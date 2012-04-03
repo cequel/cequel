@@ -57,22 +57,49 @@ describe Cequel::ColumnGroup do
   describe '#update' do
     it 'should send basic update statement' do
       connection.should_receive(:execute).
-        with 'UPDATE posts SET title = ? AND body = ? WHERE id = ?', 'Fun times', 'Fun', 1
+        with 'UPDATE posts SET title = ? AND body = ?', 'Fun times', 'Fun'
 
-      cequel[:posts].update(:id, 1, :title => 'Fun times', :body => 'Fun')
+      cequel[:posts].update(:title => 'Fun times', :body => 'Fun')
     end
 
     it 'should send update statement with options' do
       time = Time.now - 10.minutes
 
       connection.should_receive(:execute).
-        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = ? AND body = ? WHERE id = ?",
-        'Fun times', 'Fun', 1
+        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = ? AND body = ?",
+        'Fun times', 'Fun'
 
       cequel[:posts].update(
-        :id, 1,
         {:title => 'Fun times', :body => 'Fun'},
         :consistency => :quorum, :ttl => 600, :timestamp => time
+      )
+    end
+  end
+
+  describe '#delete' do
+    it 'should send basic delete statement' do
+      connection.should_receive(:execute).
+        with 'DELETE FROM posts'
+
+      cequel[:posts].delete
+    end
+
+    it 'should send delete statement for specified columns' do
+      connection.should_receive(:execute).
+        with 'DELETE title, body FROM posts'
+
+      cequel[:posts].delete(:title, :body)
+    end
+
+    it 'should send delete statement with persistence options' do
+      time = Time.now - 10.minutes
+
+      connection.should_receive(:execute).
+        with "DELETE title, body FROM posts USING CONSISTENCY QUORUM AND TIMESTAMP #{time.to_i}"
+
+      cequel[:posts].delete(
+        :title, :body,
+        :consistency => :quorum, :timestamp => time
       )
     end
   end

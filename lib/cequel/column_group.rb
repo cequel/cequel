@@ -28,21 +28,38 @@ module Cequel
     end
 
     #
-    # Update a row
+    # Update rows
     #
-    # @param [Symbol, String] key_alias the name of the key column in this group
-    # @param [Symbol, String] key_value the key of the row to be updated
     # @param [Hash] data column-value pairs
     # @param [Options] options options for persisting the column data
     # @option (see #generate_upsert_options)
     #
-    def update(key_alias, key_value, data, options = {})
+    # TODO support scoped update
+    #
+    def update(data, options = {})
       cql = "UPDATE #{@name}" <<
         generate_upsert_options(options) <<
-        " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ') <<
-        " WHERE #{key_alias} = ?"
+        " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ')
 
-      @connection.execute(cql, *(data.values << key_value))
+      @connection.execute(cql, *data.values)
+    end
+
+    # 
+    # Delete data from the column family
+    #
+    # @param columns zero or more columns to delete. Deletes the entire row if none specified.
+    # @param options persistence options
+    #
+    # TODO scoped delete
+    #
+    def delete(*columns)
+      options = columns.extract_options!
+      column_aliases = columns.empty? ? '' : " #{columns.join(', ')}"
+      cql, values = "DELETE#{column_aliases}" <<
+        " FROM #{@name}" <<
+        generate_upsert_options(options)
+
+      @connection.execute(cql, *values)
     end
 
     private
