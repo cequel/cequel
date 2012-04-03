@@ -53,4 +53,27 @@ describe Cequel::ColumnGroup do
       )
     end
   end
+
+  describe '#update' do
+    it 'should send basic update statement' do
+      connection.should_receive(:execute).
+        with 'UPDATE posts SET title = ? AND body = ? WHERE id = ?', 'Fun times', 'Fun', 1
+
+      cequel[:posts].update(:id, 1, :title => 'Fun times', :body => 'Fun')
+    end
+
+    it 'should send update statement with options' do
+      time = Time.now - 10.minutes
+
+      connection.should_receive(:execute).
+        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = ? AND body = ? WHERE id = ?",
+        'Fun times', 'Fun', 1
+
+      cequel[:posts].update(
+        :id, 1,
+        {:title => 'Fun times', :body => 'Fun'},
+        :consistency => :quorum, :ttl => 600, :timestamp => time
+      )
+    end
+  end
 end
