@@ -2,6 +2,7 @@ module Cequel
 
   class DataSet
 
+    include Enumerable
     include Helpers
 
     # @return [Keyspace] the keyspace this data set lives in
@@ -130,6 +131,37 @@ module Cequel
     end
 
     #
+    # Enumerate over rows in this data set. Along with #each, all other
+    # Enumerable methods are implemented.
+    #
+    # @yield [Hash] result rows
+    # @return [Enumerator] enumerator for rows, if no block given
+    #
+    def each
+      if block_given?
+        @keyspace.execute(to_cql).fetch do |row|
+          yield row.to_hash.with_indifferent_access
+        end
+      else
+        enum_for(:each)
+      end
+    end
+
+    #
+    # @return [Hash] the first row in this data set
+    #
+    def first
+      @keyspace.execute(limit(1).to_cql).fetch_row.try(:with_indifferent_access)
+    end
+
+    #
+    # @return [Fixnum] the number of rows in this data set
+    #
+    def count
+      @keyspace.execute(count_cql).fetch_row['count']
+    end
+
+    #
     # @return [String] CQL select statement encoding this data set's scope.
     #
     def to_cql
@@ -138,6 +170,12 @@ module Cequel
         consistency_cql <<
         row_specifications_cql <<
         limit_cql
+    end
+
+    def count_cql
+      "SELECT COUNT(*) FROM #{@column_group}" <<
+        consistency_cql <<
+        row_specifications_cql
     end
 
     def inspect

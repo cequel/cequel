@@ -5,5 +5,5 @@ Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |file|
 end
 
 RSpec.configure do |config|
-  config.include(Cequel::SpecSupport::Globals)
+  config.include(Cequel::SpecSupport::Helpers)
 end

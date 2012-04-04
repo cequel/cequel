@@ -196,4 +196,51 @@ describe Cequel::DataSet do
         should == "SELECT id, title FROM posts USING CONSISTENCY QUORUM WHERE title = 'Hey' LIMIT 3"
     end
   end
+
+  describe 'result enumeration' do
+    it 'should enumerate over results' do
+      connection.stub(:execute).with("SELECT * FROM posts").
+        and_return result_stub('id' => 1, 'title' => 'Hey')
+
+      cequel[:posts].to_a.should == [{'id' => 1, 'title' => 'Hey'}]
+    end
+
+    it 'should provide results with indifferent access' do
+      connection.stub(:execute).with("SELECT * FROM posts").
+        and_return result_stub('id' => 1, 'title' => 'Hey')
+
+      cequel[:posts].to_a.first[:id].should == 1
+    end
+
+    it 'should not run query if no block given to #each' do
+      expect { cequel[:posts].each }.to_not raise_error
+    end
+
+    it 'should return Enumerator if no block given to #each' do
+      connection.stub(:execute).with("SELECT * FROM posts").
+        and_return result_stub('id' => 1, 'title' => 'Hey')
+
+      cequel[:posts].each.each_with_index.map { |row, i| [row[:id], i] }.
+        should == [[1, 0]]
+    end
+  end
+
+  describe '#first' do
+    it 'should run a query with LIMIT 1 and return first row' do
+      connection.stub(:execute).with("SELECT * FROM posts LIMIT 1").
+        and_return result_stub('id' => 1, 'title' => 'Hey')
+
+      cequel[:posts].first.should == {'id' => 1, 'title' => 'Hey'}
+    end
+  end
+
+  describe '#count' do
+    it 'should run a count query and return count' do
+      connection.stub(:execute).with("SELECT COUNT(*) FROM posts").
+        and_return result_stub('count' => 4)
+
+      cequel[:posts].count.should == 4
+    end
+  end
+
 end
