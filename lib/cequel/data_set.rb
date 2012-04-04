@@ -14,22 +14,22 @@ module Cequel
     # @return [Keyspace] the keyspace this data set lives in
     attr_reader :keyspace
 
-    # @return [Symbol] the name of the column group this data set draws from
-    attr_reader :column_group
+    # @return [Symbol] the name of the column family this data set draws from
+    attr_reader :column_family
 
     #
-    # @param column_group [Symbol] column group for this data set
-    # @param keyspace [Keyspace] keyspace this data set's column group lives in
+    # @param column_family [Symbol] column family for this data set
+    # @param keyspace [Keyspace] keyspace this data set's column family lives in
     #
     # @see Keyspace#[]
     #
-    def initialize(column_group, keyspace)
-      @column_group, @keyspace = column_group, keyspace
+    def initialize(column_family, keyspace)
+      @column_family, @keyspace = column_family, keyspace
       @select_columns, @row_specifications = [], []
     end
 
     #
-    # Insert a row into the column group.
+    # Insert a row into the column family.
     #
     # @param [Hash] data column-value pairs. The first entry *must* be the key column.
     # @param [Options] options options for persisting the row
@@ -38,7 +38,7 @@ module Cequel
     #
     def insert(data, options = {})
       options.symbolize_keys!
-      cql = "INSERT INTO #{@column_group}" <<
+      cql = "INSERT INTO #{@column_family}" <<
         " (#{data.keys.join(', ')})" <<
         " VALUES (" << (['?'] * data.length).join(', ') << ")" <<
         generate_upsert_options(options)
@@ -57,7 +57,7 @@ module Cequel
     # @todo support counter columns
     #
     def update(data, options = {})
-      cql = "UPDATE #{@column_group}" <<
+      cql = "UPDATE #{@column_family}" <<
         generate_upsert_options(options) <<
         " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ') <<
         row_specifications_cql
@@ -78,7 +78,7 @@ module Cequel
       options = columns.extract_options!
       column_aliases = columns.empty? ? '' : " #{columns.join(', ')}"
       cql, values = "DELETE#{column_aliases}" <<
-        " FROM #{@column_group}" <<
+        " FROM #{@column_family}" <<
         generate_upsert_options(options) <<
         row_specifications_cql
 
@@ -94,7 +94,7 @@ module Cequel
     # @see #delete
     #
     def truncate
-      @keyspace.execute("TRUNCATE #{@column_group}")
+      @keyspace.execute("TRUNCATE #{@column_family}")
     end
 
     #
@@ -201,7 +201,7 @@ module Cequel
     #
     def to_cql
       select_cql <<
-        " FROM #{@column_group}" <<
+        " FROM #{@column_family}" <<
         consistency_cql <<
         row_specifications_cql <<
         limit_cql
@@ -211,7 +211,7 @@ module Cequel
     # @return [String] CQL statement to get count of rows in this data set
     #
     def count_cql
-      "SELECT COUNT(*) FROM #{@column_group}" <<
+      "SELECT COUNT(*) FROM #{@column_family}" <<
         consistency_cql <<
         row_specifications_cql
     end

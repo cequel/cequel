@@ -16,13 +16,13 @@ module Cequel
     end
 
     #
-    # Get DataSet encapsulating a column group in this keyspace
+    # Get DataSet encapsulating a column family in this keyspace
     #
-    # @param column_group_name [Symbol] the name of the column group
-    # @return [DataSet] a column group
+    # @param column_family_name [Symbol] the name of the column family
+    # @return [DataSet] a column family
     #
-    def [](column_group_name)
-      DataSet.new(column_group_name.to_sym, self)
+    def [](column_family_name)
+      DataSet.new(column_family_name.to_sym, self)
     end
 
     #
