@@ -36,7 +36,7 @@ module Cequel
         " VALUES (" << (['?'] * data.length).join(', ') << ")" <<
         generate_upsert_options(options)
 
-      @keyspace.execute(sanitize(cql, *data.values))
+      @keyspace.write(sanitize(cql, *data.values))
     end
 
     #
@@ -54,7 +54,7 @@ module Cequel
         " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ') <<
         row_specifications_cql
 
-      @keyspace.execute(sanitize(cql, *data.values))
+      @keyspace.write(sanitize(cql, *data.values))
     rescue EmptySubquery
       # Noop -- no rows to update
     end
@@ -73,7 +73,7 @@ module Cequel
         generate_upsert_options(options) <<
         row_specifications_cql
 
-      @keyspace.execute(sanitize(cql, *values))
+      @keyspace.write(sanitize(cql, *values))
     rescue EmptySubquery
       # Noop -- no rows to delete
     end
