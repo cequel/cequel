@@ -145,57 +145,57 @@ describe Cequel::DataSet do
     end
   end
 
-  describe '#to_cql' do
+  describe '#cql' do
     it 'should generate select statement with all columns' do
-      cequel[:posts].to_cql.should == 'SELECT * FROM posts'
+      cequel[:posts].cql.should == 'SELECT * FROM posts'
     end
   end
 
   describe '#select' do
     it 'should generate select statement with given columns' do
-      cequel[:posts].select(:id, :title).to_cql.
+      cequel[:posts].select(:id, :title).cql.
         should == 'SELECT id, title FROM posts'
     end
 
     it 'should accept array argument' do
-      cequel[:posts].select([:id, :title]).to_cql.
+      cequel[:posts].select([:id, :title]).cql.
         should == 'SELECT id, title FROM posts'
     end
 
     it 'should combine multiple selects' do
-      cequel[:posts].select(:id).select(:title).to_cql.
+      cequel[:posts].select(:id).select(:title).cql.
         should == 'SELECT id, title FROM posts'
     end
   end
 
   describe '#where' do
     it 'should build WHERE statement from hash' do
-      cequel[:posts].where(:title => 'Hey').to_cql.
+      cequel[:posts].where(:title => 'Hey').cql.
         should == "SELECT * FROM posts WHERE title = 'Hey'"
     end
 
     it 'should build WHERE statement from multi-element hash' do
-      cequel[:posts].where(:title => 'Hey', :body => 'Guy').to_cql.
+      cequel[:posts].where(:title => 'Hey', :body => 'Guy').cql.
         should == "SELECT * FROM posts WHERE title = 'Hey' AND body = 'Guy'"
     end
 
     it 'should build WHERE statement with IN' do
-      cequel[:posts].where(:id => [1, 2, 3, 4]).to_cql.
+      cequel[:posts].where(:id => [1, 2, 3, 4]).cql.
         should == 'SELECT * FROM posts WHERE id IN (1, 2, 3, 4)'
     end
 
     it 'should build WHERE statement from CQL string' do
-      cequel[:posts].where("title = 'Hey'").to_cql.
+      cequel[:posts].where("title = 'Hey'").cql.
         should == "SELECT * FROM posts WHERE title = 'Hey'"
     end
 
     it 'should build WHERE statement from CQL string with bind variables' do
-      cequel[:posts].where("title = ?", 'Hey').to_cql.
+      cequel[:posts].where("title = ?", 'Hey').cql.
         should == "SELECT * FROM posts WHERE title = 'Hey'"
     end
 
     it 'should aggregate multiple WHERE statements' do
-      cequel[:posts].where(:title => 'Hey').where('body = ?', 'Sup').to_cql.
+      cequel[:posts].where(:title => 'Hey').where('body = ?', 'Sup').cql.
         should == "SELECT * FROM posts WHERE title = 'Hey' AND body = 'Sup'"
     end
 
@@ -209,7 +209,7 @@ describe Cequel::DataSet do
 
       cequel[:blogs].where(
         :id => cequel[:posts].select(:blog_id).where(:title => 'Blog')
-      ).to_cql.
+      ).cql.
         should == 'SELECT * FROM blogs WHERE id IN (1, 3)'
     end
 
@@ -221,7 +221,7 @@ describe Cequel::DataSet do
       expect do
         cequel[:blogs].where(
           :id => cequel[:posts].select(:blog_id).where(:title => 'Blog')
-        ).to_cql
+        ).cql
       end.to raise_error(Cequel::EmptySubquery)
     end
 
@@ -229,14 +229,14 @@ describe Cequel::DataSet do
 
   describe '#consistency' do
     it 'should add USING CONSISTENCY to select' do
-      cequel[:posts].consistency(:quorum).to_cql.
+      cequel[:posts].consistency(:quorum).cql.
         should == "SELECT * FROM posts USING CONSISTENCY QUORUM"
     end
   end
 
   describe '#limit' do
     it 'should add LIMIT' do
-      cequel[:posts].limit(2).to_cql.
+      cequel[:posts].limit(2).cql.
         should == 'SELECT * FROM posts LIMIT 2'
     end
   end
@@ -247,7 +247,7 @@ describe Cequel::DataSet do
         select(:id, :title).
         consistency(:quorum).
         where(:title => 'Hey').
-        limit(3).to_cql.
+        limit(3).cql.
         should == "SELECT id, title FROM posts USING CONSISTENCY QUORUM WHERE title = 'Hey' LIMIT 3"
     end
   end

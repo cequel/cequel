@@ -15,7 +15,7 @@ module Cequel
       @condition, @bind_vars = condition, bind_vars
     end
 
-    def to_cql
+    def cql
       sanitize(@condition, *@bind_vars)
     end
 

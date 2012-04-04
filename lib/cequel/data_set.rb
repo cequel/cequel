@@ -166,7 +166,7 @@ module Cequel
     def each
       if block_given?
         begin
-          @keyspace.execute(to_cql).fetch do |row|
+          @keyspace.execute(cql).fetch do |row|
             yield row.to_hash.with_indifferent_access
           end
         rescue EmptySubquery
@@ -181,7 +181,7 @@ module Cequel
     # @return [Hash] the first row in this data set
     #
     def first
-      @keyspace.execute(limit(1).to_cql).fetch_row.try(:with_indifferent_access)
+      @keyspace.execute(limit(1).cql).fetch_row.try(:with_indifferent_access)
     rescue EmptySubquery
       nil
     end
@@ -199,7 +199,7 @@ module Cequel
     # @raise [EmptySubquery] if row specifications use a subquery that returns no results
     # @return [String] CQL select statement encoding this data set's scope.
     #
-    def to_cql
+    def cql
       select_cql <<
         " FROM #{@column_family}" <<
         consistency_cql <<
@@ -217,11 +217,11 @@ module Cequel
     end
 
     def inspect
-      "#<#{self.class.name}: #{to_cql}>"
+      "#<#{self.class.name}: #{cql}>"
     end
 
     def ==(other)
-      to_cql == other.to_cql
+      cql == other.cql
     end
 
     protected
@@ -279,7 +279,7 @@ module Cequel
 
     def row_specifications_cql
       if @row_specifications.any?
-        " WHERE #{@row_specifications.map { |c| c.to_cql }.join(' AND ')}"
+        " WHERE #{@row_specifications.map { |c| c.cql }.join(' AND ')}"
       else ''
       end
     end

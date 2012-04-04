@@ -15,7 +15,7 @@ module Cequel
       @column, @value = column, value
     end
 
-    def to_cql
+    def cql
       case @value
       when DataSet
         subquery_cql
@@ -36,11 +36,11 @@ module Cequel
       case values.length
       when 0
         raise EmptySubquery,
-          "Unable to generate CQL row specification: subquery (#{@value.to_cql}) returned no results."
+          "Unable to generate CQL row specification: subquery (#{@value.cql}) returned no results."
       when 1
-        RowSpecification.new(@column, values.first).to_cql
+        RowSpecification.new(@column, values.first).cql
       else
-        RowSpecification.new(@column, values).to_cql
+        RowSpecification.new(@column, values).cql
       end
     end
 
