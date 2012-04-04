@@ -4,14 +4,14 @@ describe Cequel::DataSet do
   describe '#insert' do
     it 'should insert a row' do
       connection.should_receive(:execute).
-        with 'INSERT INTO posts (id, title) VALUES (?, ?)', 1, 'Fun times'
+        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times')"
 
       cequel[:posts].insert(:id => 1, :title => 'Fun times')
     end
 
     it 'should include consistency argument' do
       connection.should_receive(:execute).
-        with 'INSERT INTO posts (id, title) VALUES (?, ?) USING CONSISTENCY QUORUM', 1, 'Fun times'
+        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING CONSISTENCY QUORUM"
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -21,7 +21,7 @@ describe Cequel::DataSet do
 
     it 'should include ttl argument' do
       connection.should_receive(:execute).
-        with 'INSERT INTO posts (id, title) VALUES (?, ?) USING TTL 600', 1, 'Fun times'
+        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING TTL 600"
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -32,7 +32,7 @@ describe Cequel::DataSet do
     it 'should include timestamp argument' do
       time = Time.now - 10.minutes
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (?, ?) USING TIMESTAMP #{time.to_i}", 1, 'Fun times'
+        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING TIMESTAMP #{time.to_i}"
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -43,7 +43,7 @@ describe Cequel::DataSet do
     it 'should include multiple arguments joined by AND' do
       time = Time.now - 10.minutes
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (?, ?) USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i}", 1, 'Fun times'
+        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i}"
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -57,7 +57,7 @@ describe Cequel::DataSet do
   describe '#update' do
     it 'should send basic update statement' do
       connection.should_receive(:execute).
-        with 'UPDATE posts SET title = ? AND body = ?', 'Fun times', 'Fun'
+        with "UPDATE posts SET title = 'Fun times' AND body = 'Fun'"
 
       cequel[:posts].update(:title => 'Fun times', :body => 'Fun')
     end
@@ -66,8 +66,7 @@ describe Cequel::DataSet do
       time = Time.now - 10.minutes
 
       connection.should_receive(:execute).
-        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = ? AND body = ?",
-        'Fun times', 'Fun'
+        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = 'Fun times' AND body = 'Fun'"
 
       cequel[:posts].update(
         {:title => 'Fun times', :body => 'Fun'},
@@ -101,6 +100,81 @@ describe Cequel::DataSet do
         :title, :body,
         :consistency => :quorum, :timestamp => time
       )
+    end
+  end
+
+  describe '#to_cql' do
+    it 'should generate select statement with all columns' do
+      cequel[:posts].to_cql.should == 'SELECT * FROM posts'
+    end
+  end
+
+  describe '#select' do
+    it 'should generate select statement with given columns' do
+      cequel[:posts].select(:id, :title).to_cql.
+        should == 'SELECT id, title FROM posts'
+    end
+
+    it 'should accept array argument' do
+      cequel[:posts].select([:id, :title]).to_cql.
+        should == 'SELECT id, title FROM posts'
+    end
+  end
+
+  describe '#where' do
+    it 'should build WHERE statement from hash' do
+      cequel[:posts].where(:title => 'Hey').to_cql.
+        should == "SELECT * FROM posts WHERE title = 'Hey'"
+    end
+
+    it 'should build WHERE statement from multi-element hash' do
+      cequel[:posts].where(:title => 'Hey', :body => 'Guy').to_cql.
+        should == "SELECT * FROM posts WHERE title = 'Hey' AND body = 'Guy'"
+    end
+
+    it 'should build WHERE statement with IN' do
+      cequel[:posts].where(:id => [1, 2, 3, 4]).to_cql.
+        should == 'SELECT * FROM posts WHERE id IN (1, 2, 3, 4)'
+    end
+
+    it 'should build WHERE statement from CQL string' do
+      cequel[:posts].where("title = 'Hey'").to_cql.
+        should == "SELECT * FROM posts WHERE title = 'Hey'"
+    end
+
+    it 'should build WHERE statement from CQL string with bind variables' do
+      cequel[:posts].where("title = ?", 'Hey').to_cql.
+        should == "SELECT * FROM posts WHERE title = 'Hey'"
+    end
+
+    it 'should aggregate multiple WHERE statements' do
+      cequel[:posts].where(:title => 'Hey').where('body = ?', 'Sup').to_cql.
+        should == "SELECT * FROM posts WHERE title = 'Hey' AND body = 'Sup'"
+    end
+  end
+
+  describe '#consistency' do
+    it 'should add USING CONSISTENCY to select' do
+      cequel[:posts].consistency(:quorum).to_cql.
+        should == "SELECT * FROM posts USING CONSISTENCY QUORUM"
+    end
+  end
+
+  describe '#limit' do
+    it 'should add LIMIT' do
+      cequel[:posts].limit(2).to_cql.
+        should == 'SELECT * FROM posts LIMIT 2'
+    end
+  end
+
+  describe 'chaining scopes' do
+    it 'should aggregate all scope options' do
+      cequel[:posts].
+        select(:id, :title).
+        consistency(:quorum).
+        where(:title => 'Hey').
+        limit(3).to_cql.
+        should == "SELECT id, title FROM posts USING CONSISTENCY QUORUM WHERE title = 'Hey' LIMIT 3"
     end
   end
 end

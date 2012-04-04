@@ -2,12 +2,15 @@ module Cequel
 
   class DataSet
 
+    include Helpers
+
     #
     # @api private
     # @see Keyspace#[]
     #
     def initialize(name, connection)
       @name, @connection = name, connection
+      @select_columns, @row_specifications = [], []
     end
 
     #
@@ -24,7 +27,7 @@ module Cequel
         " VALUES (" << (['?'] * data.length).join(', ') << ")" <<
         generate_upsert_options(options)
 
-      @connection.execute(cql, *data.values)
+      @connection.execute(sanitize(cql, *data.values))
     end
 
     #
@@ -41,7 +44,7 @@ module Cequel
         generate_upsert_options(options) <<
         " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ')
 
-      @connection.execute(cql, *data.values)
+      @connection.execute(sanitize(cql, *data.values))
     end
 
     # 
@@ -59,10 +62,96 @@ module Cequel
         " FROM #{@name}" <<
         generate_upsert_options(options)
 
-      @connection.execute(cql, *values)
+      @connection.execute(sanitize(cql, *values))
     end
 
+    #
+    # Select specified columns from this data set.
+    #
+    # @param *columns [Symbol,Array] columns to select
+    # @return [DataSet] new data set scoped to specified columns
+    #
+    def select(*columns)
+      clone.tap do |data_set|
+        data_set.select_columns.concat(columns.flatten)
+      end
+    end
+
+    #
+    # Add consistency option for data set retrieval
+    #
+    # @param consistency [:one,:quorum,:local_quorum,:each_quorum]
+    # @return [DataSet] new data set with specified consistency
+    #
+    def consistency(consistency)
+      clone.tap { |data_set| data_set.consistency = consistency.to_sym }
+    end
+
+    #
+    # Add a row_specification to this data set
+    #
+    # @param row_specification [Hash, String] row_specification statement
+    # @param *bind_vars bind variables, only if using a CQL string row_specification
+    # @return [DataSet] new data set scoped to this row_specification
+    # @example Using a simple hash
+    #   DB[:posts].where(:title => 'Hey')
+    # @example Using a CQL string
+    #   DB[:posts].where("title = 'Hey'")
+    # @example Using a CQL string with bind variables
+    #   DB[:posts].where('title = ?', 'Hey')
+    #
+    def where(row_specification, *bind_vars)
+      clone.tap do |data_set|
+        data_set.row_specifications.concat(
+          case row_specification
+          when Hash then RowSpecification.build(row_specification)
+          when String then CqlRowSpecification.build(row_specification, bind_vars)
+          else raise ArgumentError, "Invalid argument #{row_specification.inspect}; expected Hash or String"
+          end
+        )
+      end
+    end
+
+    #
+    # Limit the number of rows returned by this data set
+    #
+    # @param limit [Integer] maximum number of rows to return
+    #
+    def limit(limit)
+      clone.tap { |data_set| data_set.limit = limit }
+    end
+
+    #
+    # @return [String] CQL select statement encoding this data set's scope.
+    #
+    def to_cql
+      select_cql <<
+        " FROM #{@name}" <<
+        consistency_cql <<
+        row_specifications_cql <<
+        limit_cql
+    end
+
+    def inspect
+      "#<#{self.class.name}: #{to_cql}>"
+    end
+
+    def ==(other)
+      to_cql == other.to_cql
+    end
+
+    protected
+
+    attr_reader :select_columns, :row_specifications
+    attr_writer :consistency, :limit
+
     private
+
+    def initialize_copy(source)
+      super
+      @select_columns = source.select_columns.clone
+      @row_specifications = source.row_specifications.clone
+    end
 
     #
     # Generate CQL option statement for inserts and updates
@@ -87,6 +176,32 @@ module Cequel
             "#{key.to_s.upcase} #{serialized_value}"
           end.join(' AND ')
       end
+    end
+
+    def select_cql
+      if @select_columns.any?
+        "SELECT #{@select_columns.join(', ')}"
+      else
+        "SELECT *"
+      end
+    end
+
+    def consistency_cql
+      if @consistency
+        " USING CONSISTENCY #{@consistency.upcase}"
+      else ''
+      end
+    end
+
+    def row_specifications_cql
+      if @row_specifications.any?
+        " WHERE #{@row_specifications.map { |c| c.to_cql }.join(' AND ')}"
+      else ''
+      end
+    end
+
+    def limit_cql
+      @limit ? " LIMIT #{@limit}" : ''
     end
 
   end
