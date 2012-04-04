@@ -16,6 +16,7 @@ module Cequel
     # @param options [Hash]
     # @option options (see Keyspace#batch)
     # @see Keyspace#batch
+    # @todo support batch-level consistency options
     #
     def initialize(keyspace, options = {})
       @keyspace = keyspace

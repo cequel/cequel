@@ -28,6 +28,7 @@ module Cequel
     # @param [Hash] data column-value pairs. The first entry *must* be the key column.
     # @param [Options] options options for persisting the row
     # @option (see #generate_upsert_options)
+    # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
     #
     def insert(data, options = {})
       options.symbolize_keys!
@@ -45,8 +46,9 @@ module Cequel
     # @param [Hash] data column-value pairs
     # @param [Options] options options for persisting the column data
     # @option (see #generate_upsert_options)
+    # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
     #
-    # TODO support counter columns
+    # @todo support counter columns
     #
     def update(data, options = {})
       cql = "UPDATE #{@column_group}" <<
@@ -64,6 +66,7 @@ module Cequel
     #
     # @param columns zero or more columns to delete. Deletes the entire row if none specified.
     # @param options persistence options
+    # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
     #
     def delete(*columns)
       options = columns.extract_options!
@@ -76,6 +79,16 @@ module Cequel
       @keyspace.write(sanitize(cql, *values))
     rescue EmptySubquery
       # Noop -- no rows to delete
+    end
+
+    #
+    # Remove all data from the column family.
+    #
+    # @note This method always executes immediately, even if called within a batch block. This method does not respect scoped row specifications.
+    # @see #delete
+    #
+    def truncate
+      @keyspace.execute("TRUNCATE #{@column_group}")
     end
 
     #
@@ -131,6 +144,7 @@ module Cequel
     # Limit the number of rows returned by this data set
     #
     # @param limit [Integer] maximum number of rows to return
+    # @return [DataSet] new data set scoped with given limit
     #
     def limit(limit)
       clone.tap { |data_set| data_set.limit = limit }

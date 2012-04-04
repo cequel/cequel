@@ -137,6 +137,14 @@ describe Cequel::DataSet do
     end
   end
 
+  describe '#truncate' do
+    it 'should send a TRUNCATE statement' do
+      connection.should_receive(:execute).with("TRUNCATE posts")
+
+      cequel[:posts].truncate
+    end
+  end
+
   describe '#to_cql' do
     it 'should generate select statement with all columns' do
       cequel[:posts].to_cql.should == 'SELECT * FROM posts'
