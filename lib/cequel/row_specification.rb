@@ -14,16 +14,43 @@ module Cequel
     def initialize(column, value)
       @column, @value = column, value
     end
-    private_class_method :new
 
     def to_cql
-      if @value.is_a?(Array)
+      case @value
+      when DataSet
+        subquery_cql
+      when Array
         sanitize(
           "#{@column} IN (#{Array.new(@value.length) { '?' }.join(', ')})",
           *@value
         )
       else
         sanitize("#{@column} = ?", @value)
+      end
+    end
+
+    private
+
+    def subquery_cql
+      values = values_from_subquery
+      case values.length
+      when 0
+        raise EmptySubquery,
+          "Unable to generate CQL row specification: subquery (#{@value.to_cql}) returned no results."
+      when 1
+        RowSpecification.new(@column, values.first).to_cql
+      else
+        RowSpecification.new(@column, values).to_cql
+      end
+    end
+
+    def values_from_subquery
+      results = @value.map do |row|
+        if row.length > 1
+          raise ArgumentError,
+            "Subqueries must return a single row per column"
+        end
+        row.values.first
       end
     end
 

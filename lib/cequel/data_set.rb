@@ -55,6 +55,8 @@ module Cequel
         row_specifications_cql
 
       @keyspace.execute(sanitize(cql, *data.values))
+    rescue EmptySubquery
+      # Noop -- no rows to update
     end
 
     # 
@@ -72,6 +74,8 @@ module Cequel
         row_specifications_cql
 
       @keyspace.execute(sanitize(cql, *values))
+    rescue EmptySubquery
+      # Noop -- no rows to delete
     end
 
     #
@@ -108,6 +112,8 @@ module Cequel
     #   DB[:posts].where("title = 'Hey'")
     # @example Using a CQL string with bind variables
     #   DB[:posts].where('title = ?', 'Hey')
+    # @example Use another data set as an input -- inner data set must return a single column per row!
+    #   DB[:blogs].where(:id => DB[:posts].select(:blog_id).where(:title => 'Hey'))
     #
     def where(row_specification, *bind_vars)
       clone.tap do |data_set|
@@ -139,8 +145,12 @@ module Cequel
     #
     def each
       if block_given?
-        @keyspace.execute(to_cql).fetch do |row|
-          yield row.to_hash.with_indifferent_access
+        begin
+          @keyspace.execute(to_cql).fetch do |row|
+            yield row.to_hash.with_indifferent_access
+          end
+        rescue EmptySubquery
+          # Noop -- yield no results
         end
       else
         enum_for(:each)
@@ -152,6 +162,8 @@ module Cequel
     #
     def first
       @keyspace.execute(limit(1).to_cql).fetch_row.try(:with_indifferent_access)
+    rescue EmptySubquery
+      nil
     end
 
     #
@@ -159,9 +171,12 @@ module Cequel
     #
     def count
       @keyspace.execute(count_cql).fetch_row['count']
+    rescue EmptySubquery
+      0
     end
 
     #
+    # @raise [EmptySubquery] if row specifications use a subquery that returns no results
     # @return [String] CQL select statement encoding this data set's scope.
     #
     def to_cql
@@ -172,6 +187,9 @@ module Cequel
         limit_cql
     end
 
+    #
+    # @return [String] CQL statement to get count of rows in this data set
+    #
     def count_cql
       "SELECT COUNT(*) FROM #{@column_group}" <<
         consistency_cql <<

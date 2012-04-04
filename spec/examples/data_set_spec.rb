@@ -80,6 +80,16 @@ describe Cequel::DataSet do
 
       cequel[:posts].where(:id => 4).update(:title => 'Fun')
     end
+
+    it 'should do nothing if row specification contains empty subquery' do
+      connection.stub(:execute).with("SELECT blog_id FROM posts").
+        and_return result_stub
+
+      expect do
+        cequel[:blogs].where(:id => cequel[:posts].select(:blog_id)).
+          update(:title => 'Fun')
+      end.to_not raise_error
+    end
   end
 
   describe '#delete' do
@@ -114,6 +124,16 @@ describe Cequel::DataSet do
         with "DELETE FROM posts WHERE id = 4"
 
       cequel[:posts].where(:id => 4).delete
+    end
+
+    it 'should not do anything if scoped to empty subquery' do
+      connection.stub(:execute).with("SELECT blog_id FROM posts").
+        and_return result_stub
+
+      expect do
+        cequel[:blogs].where(:id => cequel[:posts].select(:blog_id)).
+          delete
+      end.to_not raise_error
     end
   end
 
@@ -170,6 +190,33 @@ describe Cequel::DataSet do
       cequel[:posts].where(:title => 'Hey').where('body = ?', 'Sup').to_cql.
         should == "SELECT * FROM posts WHERE title = 'Hey' AND body = 'Sup'"
     end
+
+    it 'should take a data set as a condition and perform an IN statement' do
+      connection.stub(:execute).
+        with("SELECT blog_id FROM posts WHERE title = 'Blog'").
+        and_return result_stub(
+          {:blog_id => 1},
+          {:blog_id => 3}
+        )
+
+      cequel[:blogs].where(
+        :id => cequel[:posts].select(:blog_id).where(:title => 'Blog')
+      ).to_cql.
+        should == 'SELECT * FROM blogs WHERE id IN (1, 3)'
+    end
+
+    it 'should raise EmptySubquery if inner data set has no results' do
+      connection.stub(:execute).
+        with("SELECT blog_id FROM posts WHERE title = 'Blog'").
+        and_return result_stub
+
+      expect do
+        cequel[:blogs].where(
+          :id => cequel[:posts].select(:blog_id).where(:title => 'Blog')
+        ).to_cql
+      end.to raise_error(Cequel::EmptySubquery)
+    end
+
   end
 
   describe '#consistency' do
@@ -223,6 +270,14 @@ describe Cequel::DataSet do
       cequel[:posts].each.each_with_index.map { |row, i| [row[:id], i] }.
         should == [[1, 0]]
     end
+
+    it 'should return no results if subquery is empty' do
+      connection.stub(:execute).with("SELECT blog_id FROM posts").
+        and_return result_stub
+
+      cequel[:blogs].where(:id => cequel[:posts].select(:blog_id)).to_a.
+        should == []
+    end
   end
 
   describe '#first' do
@@ -232,6 +287,14 @@ describe Cequel::DataSet do
 
       cequel[:posts].first.should == {'id' => 1, 'title' => 'Hey'}
     end
+
+    it 'should return nil if subquery returns empty results' do
+      connection.stub(:execute).with("SELECT blog_id FROM posts").
+        and_return result_stub
+
+      cequel[:blogs].where(:id => cequel[:posts].select(:blog_id)).first.
+        should be_nil
+    end
   end
 
   describe '#count' do
@@ -240,6 +303,14 @@ describe Cequel::DataSet do
         and_return result_stub('count' => 4)
 
       cequel[:posts].count.should == 4
+    end
+
+    it 'should return 0 if subquery returns no results' do
+      connection.stub(:execute).with("SELECT blog_id FROM posts").
+        and_return result_stub
+
+      cequel[:blogs].where(:id => cequel[:posts].select(:blog_id)).count.
+        should == 0
     end
   end
 

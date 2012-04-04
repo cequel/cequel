@@ -14,7 +14,6 @@ module Cequel
     def initialize(condition, bind_vars)
       @condition, @bind_vars = condition, bind_vars
     end
-    private_class_method :new
 
     def to_cql
       sanitize(@condition, *@bind_vars)
