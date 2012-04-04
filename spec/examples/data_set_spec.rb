@@ -119,6 +119,11 @@ describe Cequel::DataSet do
       cequel[:posts].select([:id, :title]).to_cql.
         should == 'SELECT id, title FROM posts'
     end
+
+    it 'should combine multiple selects' do
+      cequel[:posts].select(:id).select(:title).to_cql.
+        should == 'SELECT id, title FROM posts'
+    end
   end
 
   describe '#where' do
