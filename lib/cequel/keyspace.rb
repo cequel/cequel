@@ -17,7 +17,14 @@ module Cequel
     # @return [DataSet] a column group
     #
     def [](column_group_name)
-      DataSet.new(column_group_name.to_sym, @connection)
+      DataSet.new(column_group_name.to_sym, self)
+    end
+
+    #
+    # Execute a CQL statement on this keyspace
+    #
+    def execute(statement, *bind_vars)
+      @connection.execute(statement, *bind_vars)
     end
 
   end

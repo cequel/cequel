@@ -4,12 +4,20 @@ module Cequel
 
     include Helpers
 
+    # @return [Keyspace] the keyspace this data set lives in
+    attr_reader :keyspace
+
+    # @return [Symbol] the name of the column group this data set draws from
+    attr_reader :column_group
+
     #
-    # @api private
+    # @param column_group [Symbol] column group for this data set
+    # @param keyspace [Keyspace] keyspace this data set's column group lives in
+    #
     # @see Keyspace#[]
     #
-    def initialize(name, connection)
-      @name, @connection = name, connection
+    def initialize(column_group, keyspace)
+      @column_group, @keyspace = column_group, keyspace
       @select_columns, @row_specifications = [], []
     end
 
@@ -22,12 +30,12 @@ module Cequel
     #
     def insert(data, options = {})
       options.symbolize_keys!
-      cql = "INSERT INTO #{@name}" <<
+      cql = "INSERT INTO #{@column_group}" <<
         " (#{data.keys.join(', ')})" <<
         " VALUES (" << (['?'] * data.length).join(', ') << ")" <<
         generate_upsert_options(options)
 
-      @connection.execute(sanitize(cql, *data.values))
+      @keyspace.execute(sanitize(cql, *data.values))
     end
 
     #
@@ -40,12 +48,12 @@ module Cequel
     # TODO support counter columns
     #
     def update(data, options = {})
-      cql = "UPDATE #{@name}" <<
+      cql = "UPDATE #{@column_group}" <<
         generate_upsert_options(options) <<
         " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ') <<
         row_specifications_cql
 
-      @connection.execute(sanitize(cql, *data.values))
+      @keyspace.execute(sanitize(cql, *data.values))
     end
 
     # 
@@ -58,11 +66,11 @@ module Cequel
       options = columns.extract_options!
       column_aliases = columns.empty? ? '' : " #{columns.join(', ')}"
       cql, values = "DELETE#{column_aliases}" <<
-        " FROM #{@name}" <<
+        " FROM #{@column_group}" <<
         generate_upsert_options(options) <<
         row_specifications_cql
 
-      @connection.execute(sanitize(cql, *values))
+      @keyspace.execute(sanitize(cql, *values))
     end
 
     #
@@ -126,7 +134,7 @@ module Cequel
     #
     def to_cql
       select_cql <<
-        " FROM #{@name}" <<
+        " FROM #{@column_group}" <<
         consistency_cql <<
         row_specifications_cql <<
         limit_cql
