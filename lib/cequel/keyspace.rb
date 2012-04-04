@@ -1,5 +1,8 @@
 module Cequel
 
+  #
+  # Handle to a Cassandra keyspace.
+  #
   class Keyspace
 
     include Helpers
