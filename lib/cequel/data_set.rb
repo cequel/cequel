@@ -1,6 +1,6 @@
 module Cequel
 
-  class ColumnGroup
+  class DataSet
 
     #
     # @api private

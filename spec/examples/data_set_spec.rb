@@ -1,6 +1,6 @@
 require File.expand_path('../spec_helper', __FILE__)
 
-describe Cequel::ColumnGroup do
+describe Cequel::DataSet do
   describe '#insert' do
     it 'should insert a row' do
       connection.should_receive(:execute).

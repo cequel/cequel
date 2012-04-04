@@ -11,13 +11,13 @@ module Cequel
     end
 
     #
-    # Get a handle to a ColumnGroup in this keyspace.
+    # Get DataSet encapsulating a column group in this keyspace
     #
     # @param column_group_name [Symbol] the name of the column group
-    # @return [ColumnGroup] a column group
+    # @return [DataSet] a column group
     #
     def [](column_group_name)
-      ColumnGroup.new(column_group_name.to_sym, @connection)
+      DataSet.new(column_group_name.to_sym, @connection)
     end
 
   end

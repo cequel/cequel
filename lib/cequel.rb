@@ -1,6 +1,6 @@
 require 'active_support/core_ext'
 
-require 'cequel/column_group'
+require 'cequel/data_set'
 require 'cequel/keyspace'
 
 module Cequel
