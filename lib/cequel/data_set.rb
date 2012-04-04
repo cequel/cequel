@@ -37,12 +37,13 @@ module Cequel
     # @param [Options] options options for persisting the column data
     # @option (see #generate_upsert_options)
     #
-    # TODO support scoped update
+    # TODO support counter columns
     #
     def update(data, options = {})
       cql = "UPDATE #{@name}" <<
         generate_upsert_options(options) <<
-        " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ')
+        " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ') <<
+        row_specifications_cql
 
       @connection.execute(sanitize(cql, *data.values))
     end
@@ -53,14 +54,13 @@ module Cequel
     # @param columns zero or more columns to delete. Deletes the entire row if none specified.
     # @param options persistence options
     #
-    # TODO scoped delete
-    #
     def delete(*columns)
       options = columns.extract_options!
       column_aliases = columns.empty? ? '' : " #{columns.join(', ')}"
       cql, values = "DELETE#{column_aliases}" <<
         " FROM #{@name}" <<
-        generate_upsert_options(options)
+        generate_upsert_options(options) <<
+        row_specifications_cql
 
       @connection.execute(sanitize(cql, *values))
     end

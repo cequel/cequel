@@ -73,6 +73,13 @@ describe Cequel::DataSet do
         :consistency => :quorum, :ttl => 600, :timestamp => time
       )
     end
+
+    it 'should send update statement scoped to current row specifications' do
+      connection.should_receive(:execute).
+        with "UPDATE posts SET title = 'Fun' WHERE id = 4"
+
+      cequel[:posts].where(:id => 4).update(:title => 'Fun')
+    end
   end
 
   describe '#delete' do
@@ -100,6 +107,13 @@ describe Cequel::DataSet do
         :title, :body,
         :consistency => :quorum, :timestamp => time
       )
+    end
+
+    it 'should send delete statement with scoped row specifications' do
+      connection.should_receive(:execute).
+        with "DELETE FROM posts WHERE id = 4"
+
+      cequel[:posts].where(:id => 4).delete
     end
   end
 
