@@ -16,10 +16,6 @@ module Cequel
             def #{key_alias}
               @_cequel.key
             end
-
-            def #{key_alias}=(key)
-              @_cequel.key = key
-            end
           RUBY
         end
 
@@ -50,6 +46,12 @@ module Cequel
           [@_cequel.key, *@_cequel.columns.values]
         end
 
+      end
+
+      def initialize(key, attributes = {})
+        super()
+        @_cequel.key = key
+        self.attributes = attributes
       end
 
       def attributes

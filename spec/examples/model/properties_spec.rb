@@ -1,11 +1,14 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Model::Properties do
-  let(:post) { Post.new }
+  let(:post) { Post.new(1) }
 
-  it 'should have getter and setter for key' do
-    post.id = 1
+  it 'should have getter for key' do
     post.id.should == 1
+  end
+
+  it 'should not have setter for key' do
+    expect { post.id = 2 }.to raise_error(NoMethodError)
   end
 
   it 'should return key alias from class' do
@@ -27,22 +30,24 @@ describe Cequel::Model::Properties do
   end
 
   it 'should expose #attributes' do
-    post.id = 1
     post.title = 'Cequel'
     post.attributes.
       should == {:id => 1, :title => 'Cequel'}.with_indifferent_access
   end
 
   it 'should not return nil values with attributes' do
-    post.id = 1
     post.title = nil
     post.attributes.should == {:id => 1}.with_indifferent_access
   end
 
   it 'should set attributes' do
-    post.attributes = { :id => 1, :title => 'Cequel' }
+    post.attributes = { :title => 'Cequel' }
     post.id.should == 1
     post.title.should == 'Cequel'
+  end
+
+  it 'should set attributes from constructor' do
+    Post.new(1, :title => 'Cequel').title.should == 'Cequel'
   end
 
 end
