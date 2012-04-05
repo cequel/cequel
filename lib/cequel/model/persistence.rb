@@ -31,19 +31,24 @@ module Cequel
           Cequel::Model.keyspace
         end
 
+        def _hydrate(row)
+          unless row.length == 1
+            new(row[key_alias])._hydrate(row.except(key_alias))
+          end
+        end
+
         private
         
         def find_one(key)
-          row = column_family.where(key_alias => key).first
-          _hydrate(row).tap do |result|
+          all.where(key_alias => key).first.tap do |result|
             raise RecordNotFound,
               "Couldn't find #{name} with #{key_alias}=#{key}" if result.nil?
           end
         end
 
         def find_many(keys)
-          results = column_family.where(key_alias => keys).
-            map { |row| _hydrate(row) }.compact
+          results = all.where(key_alias => keys).to_a
+          results.compact!
 
           if results.length < keys.length
             raise RecordNotFound,
@@ -51,12 +56,6 @@ module Cequel
                 "(found #{results.length} results, but was looking for #{keys.length}"
           end
           results
-        end
-
-        def _hydrate(row)
-          unless row.length == 1
-            new(row[key_alias])._hydrate(row.except(key_alias))
-          end
         end
 
       end

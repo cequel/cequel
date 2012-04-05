@@ -5,6 +5,8 @@ require 'cequel/model/errors'
 require 'cequel/model/instance_internals'
 require 'cequel/model/persistence'
 require 'cequel/model/properties'
+require 'cequel/model/scope'
+require 'cequel/model/scoped'
 
 module Cequel
 
@@ -20,6 +22,7 @@ module Cequel
 
       include Properties
       include Persistence
+      include Scoped
     end
 
     def self.keyspace
