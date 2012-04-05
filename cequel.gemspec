@@ -18,8 +18,8 @@ DESC
   s.has_rdoc = false
   #s.extra_rdoc_files = 'README.md'
   s.required_ruby_version = '>= 1.9'
-  s.add_runtime_dependency 'activesupport', '~> 3.0'
-  s.add_runtime_dependency 'activemodel', '~> 3.0'
+  s.add_runtime_dependency 'activesupport', '~> 3.1'
+  s.add_runtime_dependency 'activemodel', '~> 3.1'
   s.add_runtime_dependency 'cassandra-cql', '~> 1.0'
   s.add_runtime_dependency 'i18n'
   s.add_development_dependency 'rspec', '~> 2.0'

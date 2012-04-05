@@ -1,6 +1,7 @@
 require 'cequel'
 require 'cequel/model/class_internals'
 require 'cequel/model/column'
+require 'cequel/model/dirty'
 require 'cequel/model/errors'
 require 'cequel/model/instance_internals'
 require 'cequel/model/persistence'
@@ -23,6 +24,7 @@ module Cequel
       include Properties
       include Persistence
       include Scoped
+      include Dirty
     end
 
     def self.keyspace
