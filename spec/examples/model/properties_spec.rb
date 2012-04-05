@@ -26,7 +26,7 @@ describe Cequel::Model::Properties do
 
   it 'should expose column objects on class' do
     Post.columns[0..1].map { |col| [col.name, col.type] }.
-      should == [[:id, :integer], [:title, :string]]
+      should == [[:id, :integer], [:title, :varchar]]
   end
 
   it 'should expose #attributes' do

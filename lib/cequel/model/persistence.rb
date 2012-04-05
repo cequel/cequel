@@ -60,8 +60,58 @@ module Cequel
 
       end
 
+      def save
+        persisted? ? update : insert
+      end
+
+      def insert
+        return if @_cequel.attributes.empty?
+        self.class.column_family.insert(attributes)
+        persisted!
+      end
+
+      def update
+        update_attributes, delete_attributes = {}, []
+        changes.each_pair do |attr, (old, new)|
+          if new.nil?
+            delete_attributes << attr
+          else
+            update_attributes[attr] = new
+          end
+        end
+        data_set.update(update_attributes) if update_attributes.any?
+        data_set.delete(*delete_attributes) if delete_attributes.any?
+        transient! if @_cequel.attributes.empty?
+      end
+
+      def destroy
+        data_set.delete
+      end
+
       def _hydrate(row)
-        tap { @_cequel.attributes = row }
+        tap do
+          @_cequel.attributes = row
+          persisted!
+        end
+      end
+
+      def persisted!
+        @_cequel.persisted = true
+      end
+
+      def transient!
+        @_cequel.persisted = false
+      end
+
+      def persisted?
+        !!@_cequel.persisted
+      end
+
+      private
+
+      def data_set
+        self.class.column_family.
+          where(self.class.key_alias => @_cequel.key)
       end
 
     end

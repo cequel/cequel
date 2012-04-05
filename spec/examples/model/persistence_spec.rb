@@ -54,4 +54,78 @@ describe Cequel::Model::Persistence do
       expect { Post.find(2, 5) }.to raise_error(Cequel::Model::RecordNotFound)
     end
   end
+
+  describe '#save' do
+    describe 'with new record' do
+      let(:post) { Post.new(1) }
+
+      it 'should persist only columns with values' do
+        connection.should_receive(:execute).
+          with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+
+        post.title = 'Cequel'
+        post.save
+      end
+
+      it 'should mark instance as persisted' do
+        connection.stub(:execute).
+          with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+
+        post.title = 'Cequel'
+        post.save
+        post.should be_persisted
+      end
+
+      it 'should not send anything to Cassandra if no column values are set' do
+        post.save
+        post.should_not be_persisted
+      end
+    end
+
+    describe 'with persisted record' do
+      let(:post) do
+        connection.stub(:execute).with("SELECT * FROM posts WHERE id = 1 LIMIT 1").
+          and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
+        Post.find(1)
+      end
+
+      it 'should send UPDATE statement with changed columns' do
+        connection.should_receive(:execute).
+          with "UPDATE posts SET body = 'Cequel cequel' WHERE id = 1"
+        post.body = 'Cequel cequel'
+        post.save
+      end
+
+      it 'should send DELETE statement with removed columns' do
+        connection.should_receive(:execute).
+          with "DELETE title FROM posts WHERE id = 1"
+        post.title = nil
+        post.save
+      end
+
+      it 'should mark record as transient if all attributes removed' do
+        connection.stub(:execute).
+          with "DELETE title, blog_id FROM posts WHERE id = 1"
+        post.title = nil
+        post.blog_id = nil
+        post.save
+        post.should_not be_persisted
+      end
+    end
+
+    describe '#destroy' do
+      let(:post) do
+        connection.stub(:execute).with("SELECT * FROM posts WHERE id = 1 LIMIT 1").
+          and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
+        Post.find(1)
+      end
+
+      it 'should delete all columns from column family' do
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id = 1"
+
+        post.destroy
+      end
+    end
+  end
 end

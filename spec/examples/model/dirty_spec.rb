@@ -18,12 +18,14 @@ describe Cequel::Model::Dirty do
   end
 
   it 'should not have changed attributes after save' do
+    connection.stub(:execute)
     post.title = 'Cequel'
     post.save
     post.changed_attributes.should be_empty
   end
 
   it 'should have previous changes after save' do
+    connection.stub(:execute)
     post.title = 'Cequel'
     post.save
     post.previous_changes.should == { :title => [nil, 'Cequel'] }

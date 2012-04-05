@@ -22,7 +22,7 @@ module Cequel
       end
 
       def save
-        #TODO super
+        super
         @previously_changed = changes
         changed_attributes.clear
       end
