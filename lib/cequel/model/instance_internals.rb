@@ -7,8 +7,7 @@ module Cequel
     #
     class InstanceInternals
 
-      attr_accessor :key
-      attr_reader :attributes
+      attr_accessor :key, :attributes
 
       def initialize(instance)
         @instance = instance

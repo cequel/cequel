@@ -1,7 +1,9 @@
 require 'cequel'
 require 'cequel/model/class_internals'
 require 'cequel/model/column'
+require 'cequel/model/errors'
 require 'cequel/model/instance_internals'
+require 'cequel/model/persistence'
 require 'cequel/model/properties'
 
 module Cequel
@@ -14,9 +16,10 @@ module Cequel
     extend ActiveSupport::Concern
 
     included do
-      include Properties
-
       @_cequel = ClassInternals.new(self)
+
+      include Properties
+      include Persistence
     end
 
     def self.keyspace

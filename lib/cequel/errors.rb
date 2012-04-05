@@ -1,3 +1,4 @@
 module Cequel
-  EmptySubquery = Class.new(StandardError)
+  Error = Class.new(StandardError)
+  EmptySubquery = Class.new(Error)
 end
