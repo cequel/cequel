@@ -25,4 +25,24 @@ describe Cequel::Model::Properties do
     Post.columns[0..1].map { |col| [col.name, col.type] }.
       should == [[:id, :integer], [:title, :string]]
   end
+
+  it 'should expose #attributes' do
+    post.id = 1
+    post.title = 'Cequel'
+    post.attributes.
+      should == {:id => 1, :title => 'Cequel'}.with_indifferent_access
+  end
+
+  it 'should not return nil values with attributes' do
+    post.id = 1
+    post.title = nil
+    post.attributes.should == {:id => 1}.with_indifferent_access
+  end
+
+  it 'should set attributes' do
+    post.attributes = { :id => 1, :title => 'Cequel' }
+    post.id.should == 1
+    post.title.should == 'Cequel'
+  end
+
 end

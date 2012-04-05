@@ -9,7 +9,8 @@ module Cequel
       module ClassMethods
 
         def key(key_alias, type)
-          @_cequel.key = Column.new(key_alias.to_sym, type)
+          key_alias = key_alias.to_sym
+          @_cequel.key = Column.new(key_alias, type)
 
           module_eval(<<-RUBY, __FILE__, __LINE__+1)
             def #{key_alias}
@@ -51,10 +52,25 @@ module Cequel
 
       end
 
+      def attributes
+        {self.class.key_alias => @_cequel.key}.with_indifferent_access.
+          merge(@_cequel.attributes)
+      end
+
+      def attributes=(attributes)
+        attributes.each_pair do |column_name, value|
+          __send__("#{column_name}=", value)
+        end
+      end
+
       private
 
       def write_attribute(column_name, value)
-        @_cequel.attributes[column_name.to_sym] = value
+        if value.nil?
+          @_cequel.attributes.delete(column_name)
+        else
+          @_cequel.attributes[column_name] = value
+        end
       end
 
       def read_attribute(column_name)
