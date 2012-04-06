@@ -127,5 +127,21 @@ describe Cequel::Model::Persistence do
         post.destroy
       end
     end
+
+    describe '::create' do
+      it 'should persist only columns with values' do
+        connection.should_receive(:execute).
+          with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+
+        Post.create(1, :title => 'Cequel')
+      end
+
+      it 'should return post instance and mark it as persisted' do
+        connection.stub(:execute).
+          with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+
+        Post.create(1, :title => 'Cequel').should be_persisted
+      end
+    end
   end
 end

@@ -19,6 +19,10 @@ module Cequel
           end
         end
 
+        def create(key, attributes = {})
+          new(key, attributes).tap { |instance| instance.save }
+        end
+
         def column_family_name
           name.tableize.to_sym
         end
