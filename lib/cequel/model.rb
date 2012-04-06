@@ -1,4 +1,5 @@
 require 'cequel'
+require 'cequel/model/callbacks'
 require 'cequel/model/class_internals'
 require 'cequel/model/column'
 require 'cequel/model/dirty'
@@ -24,6 +25,7 @@ module Cequel
       include Properties
       include Persistence
       include Scoped
+      include Callbacks
       include Dirty
     end
 
