@@ -1,5 +1,3 @@
-require 'active_model/callbacks'
-
 module Cequel
 
   module Model

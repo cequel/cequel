@@ -1,5 +1,3 @@
-require 'active_model/dirty'
-
 module Cequel
 
   module Model
@@ -22,9 +20,10 @@ module Cequel
       end
 
       def save
-        super
-        @previously_changed = changes
-        changed_attributes.clear
+        super.tap do
+          @previously_changed = changes
+          changed_attributes.clear
+        end
       end
 
       private

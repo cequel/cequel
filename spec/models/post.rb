@@ -11,6 +11,11 @@ class Post
   before_create :record_create_callback
   before_update :record_update_callback
   before_destroy :record_destroy_callback
+  before_validation :record_validation_callback
+
+  validates :title, :presence => true, :if => :require_title?
+
+  attr_writer :require_title
 
   def self.for_blog(blog_id)
     where(:blog_id => blog_id)
@@ -18,6 +23,10 @@ class Post
 
   def has_callback?(callback)
     callbacks.include?(callback)
+  end
+
+  def require_title?
+    !!@require_title
   end
 
   private
@@ -36,6 +45,10 @@ class Post
 
   def record_destroy_callback
     record_callback(:destroy)
+  end
+
+  def record_validation_callback
+    record_callback(:validation)
   end
 
   def record_callback(callback)

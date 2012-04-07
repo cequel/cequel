@@ -1,3 +1,5 @@
+require 'active_model'
+
 require 'cequel'
 require 'cequel/model/callbacks'
 require 'cequel/model/class_internals'
@@ -9,6 +11,7 @@ require 'cequel/model/persistence'
 require 'cequel/model/properties'
 require 'cequel/model/scope'
 require 'cequel/model/scoped'
+require 'cequel/model/validations'
 
 module Cequel
 
@@ -26,6 +29,7 @@ module Cequel
       include Persistence
       include Scoped
       include Callbacks
+      include Validations
       include Dirty
     end
 
