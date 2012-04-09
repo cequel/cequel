@@ -8,11 +8,13 @@ require 'cequel/model/dirty'
 require 'cequel/model/errors'
 require 'cequel/model/instance_internals'
 require 'cequel/model/mass_assignment_security'
+require 'cequel/model/naming'
 require 'cequel/model/observing'
 require 'cequel/model/persistence'
 require 'cequel/model/properties'
 require 'cequel/model/scope'
 require 'cequel/model/scoped'
+require 'cequel/model/translation'
 require 'cequel/model/validations'
 
 module Cequel
@@ -30,11 +32,14 @@ module Cequel
       include Properties
       include Persistence
       include Scoped
+      include Naming
       include Callbacks
       include Validations
       include Observing
       include Dirty
       include MassAssignmentSecurity
+
+      extend Translation
     end
 
     def self.keyspace

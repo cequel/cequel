@@ -1,0 +1,13 @@
+en:
+  cequel:
+    models:
+      post: Blog post
+    attributes:
+      post:
+        title: Post title
+    errors:
+      models:
+        post:
+          attributes:
+            title:
+              blank: is a required field
