@@ -24,7 +24,7 @@ module Cequel
         end
 
         def column_family_name
-          name.tableize.to_sym
+          @_cequel.column_family_name
         end
 
         def column_family
@@ -37,7 +37,10 @@ module Cequel
 
         def _hydrate(row)
           unless row.length == 1
-            new(row[key_alias])._hydrate(row.except(key_alias))
+            if row[:type] then clazz = row[:type].constantize
+            else clazz = self
+            end
+            clazz.new(row[key_alias])._hydrate(row.except(key_alias))
           end
         end
 

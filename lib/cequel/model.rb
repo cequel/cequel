@@ -6,6 +6,7 @@ require 'cequel/model/class_internals'
 require 'cequel/model/column'
 require 'cequel/model/dirty'
 require 'cequel/model/errors'
+require 'cequel/model/inheritable'
 require 'cequel/model/instance_internals'
 require 'cequel/model/mass_assignment_security'
 require 'cequel/model/naming'
@@ -14,6 +15,7 @@ require 'cequel/model/persistence'
 require 'cequel/model/properties'
 require 'cequel/model/scope'
 require 'cequel/model/scoped'
+require 'cequel/model/subclass_internals'
 require 'cequel/model/translation'
 require 'cequel/model/validations'
 
@@ -38,6 +40,7 @@ module Cequel
       include Observing
       include Dirty
       include MassAssignmentSecurity
+      extend Inheritable
 
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml
