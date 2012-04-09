@@ -8,6 +8,7 @@ require 'cequel/model/dirty'
 require 'cequel/model/errors'
 require 'cequel/model/instance_internals'
 require 'cequel/model/mass_assignment_security'
+require 'cequel/model/observing'
 require 'cequel/model/persistence'
 require 'cequel/model/properties'
 require 'cequel/model/scope'
@@ -31,6 +32,7 @@ module Cequel
       include Scoped
       include Callbacks
       include Validations
+      include Observing
       include Dirty
       include MassAssignmentSecurity
     end

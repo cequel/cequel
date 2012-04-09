@@ -27,6 +27,14 @@ class Post
     callbacks.include?(callback)
   end
 
+  def has_been_observed?(callback)
+    observed.include?(callback)
+  end
+
+  def observed!(callback)
+    observed << callback
+  end
+
   def require_title?
     !!@require_title
   end
@@ -59,6 +67,10 @@ class Post
 
   def callbacks
     @callbacks ||= Set[]
+  end
+
+  def observed
+    @observed ||= Set[]
   end
 
 end
