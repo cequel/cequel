@@ -5,13 +5,14 @@ class Post
   key :id, :integer
   column :title, :varchar
   column :body, :varchar
-  column :blog_id, :integer
 
   before_save :record_save_callback
   before_create :record_create_callback
   before_update :record_update_callback
   before_destroy :record_destroy_callback
   before_validation :record_validation_callback
+
+  belongs_to :blog
 
   validates :title, :presence => true, :if => :require_title?
 

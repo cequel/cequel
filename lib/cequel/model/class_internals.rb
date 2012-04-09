@@ -8,11 +8,11 @@ module Cequel
     class ClassInternals
 
       attr_accessor :key, :current_scope
-      attr_reader :columns
+      attr_reader :columns, :associations
 
       def initialize(clazz)
         @clazz = clazz
-        @columns = {}
+        @columns, @associations = {}, {}
       end
 
       def add_column(name, type)

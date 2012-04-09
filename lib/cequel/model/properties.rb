@@ -43,7 +43,11 @@ module Cequel
         end
 
         def key_alias
-          @_cequel.key.name
+          key_column.name
+        end
+
+        def key_column
+          @_cequel.key
         end
 
         def column_names
