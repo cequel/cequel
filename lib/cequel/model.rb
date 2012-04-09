@@ -39,6 +39,9 @@ module Cequel
       include Dirty
       include MassAssignmentSecurity
 
+      include ActiveModel::Serializers::JSON
+      include ActiveModel::Serializers::Xml
+
       extend Translation
     end
 
