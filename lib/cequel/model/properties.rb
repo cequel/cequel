@@ -6,6 +6,10 @@ module Cequel
 
       extend ActiveSupport::Concern
 
+      included do
+        include ActiveModel::Conversion
+      end
+
       module ClassMethods
 
         def key(key_alias, type)
@@ -15,6 +19,10 @@ module Cequel
           module_eval(<<-RUBY, __FILE__, __LINE__+1)
             def #{key_alias}
               @_cequel.key
+            end
+
+            def to_key
+              [@_cequel.key]
             end
           RUBY
         end

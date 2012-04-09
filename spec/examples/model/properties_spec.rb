@@ -15,6 +15,15 @@ describe Cequel::Model::Properties do
     Post.key_alias.should == :id
   end
 
+  it 'should return key for to_key' do
+    post.to_key.should == [1]
+  end
+
+  it 'should return param for to_param' do
+    post.persisted!
+    post.to_param.should == '1'
+  end
+
   it 'should have getter and setter for column' do
     post.title = 'Object/row mapping'
     post.title.should == 'Object/row mapping'
