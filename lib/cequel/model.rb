@@ -7,6 +7,7 @@ require 'cequel/model/column'
 require 'cequel/model/dirty'
 require 'cequel/model/errors'
 require 'cequel/model/instance_internals'
+require 'cequel/model/mass_assignment_security'
 require 'cequel/model/persistence'
 require 'cequel/model/properties'
 require 'cequel/model/scope'
@@ -31,6 +32,7 @@ module Cequel
       include Callbacks
       include Validations
       include Dirty
+      include MassAssignmentSecurity
     end
 
     def self.keyspace
