@@ -2,7 +2,7 @@ module Cequel
 
   module Model
 
-    class ManyToOneAssociation
+    class LocalAssociation
 
       attr_reader :clazz, :name
 

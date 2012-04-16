@@ -59,4 +59,20 @@ describe Cequel::Model::Associations do
         ['Cequel', 'Cequel revisited']
     end
   end
+
+  describe '::has_one' do
+    let(:post) { Post.new(:id => 1) }
+
+    before do
+      connection.stub(:execute).
+        with("SELECT * FROM assets WHERE type = 'Photo' AND post_id = 1 LIMIT 1").
+        and_return result_stub(
+          {:id => 1, :type => 'Photo', :url => 'http://outofti.me/glamour.jpg'},
+        )
+    end
+
+    it 'should look up association by foreign key' do
+      post.thumbnail.url.should == 'http://outofti.me/glamour.jpg'
+    end
+  end
 end

@@ -13,6 +13,7 @@ class Post
   before_validation :record_validation_callback
 
   belongs_to :blog
+  has_one :thumbnail, :class_name => 'Photo'
 
   validates :title, :presence => true, :if => :require_title?
 

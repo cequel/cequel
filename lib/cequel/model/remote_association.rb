@@ -2,7 +2,7 @@ module Cequel
 
   module Model
 
-    class OneToManyAssociation
+    class RemoteAssociation
 
       attr_reader :name, :class_name
 

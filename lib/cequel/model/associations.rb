@@ -10,7 +10,7 @@ module Cequel
 
         def belongs_to(name, options = {})
           name = name.to_sym
-          association = ManyToOneAssociation.new(name, self, options.symbolize_keys)
+          association = LocalAssociation.new(name, self, options.symbolize_keys)
           @_cequel.associations[name] = association
           column(association.foreign_key_name, association.primary_key.type)
 
@@ -39,11 +39,23 @@ module Cequel
         def has_many(name, options = {})
           name = name.to_sym
           @_cequel.associations[name] =
-            OneToManyAssociation.new(name, self, options.symbolize_keys)
+            RemoteAssociation.new(name, self, options.symbolize_keys)
           
           module_eval <<-RUBY
             def #{name}
               self.class.reflect_on_association(#{name.inspect}).scope(self)
+            end
+          RUBY
+        end
+
+        def has_one(name, options = {})
+          name = name.to_sym
+          @_cequel.associations[name] =
+            RemoteAssociation.new(name, self, options.symbolize_keys)
+
+          module_eval <<-RUBY
+            def #{name}
+              self.class.reflect_on_association(#{name.inspect}).scope(self).first
             end
           RUBY
         end
