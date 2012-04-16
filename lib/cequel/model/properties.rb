@@ -92,6 +92,10 @@ module Cequel
         self_key && other_key && self_key == other_key
       end
 
+      def inspect
+        inspected = "#<#{self.class.name} #{attributes.map { |column, value| "#{column}:#{value.inspect}" }.join(' ')}>"
+      end
+
       private
 
       def write_attribute(column_name, value)
