@@ -17,6 +17,10 @@ describe Cequel::Model::Inheritable do
     expect { sub = Class.new(base) }.to raise_error(ArgumentError)
   end
 
+  it 'should set type on initialization' do
+    Photo.new.class_name.should == 'Photo'
+  end
+
   it 'should query correct column family when querying subclass' do
     connection.stub(:execute).
       with("SELECT * FROM assets WHERE class_name = 'Photo' AND id = 1 LIMIT 1").
