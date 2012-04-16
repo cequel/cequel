@@ -62,11 +62,16 @@ module Cequel
           [@_cequel.key, *@_cequel.columns.values]
         end
 
+        def type_column
+          @_cequel.type_column
+        end
+
       end
 
       def initialize(attributes = {})
         super()
         self.attributes = attributes
+        yield self if block_given?
       end
 
       def attributes

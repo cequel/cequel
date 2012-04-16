@@ -41,7 +41,7 @@ module Cequel
           @_cequel.associations[name] =
             RemoteAssociation.new(name, self, options.symbolize_keys)
           
-          module_eval <<-RUBY
+          module_eval <<-RUBY, __FILE__, __LINE__+1
             def #{name}
               self.class.reflect_on_association(#{name.inspect}).scope(self)
             end
@@ -53,7 +53,7 @@ module Cequel
           @_cequel.associations[name] =
             RemoteAssociation.new(name, self, options.symbolize_keys)
 
-          module_eval <<-RUBY
+          module_eval <<-RUBY, __FILE__, __LINE__+1
             def #{name}
               self.class.reflect_on_association(#{name.inspect}).scope(self).first
             end

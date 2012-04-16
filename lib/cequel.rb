@@ -12,9 +12,11 @@ require 'cequel/row_specification'
 
 module Cequel
   def self.connect(configuration)
-    CassandraCQL::Database.new(
-      configuration[:host] || configuration[:hosts],
-      :keyspace => configuration[:keyspace]
+    Keyspace.new(
+      CassandraCQL::Database.new(
+        configuration[:host] || configuration[:hosts],
+        :keyspace => configuration[:keyspace]
+      )
     )
   end
 end
