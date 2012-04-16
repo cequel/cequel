@@ -19,8 +19,8 @@ module Cequel
           end
         end
 
-        def create(key, attributes = {})
-          new(key, attributes).tap { |instance| instance.save }
+        def create(attributes = {})
+          new(attributes).tap { |instance| instance.save }
         end
 
         def column_family_name
@@ -40,7 +40,7 @@ module Cequel
             if row[:type] then clazz = row[:type].constantize
             else clazz = self
             end
-            clazz.new(row[key_alias])._hydrate(row.except(key_alias))
+            clazz.new._hydrate(row.except(:type))
           end
         end
 
@@ -72,6 +72,7 @@ module Cequel
       end
 
       def insert
+        raise MissingKey if @_cequel.key.nil?
         return if @_cequel.attributes.empty?
         self.class.column_family.insert(attributes)
         persisted!
@@ -97,7 +98,9 @@ module Cequel
 
       def _hydrate(row)
         tap do
-          @_cequel.attributes = row
+          key_alias = self.class.key_alias.to_s
+          @_cequel.key = row[key_alias]
+          @_cequel.attributes = row.except(key_alias)
           persisted!
         end
       end
@@ -117,6 +120,7 @@ module Cequel
       private
 
       def data_set
+        raise MissingKey if @_cequel.key.nil?
         self.class.column_family.
           where(self.class.key_alias => @_cequel.key)
       end

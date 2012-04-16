@@ -1,14 +1,10 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Model::Properties do
-  let(:post) { Post.new(1) }
+  let(:post) { Post.new(:id => 1) }
 
   it 'should have getter for key' do
     post.id.should == 1
-  end
-
-  it 'should not have setter for key' do
-    expect { post.id = 2 }.to raise_error(NoMethodError)
   end
 
   it 'should return key alias from class' do
@@ -56,7 +52,7 @@ describe Cequel::Model::Properties do
   end
 
   it 'should set attributes from constructor' do
-    Post.new(1, :title => 'Cequel').title.should == 'Cequel'
+    Post.new(:id => 1, :title => 'Cequel').title.should == 'Cequel'
   end
 
 end

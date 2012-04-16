@@ -21,6 +21,10 @@ module Cequel
               @_cequel.key
             end
 
+            def #{key_alias}=(key)
+              @_cequel.key = key
+            end
+
             def to_key
               [@_cequel.key]
             end
@@ -60,9 +64,8 @@ module Cequel
 
       end
 
-      def initialize(key, attributes = {})
+      def initialize(attributes = {})
         super()
-        @_cequel.key = key
         self.attributes = attributes
       end
 

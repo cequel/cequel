@@ -1,7 +1,7 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe 'Serialization' do
-  let(:post) { Post.new(1, :title => 'Cequel') }
+  let(:post) { Post.new(:id => 1, :title => 'Cequel') }
 
   it 'should serialize to JSON' do
     post.to_json.should ==

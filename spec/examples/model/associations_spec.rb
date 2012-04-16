@@ -4,7 +4,7 @@ describe Cequel::Model::Associations do
 
   describe '::belongs_to' do
     let(:post) do
-      Post.new(1).tap { |post| post.blog_id = 2 }
+      Post.new(:id => 1).tap { |post| post.blog_id = 2 }
     end
 
     before do
@@ -39,7 +39,7 @@ describe Cequel::Model::Associations do
     end
 
     it 'should provide setter for association' do
-      post.blog = Blog.new(3, :name => 'This blog')
+      post.blog = Blog.new(:id => 3, :name => 'This blog')
       post.blog_id.should == 3
     end
 
@@ -47,7 +47,7 @@ describe Cequel::Model::Associations do
 
   describe '::has_many' do
     let(:blog) do
-      Blog.new(2)
+      Blog.new(:id => 2)
     end
 
     before do

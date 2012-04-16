@@ -22,6 +22,10 @@ require 'cequel/model/subclass_internals'
 require 'cequel/model/translation'
 require 'cequel/model/validations'
 
+if defined? Rails
+  require 'cequel/model/railtie'
+end
+
 module Cequel
 
   #

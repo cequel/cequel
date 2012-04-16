@@ -57,7 +57,7 @@ describe Cequel::Model::Persistence do
 
   describe '#save' do
     describe 'with new record' do
-      let(:post) { Post.new(1) }
+      let(:post) { Post.new(:id => 1) }
 
       it 'should persist only columns with values' do
         connection.should_receive(:execute).
@@ -79,6 +79,10 @@ describe Cequel::Model::Persistence do
       it 'should not send anything to Cassandra if no column values are set' do
         post.save
         post.should_not be_persisted
+      end
+
+      it 'should raise MissingKey if no key set' do
+        expect { Post.new.save }.to raise_error(Cequel::Model::MissingKey)
       end
     end
 
@@ -133,14 +137,14 @@ describe Cequel::Model::Persistence do
         connection.should_receive(:execute).
           with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
 
-        Post.create(1, :title => 'Cequel')
+        Post.create(:id => 1, :title => 'Cequel')
       end
 
       it 'should return post instance and mark it as persisted' do
         connection.stub(:execute).
           with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
 
-        Post.create(1, :title => 'Cequel').should be_persisted
+        Post.create(:id => 1, :title => 'Cequel').should be_persisted
       end
     end
   end

@@ -14,8 +14,8 @@ module Cequel
 
       module ClassMethods
 
-        def create!(key, attributes = {})
-          instance = new(key, attributes)
+        def create!(attributes = {})
+          instance = new(attributes)
           instance.save!
         end
 

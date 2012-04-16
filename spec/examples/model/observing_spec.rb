@@ -38,7 +38,7 @@ describe Cequel::Model::Observing do
     let(:post) do
       connection.stub(:execute).
         with "INSERT INTO posts (id, title) VALUES (1, 'Hey')"
-      Post.new(1, :title => 'Hey')
+      Post.new(:id => 1, :title => 'Hey')
     end
 
     before { post.save }

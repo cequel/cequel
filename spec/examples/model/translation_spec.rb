@@ -16,7 +16,7 @@ describe Cequel::Model::Translation do
   end
 
   it 'should translate error messages' do
-    post = Post.new(1, :require_title => true)
+    post = Post.new(:id => 1, :require_title => true)
     post.valid?
     post.errors.full_messages.should include("Post title is a required field")
   end

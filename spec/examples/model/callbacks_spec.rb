@@ -9,7 +9,7 @@ describe Cequel::Model::Callbacks do
   end
 
   context 'on create' do
-    let(:post) { Post.new(1) }
+    let(:post) { Post.new(:id => 1) }
 
     before do
       post.save
