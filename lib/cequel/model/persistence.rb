@@ -37,8 +37,11 @@ module Cequel
 
         def _hydrate(row)
           unless row.length == 1
-            if row[:type] then clazz = row[:type].constantize
-            else clazz = self
+            type_column_name = @_cequel.type_column.try(:name)
+            if type_column_name && row[type_column_name]
+              clazz = row[type_column_name].constantize
+            else
+              clazz = self
             end
             clazz.new._hydrate(row.except(:type))
           end

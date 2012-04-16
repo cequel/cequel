@@ -57,11 +57,15 @@ module Cequel
     end
 
     def self.keyspace
-      @keyspace
+      @keyspace ||= Cequel.connect(@configuration)
     end
 
     def self.keyspace=(keyspace)
       @keyspace = keyspace
+    end
+
+    def self.configure(configuration)
+      @configuration = configuration
     end
 
     def initialize

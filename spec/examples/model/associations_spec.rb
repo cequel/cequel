@@ -65,7 +65,7 @@ describe Cequel::Model::Associations do
 
     before do
       connection.stub(:execute).
-        with("SELECT * FROM assets WHERE type = 'Photo' AND post_id = 1 LIMIT 1").
+        with("SELECT * FROM assets WHERE class_name = 'Photo' AND post_id = 1 LIMIT 1").
         and_return result_stub(
           {:id => 1, :type => 'Photo', :url => 'http://outofti.me/glamour.jpg'},
         )

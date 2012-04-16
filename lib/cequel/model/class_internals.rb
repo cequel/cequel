@@ -20,7 +20,7 @@ module Cequel
       end
 
       def type_column
-        @columns[:type]
+        @columns[:class_name]
       end
 
       def column_family_name
