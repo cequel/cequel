@@ -60,6 +60,10 @@ module Cequel
         end
       end
 
+      def ==(other)
+        to_a == other.to_a
+      end
+
       def consistency(consistency)
         scoped(@data_set.consistency(consistency))
       end
@@ -85,6 +89,8 @@ module Cequel
           @clazz.with_scope(self) do
             @clazz.__send__(method, *args, &block)
           end
+        else
+          super
         end
       end
 
