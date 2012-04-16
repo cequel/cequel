@@ -55,4 +55,10 @@ describe Cequel::Model::Properties do
     Post.new(:id => 1, :title => 'Cequel').title.should == 'Cequel'
   end
 
+  it 'should use key to compare equality' do
+    Post.new(:id => 1).should == Post.new(:id => 1)
+    Post.new(:id => 1).should_not == Post.new(:id => 2)
+    Post.new(:id => 1).should_not == Blog.new(:id => 1)
+  end
+
 end

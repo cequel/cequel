@@ -85,6 +85,13 @@ module Cequel
         end
       end
 
+      def ==(other)
+        return false if self.class != other.class
+        self_key = self.__send__(self.class.key_column.name)
+        other_key = other.__send__(self.class.key_column.name)
+        self_key && other_key && self_key == other_key
+      end
+
       private
 
       def write_attribute(column_name, value)
