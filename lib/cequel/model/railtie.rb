@@ -11,7 +11,7 @@ module Cequel
 
         if File.exist?(config_path)
           yaml = YAML.load_file(config_path)[Rails.env]
-          Cequel::Model.configure(yaml) if yaml
+          Cequel::Model.configure(yaml.symbolize_keys) if yaml
         end
       end
 
