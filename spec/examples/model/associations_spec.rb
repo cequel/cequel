@@ -38,11 +38,6 @@ describe Cequel::Model::Associations do
       post.blog.name.should == 'Another Blog'
     end
 
-    it 'should provide setter for association' do
-      post.blog = Blog.new(:id => 3, :name => 'This blog')
-      post.blog_id.should == 3
-    end
-
   end
 
   describe '::has_many' do
