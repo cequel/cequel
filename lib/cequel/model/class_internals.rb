@@ -15,8 +15,8 @@ module Cequel
         @columns, @associations = {}, {}
       end
 
-      def add_column(name, type)
-        @columns[name] = Column.new(name, type)
+      def add_column(name, type, options = {})
+        @columns[name] = Column.new(name, type, options)
       end
 
       def type_column

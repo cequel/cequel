@@ -2,7 +2,7 @@ class Post
 
   include Cequel::Model
 
-  key :id, :integer
+  key :id, :int
   column :title, :varchar
   column :body, :varchar
   column :published, :boolean

@@ -12,6 +12,15 @@ describe Cequel::Model::Persistence do
       post.title.should == 'Cequel'
     end
 
+    it 'should not set defaults when hydrating instance' do
+      connection.stub(:execute).
+        with("SELECT id, name FROM blogs WHERE id = 2 LIMIT 1").
+        and_return result_stub(:id => 1, :title => 'Big Data')
+
+      blog = Blog.select(:id, :name).find(2)
+      blog.published.should be_nil
+    end
+
     it 'should return multiple instances' do
       connection.stub(:execute).
         with("SELECT * FROM posts WHERE id IN (2, 5)").

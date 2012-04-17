@@ -13,7 +13,7 @@ module Cequel
 
       module ClassMethods
 
-        def column(name, type)
+        def column(name, type, options = {})
           define_attribute_method(name)
           super
         end
@@ -25,6 +25,10 @@ module Cequel
           @previously_changed = changes
           changed_attributes.clear
         end
+      end
+
+      def _hydrate(row)
+        super.tap { changed_attributes.clear }
       end
 
       private

@@ -40,7 +40,7 @@ describe Cequel::Model::Properties do
 
   it 'should expose column objects on class' do
     Post.columns[0..1].map { |col| [col.name, col.type] }.
-      should == [[:id, :integer], [:title, :varchar]]
+      should == [[:id, :int], [:title, :varchar]]
   end
 
   it 'should expose #attributes' do
@@ -62,6 +62,10 @@ describe Cequel::Model::Properties do
 
   it 'should set attributes from constructor' do
     Post.new(:id => 1, :title => 'Cequel').title.should == 'Cequel'
+  end
+
+  it 'should set default column values for new instances' do
+    Blog.new.published.should == true
   end
 
   it 'should use key to compare equality' do

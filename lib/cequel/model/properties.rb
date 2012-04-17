@@ -31,9 +31,9 @@ module Cequel
           RUBY
         end
 
-        def column(name, type)
+        def column(name, type, options = {})
           name = name.to_sym
-          @_cequel.add_column(name, type)
+          @_cequel.add_column(name, type, options.symbolize_keys)
 
           module_eval <<-RUBY, __FILE__, __LINE__+1
             def #{name}
@@ -78,6 +78,9 @@ module Cequel
 
       def initialize(attributes = {})
         super()
+        self.class.columns.each do |column|
+          write_attribute(column.name, column.default)
+        end
         self.attributes = attributes
         yield self if block_given?
       end
