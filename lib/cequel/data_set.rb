@@ -181,7 +181,8 @@ module Cequel
     # @return [Hash] the first row in this data set
     #
     def first
-      @keyspace.execute(limit(1).cql).fetch_row.try(:with_indifferent_access)
+      row = @keyspace.execute(limit(1).cql).fetch_row
+      row.to_hash.with_indifferent_access if row
     rescue EmptySubquery
       nil
     end
