@@ -5,6 +5,7 @@ class Post
   key :id, :integer
   column :title, :varchar
   column :body, :varchar
+  column :published, :boolean
 
   before_save :record_save_callback
   before_create :record_create_callback

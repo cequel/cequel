@@ -44,6 +44,14 @@ module Cequel
               write_attribute(#{name.inspect}, value)
             end
           RUBY
+
+          if type == :boolean
+            module_eval <<-RUBY, __FILE__, __LINE__+1 if type == :boolean
+              def #{name}?
+                !!read_attribute(#{name.inspect})
+              end
+            RUBY
+          end
         end
 
         def key_alias

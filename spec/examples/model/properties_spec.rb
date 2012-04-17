@@ -25,6 +25,15 @@ describe Cequel::Model::Properties do
     post.title.should == 'Object/row mapping'
   end
 
+  it 'should have ? accessor for boolean column' do
+    post.published = true
+    post.published?.should be_true
+  end
+
+  it 'should not have ? accessor for non-boolean column' do
+    expect { post.title? }.to raise_error(NoMethodError)
+  end
+
   it 'should expose column names on class' do
     Post.column_names[0..1].should == [:id, :title]
   end
