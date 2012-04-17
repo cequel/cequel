@@ -29,6 +29,14 @@ module Cequel
               end
             end
 
+            def #{name}=(instance)
+              @_cequel.associations[#{name.inspect}] = instance
+              write_attribute(
+                #{association.foreign_key_name.inspect},
+                instance.__send__(instance.class.key_alias)
+              )
+            end
+
             def #{association.foreign_key_name}=(key)
               @_cequel.associations.delete(#{name.inspect})
               write_attribute(#{association.foreign_key_name.inspect}, key)
