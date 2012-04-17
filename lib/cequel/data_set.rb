@@ -224,8 +224,6 @@ module Cequel
       cql == other.cql
     end
 
-    protected
-
     attr_reader :select_columns, :row_specifications
     attr_writer :consistency, :limit
 

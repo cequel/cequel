@@ -30,6 +30,22 @@ module Cequel
         @data_set.count
       end
 
+      def update_all(changes)
+        key_alias = @clazz.key_alias
+        if @data_set.row_specifications.length == 0
+          return @data_set.update(changes)
+        end
+        if @data_set.row_specifications.length == 1
+          specification = @data_set.row_specifications.first
+          if specification.respond_to?(:column)
+            if specification.column == key_alias
+              return @data_set.update(changes)
+            end
+          end
+        end
+        @clazz.where(key_alias => @data_set.select(key_alias)).update_all(changes)
+      end
+
       def find(*keys, &block)
         if block then super
         else with_scope(self) { @clazz.find(*keys) }
@@ -54,14 +70,14 @@ module Cequel
         end
       end
 
+      def ==(other)
+        to_a == other.to_a
+      end
+
       def select(*rows, &block)
         if block then super
         else scoped(@data_set.select(*rows))
         end
-      end
-
-      def ==(other)
-        to_a == other.to_a
       end
 
       def consistency(consistency)

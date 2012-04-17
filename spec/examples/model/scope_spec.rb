@@ -268,4 +268,42 @@ describe Cequel::Model::Scope do
 
   end
 
+  describe '#update_all' do
+    context 'with no scope restrictions' do
+      let(:scope) { Post }
+
+      it 'should issue global update request' do
+        connection.should_receive(:execute).
+          with "UPDATE posts SET title = 'Cequel'"
+        scope.update_all(:title => 'Cequel')
+      end
+    end
+
+    context 'with scope selecting on ids' do
+      let(:scope) { Post.where(:id => [1, 2]) }
+
+      it 'should issue scoped update request' do
+        connection.should_receive(:execute).
+          with "UPDATE posts SET title = 'Cequel' WHERE id IN (1, 2)"
+        scope.update_all(:title => 'Cequel')
+      end
+
+    end
+
+    context 'with scope selecting on non-IDs' do
+      let(:scope) { Post.where(:published => false) }
+
+      it 'should perform "subquery" and issue update' do
+        connection.stub(:execute).
+          with("SELECT id FROM posts WHERE published = 'false'").
+          and_return result_stub({:id => 1}, {:id => 2})
+
+        connection.should_receive(:execute).
+          with "UPDATE posts SET title = 'Cequel' WHERE id IN (1, 2)"
+
+        scope.update_all(:title => 'Cequel')
+      end
+    end
+  end
+
 end

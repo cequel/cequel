@@ -8,6 +8,8 @@ module Cequel
 
       module ClassMethods
 
+        delegate :update_all, :to => :all
+
         def find(*keys)
           coerce_array = keys.first.is_a?(Array)
           keys.flatten!

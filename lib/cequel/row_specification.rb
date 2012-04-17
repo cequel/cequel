@@ -11,6 +11,8 @@ module Cequel
       column_values.map { |column, value| new(column, value) }
     end
 
+    attr_reader :column
+
     def initialize(column, value)
       @column, @value = column, value
     end
