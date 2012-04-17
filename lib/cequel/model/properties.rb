@@ -79,7 +79,8 @@ module Cequel
       def initialize(attributes = {})
         super()
         self.class.columns.each do |column|
-          write_attribute(column.name, column.default)
+          default = column.default
+          @_cequel.attributes[column.name] = default if default
         end
         self.attributes = attributes
         yield self if block_given?
