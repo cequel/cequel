@@ -8,6 +8,7 @@ module Cequel
 
       included do
         include ActiveModel::Dirty
+        include ChangedAttributesWithIndifferentAccess
       end
 
       module ClassMethods
@@ -31,6 +32,14 @@ module Cequel
       def write_attribute(name, value)
         attribute_will_change!(name) if value != read_attribute(name)
         super
+      end
+
+    end
+
+    module ChangedAttributesWithIndifferentAccess
+
+      def changed_attributes
+        @changed_attributes ||= HashWithIndifferentAccess.new
       end
 
     end
