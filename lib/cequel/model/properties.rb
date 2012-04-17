@@ -80,7 +80,7 @@ module Cequel
         super()
         self.class.columns.each do |column|
           default = column.default
-          @_cequel.attributes[column.name] = default if default
+          @_cequel.attributes[column.name] = default unless default.nil?
         end
         self.attributes = attributes
         yield self if block_given?
