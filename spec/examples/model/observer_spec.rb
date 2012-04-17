@@ -1,8 +1,8 @@
 require File.expand_path('../spec_helper', __FILE__)
 
-describe Cequel::Model::Observing do
+describe Cequel::Model::Observer do
   before do
-    Cequel::Model.observers = [:post_observer]
+    Cequel::Model.observers = [:post_observer, :asset_observer]
     Cequel::Model.instantiate_observers
   end
 
@@ -73,5 +73,14 @@ describe Cequel::Model::Observing do
     end
 
     it_should_behave_like 'observing callbacks', :before_validation, :after_validation
+  end
+
+  context 'with inheritence' do
+    it 'should observe subclass' do
+      connection.stub(:execute).
+        with("INSERT INTO assets (id, label, class_name) VALUES (1, 'Cequel', 'Photo')")
+      photo = Photo.create!(:id => 1, :label => 'Cequel')
+      photo.should have_observed(:before_save)
+    end
   end
 end

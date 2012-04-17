@@ -1,4 +1,4 @@
-class PostObserver < ActiveModel::Observer
+class PostObserver < Cequel::Model::Observer
 
   def before_create(post)
     post.observed!(:before_create)

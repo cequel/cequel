@@ -8,7 +8,6 @@ module Cequel
 
       included do
         include ActiveModel::Validations
-        define_model_callbacks :validation
         alias_method_chain :valid?, :callbacks # XXX is there no better way?
       end
 

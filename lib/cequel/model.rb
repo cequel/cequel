@@ -12,7 +12,7 @@ require 'cequel/model/instance_internals'
 require 'cequel/model/local_association'
 require 'cequel/model/mass_assignment_security'
 require 'cequel/model/naming'
-require 'cequel/model/observing'
+require 'cequel/model/observer'
 require 'cequel/model/persistence'
 require 'cequel/model/properties'
 require 'cequel/model/remote_association'
@@ -34,6 +34,7 @@ module Cequel
   module Model
 
     extend ActiveSupport::Concern
+    extend ActiveModel::Observing::ClassMethods
 
     included do
       @_cequel = ClassInternals.new(self)
@@ -44,7 +45,7 @@ module Cequel
       include Naming
       include Callbacks
       include Validations
-      include Observing
+      include ActiveModel::Observing
       include Dirty
       include MassAssignmentSecurity
       include Associations

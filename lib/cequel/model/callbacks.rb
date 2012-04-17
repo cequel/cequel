@@ -6,9 +6,13 @@ module Cequel
 
       extend ActiveSupport::Concern
 
+      HOOKS = [:save, :create, :update, :destroy, :validation]
+      CALLBACKS = HOOKS.map { |hook| [:"before_#{hook}", :"after_#{hook}"] }.
+        flatten
+
       included do
         extend ActiveModel::Callbacks
-        define_model_callbacks :save, :create, :update, :destroy
+        define_model_callbacks *HOOKS
       end
 
       def save(*args)

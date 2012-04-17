@@ -24,6 +24,7 @@ module Cequel
       end
 
       def inherited(subclass)
+        super
         unless @_cequel.type_column
           raise ArgumentError,
             "Can't subclass model class that does not define a type column"
