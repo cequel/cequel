@@ -5,7 +5,8 @@ module Cequel
     class SubclassInternals < ClassInternals
 
       def initialize(clazz, super_internals)
-        @clazz, @super = clazz, super_internals
+        super(clazz)
+        @super = super_internals
         @columns = {}
       end
 
@@ -27,6 +28,10 @@ module Cequel
 
       def base_class
         @super.base_class
+      end
+
+      def association(name)
+        super || @super.association(name)
       end
 
     end

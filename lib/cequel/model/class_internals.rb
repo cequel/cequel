@@ -31,6 +31,10 @@ module Cequel
         @clazz
       end
 
+      def association(name)
+        @associations[name]
+      end
+
     end
 
   end

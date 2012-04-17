@@ -61,7 +61,7 @@ module Cequel
         end
 
         def reflect_on_association(name)
-          @_cequel.associations[name.to_sym]
+          @_cequel.association(name.to_sym)
         end
 
       end
