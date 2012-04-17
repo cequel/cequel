@@ -76,6 +76,11 @@ module Cequel
         persisted? ? update : insert
       end
 
+      def update_attributes(attributes)
+        self.attributes = attributes
+        save
+      end
+
       def insert
         raise MissingKey if @_cequel.key.nil?
         return if @_cequel.attributes.empty?

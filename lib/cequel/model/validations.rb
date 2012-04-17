@@ -34,6 +34,11 @@ module Cequel
         self
       end
 
+      def update_attributes!(*args)
+        raise RecordInvalid unless update_attributes(*args)
+        self
+      end
+
       def valid_with_callbacks?
         run_callbacks(:validation) { valid_without_callbacks? }
       end

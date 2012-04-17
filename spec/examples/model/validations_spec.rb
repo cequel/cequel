@@ -40,6 +40,26 @@ describe Cequel::Model::Validations do
     end
   end
 
+  describe '#update_attributes!' do
+    let(:post) do
+      connection.stub(:execute).with("SELECT * FROM posts WHERE id = 1 LIMIT 1").
+        and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
+      Post.find(1)
+    end
+
+    it 'should change attributes and save them if valid' do
+      connection.should_receive(:execute).
+        with "UPDATE posts SET body = 'Cequel cequel' WHERE id = 1"
+      post.update_attributes!(:body => 'Cequel cequel')
+    end
+
+    it 'should raise error if not valid' do
+      post.require_title = true
+      expect { post.update_attributes!(:title => nil) }.
+        to raise_error(Cequel::Model::RecordInvalid)
+    end
+  end
+
   describe '::create!' do
     it 'should raise RecordInvalid and not persist model if invalid' do
       expect do

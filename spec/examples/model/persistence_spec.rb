@@ -125,36 +125,50 @@ describe Cequel::Model::Persistence do
         post.should_not be_persisted
       end
     end
+  end
 
-    describe '#destroy' do
-      let(:post) do
-        connection.stub(:execute).with("SELECT * FROM posts WHERE id = 1 LIMIT 1").
-          and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
-        Post.find(1)
-      end
-
-      it 'should delete all columns from column family' do
-        connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id = 1"
-
-        post.destroy
-      end
+  describe '#update_attributes' do
+    let(:post) do
+      connection.stub(:execute).with("SELECT * FROM posts WHERE id = 1 LIMIT 1").
+        and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
+      Post.find(1)
     end
 
-    describe '::create' do
-      it 'should persist only columns with values' do
-        connection.should_receive(:execute).
-          with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+    it 'should change attributes and save them' do
+      connection.should_receive(:execute).
+        with "UPDATE posts SET body = 'Cequel cequel' WHERE id = 1"
+      post.update_attributes(:body => 'Cequel cequel')
+    end
+  end
 
-        Post.create(:id => 1, :title => 'Cequel')
-      end
+  describe '#destroy' do
+    let(:post) do
+      connection.stub(:execute).with("SELECT * FROM posts WHERE id = 1 LIMIT 1").
+        and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
+      Post.find(1)
+    end
 
-      it 'should return post instance and mark it as persisted' do
-        connection.stub(:execute).
-          with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+    it 'should delete all columns from column family' do
+      connection.should_receive(:execute).
+        with "DELETE FROM posts WHERE id = 1"
 
-        Post.create(:id => 1, :title => 'Cequel').should be_persisted
-      end
+      post.destroy
+    end
+  end
+
+  describe '::create' do
+    it 'should persist only columns with values' do
+      connection.should_receive(:execute).
+        with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+
+      Post.create(:id => 1, :title => 'Cequel')
+    end
+
+    it 'should return post instance and mark it as persisted' do
+      connection.stub(:execute).
+        with("INSERT INTO posts (id, title) VALUES (1, 'Cequel')")
+
+      Post.create(:id => 1, :title => 'Cequel').should be_persisted
     end
   end
 end
