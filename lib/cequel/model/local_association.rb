@@ -9,6 +9,7 @@ module Cequel
       def initialize(name, owning_class, options)
         @name, @owning_class = name, owning_class
         @class_name = options[:class_name] || name.to_s.classify.to_sym
+        @foreign_key_name = options[:foreign_key]
       end
 
       def primary_key
