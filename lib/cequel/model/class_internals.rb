@@ -13,6 +13,7 @@ module Cequel
       def initialize(clazz)
         @clazz = clazz
         @columns, @associations = {}, {}
+        @lock = Monitor.new
       end
 
       def add_column(name, type, options = {})
@@ -33,6 +34,10 @@ module Cequel
 
       def association(name)
         @associations[name]
+      end
+
+      def synchronize(&block)
+        @lock.synchronize(&block)
       end
 
     end

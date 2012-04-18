@@ -6,10 +6,6 @@ module Cequel
 
       extend ActiveSupport::Concern
 
-      included do
-        extend MonitorMixin
-      end
-
       module ClassMethods
         delegate :consistency, :count, :first, :limit, :select, :where,
           :to => :all
@@ -23,7 +19,7 @@ module Cequel
         end
 
         def with_scope(scope)
-          synchronize do
+          @_cequel.synchronize do
             old_scope = @_cequel.current_scope
             begin
               @_cequel.current_scope = scope
