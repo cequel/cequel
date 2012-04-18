@@ -168,6 +168,13 @@ describe Cequel::DataSet do
     end
   end
 
+  describe '#select!' do
+    it 'should generate select statement with given columns' do
+      cequel[:posts].select(:id, :title).select!(:published).cql.
+        should == 'SELECT published FROM posts'
+    end
+  end
+
   describe '#where' do
     it 'should build WHERE statement from hash' do
       cequel[:posts].where(:title => 'Hey').cql.
@@ -225,6 +232,13 @@ describe Cequel::DataSet do
       end.to raise_error(Cequel::EmptySubquery)
     end
 
+  end
+
+  describe '#where!' do
+    it 'should override chained conditions' do
+      cequel[:posts].where(:title => 'Hey').where!(:title => 'Cequel').cql.
+        should == "SELECT * FROM posts WHERE title = 'Cequel'"
+    end
   end
 
   describe '#consistency' do

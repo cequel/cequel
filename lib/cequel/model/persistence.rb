@@ -52,14 +52,14 @@ module Cequel
         private
         
         def find_one(key)
-          all.where(key_alias => key).first.tap do |result|
+          all.where!(key_alias => key).first.tap do |result|
             raise RecordNotFound,
               "Couldn't find #{name} with #{key_alias}=#{key}" if result.nil?
           end
         end
 
         def find_many(keys)
-          results = all.where(key_alias => keys).to_a
+          results = all.where!(key_alias => keys).to_a
           results.compact!
 
           if results.length < keys.length

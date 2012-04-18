@@ -51,12 +51,12 @@ describe Cequel::Model::Magic do
 
     it 'should create new record from args' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id = 1 AND published = 'true' LIMIT 1").
+        with("SELECT * FROM blogs WHERE id = 1 LIMIT 1").
         and_return result_stub
       connection.should_receive(:execute).
-        with("INSERT INTO posts (id, published) VALUES (1, 'true')")
+        with("INSERT INTO blogs (id, published) VALUES (1, 'true')")
 
-      Post.find_or_create_by_id_and_published(1, true).id.should == 1
+      Blog.find_or_create_by_id(1).id.should == 1
     end
 
     it 'should look up record from attributes' do

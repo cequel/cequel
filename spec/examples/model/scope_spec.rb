@@ -214,6 +214,16 @@ describe Cequel::Model::Scope do
     end
   end
 
+  describe '#select!' do
+    it 'should override previous columns in data set' do
+      connection.stub(:execute).with("SELECT id, published FROM posts").
+        and_return result_stub(:id => 1, :published => true)
+
+      Post.select(:id, :title).select!(:id, :published).
+        map { |post| post.published }.should == [true]
+    end
+  end
+
   describe '#consistency' do
     it 'should scope consistency in data set' do
       connection.stub(:execute).with("SELECT * FROM posts USING CONSISTENCY QUORUM").
@@ -229,6 +239,26 @@ describe Cequel::Model::Scope do
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.where(:id => 1).map { |post| post.title }.should == ['Cequel']
+    end
+
+    it 'should fail fast if attempting to perform IN query on non-key column' do
+      expect { Post.where(:title => %w(Cequel Fun)) }.
+        to raise_error(Cequel::Model::InvalidQuery)
+    end
+
+    it 'should fail fast if attempting to mix key and non-key columns' do
+      expect { Post.where(:id => 1).where(:title => 'Cequel') }.
+        to raise_error(Cequel::Model::InvalidQuery)
+    end
+  end
+
+  describe '#where!' do
+    it 'should override previously chained row specifications' do
+      connection.stub(:execute).with("SELECT * FROM posts WHERE title = 'Cequel'").
+        and_return result_stub(:id => 1, :title => 'Cequel')
+
+      Post.where(:id => 1).where!(:title => 'Cequel').
+        map { |post| post.title }.should == ['Cequel']
     end
   end
 

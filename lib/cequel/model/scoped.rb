@@ -11,7 +11,7 @@ module Cequel
           :to => :all
 
         def all
-          @_cequel.current_scope || Scope.new(self, column_family)
+          @_cequel.current_scope || empty_scope
         end
 
         def select(*rows)
@@ -28,6 +28,12 @@ module Cequel
               @_cequel.current_scope = old_scope
             end
           end
+        end
+
+        private
+
+        def empty_scope
+          Scope.new(self, column_family)
         end
 
       end

@@ -80,12 +80,20 @@ module Cequel
         end
       end
 
+      def select!(*rows)
+        scoped(@data_set.select!(*rows))
+      end
+
       def consistency(consistency)
         scoped(@data_set.consistency(consistency))
       end
 
       def where(*row_specification)
-        scoped(@data_set.where(*row_specification))
+        scoped(@data_set.where(*row_specification)).validate!
+      end
+
+      def where!(*row_specification)
+        scoped(@data_set.where!(*row_specification)).validate!
       end
 
       def limit(*row_specification)
@@ -108,6 +116,31 @@ module Cequel
         else
           super
         end
+      end
+
+      protected
+
+      def validate!
+        key_column = false
+        non_key_column = false
+        @data_set.row_specifications.each do |specification|
+          if specification.respond_to?(:column)
+            if specification.column == @clazz.key_alias
+              key_column = true
+            else
+              non_key_column = true
+              if ::Array === specification.value
+                ::Kernel.raise InvalidQuery,
+                  "Can't select for multiple values on non-key column"
+              end
+            end
+          end
+        end
+        if key_column && non_key_column
+          ::Kernel.raise InvalidQuery,
+            "Can't select by key and non-key columns in the same query"
+        end
+        self
       end
 
     end

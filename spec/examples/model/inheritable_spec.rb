@@ -31,7 +31,7 @@ describe Cequel::Model::Inheritable do
 
   it 'should query correct column family when querying subclass' do
     connection.stub(:execute).
-      with("SELECT * FROM assets WHERE class_name = 'Photo' AND id = 1 LIMIT 1").
+      with("SELECT * FROM assets WHERE id = 1 LIMIT 1").
       and_return result_stub(:id => 1, :label => 'Cequel')
     Photo.find(1)
   end

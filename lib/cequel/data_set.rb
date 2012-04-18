@@ -110,6 +110,18 @@ module Cequel
     end
 
     #
+    # Select specified columns from this data set, overriding chained scope.
+    #
+    # @param *columns [Symbol,Array] columns to select
+    # @return [DataSet] new data set scoped to specified columns
+    #
+    def select!(*columns)
+      clone.tap do |data_set|
+        data_set.select_columns.replace(columns.flatten)
+      end
+    end
+
+    #
     # Add consistency option for data set retrieval
     #
     # @param consistency [:one,:quorum,:local_quorum,:each_quorum]
@@ -136,13 +148,15 @@ module Cequel
     #
     def where(row_specification, *bind_vars)
       clone.tap do |data_set|
-        data_set.row_specifications.concat(
-          case row_specification
-          when Hash then RowSpecification.build(row_specification)
-          when String then CqlRowSpecification.build(row_specification, bind_vars)
-          else raise ArgumentError, "Invalid argument #{row_specification.inspect}; expected Hash or String"
-          end
-        )
+        data_set.row_specifications.
+          concat(build_row_specifications(row_specification, bind_vars))
+      end
+    end
+
+    def where!(row_specification, *bind_vars)
+      clone.tap do |data_set|
+        data_set.row_specifications.
+          replace(build_row_specifications(row_specification, bind_vars))
       end
     end
 
@@ -285,6 +299,14 @@ module Cequel
 
     def limit_cql
       @limit ? " LIMIT #{@limit}" : ''
+    end
+
+    def build_row_specifications(row_specification, bind_vars)
+      case row_specification
+      when Hash then RowSpecification.build(row_specification)
+      when String then CqlRowSpecification.build(row_specification, bind_vars)
+      else raise ArgumentError, "Invalid argument #{row_specification.inspect}; expected Hash or String"
+      end
     end
 
   end

@@ -6,6 +6,7 @@ module Cequel
     RecordNotFound = Class.new(Error)
     RecordInvalid = Class.new(Error)
     MissingKey = Class.new(Error)
+    InvalidQuery = Class.new(Error)
 
   end
 
