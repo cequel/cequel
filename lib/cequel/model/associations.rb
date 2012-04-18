@@ -79,8 +79,8 @@ module Cequel
       end
 
       def destroy(*args)
-        super
         destroy_associated
+        super
       end
 
       private
