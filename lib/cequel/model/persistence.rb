@@ -21,8 +21,8 @@ module Cequel
           end
         end
 
-        def create(attributes = {})
-          new(attributes).tap { |instance| instance.save }
+        def create(attributes = {}, &block)
+          new(attributes, &block).tap { |instance| instance.save }
         end
 
         def column_family_name

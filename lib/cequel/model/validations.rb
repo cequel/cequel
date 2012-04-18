@@ -13,8 +13,8 @@ module Cequel
 
       module ClassMethods
 
-        def create!(attributes = {})
-          instance = new(attributes)
+        def create!(attributes = {}, &block)
+          instance = new(attributes, &block)
           instance.save!
         end
 
@@ -30,12 +30,12 @@ module Cequel
       end
 
       def save!(*args)
-        raise RecordInvalid unless save
+        raise RecordInvalid, errors.full_messages.join("; ") unless save
         self
       end
 
       def update_attributes!(*args)
-        raise RecordInvalid unless update_attributes(*args)
+        raise RecordInvalid, errors.full_messages.join("; ") unless update_attributes(*args)
         self
       end
 

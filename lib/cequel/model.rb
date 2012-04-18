@@ -11,6 +11,7 @@ require 'cequel/model/inheritable'
 require 'cequel/model/instance_internals'
 require 'cequel/model/local_association'
 require 'cequel/model/mass_assignment_security'
+require 'cequel/model/magic'
 require 'cequel/model/naming'
 require 'cequel/model/observer'
 require 'cequel/model/persistence'
@@ -50,6 +51,7 @@ module Cequel
       include MassAssignmentSecurity
       include Associations
       extend Inheritable
+      extend Magic
 
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml
