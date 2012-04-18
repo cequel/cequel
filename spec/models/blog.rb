@@ -6,6 +6,6 @@ class Blog
   column :name, :varchar
   column :published, :boolean, :default => true
 
-  has_many :posts
+  has_many :posts, :dependent => :destroy
 
 end

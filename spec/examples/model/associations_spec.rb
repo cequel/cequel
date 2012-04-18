@@ -63,6 +63,13 @@ describe Cequel::Model::Associations do
       blog.posts.map { |post| post.title }.should ==
         ['Cequel', 'Cequel revisited']
     end
+
+    it 'should destroy associated instances if :dependent => :destroy' do
+      connection.stub(:execute).with 'DELETE FROM blogs WHERE id = 2'
+      connection.should_receive(:execute).with 'DELETE FROM posts WHERE id = 1'
+      connection.should_receive(:execute).with 'DELETE FROM posts WHERE id = 2'
+      blog.destroy
+    end
   end
 
   describe '::has_one' do

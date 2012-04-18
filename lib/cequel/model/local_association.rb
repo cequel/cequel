@@ -31,6 +31,9 @@ module Cequel
       def clazz
         @clazz ||= @class_name.to_s.constantize
       end
+
+      def dependent
+      end
     
     end
 

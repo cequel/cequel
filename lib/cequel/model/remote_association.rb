@@ -4,12 +4,13 @@ module Cequel
 
     class RemoteAssociation
 
-      attr_reader :name, :class_name
+      attr_reader :name, :class_name, :dependent
 
       def initialize(name, owning_class, options)
         @name, @owning_class = name, owning_class
         @class_name = options[:class_name] || name.to_s.classify.to_sym
         @foreign_key_name = options[:foreign_key]
+        @dependent = options[:dependent]
       end
 
       def scope(instance)

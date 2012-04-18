@@ -72,6 +72,27 @@ module Cequel
           @_cequel.association(name.to_sym)
         end
 
+        def reflect_on_associations
+          @_cequel.associations.values
+        end
+
+      end
+
+      def destroy(*args)
+        super
+        destroy_associated
+      end
+
+      private
+
+      def destroy_associated
+        self.class.reflect_on_associations.each do |association|
+          if association.dependent == :destroy
+            association.scope(self).each do |associated|
+              associated.destroy
+            end
+          end
+        end
       end
 
     end
