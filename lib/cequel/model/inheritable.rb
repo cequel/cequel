@@ -33,6 +33,10 @@ module Cequel
         subclass.module_eval { include(SubclassMethods) }
       end
 
+      def base_class
+        @_cequel.base_class
+      end
+
       protected
 
       attr_writer :_cequel

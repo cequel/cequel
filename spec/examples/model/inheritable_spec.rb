@@ -9,6 +9,14 @@ describe Cequel::Model::Inheritable do
     Photo.column_names.should == [:id, :class_name, :label, :url]
   end
 
+  it 'should return ::base_class for base class' do
+    Asset.base_class.should == Asset
+  end
+
+  it 'should return ::base_class for subclass' do
+    Photo.base_class.should == Asset
+  end
+
   it 'should not allow overriding a class without a type column' do
     base = Class.new do
       include Cequel::Model
