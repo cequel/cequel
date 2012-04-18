@@ -109,6 +109,7 @@ module Cequel
       def _hydrate(row)
         tap do
           key_alias = self.class.key_alias.to_s
+          key_alias = 'KEY' if key_alias.upcase == 'KEY'
           @_cequel.key = row[key_alias]
           @_cequel.attributes = row.except(key_alias)
           persisted!
