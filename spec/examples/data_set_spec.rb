@@ -191,6 +191,11 @@ describe Cequel::DataSet do
         should == 'SELECT * FROM posts WHERE id IN (1, 2, 3, 4)'
     end
 
+    it 'should use = if provided one-element array' do
+      cequel[:posts].where(:id => [1]).cql.
+        should == 'SELECT * FROM posts WHERE id = 1'
+    end
+
     it 'should build WHERE statement from CQL string' do
       cequel[:posts].where("title = 'Hey'").cql.
         should == "SELECT * FROM posts WHERE title = 'Hey'"

@@ -22,10 +22,14 @@ module Cequel
       when DataSet
         subquery_cql
       when Array
-        sanitize(
-          "#{@column} IN (#{Array.new(@value.length) { '?' }.join(', ')})",
-          *@value
-        )
+        if @value.length == 1
+          sanitize("#{@column} = ?", @value.first)
+        else
+          sanitize(
+            "#{@column} IN (#{Array.new(@value.length) { '?' }.join(', ')})",
+            *@value
+          )
+        end
       else
         sanitize("#{@column} = ?", @value)
       end
