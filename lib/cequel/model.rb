@@ -20,6 +20,7 @@ require 'cequel/model/remote_association'
 require 'cequel/model/scope'
 require 'cequel/model/scoped'
 require 'cequel/model/subclass_internals'
+require 'cequel/model/timestamps'
 require 'cequel/model/translation'
 require 'cequel/model/validations'
 

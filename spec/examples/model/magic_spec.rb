@@ -50,11 +50,14 @@ describe Cequel::Model::Magic do
     end
 
     it 'should create new record from args' do
+      now = Time.now
+      Time.stub!(:now).and_return now
+      timestamp = (now.to_f * 1000).to_i
       connection.stub(:execute).
         with("SELECT * FROM blogs WHERE id = 1 LIMIT 1").
         and_return result_stub
       connection.should_receive(:execute).
-        with("INSERT INTO blogs (id, published) VALUES (1, 'true')")
+        with("INSERT INTO blogs (id, published, updated_at, created_at) VALUES (1, 'true', #{timestamp}, #{timestamp})")
 
       Blog.find_or_create_by_id(1).id.should == 1
     end

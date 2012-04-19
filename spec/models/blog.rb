@@ -1,6 +1,7 @@
 class Blog
 
   include Cequel::Model
+  include Timestamps
 
   key :id, :integer
   column :name, :varchar
