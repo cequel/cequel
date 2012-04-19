@@ -57,7 +57,7 @@ describe Cequel::DataSet do
   describe '#update' do
     it 'should send basic update statement' do
       connection.should_receive(:execute).
-        with "UPDATE posts SET title = 'Fun times' AND body = 'Fun'"
+        with "UPDATE posts SET title = 'Fun times', body = 'Fun'"
 
       cequel[:posts].update(:title => 'Fun times', :body => 'Fun')
     end
@@ -66,7 +66,7 @@ describe Cequel::DataSet do
       time = Time.now - 10.minutes
 
       connection.should_receive(:execute).
-        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = 'Fun times' AND body = 'Fun'"
+        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = 'Fun times', body = 'Fun'"
 
       cequel[:posts].update(
         {:title => 'Fun times', :body => 'Fun'},

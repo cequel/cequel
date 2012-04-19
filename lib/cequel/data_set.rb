@@ -59,7 +59,7 @@ module Cequel
     def update(data, options = {})
       cql = "UPDATE #{@column_family}" <<
         generate_upsert_options(options) <<
-        " SET " << data.keys.map { |k| "#{k} = ?" }.join(' AND ') <<
+        " SET " << data.keys.map { |k| "#{k} = ?" }.join(', ') <<
         row_specifications_cql
 
       @keyspace.write(sanitize(cql, *data.values))
