@@ -109,10 +109,12 @@ module Cequel
 
       def reload
         result = data_set.first
-        if result.keys == [self.class.key_alias.to_s]
+        key_alias = self.class.key_alias
+        if result.keys == [key_alias.to_s]
           raise RecordNotFound,
-            "Couldn't find #{name} with #{key_alias}=#{key}"
+            "Couldn't find #{self.class.name} with #{key_alias}=#{@_cequel.key}"
         end
+        @_cequel = InstanceInternals.new(self)
         _hydrate(result)
         self
       end
