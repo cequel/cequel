@@ -38,29 +38,30 @@ module Cequel
         end
 
         def _hydrate(row)
-          unless row.length == 1
-            type_column_name = @_cequel.type_column.try(:name)
-            if type_column_name && row[type_column_name]
-              clazz = row[type_column_name].constantize
-            else
-              clazz = self
-            end
-            clazz.new._hydrate(row.except(:type))
+          type_column_name = @_cequel.type_column.try(:name)
+          if type_column_name && row[type_column_name]
+            clazz = row[type_column_name].constantize
+          else
+            clazz = self
           end
+          clazz.new._hydrate(row.except(:type))
         end
 
         private
         
         def find_one(key)
           all.where!(key_alias => key).first.tap do |result|
-            raise RecordNotFound,
-              "Couldn't find #{name} with #{key_alias}=#{key}" if result.nil?
+            if result.attributes.keys == [key_alias.to_s]
+              raise RecordNotFound,
+                "Couldn't find #{name} with #{key_alias}=#{key}"
+            end
           end
         end
 
         def find_many(keys)
-          results = all.where!(key_alias => keys).to_a
-          results.compact!
+          results = all.where!(key_alias => keys).reject do |result|
+            result.attributes.keys == [key_alias.to_s]
+          end
 
           if results.length < keys.length
             raise RecordNotFound,

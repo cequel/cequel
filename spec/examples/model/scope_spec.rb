@@ -10,11 +10,11 @@ describe Cequel::Model::Scope do
         should == [[1, 'Cequel']]
     end
 
-    it 'should not enumerate results for missing keys' do
-      connection.stub(:execute).with("SELECT * FROM posts"). #FIXME
+    it 'should enumerate results for just id' do
+      connection.stub(:execute).with("SELECT id FROM posts"). #FIXME
         and_return result_stub(:id => 1)
 
-      Post.all.to_a.should == []
+      Post.select(:id).to_a.map { |post| post.id }.should == [1]
     end
 
     it 'should provide enumerator if no block given' do
