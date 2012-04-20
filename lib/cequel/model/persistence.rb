@@ -107,6 +107,16 @@ module Cequel
         data_set.delete
       end
 
+      def reload
+        result = data_set.first
+        if result.keys == [self.class.key_alias.to_s]
+          raise RecordNotFound,
+            "Couldn't find #{name} with #{key_alias}=#{key}"
+        end
+        _hydrate(result)
+        self
+      end
+
       def _hydrate(row)
         tap do
           key_alias = self.class.key_alias.to_s

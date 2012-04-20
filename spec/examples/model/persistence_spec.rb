@@ -64,6 +64,24 @@ describe Cequel::Model::Persistence do
     end
   end
 
+  describe '#reload' do
+    let(:post) do
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE id = 2 LIMIT 1").
+        and_return result_stub(:id => 2, :title => 'Cequel')
+      Post.find(2)
+    end
+
+    it 'should reload attributes from Cassandra' do
+      post.title = 'Donkeys'
+      connection.should_receive(:execute).
+        with("SELECT * FROM posts WHERE id = 2 LIMIT 1").
+        and_return result_stub(:id => 2, :title => 'Cequel')
+      post.reload
+      post.title.should == 'Cequel'
+    end
+  end
+
   describe '#save' do
     describe 'with new record' do
       let(:post) { Post.new(:id => 1) }
