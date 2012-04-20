@@ -43,6 +43,12 @@ describe Cequel::Model::Associations do
       post.blog_id.should == 3
     end
 
+    it 'should set foreign key to nil if association set to nil' do
+      post.blog = Blog.new(:id => 3, :name => 'This blog')
+      post.blog = nil
+      post.blog_id.should be_nil
+    end
+
   end
 
   describe '::has_many' do

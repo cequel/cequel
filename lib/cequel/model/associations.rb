@@ -31,10 +31,12 @@ module Cequel
 
             def #{name}=(instance)
               @_cequel.associations[#{name.inspect}] = instance
-              write_attribute(
-                #{association.foreign_key_name.inspect},
-                instance.__send__(instance.class.key_alias)
-              )
+              if instance.nil?
+                key = nil
+              else
+                key = instance.__send__(instance.class.key_alias)
+              end
+              write_attribute(#{association.foreign_key_name.inspect}, key)
             end
 
             def #{association.foreign_key_name}=(key)
