@@ -4,6 +4,10 @@ module Cequel
 
     module Magic
 
+      FIND_BY_PATTERN = /^find_by_(\w+)$/
+      FIND_ALL_BY_PATTERN = /^find_all_by_(\w+)$/
+      FIND_OR_CREATE_BY_PATTERN = /^find_or_create_by_(\w+)$/
+
       def self.scope(scope, columns_string, args)
         scope.where(extract_row_specifications(columns_string, args))
       end
@@ -35,13 +39,22 @@ module Cequel
         end
       end
 
+      def respond_to?(method, priv = false)
+        case method
+        when FIND_BY_PATTERN, FIND_ALL_BY_PATTERN, FIND_OR_CREATE_BY_PATTERN
+          true
+        else
+          super
+        end
+      end
+
       def method_missing(method, *args, &block)
         case method.to_s
-        when /^find_by_(\w+)$/
+        when FIND_BY_PATTERN
           Magic.scope(all, $1, args).first
-        when /^find_all_by_(\w+)$/
+        when FIND_ALL_BY_PATTERN
           Magic.scope(all, $1, args).to_a
-        when /^find_or_create_by_(\w+)$/
+        when FIND_OR_CREATE_BY_PATTERN
           Magic.find_or_create_by(all, $1, args, &block)
         else
           super

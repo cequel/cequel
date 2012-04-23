@@ -18,6 +18,14 @@ describe Cequel::Model::Magic do
       Post.find_by_title_and_published('Cequel', true).id.should == 1
     end
 
+    it 'should magically work on scopes' do
+      connection.stub(:execute).
+        with("SELECT id FROM posts WHERE title = 'Cequel' AND published = 'true' LIMIT 1").
+        and_return result_stub(:id => 1)
+
+      Post.select(:id).find_by_title_and_published('Cequel', true).id.should == 1
+    end
+
     it 'should raise error if specified columns different from arg count' do
       expect { Post.find_by_title_and_published('Cequel') }.
         to raise_error(ArgumentError)
@@ -35,6 +43,18 @@ describe Cequel::Model::Magic do
           )
 
         Post.find_all_by_title_and_published('Cequel', true).map(&:id).
+          should == [1, 2]
+      end
+
+      it 'should magically work on scopes' do
+        connection.stub(:execute).
+          with("SELECT id FROM posts WHERE title = 'Cequel' AND published = 'true'").
+          and_return result_stub(
+            {:id => 1},
+            {:id => 2}
+          )
+
+        Post.select(:id).find_all_by_title_and_published('Cequel', true).map(&:id).
           should == [1, 2]
       end
     end
@@ -94,6 +114,15 @@ describe Cequel::Model::Magic do
       Post.find_or_create_by_title_and_published('Cequel', true) do |post|
         post.id = 2
       end.id.should == 2
+    end
+
+    it 'should work on scopes' do
+      connection.stub(:execute).
+        with("SELECT id FROM posts WHERE title = 'Cequel' AND published = 'true' LIMIT 1").
+        and_return result_stub(:id => 1)
+
+      Post.select(:id).find_or_create_by_title_and_published('Cequel', true).id.
+        should == 1
     end
   end
 end
