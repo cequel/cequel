@@ -125,4 +125,65 @@ describe Cequel::Model::Magic do
         should == 1
     end
   end
+
+  describe '::find_or_initialize_by_*' do
+    it 'should return existing record from args' do
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE title = 'Cequel' AND published = 'true' LIMIT 1").
+        and_return result_stub(:id => 1, :title => 'Cequel', :published => true)
+
+      Post.find_or_initialize_by_title_and_published('Cequel', true).id.should == 1
+    end
+
+    it 'should initialize new record from args' do
+      now = Time.now
+      Time.stub!(:now).and_return now
+      timestamp = (now.to_f * 1000).to_i
+      connection.stub(:execute).
+        with("SELECT * FROM blogs WHERE id = 1 LIMIT 1").
+        and_return result_stub
+
+      Blog.find_or_initialize_by_id(1).id.should == 1
+    end
+
+    it 'should look up record from attributes' do
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE title = 'Cequel' AND published = 'true' LIMIT 1").
+        and_return result_stub(:id => 1, :title => 'Cequel', :published => true)
+
+      Post.find_or_initialize_by_title_and_published(
+        :id => 2, :title => 'Cequel', :published => true
+      ).id.should == 1
+    end
+
+    it 'should create record from all attributes specified, including non-lookup ones' do
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE title = 'Cequel' AND published = 'true' LIMIT 1").
+        and_return result_stub
+
+      Post.find_or_initialize_by_title_and_published(
+        :id => 2, :title => 'Cequel', :published => true
+      ).id.should == 2
+    end
+
+    it 'should yield instance on initialize if block given' do
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE title = 'Cequel' AND published = 'true' LIMIT 1").
+        and_return result_stub
+
+      Post.find_or_initialize_by_title_and_published('Cequel', true) do |post|
+        post.id = 2
+      end.id.should == 2
+    end
+
+    it 'should work on scopes' do
+      connection.stub(:execute).
+        with("SELECT id FROM posts WHERE title = 'Cequel' AND published = 'true' LIMIT 1").
+        and_return result_stub(:id => 1)
+
+      Post.select(:id).find_or_initialize_by_title_and_published('Cequel', true).id.
+        should == 1
+    end
+
+  end
 end
