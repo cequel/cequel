@@ -6,15 +6,16 @@ module Cequel
 
       include ::Enumerable
 
-      def initialize(clazz, data_set)
-        @clazz, @data_set = clazz, data_set
+      def initialize(clazz, data_sets)
+        @clazz, @data_sets = clazz, data_sets
       end
 
       def each(&block)
         if block
-          @data_set.each do |row|
-            result = @clazz._hydrate(row)
-            yield result if result
+          @data_sets.each do |data_set|
+            data_set.each do |row|
+              yield(@clazz._hydrate(row))
+            end
           end
         else
           ::Enumerator.new(self, :each)
@@ -22,28 +23,38 @@ module Cequel
       end
 
       def first
-        row = @data_set.first
-        @clazz._hydrate(row) if row
+        @data_sets.each do |data_set|
+          row = data_set.first
+          return @clazz._hydrate(row) if row
+        end
+        nil
       end
 
       def count
-        @data_set.count
+        @data_sets.inject(0) { |count, data_set| count + data_set.count }
       end
 
       def update_all(changes)
-        key_alias = @clazz.key_alias
-        if @data_set.row_specifications.length == 0
-          return @data_set.update(changes)
-        end
-        if @data_set.row_specifications.length == 1
-          specification = @data_set.row_specifications.first
-          if specification.respond_to?(:column)
-            if specification.column == key_alias
-              return @data_set.update(changes)
-            end
+        if @data_sets.length == 1
+          if @data_sets.first.row_specifications.length == 0
+            return @data_sets.first.update(changes)
           end
         end
-        @clazz.where(key_alias => @data_set.select(key_alias)).update_all(changes)
+        key_alias = @clazz.key_alias
+        keys = []
+        @data_sets.each do |data_set|
+          if data_set.row_specifications.length == 1
+            specification = data_set.row_specifications.first
+            if specification.respond_to?(:column)
+              if specification.column == key_alias
+                keys.concat(::Kernel.Array(specification.value))
+                next
+              end
+            end
+          end
+          data_set.select!(key_alias).each { |row| keys << row[key_alias] }
+        end
+        @clazz.column_family.where(key_alias => keys).update(changes)
       end
 
       def find(*keys, &block)
@@ -76,32 +87,39 @@ module Cequel
 
       def select(*rows, &block)
         if block then super
-        else scoped(@data_set.select(*rows))
+        else scoped { |data_set| data_set.select(*rows) }
         end
       end
 
       def select!(*rows)
-        scoped(@data_set.select!(*rows))
+        scoped { |data_set| data_set.select!(*rows) }
       end
 
       def consistency(consistency)
-        scoped(@data_set.consistency(consistency))
+        scoped { |data_set| data_set.consistency(consistency) }
       end
 
       def where(*row_specification)
-        scoped(@data_set.where(*row_specification)).validate!
+        if row_specification.length == 1 && ::Hash === row_specification.first
+          row_specification.first.each_pair.inject(self) do |scope, (column, value)|
+            scope.where_column_equals(column, value)
+          end
+        else
+          scoped { |data_set| data_set.where(*row_specification) }
+        end
       end
 
       def where!(*row_specification)
-        scoped(@data_set.where!(*row_specification)).validate!
+        scoped { |data_set| data_set.where!(*row_specification) }
       end
 
       def limit(*row_specification)
-        scoped(@data_set.limit(*row_specification))
+        scoped { |data_set| data_set.limit(*row_specification) }
       end
 
-      def scoped(data_set)
-        Scope.new(@clazz, data_set)
+      def scoped(&block)
+        new_data_sets = @data_sets.map(&block)
+        Scope.new(@clazz, new_data_sets)
       end
 
       def nil?
@@ -123,15 +141,13 @@ module Cequel
       def validate!
         key_column = false
         non_key_column = false
-        @data_set.row_specifications.each do |specification|
-          if specification.respond_to?(:column)
-            if specification.column == @clazz.key_alias
-              key_column = true
-            else
-              non_key_column = true
-              if ::Array === specification.value
-                ::Kernel.raise InvalidQuery,
-                  "Can't select for multiple values on non-key column"
+        @data_sets.each do |data_set|
+          data_set.row_specifications.each do |specification|
+            if specification.respond_to?(:column)
+              if specification.column == @clazz.key_alias
+                key_column = true
+              else
+                non_key_column = true
               end
             end
           end
@@ -141,6 +157,22 @@ module Cequel
             "Can't select by key and non-key columns in the same query"
         end
         self
+      end
+
+      protected
+
+      def where_column_equals(column, value)
+        if column.to_sym != @clazz.key_alias && ::Array === value
+          new_data_sets = []
+          @data_sets.each do |data_set|
+            value.each do |element|
+              new_data_sets << data_set.where(column => element)
+            end
+          end
+          Scope.new(@clazz, new_data_sets)
+        else
+          scoped { |data_set| data_set.where(column => value) }
+        end.validate!
       end
 
     end

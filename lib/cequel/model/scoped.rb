@@ -33,7 +33,7 @@ module Cequel
         private
 
         def empty_scope
-          Scope.new(self, column_family)
+          Scope.new(self, [column_family])
         end
 
       end

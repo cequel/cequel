@@ -41,6 +41,18 @@ describe Cequel::Model::Scope do
 
       Post.select(:id, :title).first.title.should == 'Cequel'
     end
+
+    it 'should query scopes successively when multi-valued non-key column selected' do
+      connection.stub(:execute).with("SELECT * FROM posts WHERE title = 'Cequel' LIMIT 1").
+        and_return result_stub
+      connection.stub(:execute).with("SELECT * FROM posts WHERE title = 'Cassandra' LIMIT 1").
+        and_return result_stub(:id => 1, :title => 'Cassandra')
+      connection.stub(:execute).with("SELECT * FROM posts WHERE title = 'CQL' LIMIT 1").
+        and_return result_stub(:id => 2, :title => 'CQL')
+
+      Post.where(:title => %w(Cequel Cassandra CQL)).first.title.
+        should == 'Cassandra'
+    end
   end
 
   describe '#count' do
@@ -57,6 +69,17 @@ describe Cequel::Model::Scope do
         and_return result_stub('count' => 5)
 
       Post.where(:blog_id => 1).count.should == 5
+    end
+
+    it 'should perform multiple COUNT queries if non-key column selected for multiple values' do
+      connection.stub(:execute).
+        with("SELECT COUNT(*) FROM posts WHERE blog_id = 1").
+        and_return result_stub('count' => 3)
+      connection.stub(:execute).
+        with("SELECT COUNT(*) FROM posts WHERE blog_id = 2").
+        and_return result_stub('count' => 2)
+
+      Post.where(:blog_id => [1, 2]).count.should == 5
     end
   end
 
@@ -241,9 +264,16 @@ describe Cequel::Model::Scope do
       Post.where(:id => 1).map { |post| post.title }.should == ['Cequel']
     end
 
-    it 'should fail fast if attempting to perform IN query on non-key column' do
-      expect { Post.where(:title => %w(Cequel Fun)) }.
-        to raise_error(Cequel::Model::InvalidQuery)
+    it 'should perform multiple queries if IN query performed on non-key column' do
+      connection.stub(:execute).with("SELECT * FROM posts WHERE title = 'Cequel'").
+        and_return result_stub(:id => 1, :title => 'Cequel')
+      connection.stub(:execute).with("SELECT * FROM posts WHERE title = 'Fun'").
+        and_return result_stub(
+          {:id => 2, :title => 'Fun'},
+          {:id => 3, :title => 'Fun'}
+        )
+      Post.where(:title => %w(Cequel Fun)).map(&:id).
+        should == [1, 2, 3]
     end
 
     it 'should fail fast if attempting to mix key and non-key columns' do
@@ -332,6 +362,25 @@ describe Cequel::Model::Scope do
           with "UPDATE posts SET title = 'Cequel' WHERE id IN (1, 2)"
 
         scope.update_all(:title => 'Cequel')
+      end
+    end
+
+    context 'with scope selecting multiple values on non-key column' do
+      let(:scope) { Post.where(:title => %w(Cequel Cassandra)) }
+
+      it 'should perform multiple subqueries and execute single update on returned keys' do
+        connection.stub(:execute).
+          with("SELECT id FROM posts WHERE title = 'Cequel'").
+          and_return result_stub({:id => 1}, {:id => 2})
+
+        connection.stub(:execute).
+          with("SELECT id FROM posts WHERE title = 'Cassandra'").
+          and_return result_stub({:id => 3}, {:id => 4})
+
+        connection.should_receive(:execute).
+          with "UPDATE posts SET published = 'true' WHERE id IN (1, 2, 3, 4)"
+
+        scope.update_all(:published => true)
       end
     end
   end

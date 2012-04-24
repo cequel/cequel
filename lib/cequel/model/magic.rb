@@ -13,10 +13,9 @@ module Cequel
         scope.where(extract_row_specifications(columns_string, args))
       end
 
-      def self.find_or_create_by(scope, columns_string, args)
-        find_or_initialize_by(scope, columns_string, args) do |instance|
-          yield instance if block_given?
-          instance.save
+      def self.find_or_create_by(scope, columns_string, args, &block)
+        find_or_initialize_by(scope, columns_string, args, &block).tap do |instance|
+          instance.save unless instance.persisted?
         end
       end
 
