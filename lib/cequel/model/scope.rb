@@ -12,13 +12,19 @@ module Cequel
 
       def each(&block)
         if block
-          @data_sets.each do |data_set|
-            data_set.each do |row|
-              yield(@clazz._hydrate(row))
-            end
-          end
+          each_row { |row| yield @clazz._hydrate(row) }
         else
           ::Enumerator.new(self, :each)
+        end
+      end
+
+      def each_row(&block)
+        if block
+          @data_sets.each do |data_set|
+            data_set.each(&block)
+          end
+        else
+          ::Enumerator.new(self, :each_row)
         end
       end
 
@@ -54,7 +60,9 @@ module Cequel
           end
           data_set.select!(key_alias).each { |row| keys << row[key_alias] }
         end
-        @clazz.column_family.where(key_alias => keys).update(changes)
+        unless keys.empty?
+          @clazz.column_family.where(key_alias => keys).update(changes)
+        end
       end
 
       def find(*keys, &block)
