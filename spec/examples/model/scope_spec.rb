@@ -10,11 +10,18 @@ describe Cequel::Model::Scope do
         should == [[1, 'Cequel']]
     end
 
-    it 'should enumerate results for just id' do
-      connection.stub(:execute).with("SELECT id FROM posts"). #FIXME
+    it 'should enumerate results for just id if no key restriction' do
+      connection.stub(:execute).with("SELECT id FROM posts").
         and_return result_stub(:id => 1)
 
       Post.select(:id).to_a.map { |post| post.id }.should == [1]
+    end
+
+    it 'should not enumerate results for just id if key restriction' do
+      connection.stub(:execute).with("SELECT * FROM posts").
+        and_return result_stub(:id => 1)
+
+      Post.all.to_a.map { |post| post.id }.should == []
     end
 
     it 'should provide enumerator if no block given' do
@@ -69,6 +76,11 @@ describe Cequel::Model::Scope do
         and_return result_stub('count' => 5)
 
       Post.where(:blog_id => 1).count.should == 5
+    end
+
+    it 'should raise error if attempting count with key restriction' do
+      expect { Post.where(:id => [1, 2, 3]).count }.
+        to raise_error(Cequel::Model::InvalidQuery)
     end
 
     it 'should perform multiple COUNT queries if non-key column selected for multiple values' do
@@ -223,6 +235,11 @@ describe Cequel::Model::Scope do
       Post.select(:id, :title).map { |post| post.title }.should == ['Cequel']
     end
 
+    it 'should fail fast if attempting to select only key column with restrictions on key column' do
+      expect { Post.where(:id => 1).select(:id) }.
+        to raise_error(Cequel::Model::InvalidQuery)
+    end
+
     it 'should delegate to enumerator if block given' do
       connection.stub(:execute).
         with("SELECT * FROM posts WHERE blog_id = 1").
@@ -274,6 +291,11 @@ describe Cequel::Model::Scope do
         )
       Post.where(:title => %w(Cequel Fun)).map(&:id).
         should == [1, 2, 3]
+    end
+
+    it 'should fail fast if attempting to select only key column with restrictions on key column' do
+      expect { Post.select(:id).where(:id => 1) }.
+        to raise_error(Cequel::Model::InvalidQuery)
     end
 
     it 'should fail fast if attempting to mix key and non-key columns' do

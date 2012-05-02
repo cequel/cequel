@@ -12,7 +12,10 @@ module Cequel
 
       def each(&block)
         if block
-          each_row { |row| yield @clazz._hydrate(row) }
+          each_row do |row|
+            result = hydrate(row)
+            yield result if result
+          end
         else
           ::Enumerator.new(self, :each)
         end
@@ -30,14 +33,23 @@ module Cequel
 
       def first
         @data_sets.each do |data_set|
-          row = data_set.first
-          return @clazz._hydrate(row) if row
+          row = hydrate(data_set.first)
+          return row if row
         end
         nil
       end
 
       def count
+        if restriction_columns == [@clazz.key_alias]
+          ::Kernel.raise ::Cequel::Model::InvalidQuery,
+            "Meaningless to perform count with key row restrictions"
+        end
         @data_sets.inject(0) { |count, data_set| count + data_set.count }
+      end
+      alias_method :size, :count
+
+      def length
+        to_a.length
       end
 
       def update_all(changes)
@@ -89,18 +101,22 @@ module Cequel
         end
       end
 
+      def inspect
+        to_a.inspect
+      end
+
       def ==(other)
         to_a == other.to_a
       end
 
       def select(*rows, &block)
         if block then super
-        else scoped { |data_set| data_set.select(*rows) }
+        else scoped { |data_set| data_set.select(*rows) }.validate!
         end
       end
 
       def select!(*rows)
-        scoped { |data_set| data_set.select!(*rows) }
+        scoped { |data_set| data_set.select!(*rows) }.validate!
       end
 
       def consistency(consistency)
@@ -147,27 +163,22 @@ module Cequel
       protected
 
       def validate!
-        key_column = false
-        non_key_column = false
-        @data_sets.each do |data_set|
-          data_set.row_specifications.each do |specification|
-            if specification.respond_to?(:column)
-              if specification.column == @clazz.key_alias
-                key_column = true
-              else
-                non_key_column = true
-              end
-            end
-          end
+        columns = restriction_columns
+        key_column = restriction_columns.include?(@clazz.key_alias)
+        non_key_column = restriction_columns.any? do |column|
+          column != @clazz.key_alias
         end
-        if key_column && non_key_column
-          ::Kernel.raise InvalidQuery,
-            "Can't select by key and non-key columns in the same query"
+        if key_column
+          if non_key_column
+            ::Kernel.raise InvalidQuery,
+              "Can't select by key and non-key columns in the same query"
+          elsif key_only_select?
+            ::Kernel.raise InvalidQuery,
+              "Meaningless to select only key column with key row specification"
+          end
         end
         self
       end
-
-      protected
 
       def where_column_equals(column, value)
         if column.to_sym != @clazz.key_alias && ::Array === value
@@ -181,6 +192,33 @@ module Cequel
         else
           scoped { |data_set| data_set.where(column => value) }
         end.validate!
+      end
+
+      private
+
+      def key_only_select?
+        key_only_select = @data_sets.all? do |data_set|
+          data_set.select_columns == [@clazz.key_alias]
+        end
+      end
+
+      def restriction_columns
+        [].tap do |columns|
+          @data_sets.each do |data_set|
+            data_set.row_specifications.each do |specification|
+              if specification.respond_to?(:column)
+                columns << specification.column
+              end
+            end
+          end
+        end
+      end
+
+      def hydrate(row)
+        return if row.nil?
+        if key_only_select? || row.keys != [@clazz.key_alias.to_s]
+          @clazz._hydrate(row)
+        end
       end
 
     end

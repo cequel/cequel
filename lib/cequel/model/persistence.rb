@@ -51,7 +51,7 @@ module Cequel
         
         def find_one(key)
           all.where!(key_alias => key).first.tap do |result|
-            if result.attributes.keys == [key_alias.to_s]
+            if result.nil?
               raise RecordNotFound,
                 "Couldn't find #{name} with #{key_alias}=#{key}"
             end
