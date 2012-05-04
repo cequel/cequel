@@ -407,4 +407,100 @@ describe Cequel::Model::Scope do
     end
   end
 
+  describe '#destroy_all' do
+    context 'with no scope restrictions' do
+      let(:scope) { Post }
+
+      it 'should destroy all instances' do
+        connection.should_receive(:execute).
+          with('SELECT * FROM posts').
+          and_return result_stub(
+            {'id' => 1, 'title' => 'Cequel'},
+            {'id' => 2, 'title' => 'Cassandra'}
+          )
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id = 1"
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id = 2"
+        scope.destroy_all
+      end
+    end
+
+    context 'with column restrictions' do
+      let(:scope) { Post.where(:id => [1, 2]) }
+
+      it 'should issue scoped update request' do
+        connection.should_receive(:execute).
+          with("SELECT * FROM posts WHERE id IN (1, 2)").
+          and_return result_stub(
+            {'id' => 1, 'title' => 'Cequel'},
+            {'id' => 2, 'title' => 'Cassandra'}
+          )
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id = 1"
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id = 2"
+        scope.destroy_all
+      end
+
+    end
+  end
+
+  describe '#delete_all' do
+    context 'with no scope restrictions' do
+      let(:scope) { Post }
+
+      it 'should truncate keyspace' do
+        connection.should_receive(:execute).
+          with "TRUNCATE posts"
+        Post.delete_all
+      end
+    end
+
+    context 'with scope selecting on ids' do
+      let(:scope) { Post.where(:id => [1, 2]) }
+
+      it 'should issue scoped delete request' do
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id IN (1, 2)"
+        scope.delete_all
+      end
+
+    end
+
+    context 'with scope selecting on non-IDs' do
+      let(:scope) { Post.where(:published => false) }
+
+      it 'should perform "subquery" and issue update' do
+        connection.stub(:execute).
+          with("SELECT id FROM posts WHERE published = 'false'").
+          and_return result_stub({:id => 1}, {:id => 2})
+
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id IN (1, 2)"
+
+        scope.delete_all
+      end
+    end
+
+    context 'with scope selecting multiple values on non-key column' do
+      let(:scope) { Post.where(:title => %w(Cequel Cassandra)) }
+
+      it 'should perform multiple subqueries and execute single update on returned keys' do
+        connection.stub(:execute).
+          with("SELECT id FROM posts WHERE title = 'Cequel'").
+          and_return result_stub({:id => 1}, {:id => 2})
+
+        connection.stub(:execute).
+          with("SELECT id FROM posts WHERE title = 'Cassandra'").
+          and_return result_stub({:id => 3}, {:id => 4})
+
+        connection.should_receive(:execute).
+          with "DELETE FROM posts WHERE id IN (1, 2, 3, 4)"
+
+        scope.delete_all
+      end
+    end
+  end
+
 end

@@ -46,7 +46,10 @@ module Cequel
         end
         @data_sets.inject(0) { |count, data_set| count + data_set.count }
       end
-      alias_method :size, :count
+
+      def size
+        count
+      end
 
       def length
         to_a.length
@@ -58,22 +61,27 @@ module Cequel
             return @data_sets.first.update(changes)
           end
         end
-        key_alias = @clazz.key_alias
-        keys = []
-        @data_sets.each do |data_set|
-          if data_set.row_specifications.length == 1
-            specification = data_set.row_specifications.first
-            if specification.respond_to?(:column)
-              if specification.column == key_alias
-                keys.concat(::Kernel.Array(specification.value))
-                next
-              end
-            end
-          end
-          data_set.select!(key_alias).each { |row| keys << row[key_alias] }
-        end
+        keys = keys()
         unless keys.empty?
           @clazz.column_family.where(key_alias => keys).update(changes)
+        end
+      end
+
+      def destroy_all
+        each { |instance| instance.destroy }
+      end
+
+      def delete_all
+        if @data_sets.length == 1
+          if @data_sets.first.row_specifications.length == 0
+            return @data_sets.first.truncate
+          end
+        end
+        keys = keys()
+        if keys.empty?
+          @data_sets.each { |data_set| data_set.delete }
+        else
+          @clazz.column_family.where(key_alias => keys).delete
         end
       end
 
@@ -91,13 +99,35 @@ module Cequel
 
       def none?(&block)
         if block then super
-        else count == 0
+        else empty?
         end
+      end
+
+      def empty?
+        count == 0
       end
 
       def one?(&block)
         if block then super
         else count == 1
+        end
+      end
+
+      def keys
+        key_alias = @clazz.key_alias
+        [].tap do |keys|
+          @data_sets.each do |data_set|
+            if data_set.row_specifications.length == 1
+              specification = data_set.row_specifications.first
+              if specification.respond_to?(:column)
+                if specification.column == key_alias
+                  keys.concat(::Kernel.Array(specification.value))
+                  next
+                end
+              end
+            end
+            data_set.select!(key_alias).each { |row| keys << row[key_alias] }
+          end
         end
       end
 
@@ -216,7 +246,9 @@ module Cequel
 
       def hydrate(row)
         return if row.nil?
-        if key_only_select? || row.keys != [@clazz.key_alias.to_s]
+        key_alias = @clazz.key_alias.to_s
+        key_alias = key_alias.upcase if key_alias =~ /^key$/i
+        if row.keys.any? && (key_only_select? || row.keys != [key_alias])
           @clazz._hydrate(row)
         end
       end

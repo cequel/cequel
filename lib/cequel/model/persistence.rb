@@ -8,7 +8,7 @@ module Cequel
 
       module ClassMethods
 
-        delegate :update_all, :to => :all
+        delegate :update_all, :destroy_all, :delete_all, :to => :all
 
         def find(*keys)
           coerce_array = keys.first.is_a?(Array)
@@ -80,6 +80,10 @@ module Cequel
       def update_attributes(attributes)
         self.attributes = attributes
         save
+      end
+
+      def update_attribute(column, value)
+        update_attributes(column => value)
       end
 
       def insert
