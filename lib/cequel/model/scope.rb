@@ -211,7 +211,7 @@ module Cequel
       end
 
       def where_column_equals(column, value)
-        if value == []
+        if [] == value
           Scope.new(@clazz, [])
         elsif column.to_sym != @clazz.key_alias && ::Array === value
           new_data_sets = []
