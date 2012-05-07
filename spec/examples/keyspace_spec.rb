@@ -37,5 +37,9 @@ CQL
         cequel[:posts].delete
       end
     end
+
+    it 'should do nothing if no statements executed in batch' do
+      expect { cequel.batch {} }.to_not raise_error
+    end
   end
 end

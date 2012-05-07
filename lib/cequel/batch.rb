@@ -42,6 +42,7 @@ module Cequel
     # Send the batch to Cassandra
     #
     def apply
+      return if @statement_count.zero?
       @statements.puts("APPLY BATCH")
       @keyspace.execute(@statements.string)
     end
