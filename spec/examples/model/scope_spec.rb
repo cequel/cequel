@@ -374,9 +374,15 @@ describe Cequel::Model::Scope do
     context 'with no scope restrictions' do
       let(:scope) { Post }
 
-      it 'should issue global update request' do
+      it 'should get all keys and then update htem' do
         connection.should_receive(:execute).
-          with "UPDATE posts SET title = 'Cequel'"
+          with("SELECT id FROM posts").
+          and_return result_stub(
+            {:id => 1},
+            {:id => 2}
+          )
+        connection.should_receive(:execute).
+          with "UPDATE posts SET title = 'Cequel' WHERE id IN (1, 2)"
         scope.update_all(:title => 'Cequel')
       end
     end

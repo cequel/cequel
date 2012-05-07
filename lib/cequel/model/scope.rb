@@ -56,11 +56,6 @@ module Cequel
       end
 
       def update_all(changes)
-        if @data_sets.length == 1
-          if @data_sets.first.row_specifications.length == 0
-            return @data_sets.first.update(changes)
-          end
-        end
         keys = keys()
         unless keys.empty?
           @clazz.column_family.where(key_alias => keys).update(changes)
