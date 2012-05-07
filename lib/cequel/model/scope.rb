@@ -211,7 +211,9 @@ module Cequel
       end
 
       def where_column_equals(column, value)
-        if column.to_sym != @clazz.key_alias && ::Array === value
+        if value == []
+          Scope.new(@clazz, [])
+        elsif column.to_sym != @clazz.key_alias && ::Array === value
           new_data_sets = []
           @data_sets.each do |data_set|
             value.each do |element|

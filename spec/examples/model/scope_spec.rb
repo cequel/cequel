@@ -32,6 +32,14 @@ describe Cequel::Model::Scope do
 
       enum.map { |post| post.title }.should == ['Cequel']
     end
+
+    it 'should enumerate zero times if empty-collection key restriction given' do
+      Post.where(:id => []).to_a.should == []
+    end
+
+    it 'should enumerate zero times if empty-collection restriction given' do
+      Post.where(:title => []).to_a.should == []
+    end
   end
 
   describe '#first' do
@@ -59,6 +67,14 @@ describe Cequel::Model::Scope do
 
       Post.where(:title => %w(Cequel Cassandra CQL)).first.title.
         should == 'Cassandra'
+    end
+
+    it 'should return nil when empty key collection given' do
+      Post.where(:id => []).first.should be_nil
+    end
+
+    it 'should return nil when empty non-key collection given' do
+      Post.where(:title => []).first.should be_nil
     end
   end
 
@@ -92,6 +108,10 @@ describe Cequel::Model::Scope do
         and_return result_stub('count' => 2)
 
       Post.where(:blog_id => [1, 2]).count.should == 5
+    end
+
+    it 'should return nil if empty non-key restriction given' do
+      Post.where(:title => []).count.should == 0
     end
   end
 
