@@ -49,6 +49,18 @@ describe Cequel::Model::Associations do
       post.blog_id.should be_nil
     end
 
+    it 'should save transient associated object' do
+      now = Time.now
+      Time.stub(:now).and_return now
+      ts = (now.to_f * 1000).to_i
+      post.blog = Blog.new(:id => 3, :name => 'This blog')
+      connection.should_receive(:execute).
+        with "INSERT INTO blogs (id, published, name, updated_at, created_at) VALUES (3, 'true', 'This blog', #{ts}, #{ts})"
+      connection.stub(:execute).
+        with "INSERT INTO posts (id, blog_id) VALUES (#{post.id}, 3)"
+      post.save
+    end
+
   end
 
   describe '::has_many' do

@@ -145,6 +145,10 @@ module Cequel
         !!@_cequel.persisted
       end
 
+      def transient?
+        !persisted?
+      end
+
       private
 
       def data_set

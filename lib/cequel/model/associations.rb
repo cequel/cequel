@@ -80,12 +80,28 @@ module Cequel
 
       end
 
+      def save(*args)
+        save_transient_associated
+        super
+      end
+
       def destroy(*args)
         destroy_associated
         super
       end
 
       private
+
+      def save_transient_associated
+        self.class.reflect_on_associations.each do |association|
+          if LocalAssociation === association
+            associated = @_cequel.associations[association.name]
+            if associated && associated.transient?
+              associated.save
+            end
+          end
+        end
+      end
 
       def destroy_associated
         self.class.reflect_on_associations.each do |association|
