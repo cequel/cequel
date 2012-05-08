@@ -8,6 +8,11 @@ module Cequel
     include Helpers
 
     #
+    # Set a logger for logging queries. Queries logged at INFO level
+    #
+    attr_writer :logger
+
+    #
     # @api private
     # @see Cequel.connect
     #
@@ -32,7 +37,9 @@ module Cequel
     # @param *bind_vars [Object] values for bind variables
     #
     def execute(statement, *bind_vars)
-      @connection.execute(statement, *bind_vars)
+      log('CQL', statement) do
+        @connection.execute(statement, *bind_vars)
+      end
     end
 
     #
@@ -68,6 +75,18 @@ module Cequel
       @batch.apply
     ensure
       @batch = old_batch
+    end
+
+    private
+
+    def log(label, message)
+      return yield unless @logger
+      response = nil
+      time = Benchmark.ms do
+        response = yield
+      end
+      @logger.info { sprintf('%s (%dms) %s', label, time.to_i, message) }
+      response
     end
 
   end

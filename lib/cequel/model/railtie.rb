@@ -13,6 +13,8 @@ module Cequel
           yaml = YAML.load_file(config_path)[Rails.env]
           Cequel::Model.configure(yaml.symbolize_keys) if yaml
         end
+
+        Cequel::Model.logger = Rails.logger
       end
 
       initializer "cequel.instantiate_observers" do

@@ -1,4 +1,6 @@
 require File.expand_path('../spec_helper', __FILE__)
+require 'stringio'
+require 'logger'
 
 describe Cequel::Keyspace do
   describe '::batch' do
@@ -40,6 +42,22 @@ CQL
 
     it 'should do nothing if no statements executed in batch' do
       expect { cequel.batch {} }.to_not raise_error
+    end
+  end
+
+  describe '::logger=' do
+    let(:io) { StringIO.new }
+    let(:logger) { Logger.new(io) }
+    
+    before do
+      logger.level = Logger::INFO
+      cequel.logger = logger
+    end
+
+    it 'should log queries' do
+      connection.stub(:execute).with("SELECT * FROM posts").and_return result_stub
+      cequel[:posts].to_a
+      io.string.should =~ /CQL \(\d+ms\) SELECT \* FROM posts/
     end
   end
 end
