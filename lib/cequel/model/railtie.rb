@@ -14,7 +14,7 @@ module Cequel
           Cequel::Model.configure(yaml.symbolize_keys) if yaml
         end
 
-        Cequel::Model.logger = Rails.logger
+        Cequel::Model.keyspace.logger = Rails.logger
       end
 
       initializer "cequel.instantiate_observers" do
