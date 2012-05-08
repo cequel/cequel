@@ -13,7 +13,7 @@ also provides Cequel::Model, which is an ActiveModel-compliant object-row mapper
 for Cassandra. Cequel is heavily inspired by the Sequel library.
 DESC
 
-  s.files = []
+  s.files = Dir['lib/**/*.rb', 'spec/**/*.rb']
   s.test_files = Dir['spec/examples/**/*.rb']
   s.has_rdoc = false
   #s.extra_rdoc_files = 'README.md'
