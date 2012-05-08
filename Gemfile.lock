@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cequel (0.1.6)
+    cequel (0.1.7)
       activemodel (~> 3.1)
       activesupport (~> 3.1)
       cassandra-cql (~> 1.0)
