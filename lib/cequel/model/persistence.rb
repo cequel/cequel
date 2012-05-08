@@ -95,7 +95,8 @@ module Cequel
 
       def update
         update_attributes, delete_attributes = {}, []
-        changes.each_pair do |attr, (old, new)|
+        changed.each do |attr|
+          new = read_attribute(attr)
           if new.nil?
             delete_attributes << attr
           else

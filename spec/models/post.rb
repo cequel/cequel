@@ -6,6 +6,7 @@ class Post
   column :title, :varchar
   column :body, :varchar
   column :published, :boolean
+  column :author_name, :text
 
   before_save :record_save_callback
   before_create :record_create_callback
@@ -40,6 +41,14 @@ class Post
 
   def require_title?
     !!@require_title
+  end
+
+  def author_name=(author_name)
+    write_attribute(:author_name, author_name.try(:reverse))
+  end
+
+  def author_name
+    read_attribute(:author_name).try(:reverse)
   end
 
   private

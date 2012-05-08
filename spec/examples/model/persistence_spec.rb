@@ -128,10 +128,11 @@ describe Cequel::Model::Persistence do
         Post.find(1)
       end
 
-      it 'should send UPDATE statement with changed columns' do
+      it 'should send UPDATE statement with changed columns using underlying attributes' do
         connection.should_receive(:execute).
-          with "UPDATE posts SET body = 'Cequel cequel' WHERE id = 1"
+          with "UPDATE posts SET body = 'Cequel cequel', author_name = 'nworB taM' WHERE id = 1"
         post.body = 'Cequel cequel'
+        post.author_name = 'Mat Brown'
         post.save
       end
 
