@@ -245,6 +245,7 @@ module Cequel
         return if row.nil?
         key_alias = @clazz.key_alias.to_s
         key_alias = key_alias.upcase if key_alias =~ /^key$/i
+        row.reject! { |k, v| v.nil? }
         if row.keys.any? && (key_only_select? || row.keys != [key_alias])
           @clazz._hydrate(row)
         end

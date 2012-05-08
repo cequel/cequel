@@ -52,6 +52,14 @@ describe Cequel::Model::Persistence do
       expect { Post.find(2) }.to raise_error Cequel::Model::RecordNotFound
     end
 
+    it 'should raise RecordNotFound if row has nil data' do
+      connection.stub(:execute).
+        with("SELECT title FROM posts WHERE id = 2 LIMIT 1").
+        and_return result_stub(:title => nil)
+
+      expect { Post.select(:title).find(2) }.to raise_error Cequel::Model::RecordNotFound
+    end
+
     it 'should raise RecordNotFound if some rows in multi-row query have no data' do
       connection.stub(:execute).
         with("SELECT * FROM posts WHERE id IN (2, 5)").
