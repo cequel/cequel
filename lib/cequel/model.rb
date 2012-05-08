@@ -61,7 +61,9 @@ module Cequel
     end
 
     def self.keyspace
-      @keyspace ||= Cequel.connect(@configuration)
+      @keyspace ||= Cequel.connect(@configuration).tap do |keyspace|
+        keyspace.logger = @logger if @logger
+      end
     end
 
     def self.keyspace=(keyspace)
@@ -70,6 +72,10 @@ module Cequel
 
     def self.configure(configuration)
       @configuration = configuration
+    end
+
+    def self.logger=(logger)
+      @logger = logger
     end
 
     def initialize
