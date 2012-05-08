@@ -2,7 +2,7 @@ require File.expand_path('../lib/cequel/version', __FILE__)
 require 'rspec/core/rake_task'
 
 task :default => :release
-task :release => [:test, :build, :tag, :update_stable, :push, :cleanup]
+task :release => [:build, :tag, :update_stable, :push, :cleanup]
 
 desc 'Build gem'
 task :build do
