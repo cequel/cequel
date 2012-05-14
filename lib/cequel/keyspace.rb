@@ -86,9 +86,9 @@ module Cequel
         response = yield
       end
       if @logger
-        @logger.info { sprintf('%s (%dms) %s', label, time.to_i, message) }
+        @logger.debug { sprintf('%s (%dms) %s', label, time.to_i, message) }
       end
-      threshold = @slowlog_threshold || 2
+      threshold = @slowlog_threshold || 2000
       if @slowlog && time >= threshold
         @slowlog.warn { sprintf('%s (%dms) %s', label, time.to_i, message) }
       end
