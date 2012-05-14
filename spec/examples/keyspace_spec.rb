@@ -50,7 +50,7 @@ CQL
     let(:logger) { Logger.new(io) }
     
     before do
-      logger.level = Logger::INFO
+      logger.level = Logger::DEBUG
       cequel.logger = logger
     end
 
