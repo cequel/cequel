@@ -10,7 +10,7 @@ module Cequel
     #
     # Set a logger for logging queries. Queries logged at INFO level
     #
-    attr_writer :logger
+    attr_writer :logger, :slowlog, :slowlog_threshold
 
     #
     # @api private
@@ -80,12 +80,18 @@ module Cequel
     private
 
     def log(label, message)
-      return yield unless @logger
+      return yield unless @logger || @slowlog
       response = nil
       time = Benchmark.ms do
         response = yield
       end
-      @logger.info { sprintf('%s (%dms) %s', label, time.to_i, message) }
+      if @logger
+        @logger.info { sprintf('%s (%dms) %s', label, time.to_i, message) }
+      end
+      threshold = @slowlog_threshold || 2
+      if @slowlog && time >= threshold
+        @slowlog.warn { sprintf('%s (%dms) %s', label, time.to_i, message) }
+      end
       response
     end
 
