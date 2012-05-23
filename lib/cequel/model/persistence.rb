@@ -44,7 +44,7 @@ module Cequel
           else
             clazz = self
           end
-          clazz.new._hydrate(row.except(:type))
+          clazz.allocate._hydrate(row.except(:type))
         end
 
         private
@@ -119,12 +119,12 @@ module Cequel
           raise RecordNotFound,
             "Couldn't find #{self.class.name} with #{key_alias}=#{@_cequel.key}"
         end
-        @_cequel = InstanceInternals.new(self)
         _hydrate(result)
         self
       end
 
       def _hydrate(row)
+        @_cequel = InstanceInternals.new(self)
         tap do
           key_alias = self.class.key_alias.to_s
           key_alias = 'KEY' if key_alias.upcase == 'KEY'
