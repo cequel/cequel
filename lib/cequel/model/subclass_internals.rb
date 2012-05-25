@@ -34,8 +34,8 @@ module Cequel
         @super.base_class
       end
 
-      def association(name)
-        super || @super.association(name)
+      def associations
+        @super.associations.merge(super)
       end
 
     end

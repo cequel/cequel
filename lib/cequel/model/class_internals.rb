@@ -34,7 +34,7 @@ module Cequel
       end
 
       def association(name)
-        @associations[name]
+        associations[name]
       end
 
       def synchronize(&block)
