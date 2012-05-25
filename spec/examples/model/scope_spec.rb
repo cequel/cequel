@@ -69,6 +69,13 @@ describe Cequel::Model::Scope do
         should == 'Cassandra'
     end
 
+    it 'should apply index preference when specified' do
+      connection.should_receive(:execute).
+        with("SELECT * FROM assets WHERE checksum = 'abcdef' AND class_name = 'Photo' LIMIT 1").
+        and_return result_stub
+      Photo.where(:checksum => 'abcdef').first
+    end
+
     it 'should return nil when empty key collection given' do
       Post.where(:id => []).first.should be_nil
     end
@@ -112,6 +119,13 @@ describe Cequel::Model::Scope do
 
     it 'should return nil if empty non-key restriction given' do
       Post.where(:title => []).count.should == 0
+    end
+
+    it 'should apply index preference when specified' do
+      connection.should_receive(:execute).
+        with("SELECT COUNT(*) FROM assets WHERE checksum = 'abcdef' AND class_name = 'Photo'").
+        and_return result_stub('count' => 0)
+      Photo.where(:checksum => 'abcdef').count
     end
   end
 
@@ -321,6 +335,13 @@ describe Cequel::Model::Scope do
     it 'should fail fast if attempting to mix key and non-key columns' do
       expect { Post.where(:id => 1).where(:title => 'Cequel') }.
         to raise_error(Cequel::Model::InvalidQuery)
+    end
+
+    it 'should use index preference if given' do
+      connection.should_receive(:execute).
+        with("SELECT * FROM assets WHERE checksum = 'abcdef' AND class_name = 'Photo'").
+        and_return result_stub
+      Photo.where(:checksum => 'abcdef').to_a
     end
   end
 

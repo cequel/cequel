@@ -8,11 +8,12 @@ module Cequel
     class ClassInternals
 
       attr_accessor :key, :current_scope
-      attr_reader :columns, :associations
+      attr_reader :columns, :associations, :index_preference
 
       def initialize(clazz)
         @clazz = clazz
         @columns, @associations = {}, {}
+        @index_preference = []
         @lock = Monitor.new
       end
 

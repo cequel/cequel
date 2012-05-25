@@ -8,6 +8,7 @@ module Cequel
 
       def initialize(clazz, data_sets)
         @clazz, @data_sets = clazz, data_sets
+        @index_preference_applied = false
       end
 
       def each(&block)
@@ -23,6 +24,7 @@ module Cequel
 
       def each_row(&block)
         if block
+          apply_index_preference!
           @data_sets.each do |data_set|
             data_set.each(&block)
           end
@@ -32,6 +34,7 @@ module Cequel
       end
 
       def first
+        apply_index_preference!
         @data_sets.each do |data_set|
           row = hydrate(data_set.first)
           return row if row
@@ -44,6 +47,7 @@ module Cequel
           ::Kernel.raise ::Cequel::Model::InvalidQuery,
             "Meaningless to perform count with key row restrictions"
         end
+        apply_index_preference!
         @data_sets.inject(0) { |count, data_set| count + data_set.count }
       end
 
@@ -249,6 +253,27 @@ module Cequel
         if row.keys.any? && (key_only_select? || row.keys != [key_alias])
           @clazz._hydrate(row)
         end
+      end
+
+      def apply_index_preference!
+        return if @index_preference_applied
+        # XXX seems ugly to do the in-place sort here.
+        preference = @clazz.index_preference_columns
+        @data_sets.each do |data_set|
+          data_set.row_specifications.sort! do |spec1, spec2|
+            if spec1.respond_to?(:column) && spec2.respond_to?(:column)
+              pref1 = preference.index(spec1.column)
+              pref2 = preference.index(spec2.column)
+              if pref1 && pref2 then pref1 - pref2
+              elsif pref1 then -1
+              elsif pref2 then 1
+              else 0
+              end
+            else 0
+            end
+          end
+        end
+        @index_preference_applied = true
       end
 
     end

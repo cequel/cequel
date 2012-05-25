@@ -10,6 +10,10 @@ module Cequel
         @columns = {}
       end
 
+      def index_preference
+        @super.index_preference + @index_preference
+      end
+
       def key
         @super.key
       end

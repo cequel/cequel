@@ -10,6 +10,14 @@ module Cequel
 
         delegate :update_all, :destroy_all, :delete_all, :to => :all
 
+        def index_preference(*columns)
+          @_cequel.index_preference.concat(columns.map { |c| c.to_sym })
+        end
+
+        def index_preference_columns
+          @_cequel.index_preference
+        end
+
         def find(*keys)
           coerce_array = keys.first.is_a?(Array)
           keys.flatten!

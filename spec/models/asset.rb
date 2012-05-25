@@ -5,6 +5,9 @@ class Asset
   key :id, :integer
   column :class_name, :ascii
   column :label, :varchar
+  column :checksum, :varchar
+
+  index_preference :checksum, :class_name
 
   def observed!(callback)
     @observed ||= []

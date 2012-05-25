@@ -6,7 +6,7 @@ describe Cequel::Model::Inheritable do
   end
 
   it 'should inherit columns from superclass' do
-    Photo.column_names.should == [:id, :class_name, :label, :url]
+    Photo.column_names.should == [:id, :class_name, :label, :checksum, :url]
   end
 
   it 'should return ::base_class for base class' do
