@@ -26,7 +26,7 @@ module Cequel
       end
 
       def column_family_name
-        @clazz.name.tableize
+        @column_family_name ||= @clazz.name.tableize
       end
 
       def base_class
