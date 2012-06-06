@@ -228,7 +228,8 @@ module Cequel
     def count_cql
       "SELECT COUNT(*) FROM #{@column_family}" <<
         consistency_cql <<
-        row_specifications_cql
+        row_specifications_cql <<
+        limit_cql
     end
 
     def inspect

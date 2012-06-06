@@ -339,6 +339,13 @@ describe Cequel::DataSet do
       cequel[:blogs].where(:id => cequel[:posts].select(:blog_id)).count.
         should == 0
     end
+
+    it 'should use limit if specified' do
+      connection.stub(:execute).with("SELECT COUNT(*) FROM posts LIMIT 100000").
+        and_return result_stub('count' => 4)
+
+      cequel[:posts].limit(100_000).count.should == 4
+    end
   end
 
 end
