@@ -10,8 +10,12 @@ module Cequel
         delegate :consistency, :count, :first, :limit, :select, :where,
           :to => :all
 
+        def default_scope(scope)
+          @_cequel.default_scope = scope
+        end
+
         def all
-          @_cequel.current_scope || empty_scope
+          @_cequel.current_scope || @_cequel.default_scope || empty_scope
         end
 
         def select(*rows)

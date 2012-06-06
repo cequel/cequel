@@ -550,4 +550,20 @@ describe Cequel::Model::Scope do
     end
   end
 
+  describe '::default_scope' do
+    it 'should include in scope by default' do
+      connection.should_receive(:execute).
+        with("SELECT * FROM blogs LIMIT 100").and_return result_stub
+
+      Blog.all.to_a
+    end
+
+    it 'should override as with normal scope' do
+      connection.should_receive(:execute).
+        with("SELECT * FROM blogs LIMIT 1000").and_return result_stub
+
+      Blog.limit(1000).to_a
+    end
+  end
+
 end

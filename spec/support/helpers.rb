@@ -2,6 +2,8 @@ module Cequel
 
   module SpecSupport
 
+    Connection = Object.new
+
     module Helpers
 
       def result_stub(*results)
@@ -9,7 +11,7 @@ module Cequel
       end
 
       def connection
-        @connection ||= stub('Connection')
+        Connection
       end
 
       def cequel

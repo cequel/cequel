@@ -7,7 +7,7 @@ module Cequel
     #
     class ClassInternals
 
-      attr_accessor :key, :current_scope
+      attr_accessor :key, :current_scope, :default_scope
       attr_reader :columns, :associations, :index_preference
 
       def initialize(clazz)

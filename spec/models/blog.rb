@@ -9,4 +9,6 @@ class Blog
 
   has_many :posts, :dependent => :destroy
 
+  default_scope limit(100)
+
 end
