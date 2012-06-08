@@ -15,7 +15,9 @@ module Cequel
       end
 
       def cequel
-        @cequel ||= Cequel::Keyspace.new(connection)
+        @cequel ||= Cequel::Keyspace.new({}).tap do |keyspace|
+          keyspace.connection = connection
+        end
       end
     end
 

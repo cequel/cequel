@@ -10,14 +10,22 @@ module Cequel
     #
     # Set a logger for logging queries. Queries logged at INFO level
     #
-    attr_writer :logger, :slowlog, :slowlog_threshold
+    attr_writer :logger, :slowlog, :slowlog_threshold, :connection
 
     #
     # @api private
     # @see Cequel.connect
     #
-    def initialize(connection)
-      @connection = connection
+    def initialize(configuration = {})
+      @name = configuration[:keyspace]
+      @hosts = configuration[:host] || configuration[:hosts]
+      @thrift_options = configuration[:thrift].try(:symbolize_keys)
+    end
+
+    def connection
+      @connection ||= CassandraCQL::Database.new(
+        @hosts, {:keyspace => @name}, @thrift_options
+      )
     end
 
     #
@@ -38,7 +46,7 @@ module Cequel
     #
     def execute(statement, *bind_vars)
       log('CQL', statement) do
-        @connection.execute(statement, *bind_vars)
+        connection.execute(statement, *bind_vars)
       end
     end
 

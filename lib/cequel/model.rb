@@ -69,10 +69,6 @@ module Cequel
       end
     end
 
-    def self.keyspace=(keyspace)
-      @keyspace = keyspace
-    end
-
     def self.configure(configuration)
       @configuration = configuration
     end
