@@ -29,8 +29,23 @@ describe Cequel::Model::Timestamps do
         :updated_at => now - 1.day
       )
     blog = Blog.find(1)
+    blog.name = 'Bloggy'
     connection.should_receive(:execute).
-      with("UPDATE blogs SET updated_at = #{timestamp} WHERE id = 1")
+      with("UPDATE blogs SET name = 'Bloggy', updated_at = #{timestamp} WHERE id = 1")
     blog.save
+  end
+
+  it 'should not update updated_at when calling save with no dirty attributes' do
+    connection.stub(:execute).
+      with("SELECT * FROM blogs WHERE id = 1 LIMIT 1").
+      and_return result_stub(
+        :id => 1,
+        :name => 'Blogtime',
+        :created_at => now - 1.day,
+        :updated_at => now - 1.day
+      )
+    blog = Blog.find(1)
+    blog.save
+    blog.updated_at.should == now - 1.day
   end
 end

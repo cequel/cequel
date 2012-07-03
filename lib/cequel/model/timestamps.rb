@@ -40,7 +40,7 @@ module Cequel
         private
 
         def _set_updated_at
-          self.updated_at = Time.now
+          self.updated_at = Time.now if transient? || changed?
         end
 
       end
