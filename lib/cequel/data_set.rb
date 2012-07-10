@@ -9,7 +9,6 @@ module Cequel
   class DataSet
 
     include Enumerable
-    include Helpers
 
     # @return [Keyspace] the keyspace this data set lives in
     attr_reader :keyspace
@@ -43,7 +42,7 @@ module Cequel
         " VALUES (" << (['?'] * data.length).join(', ') << ")" <<
         generate_upsert_options(options)
 
-      @keyspace.write(sanitize(cql, *data.values))
+      @keyspace.write(cql, *data.values)
     end
 
     #
@@ -57,12 +56,13 @@ module Cequel
     # @todo support counter columns
     #
     def update(data, options = {})
-      cql = "UPDATE #{@column_family}" <<
-        generate_upsert_options(options) <<
-        " SET " << data.keys.map { |k| "#{k} = ?" }.join(', ') <<
-        row_specifications_cql
+      statement = Statement.new.
+        append("UPDATE #{@column_family}").
+        append(generate_upsert_options(options)).
+        append(" SET " << data.keys.map { |k| "#{k} = ?" }.join(', '), *data.values).
+        append(*row_specifications_cql)
 
-      @keyspace.write(sanitize(cql, *data.values))
+      @keyspace.write(*statement.args)
     rescue EmptySubquery
       # Noop -- no rows to update
     end
@@ -77,12 +77,13 @@ module Cequel
     def delete(*columns)
       options = columns.extract_options!
       column_aliases = columns.empty? ? '' : " #{columns.join(', ')}"
-      cql, values = "DELETE#{column_aliases}" <<
-        " FROM #{@column_family}" <<
-        generate_upsert_options(options) <<
-        row_specifications_cql
+      statement = Statement.new.
+        append("DELETE#{column_aliases}").
+        append(" FROM #{@column_family}").
+        append(generate_upsert_options(options)).
+        append(*row_specifications_cql)
 
-      @keyspace.write(sanitize(cql, *values))
+      @keyspace.write(*statement.args)
     rescue EmptySubquery
       # Noop -- no rows to delete
     end
@@ -180,7 +181,7 @@ module Cequel
     def each
       if block_given?
         begin
-          @keyspace.execute(cql).fetch do |row|
+          @keyspace.execute(*cql).fetch do |row|
             yield row.to_hash.with_indifferent_access
           end
         rescue EmptySubquery
@@ -195,7 +196,7 @@ module Cequel
     # @return [Hash] the first row in this data set
     #
     def first
-      row = @keyspace.execute(limit(1).cql).fetch_row
+      row = @keyspace.execute(*limit(1).cql).fetch_row
       row.to_hash.with_indifferent_access if row
     rescue EmptySubquery
       nil
@@ -205,7 +206,7 @@ module Cequel
     # @return [Fixnum] the number of rows in this data set
     #
     def count
-      @keyspace.execute(count_cql).fetch_row['count']
+      @keyspace.execute(*count_cql).fetch_row['count']
     rescue EmptySubquery
       0
     end
@@ -215,21 +216,24 @@ module Cequel
     # @return [String] CQL select statement encoding this data set's scope.
     #
     def cql
-      select_cql <<
-        " FROM #{@column_family}" <<
-        consistency_cql <<
-        row_specifications_cql <<
-        limit_cql
+      statement = Statement.new.
+        append(select_cql).
+        append(" FROM #{@column_family}").
+        append(consistency_cql).
+        append(*row_specifications_cql).
+        append(limit_cql).
+        args
     end
 
     #
     # @return [String] CQL statement to get count of rows in this data set
     #
     def count_cql
-      "SELECT COUNT(*) FROM #{@column_family}" <<
-        consistency_cql <<
-        row_specifications_cql <<
-        limit_cql
+      Statement.new.
+        append("SELECT COUNT(*) FROM #{@column_family}").
+        append(consistency_cql).
+        append(*row_specifications_cql).
+        append(limit_cql).args
     end
 
     def inspect
@@ -293,8 +297,14 @@ module Cequel
 
     def row_specifications_cql
       if @row_specifications.any?
-        " WHERE #{@row_specifications.map { |c| c.cql }.join(' AND ')}"
-      else ''
+        cql_fragments, bind_vars = [], []
+        @row_specifications.each do |spec|
+          cql_with_vars = spec.cql
+          cql_fragments << cql_with_vars.shift
+          bind_vars.concat(cql_with_vars)
+        end
+        [" WHERE #{cql_fragments.join(' AND ')}", *bind_vars]
+      else ['']
       end
     end
 

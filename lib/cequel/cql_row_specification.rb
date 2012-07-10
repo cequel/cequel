@@ -5,8 +5,6 @@ module Cequel
   #
   class CqlRowSpecification
 
-    include Helpers
-
     def self.build(condition, bind_vars)
       [new(condition, bind_vars)]
     end
@@ -16,7 +14,7 @@ module Cequel
     end
 
     def cql
-      sanitize(@condition, *@bind_vars)
+      [@condition, *@bind_vars]
     end
 
   end

@@ -9,7 +9,7 @@ describe Cequel::Model::Associations do
 
     before do
       connection.stub(:execute).
-        with('SELECT * FROM blogs WHERE id = 2 LIMIT 1').
+        with('SELECT * FROM blogs WHERE id = ? LIMIT 1', 2).
         and_return result_stub(:id => 2, :name => 'Big Data Blog')
     end
 
@@ -32,7 +32,7 @@ describe Cequel::Model::Associations do
       post.blog
       post.blog_id = 3
       connection.stub(:execute).
-        with('SELECT * FROM blogs WHERE id = 3 LIMIT 1').
+        with('SELECT * FROM blogs WHERE id = ? LIMIT 1', 3).
         and_return result_stub(:id => 2, :name => 'Another Blog')
 
       post.blog.name.should == 'Another Blog'
@@ -52,12 +52,12 @@ describe Cequel::Model::Associations do
     it 'should save transient associated object' do
       now = Time.now
       Time.stub(:now).and_return now
-      ts = (now.to_f * 1000).to_i
       post.blog = Blog.new(:id => 3, :name => 'This blog')
       connection.should_receive(:execute).
-        with "INSERT INTO blogs (id, published, name, updated_at, created_at) VALUES (3, 'true', 'This blog', #{ts}, #{ts})"
+        with "INSERT INTO blogs (id, published, name, updated_at, created_at) VALUES (?, ?, ?, ?, ?)",
+          3, true, 'This blog', now, now
       connection.stub(:execute).
-        with "INSERT INTO posts (id, blog_id) VALUES (#{post.id}, 3)"
+        with "INSERT INTO posts (id, blog_id) VALUES (?, ?)", post.id, 3
       post.save
     end
 
@@ -70,7 +70,7 @@ describe Cequel::Model::Associations do
 
     before do
       connection.stub(:execute).
-        with('SELECT * FROM posts WHERE blog_id = 2').
+        with('SELECT * FROM posts WHERE blog_id = ?', 2).
         and_return result_stub(
           {:id => 1, :title => 'Cequel'},
           {:id => 2, :title => 'Cequel revisited'}
@@ -83,9 +83,9 @@ describe Cequel::Model::Associations do
     end
 
     it 'should destroy associated instances if :dependent => :destroy' do
-      connection.stub(:execute).with 'DELETE FROM blogs WHERE id = 2'
-      connection.should_receive(:execute).with 'DELETE FROM posts WHERE id = 1'
-      connection.should_receive(:execute).with 'DELETE FROM posts WHERE id = 2'
+      connection.stub(:execute).with 'DELETE FROM blogs WHERE id = ?', 2
+      connection.should_receive(:execute).with 'DELETE FROM posts WHERE id = ?', 1
+      connection.should_receive(:execute).with 'DELETE FROM posts WHERE id = ?', 2
       blog.destroy
     end
   end
@@ -95,7 +95,7 @@ describe Cequel::Model::Associations do
 
     before do
       connection.stub(:execute).
-        with("SELECT * FROM assets WHERE class_name = 'Photo' AND post_id = 1 LIMIT 1").
+        with("SELECT * FROM assets WHERE class_name = ? AND post_id = ? LIMIT 1", 'Photo', 1).
         and_return result_stub(
           {:id => 1, :type => 'Photo', :url => 'http://outofti.me/glamour.jpg'},
         )

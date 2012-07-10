@@ -5,8 +5,6 @@ module Cequel
   #
   class Keyspace
 
-    include Helpers
-
     #
     # Set a logger for logging queries. Queries logged at INFO level
     #
@@ -58,7 +56,7 @@ module Cequel
     #
     def write(statement, *bind_vars)
       if @batch
-        @batch.execute(sanitize(statement, *bind_vars))
+        @batch.execute(statement, *bind_vars)
       else
         execute(statement, *bind_vars)
       end

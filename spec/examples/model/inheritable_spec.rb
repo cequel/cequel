@@ -31,14 +31,14 @@ describe Cequel::Model::Inheritable do
 
   it 'should query correct column family when querying subclass' do
     connection.stub(:execute).
-      with("SELECT * FROM assets WHERE id = 1 LIMIT 1").
+      with("SELECT * FROM assets WHERE id = ? LIMIT 1", 1).
       and_return result_stub(:id => 1, :label => 'Cequel')
     Photo.find(1)
   end
 
   it 'should hydrate correct model class when querying base class' do
     connection.stub(:execute).
-      with('SELECT * FROM assets WHERE id = 1 LIMIT 1').
+      with('SELECT * FROM assets WHERE id = ? LIMIT 1', 1).
       and_return result_stub(:id => 1, :class_name => 'Photo', :label => 'Cequel')
     Asset.find(1).should be_a(Photo)
   end

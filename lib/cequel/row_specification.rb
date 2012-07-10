@@ -5,8 +5,6 @@ module Cequel
   #
   class RowSpecification
 
-    include Helpers
-
     def self.build(column_values)
       column_values.map { |column, value| new(column, value) }
     end
@@ -23,15 +21,15 @@ module Cequel
         subquery_cql
       when Array
         if @value.length == 1
-          sanitize("#{@column} = ?", @value.first)
+          ["#{@column} = ?", @value.first]
         else
-          sanitize(
+          [
             "#{@column} IN (#{Array.new(@value.length) { '?' }.join(', ')})",
             *@value
-          )
+          ]
         end
       else
-        sanitize("#{@column} = ?", @value)
+        ["#{@column} = ?", @value]
       end
     end
 

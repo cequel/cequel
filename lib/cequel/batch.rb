@@ -9,8 +9,6 @@ module Cequel
   #
   class Batch
 
-    include Helpers
-
     #
     # @param keyspace [Keyspace] the keyspace that this batch will be executed on
     # @param options [Hash]
@@ -30,7 +28,7 @@ module Cequel
     # @param (see Keyspace#execute)
     #
     def execute(cql, *bind_vars)
-      @statements.puts(sanitize(cql, *bind_vars))
+      @statement.append("#{cql}\n", *bind_vars)
       @statement_count += 1
       if @auto_apply && @statement_count >= @auto_apply
         apply
@@ -43,15 +41,15 @@ module Cequel
     #
     def apply
       return if @statement_count.zero?
-      @statements.puts("APPLY BATCH")
-      @keyspace.execute(@statements.string)
+      @statement.append("APPLY BATCH\n")
+      @keyspace.execute(*@statement.args)
     end
 
     private
 
     def reset
-      @statements = StringIO.new
-      @statements.puts("BEGIN BATCH")
+      @statement = Statement.new
+      @statement.append("BEGIN BATCH\n")
       @statement_count = 0
     end
 

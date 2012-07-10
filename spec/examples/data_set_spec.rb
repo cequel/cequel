@@ -4,14 +4,14 @@ describe Cequel::DataSet do
   describe '#insert' do
     it 'should insert a row' do
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times')"
+        with "INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Fun times'
 
       cequel[:posts].insert(:id => 1, :title => 'Fun times')
     end
 
     it 'should include consistency argument' do
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING CONSISTENCY QUORUM"
+        with "INSERT INTO posts (id, title) VALUES (?, ?) USING CONSISTENCY QUORUM", 1, 'Fun times'
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -21,7 +21,7 @@ describe Cequel::DataSet do
 
     it 'should include ttl argument' do
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING TTL 600"
+        with "INSERT INTO posts (id, title) VALUES (?, ?) USING TTL 600", 1, 'Fun times'
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -32,7 +32,7 @@ describe Cequel::DataSet do
     it 'should include timestamp argument' do
       time = Time.now - 10.minutes
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING TIMESTAMP #{time.to_i}"
+        with "INSERT INTO posts (id, title) VALUES (?, ?) USING TIMESTAMP #{time.to_i}", 1, 'Fun times'
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -43,7 +43,8 @@ describe Cequel::DataSet do
     it 'should include multiple arguments joined by AND' do
       time = Time.now - 10.minutes
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Fun times') USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i}"
+        with "INSERT INTO posts (id, title) VALUES (?, ?) USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i}",
+        1, 'Fun times'
 
       cequel[:posts].insert(
         {:id => 1, :title => 'Fun times'},
@@ -57,7 +58,7 @@ describe Cequel::DataSet do
   describe '#update' do
     it 'should send basic update statement' do
       connection.should_receive(:execute).
-        with "UPDATE posts SET title = 'Fun times', body = 'Fun'"
+        with "UPDATE posts SET title = ?, body = ?", 'Fun times', 'Fun'
 
       cequel[:posts].update(:title => 'Fun times', :body => 'Fun')
     end
@@ -66,7 +67,7 @@ describe Cequel::DataSet do
       time = Time.now - 10.minutes
 
       connection.should_receive(:execute).
-        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = 'Fun times', body = 'Fun'"
+        with "UPDATE posts USING CONSISTENCY QUORUM AND TTL 600 AND TIMESTAMP #{time.to_i} SET title = ?, body = ?", 'Fun times', 'Fun'
 
       cequel[:posts].update(
         {:title => 'Fun times', :body => 'Fun'},
@@ -76,7 +77,7 @@ describe Cequel::DataSet do
 
     it 'should send update statement scoped to current row specifications' do
       connection.should_receive(:execute).
-        with "UPDATE posts SET title = 'Fun' WHERE id = 4"
+        with "UPDATE posts SET title = ? WHERE id = ?", 'Fun', 4
 
       cequel[:posts].where(:id => 4).update(:title => 'Fun')
     end
@@ -121,7 +122,7 @@ describe Cequel::DataSet do
 
     it 'should send delete statement with scoped row specifications' do
       connection.should_receive(:execute).
-        with "DELETE FROM posts WHERE id = 4"
+        with "DELETE FROM posts WHERE id = ?", 4
 
       cequel[:posts].where(:id => 4).delete
     end
@@ -147,73 +148,73 @@ describe Cequel::DataSet do
 
   describe '#cql' do
     it 'should generate select statement with all columns' do
-      cequel[:posts].cql.should == 'SELECT * FROM posts'
+      cequel[:posts].cql.should == ['SELECT * FROM posts']
     end
   end
 
   describe '#select' do
     it 'should generate select statement with given columns' do
       cequel[:posts].select(:id, :title).cql.
-        should == 'SELECT id, title FROM posts'
+        should == ['SELECT id, title FROM posts']
     end
 
     it 'should accept array argument' do
       cequel[:posts].select([:id, :title]).cql.
-        should == 'SELECT id, title FROM posts'
+        should == ['SELECT id, title FROM posts']
     end
 
     it 'should combine multiple selects' do
       cequel[:posts].select(:id).select(:title).cql.
-        should == 'SELECT id, title FROM posts'
+        should == ['SELECT id, title FROM posts']
     end
   end
 
   describe '#select!' do
     it 'should generate select statement with given columns' do
       cequel[:posts].select(:id, :title).select!(:published).cql.
-        should == 'SELECT published FROM posts'
+        should == ['SELECT published FROM posts']
     end
   end
 
   describe '#where' do
     it 'should build WHERE statement from hash' do
       cequel[:posts].where(:title => 'Hey').cql.
-        should == "SELECT * FROM posts WHERE title = 'Hey'"
+        should == ["SELECT * FROM posts WHERE title = ?", 'Hey']
     end
 
     it 'should build WHERE statement from multi-element hash' do
       cequel[:posts].where(:title => 'Hey', :body => 'Guy').cql.
-        should == "SELECT * FROM posts WHERE title = 'Hey' AND body = 'Guy'"
+        should == ["SELECT * FROM posts WHERE title = ? AND body = ?", 'Hey', 'Guy']
     end
 
     it 'should build WHERE statement with IN' do
       cequel[:posts].where(:id => [1, 2, 3, 4]).cql.
-        should == 'SELECT * FROM posts WHERE id IN (1, 2, 3, 4)'
+        should == ['SELECT * FROM posts WHERE id IN (?, ?, ?, ?)', 1, 2, 3, 4]
     end
 
     it 'should use = if provided one-element array' do
       cequel[:posts].where(:id => [1]).cql.
-        should == 'SELECT * FROM posts WHERE id = 1'
+        should == ['SELECT * FROM posts WHERE id = ?', 1]
     end
 
     it 'should build WHERE statement from CQL string' do
-      cequel[:posts].where("title = 'Hey'").cql.
-        should == "SELECT * FROM posts WHERE title = 'Hey'"
+      cequel[:posts].where("title = ?", 'Hey').cql.
+        should == ["SELECT * FROM posts WHERE title = ?", 'Hey']
     end
 
     it 'should build WHERE statement from CQL string with bind variables' do
       cequel[:posts].where("title = ?", 'Hey').cql.
-        should == "SELECT * FROM posts WHERE title = 'Hey'"
+        should == ["SELECT * FROM posts WHERE title = ?", 'Hey']
     end
 
     it 'should aggregate multiple WHERE statements' do
       cequel[:posts].where(:title => 'Hey').where('body = ?', 'Sup').cql.
-        should == "SELECT * FROM posts WHERE title = 'Hey' AND body = 'Sup'"
+        should == ["SELECT * FROM posts WHERE title = ? AND body = ?", 'Hey', 'Sup']
     end
 
     it 'should take a data set as a condition and perform an IN statement' do
       connection.stub(:execute).
-        with("SELECT blog_id FROM posts WHERE title = 'Blog'").
+        with("SELECT blog_id FROM posts WHERE title = ?", 'Blog').
         and_return result_stub(
           {:blog_id => 1},
           {:blog_id => 3}
@@ -222,12 +223,12 @@ describe Cequel::DataSet do
       cequel[:blogs].where(
         :id => cequel[:posts].select(:blog_id).where(:title => 'Blog')
       ).cql.
-        should == 'SELECT * FROM blogs WHERE id IN (1, 3)'
+        should == ['SELECT * FROM blogs WHERE id IN (?, ?)', 1, 3]
     end
 
     it 'should raise EmptySubquery if inner data set has no results' do
       connection.stub(:execute).
-        with("SELECT blog_id FROM posts WHERE title = 'Blog'").
+        with("SELECT blog_id FROM posts WHERE title = ?", 'Blog').
         and_return result_stub
 
       expect do
@@ -242,21 +243,21 @@ describe Cequel::DataSet do
   describe '#where!' do
     it 'should override chained conditions' do
       cequel[:posts].where(:title => 'Hey').where!(:title => 'Cequel').cql.
-        should == "SELECT * FROM posts WHERE title = 'Cequel'"
+        should == ["SELECT * FROM posts WHERE title = ?", 'Cequel']
     end
   end
 
   describe '#consistency' do
     it 'should add USING CONSISTENCY to select' do
       cequel[:posts].consistency(:quorum).cql.
-        should == "SELECT * FROM posts USING CONSISTENCY QUORUM"
+        should == ["SELECT * FROM posts USING CONSISTENCY QUORUM"]
     end
   end
 
   describe '#limit' do
     it 'should add LIMIT' do
       cequel[:posts].limit(2).cql.
-        should == 'SELECT * FROM posts LIMIT 2'
+        should == ['SELECT * FROM posts LIMIT 2']
     end
   end
 
@@ -267,7 +268,7 @@ describe Cequel::DataSet do
         consistency(:quorum).
         where(:title => 'Hey').
         limit(3).cql.
-        should == "SELECT id, title FROM posts USING CONSISTENCY QUORUM WHERE title = 'Hey' LIMIT 3"
+        should == ["SELECT id, title FROM posts USING CONSISTENCY QUORUM WHERE title = ? LIMIT 3", 'Hey']
     end
   end
 

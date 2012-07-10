@@ -18,7 +18,7 @@ describe Cequel::Model::Validations do
 
     it 'should return true and persist model if valid' do
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Cequel')"
+        with "INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Cequel'
 
       Post.new(:id => 1, :title => 'Cequel', :require_title => true).save.should be_true
     end
@@ -33,7 +33,7 @@ describe Cequel::Model::Validations do
 
     it 'should persist model and return self if valid' do
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Cequel')"
+        with "INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Cequel'
 
       post = Post.new(:id => 1, :title => 'Cequel', :require_title => true)
       post.save!.should == post
@@ -42,14 +42,14 @@ describe Cequel::Model::Validations do
 
   describe '#update_attributes!' do
     let(:post) do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE id = 1 LIMIT 1").
+      connection.stub(:execute).with("SELECT * FROM posts WHERE id = ? LIMIT 1", 1).
         and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
       Post.find(1)
     end
 
     it 'should change attributes and save them if valid' do
       connection.should_receive(:execute).
-        with "UPDATE posts SET body = 'Cequel cequel' WHERE id = 1"
+        with "UPDATE posts SET body = ? WHERE id = ?", 'Cequel cequel', 1
       post.update_attributes!(:body => 'Cequel cequel')
     end
 
@@ -69,7 +69,7 @@ describe Cequel::Model::Validations do
 
     it 'should and return model if valid' do
       connection.should_receive(:execute).
-        with "INSERT INTO posts (id, title) VALUES (1, 'Cequel')"
+        with "INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Cequel'
 
       Post.create!(:id => 1, :title => 'Cequel', :require_title => true).
         title.should == 'Cequel'
