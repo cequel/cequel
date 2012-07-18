@@ -33,6 +33,45 @@ module Cequel
         end
       end
 
+      def find_in_batches(options = {})
+        unless ::Kernel.block_given?
+          return ::Enumerator.new(self, :find_in_batches, options)
+        end
+        find_rows_in_batches(options) do |batch|
+          results = batch.map { |row| hydrate(row) }.compact
+          yield results if results.any?
+        end
+      end
+
+      def find_rows_in_batches(options = {}, &block)
+        return ::Enumerator.new(self, :find_rows_in_batches, options) if block.nil?
+        batch_size = options[:batch_size] || 1000
+        apply_index_preference!
+        @data_sets.each do |data_set|
+          keys = lookup_keys(data_set)
+          if keys
+            find_rows_in_key_batches(data_set, keys, batch_size, &block)
+          else
+            find_rows_in_range_batches(data_set, batch_size, &block)
+          end
+        end
+        nil
+      end
+
+      def find_each(options = {}, &block)
+        unless ::Kernel.block_given?
+          return ::Enumerator.new(self, :find_each, options)
+        end
+        find_in_batches(options) { |batch| batch.each(&block) }
+      end
+
+      def find_each_row(options = {}, &block)
+        unless ::Kernel.block_given?
+          return ::Enumerator.new(self, :find_each, options)
+        end
+        find_rows_in_batches(options) { |batch| batch.each(&block) }
+      end
+
       def first
         apply_index_preference!
         @data_sets.each do |data_set|
@@ -116,16 +155,23 @@ module Cequel
         key_alias = @clazz.key_alias
         [].tap do |keys|
           @data_sets.each do |data_set|
-            if data_set.row_specifications.length == 1
-              specification = data_set.row_specifications.first
-              if specification.respond_to?(:column)
-                if specification.column == key_alias
-                  keys.concat(::Kernel.Array(specification.value))
-                  next
-                end
-              end
+            lookup_keys = lookup_keys(data_set)
+            if lookup_keys
+              keys.concat(lookup_keys)
+              next
             end
             data_set.select!(key_alias).each { |row| keys << row[key_alias] }
+          end
+        end
+      end
+
+      def lookup_keys(data_set)
+        if data_set.row_specifications.length == 1
+          specification = data_set.row_specifications.first
+          if specification.respond_to?(:column)
+            if specification.column == key_alias
+              ::Kernel.Array(specification.value)
+            end
           end
         end
       end
@@ -226,6 +272,32 @@ module Cequel
       end
 
       private
+
+      def find_rows_in_range_batches(data_set, batch_size)
+        key_alias = @clazz.key_alias
+        key_alias = key_alias.upcase if key_alias =~ /key/i
+        scope = data_set.limit(batch_size)
+        unless data_set.select_columns.empty? ||
+          data_set.select_columns.include?(key_alias)
+
+          scope = scope.select(key_alias)
+        end
+
+        batch_scope = scope
+        begin
+          batch_rows = batch_scope.to_a
+          yield batch_rows
+          batch_scope =
+            scope.where("#{key_alias} > ?", batch_rows.last[key_alias])
+        end while batch_rows.length == batch_size
+      end
+
+      def find_rows_in_key_batches(data_set, keys, batch_size)
+        key_alias = @clazz.key_alias
+        keys.each_slice(batch_size) do |key_slice|
+          yield data_set.where!(key_alias => key_slice).to_a
+        end
+      end
 
       def key_only_select?
         key_only_select = @data_sets.all? do |data_set|

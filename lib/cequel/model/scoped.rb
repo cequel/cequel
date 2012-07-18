@@ -8,6 +8,7 @@ module Cequel
 
       module ClassMethods
         delegate :consistency, :count, :first, :limit, :select, :where,
+          :find_in_batches, :find_each, :find_rows_in_batches, :find_each_row,
           :to => :all
 
         def default_scope(scope)

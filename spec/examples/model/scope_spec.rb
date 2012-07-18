@@ -261,6 +261,91 @@ describe Cequel::Model::Scope do
     end
   end
 
+  describe '#find_in_batches' do
+    it 'should select in batches of given size' do
+      connection.stub(:execute).with("SELECT * FROM posts LIMIT 2").
+        and_return result_stub(
+          {:id => 1, :title => 'Post 1'},
+          {:id => 2, :title => 'Post 2'}
+        )
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE id > ? LIMIT 2", 2).
+        and_return result_stub(:id => 3, :title => 'Post 3')
+      batches = []
+      Post.find_in_batches(:batch_size => 2) do |batch|
+        batches << batch
+      end
+      batches.map { |batch| batch.map(&:title) }.should ==
+        [['Post 1', 'Post 2'], ['Post 3']]
+    end
+
+    it 'should iterate over batches of keys' do
+      connection.stub(:execute).with("SELECT * FROM posts WHERE id IN (?, ?)", 1, 2).
+        and_return result_stub(
+          {:id => 1, :title => 'Post 1'},
+          {:id => 2, :title => 'Post 2'}
+        )
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE id = ?", 3).
+        and_return result_stub(:id => 3, :title => 'Post 3')
+      batches = []
+      Post.where(:id => [1, 2, 3]).find_in_batches(:batch_size => 2) do |batch|
+        batches << batch
+      end
+      batches.map { |batch| batch.map(&:title) }.should ==
+        [['Post 1', 'Post 2'], ['Post 3']]
+    end
+
+    it 'should respect scope' do
+      connection.stub(:execute).with("SELECT id, title FROM posts LIMIT 2").
+        and_return result_stub(
+          {:id => 1, :title => 'Post 1'},
+          {:id => 2, :title => 'Post 2'}
+        )
+      connection.stub(:execute).
+        with("SELECT id, title FROM posts WHERE id > ? LIMIT 2", 2).
+        and_return result_stub(:id => 3, :title => 'Post 3')
+      batches = []
+      Post.select(:id, :title).find_in_batches(:batch_size => 2) do |batch|
+        batches << batch
+      end
+      batches.map { |batch| batch.map(&:title) }.should ==
+        [['Post 1', 'Post 2'], ['Post 3']]
+    end
+
+    it 'should add key column to SELECT if omitted' do
+      connection.stub(:execute).with("SELECT title, id FROM posts LIMIT 2").
+        and_return result_stub(
+          {:id => 1, :title => 'Post 1'},
+          {:id => 2, :title => 'Post 2'}
+        )
+      connection.stub(:execute).
+        with("SELECT title, id FROM posts WHERE id > ? LIMIT 2", 2).
+        and_return result_stub(:id => 3, :title => 'Post 3')
+      batches = []
+      Post.select(:title).find_in_batches(:batch_size => 2) do |batch|
+        batches << batch
+      end
+      batches.map { |batch| batch.map(&:title) }.should ==
+        [['Post 1', 'Post 2'], ['Post 3']]
+    end
+  end
+
+  describe '#find_each' do
+    it 'should iterate over batches and yield results one by one' do
+      connection.stub(:execute).with("SELECT * FROM posts LIMIT 2").
+        and_return result_stub(
+          {:id => 1, :title => 'Post 1'},
+          {:id => 2, :title => 'Post 2'}
+        )
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE id > ? LIMIT 2", 2).
+        and_return result_stub(:id => 3, :title => 'Post 3')
+      Post.find_each(:batch_size => 2).map { |post| post.title }.
+        should == ['Post 1', 'Post 2', 'Post 3']
+    end
+  end
+
   describe '#select' do
     it 'should scope columns in data set' do
       connection.stub(:execute).with("SELECT id, title FROM posts").
