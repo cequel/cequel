@@ -24,7 +24,7 @@ module Cequel
     #
     def initialize(column_family, keyspace)
       @column_family, @keyspace = column_family, keyspace
-      @select_columns, @row_specifications = [], []
+      @select_columns, @select_options, @row_specifications = [], {}, []
     end
 
     #
@@ -105,8 +105,16 @@ module Cequel
     # @return [DataSet] new data set scoped to specified columns
     #
     def select(*columns)
+      options = columns.extract_options!.symbolize_keys
       clone.tap do |data_set|
-        data_set.select_columns.concat(columns.flatten)
+        if columns.length == 1 && Range === columns.first
+          range = columns.first
+          options[:from] = range.first
+          options[:to] = range.last
+        else
+          data_set.select_columns.concat(columns.flatten)
+        end
+        data_set.select_options = options if options.present?
       end
     end
 
@@ -217,7 +225,7 @@ module Cequel
     #
     def cql
       statement = Statement.new.
-        append(select_cql).
+        append(*select_cql).
         append(" FROM #{@column_family}").
         append(consistency_cql).
         append(*row_specifications_cql).
@@ -245,7 +253,7 @@ module Cequel
     end
 
     attr_reader :select_columns, :row_specifications
-    attr_writer :consistency, :limit
+    attr_writer :consistency, :limit, :select_options
 
     private
 
@@ -281,10 +289,21 @@ module Cequel
     end
 
     def select_cql
-      if @select_columns.any?
-        "SELECT #{@select_columns.join(', ')}"
-      else
-        "SELECT *"
+      ['SELECT '].tap do |args|
+        cql = args.first
+        if @select_options[:first]
+          cql << "FIRST #{@select_options[:first]} "
+        elsif @select_options[:last]
+          cql << "FIRST #{@select_options[:last]} REVERSED "
+        end
+        if @select_options[:from] || @select_options[:to]
+          cql << '?..?'
+          args << (@select_options[:from] || '') << (@select_options[:to] || '')
+        elsif @select_columns.any?
+          cql << @select_columns.join(', ')
+        else
+          cql << '*'
+        end
       end
     end
 

@@ -167,6 +167,31 @@ describe Cequel::DataSet do
       cequel[:posts].select(:id).select(:title).cql.
         should == ['SELECT id, title FROM posts']
     end
+
+    it 'should accept :first option' do
+      cequel[:posts].select(:first => 100).cql.
+        should == ['SELECT FIRST 100 * FROM posts']
+    end
+
+    it 'should accept :last option' do
+      cequel[:posts].select(:last => 100).cql.
+        should == ['SELECT FIRST 100 REVERSED * FROM posts']
+    end
+
+    it 'should accept column range' do
+      cequel[:posts].select(1..10).cql.
+        should == ['SELECT ?..? FROM posts', 1, 10]
+    end
+
+    it 'should accept :from option' do
+      cequel[:posts].select(:from => 10).cql.
+        should == ['SELECT ?..? FROM posts', 10, '']
+    end
+
+    it 'should combine range and column limit options' do
+      cequel[:posts].select(:first => 100, :from => 10).cql.
+        should == ['SELECT FIRST 100 ?..? FROM posts', 10, '']
+    end
   end
 
   describe '#select!' do
