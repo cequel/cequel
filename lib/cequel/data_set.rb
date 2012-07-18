@@ -114,7 +114,7 @@ module Cequel
         else
           data_set.select_columns.concat(columns.flatten)
         end
-        data_set.select_options = options if options.present?
+        data_set.select_options.merge!(options)
       end
     end
 
@@ -252,8 +252,8 @@ module Cequel
       cql == other.cql
     end
 
-    attr_reader :select_columns, :row_specifications
-    attr_writer :consistency, :limit, :select_options
+    attr_reader :select_columns, :select_options, :row_specifications
+    attr_writer :consistency, :limit
 
     private
 

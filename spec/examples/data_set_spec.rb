@@ -192,6 +192,11 @@ describe Cequel::DataSet do
       cequel[:posts].select(:first => 100, :from => 10).cql.
         should == ['SELECT FIRST 100 ?..? FROM posts', 10, '']
     end
+
+    it 'should chain select options' do
+      cequel[:posts].select(:first => 100).select(:from => 10).cql.
+        should == ['SELECT FIRST 100 ?..? FROM posts', 10, '']
+    end
   end
 
   describe '#select!' do
