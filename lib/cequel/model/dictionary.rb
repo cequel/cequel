@@ -104,9 +104,11 @@ module Cequel
         return Enumerator.new(self, :load_each_pair, options) unless block
         batch_size = options[:batch_size] || 1000
         batch_scope = scope.select(:first => batch_size)
+        key_alias = self.class.key_alias
         @row = {}
         begin
           batch_results = batch_scope.first
+          batch_results.delete(key_alias)
           batch_results.each_pair(&block)
           batch_scope = batch_scope.select(:from => batch_results.keys.last)
         end while batch_results.length == batch_size

@@ -10,7 +10,7 @@ describe Cequel::Model::Dictionary do
     before do
       connection.stub(:execute).
         with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub(uuid1 => 1, uuid2 => 2)
+        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
     end
 
     it 'should write to row' do
@@ -85,7 +85,7 @@ describe Cequel::Model::Dictionary do
     before do
       connection.stub(:execute).
         with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub(uuid1 => 1, uuid2 => 2)
+        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
       dictionary.load
       connection.should_receive(:execute).
         with('DELETE FROM blog_posts WHERE ? = ?', :blog_id, 1)
@@ -122,7 +122,7 @@ describe Cequel::Model::Dictionary do
     it 'should iterate over loaded properties' do
       connection.stub(:execute).
         with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub(uuid1 => 1, uuid2 => 2)
+        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
       dictionary.load
       hash = {}
       dictionary.each_pair { |column, value| hash[column] = value }
@@ -134,13 +134,13 @@ describe Cequel::Model::Dictionary do
     it 'should load columns in batches and yield them' do
       connection.should_receive(:execute).
         with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub(uuid1 => 1, uuid2 => 2)
+        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
       connection.should_receive(:execute).
         with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
-        and_return result_stub(uuid2 => 2, uuid3 => 3)
+        and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
       connection.should_receive(:execute).
         with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
-        and_return result_stub({})
+        and_return result_stub({'blog_id' => 1})
       hash = {}
       dictionary.load_each_pair(:batch_size => 2) do |key, value|
         hash[key] = value
@@ -212,7 +212,7 @@ describe Cequel::Model::Dictionary do
     it 'should not reload missing column if all columns already loaded' do
       connection.stub(:execute).
         with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub(uuid2 => 2)
+        and_return result_stub('blog_id' => 1, uuid2 => 2)
       dictionary.load
       dictionary[uuid1].should be_nil
     end
