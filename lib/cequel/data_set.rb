@@ -260,6 +260,7 @@ module Cequel
     def initialize_copy(source)
       super
       @select_columns = source.select_columns.clone
+      @select_options = source.select_options.clone
       @row_specifications = source.row_specifications.clone
     end
 
