@@ -3,7 +3,7 @@ require File.expand_path('../spec_helper', __FILE__)
 describe Cequel::Model::Callbacks do
   let(:post) do
     connection.stub(:execute).
-      with("SELECT * FROM posts WHERE id = ? LIMIT 1", 1).
+      with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 1).
       and_return result_stub(:id => 1, :title => 'Cequel')
     Post.find(1)
   end
@@ -56,7 +56,7 @@ describe Cequel::Model::Callbacks do
 
   context 'on destroy' do
     before do
-      connection.stub(:execute).with("DELETE FROM posts WHERE id = ?", 1)
+      connection.stub(:execute).with("DELETE FROM posts WHERE ? = ?", :id, 1)
       post.destroy
     end
 

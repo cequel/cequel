@@ -38,11 +38,10 @@ module Cequel
     def insert(data, options = {})
       options.symbolize_keys!
       cql = "INSERT INTO #{@column_family}" <<
-        " (#{data.keys.join(', ')})" <<
-        " VALUES (" << (['?'] * data.length).join(', ') << ")" <<
+        " (?) VALUES (?)" <<
         generate_upsert_options(options)
 
-      @keyspace.write(cql, *data.values)
+      @keyspace.write(cql, data.keys, data.values)
     end
 
     #
@@ -59,7 +58,7 @@ module Cequel
       statement = Statement.new.
         append("UPDATE #{@column_family}").
         append(generate_upsert_options(options)).
-        append(" SET " << data.keys.map { |k| "#{k} = ?" }.join(', '), *data.values).
+        append(" SET " << data.keys.map { |k| "? = ?" }.join(', '), *data.to_a.flatten).
         append(*row_specifications_cql)
 
       @keyspace.write(*statement.args)
@@ -77,8 +76,9 @@ module Cequel
     def delete(*columns)
       options = columns.extract_options!
       column_aliases = columns.empty? ? '' : " #{columns.join(', ')}"
-      statement = Statement.new.
-        append("DELETE#{column_aliases}").
+      statement = Statement.new.append('DELETE')
+      statement = statement.append(' ?', columns) if columns.any?
+      statement = statement.
         append(" FROM #{@column_family}").
         append(generate_upsert_options(options)).
         append(*row_specifications_cql)
@@ -245,7 +245,7 @@ module Cequel
     end
 
     def inspect
-      "#<#{self.class.name}: #{cql}>"
+      "#<#{self.class.name}: #{CassandraCQL::Statement.sanitize(cql.first, cql[1..-1])}>"
     end
 
     def ==(other)
@@ -300,7 +300,8 @@ module Cequel
           cql << '?..?'
           args << (@select_options[:from] || '') << (@select_options[:to] || '')
         elsif @select_columns.any?
-          cql << @select_columns.join(', ')
+          cql << '?'
+          args << @select_columns
         else
           cql << '*'
         end

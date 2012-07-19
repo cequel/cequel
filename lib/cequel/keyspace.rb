@@ -43,7 +43,7 @@ module Cequel
     # @param *bind_vars [Object] values for bind variables
     #
     def execute(statement, *bind_vars)
-      log('CQL', statement) do
+      log('CQL', statement, *bind_vars) do
         connection.execute(statement, *bind_vars)
       end
     end
@@ -85,19 +85,19 @@ module Cequel
 
     private
 
-    def log(label, message)
+    def log(label, statement, *bind_vars)
       return yield unless @logger || @slowlog
       response = nil
-      time = Benchmark.ms do
-        response = yield
+      time = Benchmark.ms { response = yield }
+      generate_message = proc do
+        sprintf(
+          '%s (%dms) %s', label, time.to_i,
+          CassandraCQL::Statement.sanitize(statement, bind_vars)
+        )
       end
-      if @logger
-        @logger.debug { sprintf('%s (%dms) %s', label, time.to_i, message) }
-      end
+      @logger.debug(&generate_message) if @logger
       threshold = @slowlog_threshold || 2000
-      if @slowlog && time >= threshold
-        @slowlog.warn { sprintf('%s (%dms) %s', label, time.to_i, message) }
-      end
+      @slowlog.warn(&generate_message) if @slowlog && time >= threshold
       response
     end
 

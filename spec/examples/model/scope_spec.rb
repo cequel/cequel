@@ -11,7 +11,7 @@ describe Cequel::Model::Scope do
     end
 
     it 'should enumerate results for just id if no key restriction' do
-      connection.stub(:execute).with("SELECT id FROM posts").
+      connection.stub(:execute).with("SELECT ? FROM posts", [:id]).
         and_return result_stub(:id => 1)
 
       Post.select(:id).to_a.map { |post| post.id }.should == [1]
@@ -51,18 +51,18 @@ describe Cequel::Model::Scope do
     end
 
     it 'should query for a single post within scope' do
-      connection.stub(:execute).with("SELECT id, title FROM posts LIMIT 1").
+      connection.stub(:execute).with("SELECT ? FROM posts LIMIT 1", [:id, :title]).
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.select(:id, :title).first.title.should == 'Cequel'
     end
 
     it 'should query scopes successively when multi-valued non-key column selected' do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE title = ? LIMIT 1", 'Cequel').
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :title, 'Cequel').
         and_return result_stub
-      connection.stub(:execute).with("SELECT * FROM posts WHERE title = ? LIMIT 1", 'Cassandra').
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :title, 'Cassandra').
         and_return result_stub(:id => 1, :title => 'Cassandra')
-      connection.stub(:execute).with("SELECT * FROM posts WHERE title = ? LIMIT 1", 'CQL').
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :title, 'CQL').
         and_return result_stub(:id => 2, :title => 'CQL')
 
       Post.where(:title => %w(Cequel Cassandra CQL)).first.title.
@@ -71,7 +71,7 @@ describe Cequel::Model::Scope do
 
     it 'should apply index preference when specified' do
       connection.should_receive(:execute).
-        with("SELECT * FROM assets WHERE checksum = ? AND class_name = ? LIMIT 1", 'abcdef', 'Photo').
+        with("SELECT * FROM assets WHERE ? = ? AND ? = ? LIMIT 1", :checksum, 'abcdef', :class_name, 'Photo').
         and_return result_stub
       Photo.where(:checksum => 'abcdef').first
     end
@@ -95,7 +95,7 @@ describe Cequel::Model::Scope do
 
     it 'should count records in scope' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 5)
 
       Post.where(:blog_id => 1).count.should == 5
@@ -108,10 +108,10 @@ describe Cequel::Model::Scope do
 
     it 'should perform multiple COUNT queries if non-key column selected for multiple values' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 3)
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 2).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 2).
         and_return result_stub('count' => 2)
 
       Post.where(:blog_id => [1, 2]).count.should == 5
@@ -123,7 +123,7 @@ describe Cequel::Model::Scope do
 
     it 'should apply index preference when specified' do
       connection.should_receive(:execute).
-        with("SELECT COUNT(*) FROM assets WHERE checksum = ? AND class_name = ?", 'abcdef', 'Photo').
+        with("SELECT COUNT(*) FROM assets WHERE ? = ? AND ? = ?", :checksum, 'abcdef', :class_name, 'Photo').
         and_return result_stub('count' => 0)
       Photo.where(:checksum => 'abcdef').count
     end
@@ -132,7 +132,7 @@ describe Cequel::Model::Scope do
   describe '#find' do
     it 'should send scoped query when no block is passed' do
       connection.stub(:execute).
-        with("SELECT id, title FROM posts WHERE id = ? LIMIT 1", 1).
+        with("SELECT ? FROM posts WHERE ? = ? LIMIT 1", [:id, :title], :id, 1).
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.select(:id, :title).find(1).title.should == 'Cequel'
@@ -140,7 +140,7 @@ describe Cequel::Model::Scope do
 
     it 'should send scoped query with multiple keys when no block is passed' do
       connection.stub(:execute).
-        with("SELECT id, title FROM posts WHERE id IN (?, ?)", 1, 2).
+        with("SELECT ? FROM posts WHERE ? IN (?)", [:id, :title], :id, [1, 2]).
         and_return result_stub(
           {:id => 1, :title => 'Cequel'},
           {:id => 2, :title => 'Cequel 2'}
@@ -152,7 +152,7 @@ describe Cequel::Model::Scope do
 
     it 'should delegate to enumerator when block is passed' do
       connection.stub(:execute).
-        with("SELECT id, title FROM posts").
+        with("SELECT ? FROM posts", [:id, :title]).
         and_return result_stub(
           {:id => 1, :title => 'Cequel'},
           {:id => 2, :title => 'Cequel 2'}
@@ -166,7 +166,7 @@ describe Cequel::Model::Scope do
   describe '#any?' do
     it 'if called without block, should return true if COUNT > 0' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 5)
 
       Post.where(:blog_id => 1).any?.should be_true
@@ -174,7 +174,7 @@ describe Cequel::Model::Scope do
 
     it 'if called without block, should return false if COUNT == 0' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 0)
 
       Post.where(:blog_id => 1).any?.should be_false
@@ -182,7 +182,7 @@ describe Cequel::Model::Scope do
 
     it 'if called with block should delegate to enumerator' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE blog_id = ?", 1).
+        with("SELECT * FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub(
           {:id => 1, :title => 'Cequel'},
           {:id => 2, :title => 'Cequel 2'}
@@ -196,7 +196,7 @@ describe Cequel::Model::Scope do
   describe '#none?' do
     it 'if called without block, should return false if COUNT > 0' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 5)
 
       Post.where(:blog_id => 1).none?.should be_false
@@ -204,7 +204,7 @@ describe Cequel::Model::Scope do
 
     it 'if called without block, should return true if COUNT == 0' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 0)
 
       Post.where(:blog_id => 1).none?.should be_true
@@ -212,7 +212,7 @@ describe Cequel::Model::Scope do
 
     it 'if called with block should delegate to enumerator' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE blog_id = ?", 1).
+        with("SELECT * FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub(
           {:id => 1, :title => 'Cequel'},
           {:id => 2, :title => 'Cequel 2'}
@@ -226,7 +226,7 @@ describe Cequel::Model::Scope do
   describe '#one?' do
     it 'if called without block, should return false if COUNT == 0' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 0)
 
       Post.where(:blog_id => 1).one?.should be_false
@@ -234,7 +234,7 @@ describe Cequel::Model::Scope do
 
     it 'if called without block, should return true if COUNT == 1' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 1)
 
       Post.where(:blog_id => 1).one?.should be_true
@@ -242,7 +242,7 @@ describe Cequel::Model::Scope do
 
     it 'if called without block, should return false if COUNT > 1' do
       connection.stub(:execute).
-        with("SELECT COUNT(*) FROM posts WHERE blog_id = ?", 1).
+        with("SELECT COUNT(*) FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub('count' => 12)
 
       Post.where(:blog_id => 1).one?.should be_false
@@ -250,7 +250,7 @@ describe Cequel::Model::Scope do
 
     it 'if called with block should delegate to enumerator' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE blog_id = ?", 1).
+        with("SELECT * FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub(
           {:id => 1, :title => 'Cequel'},
           {:id => 2, :title => 'Cequel 2'}
@@ -269,7 +269,7 @@ describe Cequel::Model::Scope do
           {:id => 2, :title => 'Post 2'}
         )
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id > ? LIMIT 2", 2).
+        with("SELECT * FROM posts WHERE ? > ? LIMIT 2", :id, 2).
         and_return result_stub(:id => 3, :title => 'Post 3')
       batches = []
       Post.find_in_batches(:batch_size => 2) do |batch|
@@ -280,13 +280,13 @@ describe Cequel::Model::Scope do
     end
 
     it 'should iterate over batches of keys' do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE id IN (?, ?)", 1, 2).
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? IN (?)", :id, [1, 2]).
         and_return result_stub(
           {:id => 1, :title => 'Post 1'},
           {:id => 2, :title => 'Post 2'}
         )
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id = ?", 3).
+        with("SELECT * FROM posts WHERE ? = ?", :id, 3).
         and_return result_stub(:id => 3, :title => 'Post 3')
       batches = []
       Post.where(:id => [1, 2, 3]).find_in_batches(:batch_size => 2) do |batch|
@@ -297,13 +297,13 @@ describe Cequel::Model::Scope do
     end
 
     it 'should respect scope' do
-      connection.stub(:execute).with("SELECT id, title FROM posts LIMIT 2").
+      connection.stub(:execute).with("SELECT ? FROM posts LIMIT 2", [:id, :title]).
         and_return result_stub(
           {:id => 1, :title => 'Post 1'},
           {:id => 2, :title => 'Post 2'}
         )
       connection.stub(:execute).
-        with("SELECT id, title FROM posts WHERE id > ? LIMIT 2", 2).
+        with("SELECT ? FROM posts WHERE ? > ? LIMIT 2", [:id, :title], :id, 2).
         and_return result_stub(:id => 3, :title => 'Post 3')
       batches = []
       Post.select(:id, :title).find_in_batches(:batch_size => 2) do |batch|
@@ -314,13 +314,13 @@ describe Cequel::Model::Scope do
     end
 
     it 'should add key column to SELECT if omitted' do
-      connection.stub(:execute).with("SELECT title, id FROM posts LIMIT 2").
+      connection.stub(:execute).with("SELECT ? FROM posts LIMIT 2", [:title, :id]).
         and_return result_stub(
           {:id => 1, :title => 'Post 1'},
           {:id => 2, :title => 'Post 2'}
         )
       connection.stub(:execute).
-        with("SELECT title, id FROM posts WHERE id > ? LIMIT 2", 2).
+        with("SELECT ? FROM posts WHERE ? > ? LIMIT 2", [:title, :id], :id, 2).
         and_return result_stub(:id => 3, :title => 'Post 3')
       batches = []
       Post.select(:title).find_in_batches(:batch_size => 2) do |batch|
@@ -339,7 +339,7 @@ describe Cequel::Model::Scope do
           {:id => 2, :title => 'Post 2'}
         )
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id > ? LIMIT 2", 2).
+        with("SELECT * FROM posts WHERE ? > ? LIMIT 2", :id, 2).
         and_return result_stub(:id => 3, :title => 'Post 3')
       Post.find_each(:batch_size => 2).map { |post| post.title }.
         should == ['Post 1', 'Post 2', 'Post 3']
@@ -348,7 +348,7 @@ describe Cequel::Model::Scope do
 
   describe '#select' do
     it 'should scope columns in data set' do
-      connection.stub(:execute).with("SELECT id, title FROM posts").
+      connection.stub(:execute).with("SELECT ? FROM posts", [:id, :title]).
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.select(:id, :title).map { |post| post.title }.should == ['Cequel']
@@ -361,7 +361,7 @@ describe Cequel::Model::Scope do
 
     it 'should delegate to enumerator if block given' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE blog_id = ?", 1).
+        with("SELECT * FROM posts WHERE ? = ?", :blog_id, 1).
         and_return result_stub(
           {:id => 1, :title => 'Cequel'},
           {:id => 2, :title => 'Cequel 2'},
@@ -375,7 +375,7 @@ describe Cequel::Model::Scope do
 
   describe '#select!' do
     it 'should override previous columns in data set' do
-      connection.stub(:execute).with("SELECT id, published FROM posts").
+      connection.stub(:execute).with("SELECT ? FROM posts", [:id, :published]).
         and_return result_stub(:id => 1, :published => true)
 
       Post.select(:id, :title).select!(:id, :published).
@@ -394,16 +394,16 @@ describe Cequel::Model::Scope do
 
   describe '#where' do
     it 'should scope to row specifications in data set' do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE id = ?", 1).
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ?", :id, 1).
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.where(:id => 1).map { |post| post.title }.should == ['Cequel']
     end
 
     it 'should perform multiple queries if IN query performed on non-key column' do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE title = ?", 'Cequel').
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ?", :title, 'Cequel').
         and_return result_stub(:id => 1, :title => 'Cequel')
-      connection.stub(:execute).with("SELECT * FROM posts WHERE title = ?", 'Fun').
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ?", :title, 'Fun').
         and_return result_stub(
           {:id => 2, :title => 'Fun'},
           {:id => 3, :title => 'Fun'}
@@ -424,7 +424,7 @@ describe Cequel::Model::Scope do
 
     it 'should use index preference if given' do
       connection.should_receive(:execute).
-        with("SELECT * FROM assets WHERE checksum = ? AND class_name = ?", 'abcdef', 'Photo').
+        with("SELECT * FROM assets WHERE ? = ? AND ? = ?", :checksum, 'abcdef', :class_name, 'Photo').
         and_return result_stub
       Photo.where(:checksum => 'abcdef').to_a
     end
@@ -432,7 +432,7 @@ describe Cequel::Model::Scope do
 
   describe '#where!' do
     it 'should override previously chained row specifications' do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE title = ?", 'Cequel').
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ?", :title, 'Cequel').
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.where(:id => 1).where!(:title => 'Cequel').
@@ -452,7 +452,7 @@ describe Cequel::Model::Scope do
   describe 'chaining' do
     it 'should aggregate scopes' do
       connection.stub(:execute).
-        with("SELECT id, title FROM posts USING CONSISTENCY QUORUM WHERE blog_id = ? LIMIT 5", 1).
+        with("SELECT ? FROM posts USING CONSISTENCY QUORUM WHERE ? = ? LIMIT 5", [:id, :title], :blog_id, 1).
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.select(:id, :title).
@@ -464,7 +464,7 @@ describe Cequel::Model::Scope do
 
     it 'should delegate unknown methods to the underlying class with self as current scope' do
       connection.stub(:execute).
-        with("SELECT id, title FROM posts USING CONSISTENCY QUORUM WHERE blog_id = ? LIMIT 5", 1).
+        with("SELECT ? FROM posts USING CONSISTENCY QUORUM WHERE ? = ? LIMIT 5", [:id, :title], :blog_id, 1).
         and_return result_stub(:id => 1, :title => 'Cequel')
 
       Post.select(:id, :title).
@@ -482,13 +482,13 @@ describe Cequel::Model::Scope do
 
       it 'should get all keys and then update htem' do
         connection.should_receive(:execute).
-          with("SELECT id FROM posts").
+          with("SELECT ? FROM posts", [:id]).
           and_return result_stub(
             {:id => 1},
             {:id => 2}
           )
         connection.should_receive(:execute).
-          with "UPDATE posts SET title = ? WHERE id IN (?, ?)", 'Cequel', 1, 2
+          with "UPDATE posts SET ? = ? WHERE ? IN (?)", :title, 'Cequel', :id, [1, 2]
         scope.update_all(:title => 'Cequel')
       end
     end
@@ -498,7 +498,7 @@ describe Cequel::Model::Scope do
 
       it 'should issue scoped update request' do
         connection.should_receive(:execute).
-          with "UPDATE posts SET title = ? WHERE id IN (?, ?)", 'Cequel', 1, 2
+          with "UPDATE posts SET ? = ? WHERE ? IN (?)", :title, 'Cequel', :id, [1, 2]
         scope.update_all(:title => 'Cequel')
       end
 
@@ -509,11 +509,11 @@ describe Cequel::Model::Scope do
 
       it 'should perform "subquery" and issue update' do
         connection.stub(:execute).
-          with("SELECT id FROM posts WHERE published = ?", false).
+          with("SELECT ? FROM posts WHERE ? = ?", [:id], :published, false).
           and_return result_stub({:id => 1}, {:id => 2})
 
         connection.should_receive(:execute).
-          with "UPDATE posts SET title = ? WHERE id IN (?, ?)", 'Cequel', 1, 2
+          with "UPDATE posts SET ? = ? WHERE ? IN (?)", :title, 'Cequel', :id, [1, 2]
 
         scope.update_all(:title => 'Cequel')
       end
@@ -524,15 +524,15 @@ describe Cequel::Model::Scope do
 
       it 'should perform multiple subqueries and execute single update on returned keys' do
         connection.stub(:execute).
-          with("SELECT id FROM posts WHERE title = ?", 'Cequel').
+          with("SELECT ? FROM posts WHERE ? = ?", [:id], :title, 'Cequel').
           and_return result_stub({:id => 1}, {:id => 2})
 
         connection.stub(:execute).
-          with("SELECT id FROM posts WHERE title = ?", 'Cassandra').
+          with("SELECT ? FROM posts WHERE ? = ?", [:id], :title, 'Cassandra').
           and_return result_stub({:id => 3}, {:id => 4})
 
         connection.should_receive(:execute).
-          with "UPDATE posts SET published = ? WHERE id IN (?, ?, ?, ?)", true, 1, 2, 3, 4
+          with "UPDATE posts SET ? = ? WHERE ? IN (?)", :published, true, :id, [1, 2, 3, 4]
 
         scope.update_all(:published => true)
       end
@@ -551,9 +551,9 @@ describe Cequel::Model::Scope do
             {'id' => 2, 'title' => 'Cassandra'}
           )
         connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id = ?", 1
+          with "DELETE FROM posts WHERE ? = ?", :id, 1
         connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id = ?", 2
+          with "DELETE FROM posts WHERE ? = ?", :id, 2
         scope.destroy_all
       end
     end
@@ -563,15 +563,15 @@ describe Cequel::Model::Scope do
 
       it 'should issue scoped update request' do
         connection.should_receive(:execute).
-          with("SELECT * FROM posts WHERE id IN (?, ?)", 1, 2).
+          with("SELECT * FROM posts WHERE ? IN (?)", :id, [1, 2]).
           and_return result_stub(
             {'id' => 1, 'title' => 'Cequel'},
             {'id' => 2, 'title' => 'Cassandra'}
           )
         connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id = ?", 1
+          with "DELETE FROM posts WHERE ? = ?", :id, 1
         connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id = ?", 2
+          with "DELETE FROM posts WHERE ? = ?", :id, 2
         scope.destroy_all
       end
 
@@ -594,7 +594,7 @@ describe Cequel::Model::Scope do
 
       it 'should issue scoped delete request' do
         connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id IN (?, ?)", 1, 2
+          with "DELETE FROM posts WHERE ? IN (?)", :id, [1, 2]
         scope.delete_all
       end
 
@@ -605,11 +605,11 @@ describe Cequel::Model::Scope do
 
       it 'should perform "subquery" and issue update' do
         connection.stub(:execute).
-          with("SELECT id FROM posts WHERE published = ?", false).
+          with("SELECT ? FROM posts WHERE ? = ?", [:id], :published, false).
           and_return result_stub({:id => 1}, {:id => 2})
 
         connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id IN (?, ?)", 1, 2
+          with "DELETE FROM posts WHERE ? IN (?)", :id, [1, 2]
 
         scope.delete_all
       end
@@ -620,15 +620,15 @@ describe Cequel::Model::Scope do
 
       it 'should perform multiple subqueries and execute single update on returned keys' do
         connection.stub(:execute).
-          with("SELECT id FROM posts WHERE title = ?", 'Cequel').
+          with("SELECT ? FROM posts WHERE ? = ?", [:id], :title, 'Cequel').
           and_return result_stub({:id => 1}, {:id => 2})
 
         connection.stub(:execute).
-          with("SELECT id FROM posts WHERE title = ?", 'Cassandra').
+          with("SELECT ? FROM posts WHERE ? = ?", [:id], :title, 'Cassandra').
           and_return result_stub({:id => 3}, {:id => 4})
 
         connection.should_receive(:execute).
-          with "DELETE FROM posts WHERE id IN (?, ?, ?, ?)", 1, 2, 3, 4
+          with "DELETE FROM posts WHERE ? IN (?)", :id, [1, 2, 3, 4]
 
         scope.delete_all
       end

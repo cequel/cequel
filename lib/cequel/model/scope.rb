@@ -288,7 +288,7 @@ module Cequel
           batch_rows = batch_scope.to_a
           yield batch_rows
           batch_scope =
-            scope.where("#{key_alias} > ?", batch_rows.last[key_alias])
+            scope.where("? > ?", key_alias, batch_rows.last[key_alias])
         end while batch_rows.length == batch_size
       end
 

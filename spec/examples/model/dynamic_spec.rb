@@ -12,30 +12,30 @@ describe Cequel::Model::Dynamic do
   it 'should insert dynamic values' do
     category[:tag] = 'bigdata'
     connection.should_receive(:execute).
-      with "INSERT INTO categories (id, name, tag) VALUES (?, ?, ?)", 1, 'Big Data', 'bigdata'
+      with "INSERT INTO categories (?) VALUES (?)", ['id', 'name', 'tag'], [1, 'Big Data', 'bigdata']
     category.save
   end
 
   it 'should update dynamic values' do
     category[:tag] = 'bigdata'
     connection.stub(:execute).
-      with "INSERT INTO categories (id, name, tag) VALUES (?, ?, ?)", 1, 'Big Data', 'bigdata'
+      with "INSERT INTO categories (?) VALUES (?)", ['id', 'name', 'tag'], [1, 'Big Data', 'bigdata']
     category.save
     category[:tag] = 'big-data'
     category[:color] = 'blue'
     connection.should_receive(:execute).
-      with "UPDATE categories SET tag = ?, color = ? WHERE id = ?", 'big-data', 'blue', 1
+      with "UPDATE categories SET ? = ?, ? = ? WHERE ? = ?", 'tag', 'big-data', 'color', 'blue', :id, 1
     category.save
   end
 
   it 'should delete dynamic values' do
     category[:tag] = 'bigdata'
     connection.stub(:execute).
-      with "INSERT INTO categories (id, name, tag) VALUES (?, ?, ?)", 1, 'Big Data', 'bigdata'
+      with "INSERT INTO categories (?) VALUES (?)", ['id', 'name', 'tag'], [1, 'Big Data', 'bigdata']
     category.save
     category[:tag] = nil
     connection.should_receive(:execute).
-      with "DELETE tag FROM categories WHERE id = ?", 1
+      with "DELETE ? FROM categories WHERE ? = ?", ['tag'], :id, 1
     category.save
   end
 end

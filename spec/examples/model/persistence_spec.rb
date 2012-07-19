@@ -4,7 +4,7 @@ describe Cequel::Model::Persistence do
   describe '#find' do
     it 'should return hydrated instance' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id = ? LIMIT 1", 2).
+        with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 2).
         and_return result_stub(:id => 2, :title => 'Cequel')
 
       post = Post.find(2)
@@ -14,7 +14,7 @@ describe Cequel::Model::Persistence do
 
     it 'should not set defaults when hydrating instance' do
       connection.stub(:execute).
-        with("SELECT id, name FROM blogs WHERE id = ? LIMIT 1", 2).
+        with("SELECT ? FROM blogs WHERE ? = ? LIMIT 1", [:id, :name], :id, 2).
         and_return result_stub(:id => 1, :title => 'Big Data')
 
       blog = Blog.select(:id, :name).find(2)
@@ -23,7 +23,7 @@ describe Cequel::Model::Persistence do
 
     it 'should return multiple instances' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id IN (?, ?)", 2, 5).
+        with("SELECT * FROM posts WHERE ? IN (?)", :id, [2, 5]).
         and_return result_stub(
           {:id => 2, :title => 'Cequel 2'},
           {:id => 5, :title => 'Cequel 5'}
@@ -36,7 +36,7 @@ describe Cequel::Model::Persistence do
 
     it 'should return one-element array if passed one-element array' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id = ? LIMIT 1", 2).
+        with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 2).
         and_return result_stub(:id => 2, :title => 'Cequel')
 
       post = Post.find([2]).first
@@ -46,7 +46,7 @@ describe Cequel::Model::Persistence do
 
     it 'should raise RecordNotFound if row has no data' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id = ? LIMIT 1", 2).
+        with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 2).
         and_return result_stub(:id => 2)
 
       expect { Post.find(2) }.to raise_error Cequel::Model::RecordNotFound
@@ -54,7 +54,7 @@ describe Cequel::Model::Persistence do
 
     it 'should raise RecordNotFound if row has nil data' do
       connection.stub(:execute).
-        with("SELECT title FROM posts WHERE id = ? LIMIT 1", 2).
+        with("SELECT ? FROM posts WHERE ? = ? LIMIT 1", [:title], :id, 2).
         and_return result_stub(:title => nil)
 
       expect { Post.select(:title).find(2) }.to raise_error Cequel::Model::RecordNotFound
@@ -62,7 +62,7 @@ describe Cequel::Model::Persistence do
 
     it 'should raise RecordNotFound if some rows in multi-row query have no data' do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id IN (?, ?)", 2, 5).
+        with("SELECT * FROM posts WHERE ? IN (?)", :id, [2, 5]).
         and_return result_stub(
           {:id => 2, :title => 'Cequel 2'},
           {:id => 5}
@@ -75,7 +75,7 @@ describe Cequel::Model::Persistence do
   describe '#reload' do
     let(:post) do
       connection.stub(:execute).
-        with("SELECT * FROM posts WHERE id = ? LIMIT 1", 2).
+        with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 2).
         and_return result_stub(:id => 2, :title => 'Cequel')
       Post.find(2)
     end
@@ -83,7 +83,7 @@ describe Cequel::Model::Persistence do
     it 'should reload attributes from Cassandra' do
       post.title = 'Donkeys'
       connection.should_receive(:execute).
-        with("SELECT * FROM posts WHERE id = ? LIMIT 1", 2).
+        with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 2).
         and_return result_stub(:id => 2, :title => 'Cequel')
       post.reload
       post.title.should == 'Cequel'
@@ -96,7 +96,7 @@ describe Cequel::Model::Persistence do
 
       it 'should persist only columns with values' do
         connection.should_receive(:execute).
-          with("INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Cequel')
+          with("INSERT INTO posts (?) VALUES (?)", ['id', 'title'], [1, 'Cequel'])
 
         post.title = 'Cequel'
         post.save
@@ -104,7 +104,7 @@ describe Cequel::Model::Persistence do
 
       it 'should mark instance as persisted' do
         connection.stub(:execute).
-          with("INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Cequel')
+          with("INSERT INTO posts (?) VALUES (?)", ['id', 'title'], [1, 'Cequel'])
 
         post.title = 'Cequel'
         post.save
@@ -123,14 +123,14 @@ describe Cequel::Model::Persistence do
 
     describe 'with persisted record' do
       let(:post) do
-        connection.stub(:execute).with("SELECT * FROM posts WHERE id = ? LIMIT 1", 1).
+        connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 1).
           and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
         Post.find(1)
       end
 
       it 'should send UPDATE statement with changed columns using underlying attributes' do
         connection.should_receive(:execute).
-          with "UPDATE posts SET body = ?, author_name = ? WHERE id = ?", 'Cequel cequel', 'nworB taM', 1
+          with "UPDATE posts SET ? = ?, ? = ? WHERE ? = ?", 'body', 'Cequel cequel', 'author_name', 'nworB taM', :id, 1
         post.body = 'Cequel cequel'
         post.author_name = 'Mat Brown'
         post.save
@@ -138,14 +138,14 @@ describe Cequel::Model::Persistence do
 
       it 'should send DELETE statement with removed columns' do
         connection.should_receive(:execute).
-          with "DELETE title FROM posts WHERE id = ?", 1
+          with "DELETE ? FROM posts WHERE ? = ?", ['title'], :id, 1
         post.title = nil
         post.save
       end
 
       it 'should mark record as transient if all attributes removed' do
         connection.stub(:execute).
-          with "DELETE title, blog_id FROM posts WHERE id = ?", 1
+          with "DELETE ? FROM posts WHERE ? = ?", ['title', 'blog_id'], :id, 1
         post.title = nil
         post.blog_id = nil
         post.save
@@ -156,28 +156,28 @@ describe Cequel::Model::Persistence do
 
   describe '#update_attributes' do
     let(:post) do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE id = ? LIMIT 1", 1).
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 1).
         and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
       Post.find(1)
     end
 
     it 'should change attributes and save them' do
       connection.should_receive(:execute).
-        with "UPDATE posts SET body = ? WHERE id = ?", 'Cequel cequel', 1
+        with "UPDATE posts SET ? = ? WHERE ? = ?", 'body', 'Cequel cequel', :id, 1
       post.update_attributes(:body => 'Cequel cequel')
     end
   end
 
   describe '#destroy' do
     let(:post) do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE id = ? LIMIT 1", 1).
+      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 1).
         and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
       Post.find(1)
     end
 
     it 'should delete all columns from column family' do
       connection.should_receive(:execute).
-        with "DELETE FROM posts WHERE id = ?", 1
+        with "DELETE FROM posts WHERE ? = ?", :id, 1
 
       post.destroy
     end
@@ -186,14 +186,14 @@ describe Cequel::Model::Persistence do
   describe '::create' do
     it 'should persist only columns with values' do
       connection.should_receive(:execute).
-        with("INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Cequel')
+        with("INSERT INTO posts (?) VALUES (?)", ['id', 'title'], [1, 'Cequel'])
 
       Post.create(:id => 1, :title => 'Cequel')
     end
 
     it 'should return post instance and mark it as persisted' do
       connection.stub(:execute).
-        with("INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Cequel')
+        with("INSERT INTO posts (?) VALUES (?)", ['id', 'title'], [1, 'Cequel'])
 
       Post.create(:id => 1, :title => 'Cequel').should be_persisted
     end

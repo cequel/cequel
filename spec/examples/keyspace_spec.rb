@@ -5,10 +5,10 @@ require 'logger'
 describe Cequel::Keyspace do
   describe '::batch' do
     it 'should send enclosed write statements in bulk' do
-      connection.should_receive(:execute).with(<<CQL, 1, 'Hey', 'Body')
+      connection.should_receive(:execute).with(<<CQL, [:id, :title], [1, 'Hey'], :body, 'Body')
 BEGIN BATCH
-INSERT INTO posts (id, title) VALUES (?, ?)
-UPDATE posts SET body = ?
+INSERT INTO posts (?) VALUES (?)
+UPDATE posts SET ? = ?
 DELETE FROM posts
 APPLY BATCH
 CQL
@@ -20,10 +20,10 @@ CQL
     end
 
     it 'should auto-apply if option given' do
-      connection.should_receive(:execute).with(<<CQL, 1, 'Hey', 'Body')
+      connection.should_receive(:execute).with(<<CQL, [:id, :title], [1, 'Hey'], :body, 'Body')
 BEGIN BATCH
-INSERT INTO posts (id, title) VALUES (?, ?)
-UPDATE posts SET body = ?
+INSERT INTO posts (?) VALUES (?)
+UPDATE posts SET ? = ?
 APPLY BATCH
 CQL
       connection.should_receive(:execute).with(<<CQL)
@@ -54,10 +54,10 @@ CQL
       cequel.logger = logger
     end
 
-    it 'should log queries' do
-      connection.stub(:execute).with("SELECT * FROM posts").and_return result_stub
-      cequel[:posts].to_a
-      io.string.should =~ /CQL \(\d+ms\) SELECT \* FROM posts/
+    it 'should log queries with bind variables resolved' do
+      connection.stub(:execute).with("SELECT ? FROM posts", [:id, :title]).and_return result_stub
+      cequel[:posts].select(:id, :title).to_a
+      io.string.should =~ /CQL \(\d+ms\) SELECT 'id','title' FROM posts/
     end
   end
 end

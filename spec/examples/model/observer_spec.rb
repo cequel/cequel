@@ -8,7 +8,7 @@ describe Cequel::Model::Observer do
 
   let(:post) do
     connection.stub(:execute).
-      with("SELECT * FROM posts WHERE id = ? LIMIT 1", 1).
+      with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 1).
       and_return result_stub('id' => 1, 'title' => 'Hey')
     Post.find(1)
   end
@@ -37,7 +37,7 @@ describe Cequel::Model::Observer do
   context 'on create' do
     let(:post) do
       connection.stub(:execute).
-        with "INSERT INTO posts (id, title) VALUES (?, ?)", 1, 'Hey'
+        with "INSERT INTO posts (?) VALUES (?)", ['id', 'title'], [1, 'Hey']
       Post.new(:id => 1, :title => 'Hey')
     end
 
@@ -59,7 +59,7 @@ describe Cequel::Model::Observer do
 
     before do
       connection.stub(:execute).
-        with "DELETE FROM posts WHERE id = ?", 1
+        with "DELETE FROM posts WHERE ? = ?", :id, 1
 
       post.destroy
     end
@@ -78,7 +78,7 @@ describe Cequel::Model::Observer do
   context 'with inheritence' do
     it 'should observe subclass' do
       connection.stub(:execute).
-        with("INSERT INTO assets (id, label, class_name) VALUES (?, ?, ?)", 1, 'Cequel', 'Photo')
+        with("INSERT INTO assets (?) VALUES (?)", ['id', 'label', 'class_name'], [1, 'Cequel', 'Photo'])
       photo = Photo.create!(:id => 1, :label => 'Cequel')
       photo.should have_observed(:before_save)
     end
