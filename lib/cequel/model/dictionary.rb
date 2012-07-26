@@ -6,7 +6,7 @@ module Cequel
 
       class <<self
 
-        attr_writer :column_family
+        attr_writer :column_family, :default_batch_size
 
         def key_alias
           @key_alias ||= :KEY
@@ -48,11 +48,17 @@ module Cequel
           self.column_family = Cequel::Model.keyspace[column_family_name]
         end
 
+        def default_batch_size
+          @default_batch_size || 1000
+        end
+
         def [](key)
           new(key)
         end
         private :new
       end
+
+      include Enumerable
 
       def initialize(key)
         @key = key
@@ -71,7 +77,23 @@ module Cequel
       end
 
       def [](column)
-        @row[column]
+        @loaded ? @row[column] : scope.select(column).first[column]
+      end
+
+      def keys
+        @loaded ? @row.keys : each_pair.map { |key, value| key }
+      end
+
+      def values
+        @loaded ? @row.values : each_pair.map { |key, value| value }
+      end
+
+      def slice(*columns)
+        if @loaded
+          @row.slice(*columns)
+        else
+          scope.select(*columns).first.except(self.class.key_alias)
+        end
       end
 
       def destroy
@@ -88,55 +110,46 @@ module Cequel
         self
       end
 
-      def load(*args)
-        return load_all if args.empty?
-        row = scope.select(*args).first
-        row.delete(self.class.key_alias)
-        if args.length == 1 && (Hash === args.first || Range === args.first)
-          @row.merge!(row)
-        else # set values, and also set missing columns to nil to prevent double lookup
-          args.each { |column| @row[column] = row[column] }
-        end
-        self
-      end
-
-      def load_each_pair(options = {}, &block)
-        return Enumerator.new(self, :load_each_pair, options) unless block
-        batch_size = options[:batch_size] || 1000
+      def each_pair(options = {}, &block)
+        return Enumerator.new(self, :each_pair, options) unless block
+        return @row.each_pair(&block) if @loaded
+        batch_size = options[:batch_size] || self.class.default_batch_size
         batch_scope = scope.select(:first => batch_size)
         key_alias = self.class.key_alias
         @row = {}
+        last_key = nil
         begin
           batch_results = batch_scope.first
           batch_results.delete(key_alias)
+          result_length = batch_results.length
+          batch_results.delete(last_key) unless last_key.nil?
           batch_results.each_pair(&block)
-          batch_scope = batch_scope.select(:from => batch_results.keys.last)
-        end while batch_results.length == batch_size
+          last_key = batch_results.keys.last
+          batch_scope = batch_scope.select(:from => last_key)
+        end while result_length == batch_size
       end
 
-      def each_pair(&block)
-        @row.each_pair(&block)
+      def each(&block)
+        each_pair(&block)
+      end
+
+      def load
+        @row = {}
+        each_pair { |column, value| @row[column] = value }
+        @loaded = true
+        self
       end
 
       private
 
       def setup
-        @row = Hash.new do |h, k|
-          self.load(k)
-          @row[k]
-        end
+        @row = {}
         @changed_columns = Set[]
         @deleted_columns = Set[]
       end
 
       def scope
         self.class.column_family.where(self.class.key_alias => @key)
-      end
-
-      def load_all
-        @row = {}
-        load_each_pair { |column, value| @row[column] = value }
-        self
       end
 
     end

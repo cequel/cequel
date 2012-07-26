@@ -9,8 +9,11 @@ describe Cequel::Model::Dictionary do
   describe '#save' do
     before do
       connection.stub(:execute).
-        with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+        with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
         and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+      connection.stub(:execute).
+        with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+        and_return result_stub('blog_id' => 1)
     end
 
     it 'should write to row' do
@@ -84,8 +87,12 @@ describe Cequel::Model::Dictionary do
   describe '#destroy' do
     before do
       connection.stub(:execute).
-        with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+        with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
         and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+      connection.stub(:execute).
+        with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+        and_return result_stub({'blog_id' => 1})
+
       dictionary.load
       connection.should_receive(:execute).
         with('DELETE FROM blog_posts WHERE ? = ?', :blog_id, 1)
@@ -118,103 +125,128 @@ describe Cequel::Model::Dictionary do
     end
   end
 
-  describe '#each_pair' do
-    it 'should iterate over loaded properties' do
-      connection.stub(:execute).
-        with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
-      dictionary.load
-      hash = {}
-      dictionary.each_pair { |column, value| hash[column] = value }
-      hash.should == {uuid1 => 1, uuid2 => 2}
+  context 'without row in memory' do
+
+    describe '#each_pair' do
+
+      it 'should load columns in batches and yield them' do
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
+          and_return result_stub({'blog_id' => 1})
+        hash = {}
+        dictionary.each_pair do |key, value|
+          hash[key] = value
+        end
+        hash.should == {uuid1 => 1, uuid2 => 2, uuid3 => 3}
+      end
+
     end
+
+    describe '#[]' do
+
+      it 'should load column from cassandra' do
+        connection.stub(:execute).
+          with('SELECT ? FROM blog_posts WHERE ? = ? LIMIT 1', [uuid1], :blog_id, 1).
+          and_return result_stub(uuid1 => 1)
+        dictionary[uuid1].should == 1
+      end
+
+    end
+
+    describe '#slice' do
+      it 'should load columns from data store' do
+        connection.stub(:execute).
+          with('SELECT ? FROM blog_posts WHERE ? = ? LIMIT 1', [uuid1,uuid2], :blog_id, 1).
+          and_return result_stub(uuid1 => 1, uuid2 => 2)
+        dictionary.slice(uuid1, uuid2).should == {uuid1 => 1, uuid2 => 2}
+      end
+    end
+
+    describe '#keys' do
+      it 'should load keys from data store' do
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
+          and_return result_stub({'blog_id' => 1})
+        dictionary.keys.should == [uuid1, uuid2, uuid3]
+      end
+    end
+
+    describe '#values' do
+      it 'should load values from data store' do
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
+          and_return result_stub({'blog_id' => 1})
+        dictionary.values.should == [1, 2, 3]
+      end
+    end
+
   end
 
-  describe '#load_each_pair' do
-    it 'should load columns in batches and yield them' do
-      connection.should_receive(:execute).
+  context 'with data loaded in memory' do
+    before do
+      connection.stub(:execute).
         with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
         and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
-      connection.should_receive(:execute).
+      connection.stub(:execute).
         with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
         and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
-      connection.should_receive(:execute).
+      connection.stub(:execute).
         with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
         and_return result_stub({'blog_id' => 1})
-      hash = {}
-      dictionary.load_each_pair(:batch_size => 2) do |key, value|
-        hash[key] = value
+      dictionary.load
+      connection.should_not_receive(:execute)
+    end
+
+    describe '#each_pair' do
+      it 'should yield data from memory' do
+        hash = {}
+        dictionary.each_pair do |key, value|
+          hash[key] = value
+        end
+        hash.should == {uuid1 => 1, uuid2 => 2, uuid3 => 3}
       end
-      hash.should == {uuid1 => 1, uuid2 => 2, uuid3 => 3}
     end
 
-  end
-
-  describe '#load' do
-
-    it 'should populate dictionary with all columns' do
-      connection.should_receive(:execute).
-        with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
-      dictionary.load
-      dictionary[uuid1].should == 1
+    describe '#[]' do
+      it 'should return value from memory' do
+        dictionary[uuid1].should == 1
+      end
     end
 
-    it 'should populate dictionary with specified columns' do
-      connection.should_receive(:execute).
-        with('SELECT ? FROM blog_posts WHERE ? = ? LIMIT 1', [uuid1, uuid2, uuid3], :blog_id, 1).
-        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
-      dictionary.load(uuid1, uuid2, uuid3)
+    describe '#slice' do
+      it 'should return slice of data in memory' do
+        dictionary.slice(uuid1, uuid2).should == {uuid1 => 1, uuid2 => 2}
+      end
     end
 
-    it 'should populate dictionary with column range' do
-      connection.should_receive(:execute).
-        with('SELECT ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid1, uuid3, :blog_id, 1).
-        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
-      dictionary.load(uuid1..uuid3)
+    describe '#keys' do
+      it 'should return keys from memory' do
+        dictionary.keys.should == [uuid1, uuid2, uuid3]
+      end
     end
 
-    it 'should populate dictionary with greater-than range' do
-      connection.should_receive(:execute).
-        with('SELECT ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid1, '', :blog_id, 1).
-        and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
-      dictionary.load(:from => uuid1)
-    end
-
-  end
-
-  describe '#[]' do
-    it 'should load column from cassandra if it has not already' do
-      connection.stub(:execute).
-        with('SELECT ? FROM blog_posts WHERE ? = ? LIMIT 1', [uuid1], :blog_id, 1).
-        and_return result_stub(uuid1 => 1)
-      dictionary[uuid1].should == 1
-    end
-
-    it 'should not reload column if it has been loaded' do
-      connection.stub(:execute).
-        with('SELECT ? FROM blog_posts WHERE ? = ? LIMIT 1', [uuid1], :blog_id, 1).
-        and_return result_stub(uuid1 => 1)
-      dictionary.load(uuid1)
-      connection.should_not_receive(:execute)
-      dictionary[uuid1].should == 1
-    end
-
-    it 'should not reload column if it was not found by previous load' do
-      connection.stub(:execute).
-        with('SELECT ? FROM blog_posts WHERE ? = ? LIMIT 1', [uuid1], :blog_id, 1).
-        and_return result_stub({})
-      dictionary.load(uuid1)
-      connection.should_not_receive(:execute)
-      dictionary[uuid1].should be_nil
-    end
-
-    it 'should not reload missing column if all columns already loaded' do
-      connection.stub(:execute).
-        with('SELECT FIRST 1000 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
-        and_return result_stub('blog_id' => 1, uuid2 => 2)
-      dictionary.load
-      dictionary[uuid1].should be_nil
+    describe '#values' do
+      it 'should return values from memory' do
+        dictionary.values.should == [1, 2, 3]
+      end
     end
   end
 
