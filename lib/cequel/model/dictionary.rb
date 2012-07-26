@@ -77,7 +77,11 @@ module Cequel
       end
 
       def [](column)
-        @loaded ? @row[column] : scope.select(column).first[column]
+        if @loaded || @changed_columns.include?(column)
+          @row[column]
+        elsif !@deleted_columns.include?(column)
+          scope.select(column).first[column]
+        end
       end
 
       def keys
@@ -92,7 +96,10 @@ module Cequel
         if @loaded
           @row.slice(*columns)
         else
-          scope.select(*columns).first.except(self.class.key_alias)
+          scope.select(*columns).first.except(self.class.key_alias).tap do |slice| 
+            slice.merge!(@row.slice(*@changed_columns))
+            @deleted_columns.each { |column| slice.delete(column) }
+          end
         end
       end
 
@@ -116,17 +123,27 @@ module Cequel
         batch_size = options[:batch_size] || self.class.default_batch_size
         batch_scope = scope.select(:first => batch_size)
         key_alias = self.class.key_alias
-        @row = {}
         last_key = nil
+        new_columns = @changed_columns.dup
         begin
           batch_results = batch_scope.first
           batch_results.delete(key_alias)
           result_length = batch_results.length
           batch_results.delete(last_key) unless last_key.nil?
-          batch_results.each_pair(&block)
+          batch_results.each_pair do |key, value|
+            if @changed_columns.include?(key)
+              new_columns.delete(key)
+              yield key, @row[key]
+            elsif !@deleted_columns.include?(key)
+              yield key, value
+            end
+          end
           last_key = batch_results.keys.last
           batch_scope = batch_scope.select(:from => last_key)
         end while result_length == batch_size
+        new_columns.each do |key|
+          yield key, @row[key]
+        end
       end
 
       def each(&block)

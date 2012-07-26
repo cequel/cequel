@@ -250,6 +250,89 @@ describe Cequel::Model::Dictionary do
     end
   end
 
+  context 'with data modified but not loaded in memory' do
+    let(:uuid4) { uuid }
+
+    before do
+      dictionary[uuid1] = -1
+      dictionary[uuid3] = nil
+      dictionary[uuid4] = 4
+    end
+
+    describe '#each_pair' do
+      it 'should override persisted data with unsaved changes' do
+        connection.stub(:execute).
+          with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+        connection.stub(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
+        connection.stub(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
+          and_return result_stub({'blog_id' => 1})
+        hash = {}
+        dictionary.each_pair do |key, value|
+          hash[key] = value
+        end
+        hash.should == {uuid1 => -1, uuid2 => 2, uuid4 => 4}
+      end
+    end
+
+    describe '#[]' do
+      it 'should return unsaved changed value' do
+        dictionary[uuid1].should == -1
+      end
+
+      it 'should return nil if value removed' do
+        dictionary[uuid3].should be_nil
+      end
+
+      it 'should return unsaved new value' do
+        dictionary[uuid4].should == 4
+      end
+    end
+
+    describe '#slice' do
+      it 'should override loaded slice with unsaved data in memory' do
+        connection.stub(:execute).
+          with('SELECT ? FROM blog_posts WHERE ? = ? LIMIT 1', [uuid1,uuid2,uuid3,uuid4], :blog_id, 1).
+          and_return result_stub(uuid1 => 1, uuid2 => 2, uuid3 => 3)
+        dictionary.slice(uuid1, uuid2, uuid3, uuid4).should ==
+          {uuid1 => -1, uuid2 => 2, uuid4 => 4}
+      end
+    end
+
+    describe '#keys' do
+      it 'should override keys that have been added or removed' do
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
+          and_return result_stub({'blog_id' => 1})
+        dictionary.keys.should == [uuid1, uuid2, uuid4]
+      end
+    end
+
+    describe '#values' do
+      it 'should override values that have been added or removed' do
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 * FROM blog_posts WHERE ? = ? LIMIT 1', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid1 => 1, uuid2 => 2)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid2, '', :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid2 => 2, uuid3 => 3)
+        connection.should_receive(:execute).
+          with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
+          and_return result_stub({'blog_id' => 1})
+        dictionary.values.should == [-1, 2, 4]
+      end
+    end
+  end
+
   private
 
   def uuid
