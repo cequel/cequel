@@ -163,6 +163,10 @@ module Cequel
         self
       end
 
+      def loaded?
+        !!@loaded
+      end
+
       private
 
       def setup
