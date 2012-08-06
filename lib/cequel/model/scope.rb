@@ -67,7 +67,7 @@ module Cequel
 
       def find_each_row(options = {}, &block)
         unless ::Kernel.block_given?
-          return ::Enumerator.new(self, :find_each, options)
+          return ::Enumerator.new(self, :find_each_row, options)
         end
         find_rows_in_batches(options) { |batch| batch.each(&block) }
       end
@@ -284,11 +284,18 @@ module Cequel
         end
 
         batch_scope = scope
+        last_key = nil
         begin
           batch_rows = batch_scope.to_a
-          yield batch_rows
+          break if batch_rows.empty?
+          if batch_rows.first[key_alias] == last_key
+            yield batch_rows[1..-1]
+          else
+            yield batch_rows
+          end
+          last_key = batch_rows.last[key_alias]
           batch_scope =
-            scope.where("? > ?", key_alias, batch_rows.last[key_alias])
+            scope.where("? > ?", key_alias, last_key)
         end while batch_rows.length == batch_size
       end
 

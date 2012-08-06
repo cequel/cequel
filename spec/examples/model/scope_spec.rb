@@ -279,6 +279,29 @@ describe Cequel::Model::Scope do
         [['Post 1', 'Post 2'], ['Post 3']]
     end
 
+    it 'should not duplicate last key if given back first in next batch' do
+      connection.stub(:execute).with("SELECT * FROM posts LIMIT 2").
+        and_return result_stub(
+          {:id => 1, :title => 'Post 1'},
+          {:id => 2, :title => 'Post 2'}
+        )
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE ? > ? LIMIT 2", :id, 2).
+        and_return result_stub(
+          {:id => 2, :title => 'Post 2'},
+          {:id => 3, :title => 'Post 3'}
+        )
+      connection.stub(:execute).
+        with("SELECT * FROM posts WHERE ? > ? LIMIT 2", :id, 3).
+        and_return result_stub()
+      batches = []
+      Post.find_in_batches(:batch_size => 2) do |batch|
+        batches << batch
+      end
+      batches.map { |batch| batch.map(&:title) }.should ==
+        [['Post 1', 'Post 2'], ['Post 3']]
+    end
+
     it 'should iterate over batches of keys' do
       connection.stub(:execute).with("SELECT * FROM posts WHERE ? IN (?)", :id, [1, 2]).
         and_return result_stub(
