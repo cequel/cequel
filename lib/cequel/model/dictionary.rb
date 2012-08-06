@@ -81,7 +81,7 @@ module Cequel
           @row[column]
         elsif !@deleted_columns.include?(column)
           value = scope.select(column).first[column]
-          deserialize_value(value) if value
+          deserialize_value(column, value) if value
         end
       end
 
@@ -99,7 +99,7 @@ module Cequel
         else
           {}.tap do |slice|
             row = scope.select(*columns).first.except(self.class.key_alias)
-            row.each { |col, value| slice[col] = deserialize_value(value) }
+            row.each { |col, value| slice[col] = deserialize_value(col, value) }
             slice.merge!(@row.slice(*columns))
             @deleted_columns.each { |column| slice.delete(column) }
           end
@@ -141,7 +141,7 @@ module Cequel
               new_columns.delete(key)
               yield key, @row[key]
             elsif !@deleted_columns.include?(key)
-              yield key, deserialize_value(value)
+              yield key, deserialize_value(key, value)
             end
           end
           last_key = batch_results.keys.last
@@ -187,7 +187,7 @@ module Cequel
       # Subclasses may override this method to implement custom deserialization
       # strategies
       #
-      def deserialize_value(value)
+      def deserialize_value(column, value)
         value
       end
 

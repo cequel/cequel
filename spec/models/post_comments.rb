@@ -8,7 +8,7 @@ class PostComments < Cequel::Model::Dictionary
     data.to_json
   end
 
-  def deserialize_value(json)
+  def deserialize_value(post_id, json)
     JSON.parse(json)
   end
 end
