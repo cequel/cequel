@@ -80,7 +80,8 @@ module Cequel
         if @loaded || @changed_columns.include?(column)
           @row[column]
         elsif !@deleted_columns.include?(column)
-          scope.select(column).first[column]
+          value = scope.select(column).first[column]
+          deserialize_value(value) if value
         end
       end
 
@@ -96,8 +97,10 @@ module Cequel
         if @loaded
           @row.slice(*columns)
         else
-          scope.select(*columns).first.except(self.class.key_alias).tap do |slice| 
-            slice.merge!(@row.slice(*@changed_columns))
+          {}.tap do |slice|
+            row = scope.select(*columns).first.except(self.class.key_alias)
+            row.each { |col, value| slice[col] = deserialize_value(value) }
+            slice.merge!(@row.slice(*columns))
             @deleted_columns.each { |column| slice.delete(column) }
           end
         end
@@ -109,7 +112,10 @@ module Cequel
       end
 
       def save
-        updates = @row.slice(*@changed_columns)
+        updates = {}
+        @changed_columns.each do |column|
+          updates[column] = serialize_value(@row[column])
+        end
         scope.update(updates) if updates.any?
         scope.delete(*@deleted_columns.to_a) if @deleted_columns.any?
         @changed_columns.clear
@@ -135,7 +141,7 @@ module Cequel
               new_columns.delete(key)
               yield key, @row[key]
             elsif !@deleted_columns.include?(key)
-              yield key, value
+              yield key, deserialize_value(value)
             end
           end
           last_key = batch_results.keys.last
@@ -167,6 +173,22 @@ module Cequel
 
       def scope
         self.class.column_family.where(self.class.key_alias => @key)
+      end
+
+      #
+      # Subclasses may override this method to implement custom serialization
+      # strategies
+      #
+      def serialize_value(value)
+        value
+      end
+
+      #
+      # Subclasses may override this method to implement custom deserialization
+      # strategies
+      #
+      def deserialize_value(value)
+        value
       end
 
     end

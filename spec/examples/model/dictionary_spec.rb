@@ -73,7 +73,7 @@ describe Cequel::Model::Dictionary do
         with('UPDATE blog_posts SET ? = ? WHERE ? = ?', uuid3, 3, :blog_id, 1)
       2.times { dictionary.save }
     end
-    
+
     it 'should not delete columns that have been deleted previously' do
       dictionary.load
       dictionary[uuid1] = nil
@@ -329,6 +329,78 @@ describe Cequel::Model::Dictionary do
           with('SELECT FIRST 2 ?..? FROM blog_posts WHERE ? = ? LIMIT 1', uuid3, '', :blog_id, 1).
           and_return result_stub({'blog_id' => 1})
         dictionary.values.should == [-1, 2, 4]
+      end
+    end
+  end
+
+  context 'with serializer/deserializer defined' do
+    let(:dictionary) { PostComments[1] }
+    let(:comment) { {'user' => 'Mat Brown', 'comment' => 'I like big data.'} }
+
+    describe '#save' do
+      it 'should serialize data' do
+        dictionary[4] = comment
+        connection.should_receive(:execute).
+          with(
+            'UPDATE post_comments SET ? = ? WHERE ? = ?',
+            4, comment.to_json, :post_id, 1
+          )
+        dictionary.save
+      end
+    end
+
+    describe '#[]' do
+      it 'should return deserialized data' do
+        connection.stub(:execute).with(
+            'SELECT ? FROM post_comments WHERE ? = ? LIMIT 1',
+            [4], :post_id, 1
+        ).and_return result_stub(4 => comment.to_json)
+        dictionary[4].should == comment
+      end
+    end
+
+    describe '#slice' do
+      it 'should return deserialized values' do
+        connection.stub(:execute).with(
+          'SELECT ? FROM post_comments WHERE ? = ? LIMIT 1',
+          [4, 5], :post_id, 1
+        ).and_return result_stub(4 => comment.to_json)
+        dictionary.slice(4, 5).should == {4 => comment}
+      end
+    end
+
+    describe '#load' do
+      it 'should retain deserialized values in memory' do
+        connection.stub(:execute).with(
+          'SELECT FIRST 1000 * FROM post_comments WHERE ? = ? LIMIT 1',
+          :post_id, 1
+        ).and_return result_stub(4 => comment.to_json)
+        dictionary.load
+        connection.should_not_receive(:execute)
+        dictionary[4].should == comment
+      end
+    end
+
+    describe '#each_pair' do
+      it 'should yield deserialized values' do
+        connection.stub(:execute).
+          with(
+            'SELECT FIRST 1000 * FROM post_comments WHERE ? = ? LIMIT 1',
+            :post_id, 1
+          ).and_return result_stub('post_id' => 1, 4 => comment.to_json)
+        dictionary.each_pair.map { |column, comment| comment }.first.
+          should == comment
+      end
+    end
+
+    describe '#values' do
+      it 'should return deserialized values' do
+        connection.stub(:execute).
+          with(
+            'SELECT FIRST 1000 * FROM post_comments WHERE ? = ? LIMIT 1',
+            :post_id, 1
+          ).and_return result_stub('post_id' => 1, 4 => comment.to_json)
+        dictionary.values.should == [comment]
       end
     end
   end
