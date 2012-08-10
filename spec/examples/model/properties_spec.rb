@@ -74,4 +74,8 @@ describe Cequel::Model::Properties do
     Post.new(:id => 1).should_not == Blog.new(:id => 1)
   end
 
+  it 'should use #generate_key method when implemented' do
+    Comment.new.id.should be_a(SimpleUUID::UUID)
+  end
+
 end

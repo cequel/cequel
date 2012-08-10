@@ -78,6 +78,7 @@ module Cequel
 
       def initialize(attributes = {})
         super()
+        @_cequel.key = generate_key
         self.class.columns.each do |column|
           default = column.default
           @_cequel.attributes[column.name] = default unless default.nil?
@@ -120,6 +121,10 @@ module Cequel
 
       def read_attribute(column_name)
         @_cequel.attributes[column_name.to_sym]
+      end
+
+      def generate_key
+        # Noop -- model classes can override if desired
       end
 
     end
