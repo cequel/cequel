@@ -310,7 +310,7 @@ upserts only work on the columns that are given.
 
 #### Dirty Updates ####
 
-Cequel::Model includes ActiveSupport's dirty tracking. When you save a persisted
+Cequel::Model includes ActiveModel's dirty tracking. When you save a persisted
 model, only columns that have changed in memory will be included in the `UPDATE`
 statement.
 
@@ -336,7 +336,7 @@ column. But that's a concept that only exists in our minds (and in Cequel), not
 in the database itself. Consider the following:
 
 ``` ruby
-cassandra[:posts].where(:id => 1)
+cassandra[:posts].where(:id => 1).first
 #=> {'id' => 1}
 ```
 
@@ -353,6 +353,7 @@ happens when we select all posts:
 ``` ruby
 cassandra[:posts].to_a
 #=> [{'id' => 1}]
+```
 
 That's a range ghost: it's a result row consisting of only the key.
 
