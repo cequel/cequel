@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>README.rb</title>
+  <link rel="stylesheet" href="http://jashkenas.github.com/docco/resources/docco.css">
+</head>
+<body>
+<div id='container'>
+  <div id="background"></div>
+  <table cellspacing=0 cellpadding=0>
+  <thead>
+    <tr>
+      <th class=docs><h1>README.rb</h1></th>
+      <th class=code></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr id='section-Cequel'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Cequel">&#182;</a>
+        </div>
+        <h1>Cequel</h1>
+
+<p>Cequel is a
+<a href="http://www.datastax.com/docs/1.0/references/cql/index#cql-commands">CQL</a>
+query builder and object-row mapper for
+<a href="http://cassandra.apache.org/">Cassandra</a>.</p>
+
+<p>The library consists of two layers. The lower Cequel layer is a lightweight
+CQL query builder, which uses chained scopes to construct CQL queries, execute
+them against your Cassandra instance, and return results in friendly form.
+The Cequel::Model layer implements an object-row mapper on top of Cequel,
+with full <a href="https://github.com/rails/rails/tree/master/activemodel">ActiveModel</a>
+integration and an interface that conforms to established patterns for Ruby
+persistence layers (e.g. ActiveRecord).</p>
+
+<p>The lower Cequel layer is heavily inspired by the excellent
+<a href="http://sequel.rubyforge.org/">Sequel</a> library; Cequel::Model more closely
+follows the form of <a href="http://ar.rubyonrails.org/">ActiveRecord</a>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Installation'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Installation">&#182;</a>
+        </div>
+        <h2>Installation</h2>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-3'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-3">&#182;</a>
+        </div>
+        <p>To use only the lower-level Cequel query builder, just add the gem to your
+Gemfile.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">gem</span> <span class="s1">&#39;cequel&#39;</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-4'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-4">&#182;</a>
+        </div>
+        <p>For Cequel::Model, instead require &lsquo;cequel/model&rsquo;.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">gem</span> <span class="s1">&#39;cequel&#39;</span><span class="p">,</span> <span class="ss">:require</span> <span class="o">=&gt;</span> <span class="s1">&#39;cequel/model&#39;</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Rails_integration'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Rails_integration">&#182;</a>
+        </div>
+        <h3>Rails integration</h3>
+
+<p>Cequel and Cequel::Model do not require Rails, but if you are using Rails, you
+will need version 3.2+. Cequel::Model will read from the configuration file
+<code>config/cequel.yml</code> if it is present. A simple example configuration would look
+like this.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">development</span><span class="p">:</span>
+  <span class="n">host</span><span class="p">:</span> <span class="s1">&#39;127.0.0.1:9160&#39;</span>
+  <span class="n">keyspace</span><span class="p">:</span> <span class="n">myapp_development</span>
+
+<span class="n">production</span><span class="p">:</span>
+  <span class="n">hosts</span><span class="p">:</span>
+    <span class="o">-</span> <span class="s1">&#39;cass1.myapp.biz:9160&#39;</span>
+    <span class="o">-</span> <span class="s1">&#39;cass2.myapp.biz:9160&#39;</span>
+    <span class="o">-</span> <span class="s1">&#39;cass3.myapp.biz:9160&#39;</span>
+  <span class="n">keyspace</span><span class="p">:</span> <span class="n">myapp_production</span>
+  <span class="n">thrift</span><span class="p">:</span>
+    <span class="n">retries</span><span class="p">:</span> <span class="mi">10</span>
+    <span class="n">timeout</span><span class="p">:</span> <span class="mi">15</span>
+    <span class="n">connect_timeout</span><span class="p">:</span> <span class="mi">15</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Cequel_Query_Builder'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Cequel_Query_Builder">&#182;</a>
+        </div>
+        <h2>Cequel Query Builder</h2>
+
+<p>To connect to a keyspace, use <code>Cequel.connect</code>:</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span> <span class="o">=</span> <span class="no">Cequel</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+  <span class="ss">:host</span> <span class="o">=&gt;</span> <span class="s1">&#39;127.0.0.1:9160&#39;</span><span class="p">,</span>
+  <span class="ss">:keyspace</span> <span class="o">=&gt;</span> <span class="s1">&#39;myapp_development&#39;</span>
+<span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-7'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-7">&#182;</a>
+        </div>
+        <p>Column family handles are referenced like this.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">posts</span> <span class="o">=</span> <span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">]</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Reading_Data'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Reading_Data">&#182;</a>
+        </div>
+        <h3>Reading Data</h3>
+
+<p>To select data, you can form a query using the familiar chained scope pattern.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">posts</span> <span class="o">=</span> <span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span><span class="o">.</span>
+  <span class="n">consistency</span><span class="p">(</span><span class="ss">:quorum</span><span class="p">)</span><span class="o">.</span>
+  <span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span>
+  <span class="n">limit</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="n">titles</span> <span class="o">=</span> <span class="n">posts</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span> <span class="n">post</span><span class="o">[</span><span class="ss">:title</span><span class="o">]</span> <span class="p">}</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-9'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-9">&#182;</a>
+        </div>
+        <p>When working with wide rows, you often want to select a range of columns rather
+than a predefined set.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-10'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-10">&#182;</a>
+        </div>
+        <p>Select columns 1-5</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="mi">5</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-11'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-11">&#182;</a>
+        </div>
+        <p>Select columns 5 and up</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="ss">:from</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-12'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-12">&#182;</a>
+        </div>
+        <p>Select columns up to 5</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="ss">:to</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-13'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-13">&#182;</a>
+        </div>
+        <p>Select the first 8 columns (in natural order of column type)</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="ss">:first</span> <span class="o">=&gt;</span> <span class="mi">8</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-14'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-14">&#182;</a>
+        </div>
+        <p>Select the last 6 columns</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="ss">:last</span> <span class="o">=&gt;</span> <span class="mi">6</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-15'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-15">&#182;</a>
+        </div>
+        <p>Combine ranges and limits</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="mi">1</span><span class="o">.</span><span class="n">.</span><span class="mi">100</span><span class="p">,</span> <span class="ss">:first</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-16'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-16">&#182;</a>
+        </div>
+        <p>Or open-ended ranges and limits</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="ss">:first</span> <span class="o">=&gt;</span> <span class="mi">5</span><span class="p">,</span> <span class="ss">:from</span> <span class="o">=&gt;</span> <span class="mi">20</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-17'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-17">&#182;</a>
+        </div>
+        <p>Data set scopes also support the <code>first</code> and <code>count</code> methods.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Subqueries'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Subqueries">&#182;</a>
+        </div>
+        <h4>Subqueries</h4>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-19'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-19">&#182;</a>
+        </div>
+        <p>Cequel scopes support a subquery-like syntax, which can be used to populate
+the scope of an outer query with the results of an inner query:</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:blogs</span><span class="o">].</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">select</span><span class="p">(</span><span class="ss">:blog_id</span><span class="p">))</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-20'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-20">&#182;</a>
+        </div>
+        <p>This actually performs two queries to Cassandra, since CQL itself does not
+support subqueries.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Writing_data'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Writing_data">&#182;</a>
+        </div>
+        <h3>Writing data</h3>
+
+<p>To insert data, use <code>insert</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">insert</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;My Post&#39;</span><span class="p">,</span> <span class="ss">:body</span> <span class="o">=&gt;</span> <span class="s1">&#39;Some wisdom&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-22'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-22">&#182;</a>
+        </div>
+        <p>You can control consistency, timestamp, and time to live by passing a second
+options hash to insert.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">insert</span><span class="p">(</span>
+  <span class="p">{</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;My Post&#39;</span><span class="p">,</span> <span class="ss">:body</span> <span class="o">=&gt;</span> <span class="s1">&#39;Some wisdom&#39;</span><span class="p">},</span>
+  <span class="ss">:consistency</span> <span class="o">=&gt;</span> <span class="ss">:quorum</span><span class="p">,</span> <span class="ss">:ttl</span> <span class="o">=&gt;</span> <span class="mi">10</span><span class="o">.</span><span class="n">minutes</span><span class="p">,</span> <span class="ss">:timestamp</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">ago</span>
+<span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-23'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-23">&#182;</a>
+        </div>
+        <p>To update data, construct a scope and then call <code>update</code> with the columns to
+write:</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;My Post&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-24'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-24">&#182;</a>
+        </div>
+        <p>To delete entire rows, call the <code>delete</code> method with no arguments.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-25'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-25">&#182;</a>
+        </div>
+        <p>To delete certain columns from a row, pass those columns to <code>delete</code>.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="o">]</span><span class="p">)</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Cequel::Model'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Cequel::Model">&#182;</a>
+        </div>
+        <h2>Cequel::Model</h2>
+
+<p><code>Cequel::Model</code> is a higher-level object-row mapper built on top of the
+low-level functionality described above. Cequel models are
+ActiveModel-compliant and generally follow ActiveRecord-like patterns.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Defining_a_model'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Defining_a_model">&#182;</a>
+        </div>
+        <h3>Defining a model</h3>
+
+<p>Cequel models include the <code>Cequel::Model</code> module; here&rsquo;s an example model
+definition that covers most of what&rsquo;s available.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="k">class</span> <span class="nc">Post</span>
+
+  <span class="kp">include</span> <span class="no">Cequel</span><span class="o">::</span><span class="no">Model</span>
+  <span class="kp">include</span> <span class="no">Cequel</span><span class="o">::</span><span class="no">Model</span><span class="o">::</span><span class="no">Timestamps</span>
+
+  <span class="n">key</span> <span class="ss">:id</span><span class="p">,</span> <span class="ss">:uuid</span>
+  <span class="n">column</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">:text</span>
+  <span class="n">column</span> <span class="ss">:body</span><span class="p">,</span> <span class="ss">:text</span>
+
+  <span class="n">belongs_to</span> <span class="ss">:blog</span>
+  <span class="n">has_many</span> <span class="ss">:comments</span>
+
+  <span class="n">attr_accessible</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">:body</span>
+
+  <span class="n">validates</span> <span class="ss">:title</span><span class="p">,</span> <span class="ss">:body</span><span class="p">,</span> <span class="ss">:blog_id</span><span class="p">,</span> <span class="ss">:presence</span> <span class="o">=&gt;</span> <span class="kp">true</span>
+
+  <span class="n">after_create</span> <span class="ss">:post_to_twitter</span>
+
+  <span class="n">default_scope</span> <span class="n">limit</span><span class="p">(</span><span class="mi">100</span><span class="p">)</span>
+
+  <span class="kp">private</span>
+
+  <span class="k">def</span> <span class="nf">generate_key</span>
+    <span class="no">CassandraCQL</span><span class="o">::</span><span class="no">UUID</span><span class="o">.</span><span class="n">new</span>
+  <span class="k">end</span>
+
+<span class="k">end</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Working_with_models:_The_non-surprising_parts'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Working_with_models:_The_non-surprising_parts">&#182;</a>
+        </div>
+        <h3>Working with models: The non-surprising parts</h3>
+
+<p>Model behavior will be largely familiar to anyone who has worked with
+ActiveRecord or another ActiveRecord-inspired object mapper. All of these
+operations work pretty much exactly as you&rsquo;d expect:</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-29'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-29">&#182;</a>
+        </div>
+        <p>Initialize a new instance</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">new</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-30'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-30">&#182;</a>
+        </div>
+        <p>Initialize a new instance with some attributes</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;Hey&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-31'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-31">&#182;</a>
+        </div>
+        <p>Initialize a new instance and set some properties</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">new</span> <span class="k">do</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span>
+  <span class="n">post</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;Hey&#39;</span>
+<span class="k">end</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-32'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-32">&#182;</a>
+        </div>
+        <p>Create a new instance with attributes and save it</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;Hey&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-33'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-33">&#182;</a>
+        </div>
+        <p>Create a new instance with attributes and save it violently</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">create!</span><span class="p">(</span><span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;Hey&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-34'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-34">&#182;</a>
+        </div>
+        <p>Update an instance</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">post</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s1">&#39;New title&#39;</span>
+<span class="n">post</span><span class="o">.</span><span class="n">save</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-35'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-35">&#182;</a>
+        </div>
+        <p>Destroy an instance</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">post</span><span class="o">.</span><span class="n">destroy</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-36'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-36">&#182;</a>
+        </div>
+        <p>Find an instance by key</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">uuid</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-37'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-37">&#182;</a>
+        </div>
+        <p>Find an instance by magic</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find_by_blog_id</span><span class="p">(</span><span class="n">blog_id</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-38'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-38">&#182;</a>
+        </div>
+        <p>Find lots of instances by magic</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find_all_by_blog_id</span><span class="p">(</span><span class="n">blog_id</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-39'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-39">&#182;</a>
+        </div>
+        <p>Find or initialize an instance by magic</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find_or_initialize_by_title</span><span class="p">(</span><span class="s1">&#39;My Post&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-40'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-40">&#182;</a>
+        </div>
+        <p>Find or initialize an instance by magic with some extra attributes</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find_or_initialize_by_title</span><span class="p">(</span><span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;My Post&#39;</span><span class="p">,</span> <span class="ss">:body</span> <span class="o">=&gt;</span> <span class="s1">&#39;Read more&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-41'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-41">&#182;</a>
+        </div>
+        <p>Of course, find<em>or</em>create_by works too</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find_or_create_by_title</span><span class="p">(</span><span class="s1">&#39;My Post&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-42'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-42">&#182;</a>
+        </div>
+        <p>Query by scopes</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="n">uuid</span><span class="p">)</span><span class="o">.</span><span class="n">first</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-43'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-43">&#182;</a>
+        </div>
+        <p>Query by secondary indexes</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:blog_id</span> <span class="o">=&gt;</span> <span class="n">blog_uuid</span><span class="p">)</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span> <span class="n">post</span><span class="o">.</span><span class="n">title</span> <span class="p">}</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-44'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-44">&#182;</a>
+        </div>
+        <p>This will execute three queries, because CQL secondary indexes don&rsquo;t play nice
+with IN restrictions. But it&rsquo;ll work.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="ss">:title</span><span class="p">)</span><span class="o">.</span>
+  <span class="n">where</span><span class="p">(</span><span class="ss">:blog_id</span> <span class="o">=&gt;</span> <span class="o">[</span><span class="n">blog_id1</span><span class="p">,</span> <span class="n">blog_id2</span><span class="p">,</span> <span class="n">blog_id3</span><span class="o">]</span><span class="p">)</span><span class="o">.</span>
+  <span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">post</span><span class="o">|</span> <span class="n">post</span><span class="o">.</span><span class="n">title</span> <span class="p">}</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Working_with_models:_The_surprising_parts'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Working_with_models:_The_surprising_parts">&#182;</a>
+        </div>
+        <h3>Working with models: The surprising parts</h3>
+
+<p>CQL is designed to be immediately familiar to those of us who are used to
+working with SQL, which is all of us. Cequel advances this spirit by providing
+an ActiveRecord-like mapping for CQL. However, Cassandra is very much not a
+relational database, so some behaviors can come as a surprise. Here&rsquo;s an
+overview.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Upserts'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Upserts">&#182;</a>
+        </div>
+        <h4>Upserts</h4>
+
+<p>CQL provides <code>INSERT</code> and <code>UPDATE</code> statements that look more or less exactly
+like their SQL equivalents. However, these statements do exactly the same thing,
+just with different syntax. What they do is to write values into
+columns at a key. So these two Cequel statements have identical behavior.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-47'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-47">&#182;</a>
+        </div>
+        <p>Both of these statements instruct Cassandra to set the value of the <code>title</code>
+column in row 1 to &ldquo;Post&rdquo;.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">insert</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;Post&#39;</span><span class="p">)</span>
+<span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;Post&#39;</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-48'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-48">&#182;</a>
+        </div>
+        <p>Cequel::Model uses the <code>INSERT</code> statement to persist objects that have been
+newly initialized in memory, and the <code>UPDATE</code> statement to save changes to
+objects that were loaded out of Cassandra. There is no particular reason for
+this; it just feels right. But beware: you may think you&rsquo;re inserting a new row
+when you&rsquo;re actually overwriting data that already exists in that row</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-49'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-49">&#182;</a>
+        </div>
+        <p>I&rsquo;m just creating a post here.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">post1</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;My Post&#39;</span><span class="p">,</span> <span class="ss">:blog_id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">post1</span><span class="o">.</span><span class="n">save!</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-50'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-50">&#182;</a>
+        </div>
+        <p>And let&rsquo;s make another one</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">post2</span> <span class="o">=</span> <span class="no">Post</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="ss">:title</span> <span class="o">=&gt;</span> <span class="s1">&#39;Another Post&#39;</span><span class="p">)</span>
+<span class="n">post2</span><span class="o">.</span><span class="n">save!</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-51'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-51">&#182;</a>
+        </div>
+        <p>Living in a relational world, we&rsquo;d expect the second statement to throw an
+error because row 1 already exists. But not Cassandra: the above code will just
+overwrite the <code>title</code> in that row. Note that the <code>blog_id</code> will not be touched;
+upserts only work on the columns that are given.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Dirty_Updates'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Dirty_Updates">&#182;</a>
+        </div>
+        <h4>Dirty Updates</h4>
+
+<p>Cequel::Model includes ActiveModel&rsquo;s dirty tracking. When you save a persisted
+model, only columns that have changed in memory will be included in the <code>UPDATE</code>
+statement.</p>
+
+<p>Note that updating a model may generate two CQL statements. This is because
+Cassandra does not have a concept of null values; a column either has data or it
+doesn&rsquo;t. So, if you change an attribute of your model from a non-nil value to
+<code>nil</code>, Cequel::Model will issue a DELETE statement just for the column(s) in
+question.</p>
+
+<p>If you don&rsquo;t change anything, calling &lsquo;#save&rsquo; on a persisted model is a no-op.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Pondering_Existence'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Pondering_Existence">&#182;</a>
+        </div>
+        <h4>Pondering Existence</h4>
+
+<p>In a relational database, there is a well-defined concept of existence; there is
+either a row for a given primary key or there isn&rsquo;t. It&rsquo;s possible to have a row
+consisting of only a primary key, and that row still &ldquo;exists&rdquo; in a meaningful
+way.</p>
+
+<p>Cassandra works more like a key-value store: each key either has data, or it
+doesn&rsquo;t, but beyond that there is no explicit concept of a key or row existing.
+Semantically, we can think of a Cassandra row existing if it has data in any
+column. But that&rsquo;s a concept that only exists in our minds (and in Cequel), not
+in the database itself. Consider the following:</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-54'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-54">&#182;</a>
+        </div>
+        <p>This outputs <code>{&lsquo;id&rsquo; =&gt; 1}</code></p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">first</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-55'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-55">&#182;</a>
+        </div>
+        <p>The above behavior will hold even if no data has ever been written to key 1. It
+will also happen if key 1 existed at one time and then was deleted.</p>
+
+<p>This behavior is complicated by &ldquo;range ghosts&rdquo;. Range ghosts happen when you
+delete all the data from a row. You&rsquo;ll only see them when performing unlimited
+or key-range queries, and they go away after a while. There&rsquo;s a good reason for
+this, but it&rsquo;s confusing. For instance, let&rsquo;s say in the entire history of our
+database, all we&rsquo;ve done is create post 1, and then delete it. Let&rsquo;s see what
+happens when we select all posts.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-56'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-56">&#182;</a>
+        </div>
+        <p>This outputs <code>[{&lsquo;id&rsquo; =&gt; 1}]</code></p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">cassandra</span><span class="o">[</span><span class="ss">:posts</span><span class="o">].</span><span class="n">to_a</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-57'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-57">&#182;</a>
+        </div>
+        <p>That&rsquo;s a range ghost: it&rsquo;s a result row consisting of only the key.</p>
+
+<p>Cequel::Model makes explicit our implicit semantic idea that rows only exist if
+they have data in a column (not counting the key, which isn&rsquo;t really a column).
+So any time Cequel::Model sees a row that&rsquo;s either empty or only has a key, it
+drops it. You&rsquo;ll never get back a model instance containing data in no non-key
+columns.</p>
+
+<p>If you perform a <code>#find</code> and get back no non-key data, the library will raise
+<code>Cequel::Model::RecordNotFound</code>.</p>
+
+<p>This behavior can especially trip you up when you are selecting specific
+columns. For instance, let&rsquo;s say post 1 only has data in the <code>title</code> field.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-58'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-58">&#182;</a>
+        </div>
+        <p>This gives me back a nice post object.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">uuid</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-59'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-59">&#182;</a>
+        </div>
+        <p>This aises <code>Cequel::Model::RecordNotFound</code>, because there was no data in the
+row.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="ss">:blog_id</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">uuid</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-60'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-60">&#182;</a>
+        </div>
+        <p>This fails fast before any interaction with Cassandra: this is a meaningless
+query.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="ss">:id</span><span class="p">)</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">uuid</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Key_and_Secondary_Index_Selection'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Key_and_Secondary_Index_Selection">&#182;</a>
+        </div>
+        <h4>Key and Secondary Index Selection</h4>
+
+<p>CQL gives you a few ways to filter the rows you want returned in a query:</p>
+
+<ul>
+<li>A single key</li>
+<li>A list of keys</li>
+<li>A range of keys</li>
+<li>A secondary index</li>
+<li>A secondary index combined with one or more filters</li>
+</ul>
+
+<p>That&rsquo;s it. You can&rsquo;t filter by:</p>
+
+<ul>
+<li>A non-indexed column</li>
+<li>A key/list of keys combined with a secondary index</li>
+<li>A key/list of keys combined with a filter</li>
+</ul>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-62'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-62">&#182;</a>
+        </div>
+        <p>So let&rsquo;s say our <code>posts</code> column family has a secondary index on <code>blog_id</code> and
+nothing else. These will work.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">uuid</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="o">[</span><span class="n">uuid1</span><span class="p">,</span> <span class="n">uuid2</span><span class="o">]</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s1">&#39;id &gt; ?&#39;</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">find_by_blog_id</span><span class="p">(</span><span class="n">blog_id</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:blog_id</span> <span class="o">=&gt;</span> <span class="n">blog_id</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s1">&#39;created_at &gt; ?&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">ago</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-63'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-63">&#182;</a>
+        </div>
+        <p>These won&rsquo;t work.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="no">Post</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s1">&#39;created_at &gt; ?&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">ago</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="n">uuid</span><span class="p">,</span> <span class="ss">:blog_id</span> <span class="o">=&gt;</span> <span class="n">blog_id</span><span class="p">)</span>
+<span class="no">Post</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="ss">:id</span> <span class="o">=&gt;</span> <span class="n">uuid</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="s1">&#39;created_at &gt; ?&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="o">.</span><span class="n">day</span><span class="o">.</span><span class="n">ago</span><span class="p">)</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Cequel::Model::Dictionary'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Cequel::Model::Dictionary">&#182;</a>
+        </div>
+        <h2>Cequel::Model::Dictionary</h2>
+
+<p>The functionality of the Cequel::Model class maps the &ldquo;skinny row&rdquo; style of
+column family structure: each row has a small set of predefined columns, with
+heterogeneous value types. However, the &ldquo;wide row&rdquo; structure will also play an
+important role in most Cassandra schemas (if this is news to you, I recommend
+reading
+<a href="http://www.rackspace.com/blog/cassandra-by-example/?072d7a80">this article</a>).
+Cequel provides the <code>Cequel::Model::Dictionary</code> class, which abstracts wide rows
+as a dictionary object, behaving much like a Hash.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-65'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-65">&#182;</a>
+        </div>
+        <p>Applications should define subclasses of the <code>Dictionary</code> class to interact with
+data in a certain column family. For instance, let&rsquo;s say I&rsquo;ve got a <code>blog_posts</code>
+column family.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="k">class</span> <span class="nc">BlogPosts</span> <span class="o">&lt;</span> <span class="no">Cequel</span><span class="o">::</span><span class="no">Model</span><span class="o">::</span><span class="no">Dictionary</span>
+
+  <span class="n">key</span> <span class="ss">:blog_id</span><span class="p">,</span> <span class="ss">:uuid</span>
+  <span class="n">maps</span> <span class="ss">:uuid</span> <span class="o">=&gt;</span> <span class="ss">:text</span>
+
+  <span class="kp">private</span>
+
+  <span class="k">def</span> <span class="nf">serialize_value</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="n">value</span><span class="o">.</span><span class="n">to_json</span>
+  <span class="k">end</span>
+
+  <span class="k">def</span> <span class="nf">deserialize_value</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="no">JSON</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+  <span class="k">end</span>
+
+<span class="k">end</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-66'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-66">&#182;</a>
+        </div>
+        <p>In this case, your column family has a key with alias <code>blog_id</code> of type <code>uuid</code>,
+comparator of type <code>uuid</code>, and default validation of type <code>text</code>. The
+<code>serialize_value</code> and <code>deserialize_value</code> methods are optional, but aid with the
+common pattern of storing blobs of JSON, msgpack, etc. in wide-row values.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Reading_data'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Reading_data">&#182;</a>
+        </div>
+        <h3>Reading data</h3>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-68'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-68">&#182;</a>
+        </div>
+        <p>To grab a handle to a dictionary, use the bracket operator.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">posts</span> <span class="o">=</span> <span class="no">BlogPosts</span><span class="o">[</span><span class="n">blog_id</span><span class="o">]</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-69'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-69">&#182;</a>
+        </div>
+        <p>This does not perform any queries against Cassandra; it just gives you an object
+pointing at a particular row. By default, reads are lazy.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">post_json</span> <span class="o">=</span> <span class="n">posts</span><span class="o">[</span><span class="n">post_id</span><span class="o">]</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-70'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-70">&#182;</a>
+        </div>
+        <p>This will select a single column from the <code>blog_posts</code> column family and return
+its deserialized value. The value is not retained in the dictionary itself.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-71'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-71">&#182;</a>
+        </div>
+        <p>If you want to work with the entire contents of the wide row in memory, use the
+<code>#load</code> method.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">posts</span> <span class="o">=</span> <span class="no">BlogPosts</span><span class="o">[</span><span class="n">blog_id</span><span class="o">]</span>
+<span class="n">posts</span><span class="o">.</span><span class="n">load</span> <span class="c1"># loads all values into memory</span>
+<span class="n">posts</span><span class="o">[</span><span class="n">post_id</span><span class="o">]</span> <span class="c1"># doesn&#39;t do an additional query</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-72'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-72">&#182;</a>
+        </div>
+        <p>Dictionaries expose the major read methods of the Hash interface:</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre><span class="n">posts</span><span class="o">.</span><span class="n">each_pair</span> <span class="p">{</span> <span class="o">|</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span> <span class="n">do_something</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span>
+<span class="n">posts</span><span class="o">.</span><span class="n">keys</span>
+<span class="n">posts</span><span class="o">.</span><span class="n">values</span>
+<span class="n">posts</span><span class="o">.</span><span class="n">map</span> <span class="p">{</span> <span class="o">|</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="o">|</span> <span class="n">transform</span><span class="p">(</span><span class="n">column</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="p">}</span>
+<span class="n">posts</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">uuid1</span><span class="p">,</span> <span class="n">uuid2</span><span class="p">,</span> <span class="n">uuid3</span><span class="p">)</span> <span class="c1"># returns a Hash</span></pre></div>
+      </td>
+    </tr>
+    <tr id='section-73'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-73">&#182;</a>
+        </div>
+        <p>All of the above methods will read from Cassandra if the dictionary is unloaded,
+and read from memory if the dictionary is loaded. Note that for methods that
+read all columns out of the database, columns will be loaded in batches of 1000
+by default.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Writing_Data'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Writing_Data">&#182;</a>
+        </div>
+        <h3>Writing Data</h3>
+
+<p>Modifying data is, unsurprisingly, done using the <code>[]=</code> operator. When you call
+<code>#save</code>, any keys that you have modified with the <code>[]=</code> operator will be
+persisted to Cassandra. The dictionary does not use true dirty tracking, in the
+sense that it will write an attribute even if you set it to the same value it
+had previously.</p>
+
+<p>Write behavior is the same regardless of loaded status.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Road_Map'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Road_Map">&#182;</a>
+        </div>
+        <h2>Road Map</h2>
+
+<p>As mentioned previously in this document, there are considerable differences
+between modeling data in Cassandra and modeling data in a relational database,
+despite their superficial similarities. In Cassandra, wide rows are an important
+part of schema design; &ldquo;existence&rdquo; is a fuzzy concept; denormalization is often
+a good idea; secondary indexes are of limited use. Broadly, the goal for future
+versions of Cequel is to provide a more robust abstraction and tool kit for
+modeling data in Cassandra the right way. Specifically, here are some things to
+look forward to in future Cequel versions:</p>
+
+<ul>
+<li>Support for auto-migrations by introspecting the schema and making
+modifications to fit the model-defined schema.</li>
+<li>One-one relationships using multiple classes per column family.</li>
+<li>Additional wide-row data structures: lists and sets.</li>
+<li>Tighter integration between Cequel::Model and Cequel::Model::Dictionary;
+<code>references_many</code> associations.</li>
+<li>Bidirectional associations.</li>
+<li>Using defined column types to ensure objects passed to CassandraCQL layer are
+of the correct type/encoding.</li>
+</ul>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-Getting_Help'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-Getting_Help">&#182;</a>
+        </div>
+        <h2>Getting Help</h2>
+
+<p>Send me an email at mat@brewster.com; find me on Freenode on #cassandra (I&rsquo;m
+outoftime); or file an issue on GitHub.</p>
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+    <tr id='section-License'>
+      <td class=docs>
+        <div class="pilwrap">
+          <a class="pilcrow" href="#section-License">&#182;</a>
+        </div>
+        <h2>License</h2>
+
+<p>Cequel is distributed under the MIT license. See the attached LICENSE for all
+the sordid details.</p>
+
+      </td>
+      <td class=code>
+        <div class='highlight'><pre></pre></div>
+      </td>
+    </tr>
+  </table>
+</div>
+</body>
