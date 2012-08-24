@@ -16,9 +16,9 @@
 # The lower Cequel layer is heavily inspired by the excellent
 # [Sequel](http://sequel.rubyforge.org/) library; Cequel::Model more closely
 # follows the form of [ActiveRecord](http://ar.rubyonrails.org/).
-#
+
 # ## Installation ##
-#
+
 # To use only the lower-level Cequel query builder, just add the gem to your
 # Gemfile.
 
@@ -101,7 +101,7 @@ cassandra[:posts].select(:first => 5, :from => 20)
 # Data set scopes also support the `first` and `count` methods.
 
 # #### Subqueries ####
-#
+
 # Cequel scopes support a subquery-like syntax, which can be used to populate
 # the scope of an outer query with the results of an inner query:
 
@@ -129,13 +129,11 @@ cassandra[:posts].insert(
 
 cassandra[:posts].where(:id => [1, 2]).update(:title => 'My Post')
 
-# To delete entire rows, call the `delete` method; to delete certain columns from
-# a row, pass those columns to `delete`.
+# To delete entire rows, call the `delete` method with no arguments.
 
-# delete rows 1 and 2 entirely
 cassandra[:posts].where(:id => [1, 2]).delete
 
-# delete title column from rows 1 and 2
+# To delete certain columns from a row, pass those columns to `delete`.
 cassandra[:posts].where(:id => [1, 2]).delete(:title)
 
 # ## Cequel::Model ##
@@ -143,7 +141,7 @@ cassandra[:posts].where(:id => [1, 2]).delete(:title)
 # `Cequel::Model` is a higher-level object-row mapper built on top of the
 # low-level functionality described above. Cequel models are
 # ActiveModel-compliant and generally follow ActiveRecord-like patterns.
-#
+
 # ### Defining a model ###
 #
 # Cequel models include the `Cequel::Model` module; here's an example model
@@ -232,7 +230,7 @@ Post.select(:title).where(:id => uuid).first
 Post.select(:title).where(:blog_id => blog_uuid).map { |post| post.title }
 
 # This will execute three queries, because CQL secondary indexes don't play nice
-# with IN restrictions. But it'll work:
+# with IN restrictions. But it'll work.
 Post.select(:title).
   where(:blog_id => [blog_id1, blog_id2, blog_id3]).
   map { |post| post.title }
@@ -252,12 +250,12 @@ Post.select(:title).
 # just with different syntax. What they do is to write values into
 # columns at a key. So these two Cequel statements have identical behavior.
 
+# Both of these statements instruct Cassandra to set the value of the `title`
+# column in row 1 to "Post".
+
 cassandra[:posts].insert(:id => 1, :title => 'Post')
 cassandra[:posts].where(:id => 1).update(:title => 'Post')
 
-# Both of these statements instruct Cassandra to set the value of the `title`
-# column in row 1 to "Post".
-#
 # Cequel::Model uses the `INSERT` statement to persist objects that have been
 # newly initialized in memory, and the `UPDATE` statement to save changes to
 # objects that were loaded out of Cassandra. There is no particular reason for
@@ -304,7 +302,7 @@ post2.save!
 # column. But that's a concept that only exists in our minds (and in Cequel), not
 # in the database itself. Consider the following:
 
-#=> Outputs `{'id' => 1}`
+# This outputs `{'id' => 1}`
 cassandra[:posts].where(:id => 1).first
 
 # The above behavior will hold even if no data has ever been written to key 1. It
@@ -317,7 +315,7 @@ cassandra[:posts].where(:id => 1).first
 # database, all we've done is create post 1, and then delete it. Let's see what
 # happens when we select all posts.
 
-#=> Outputs `[{'id' => 1}]`
+# This outputs `[{'id' => 1}]`
 cassandra[:posts].to_a
 
 # That's a range ghost: it's a result row consisting of only the key.
@@ -334,13 +332,15 @@ cassandra[:posts].to_a
 # This behavior can especially trip you up when you are selecting specific
 # columns. For instance, let's say post 1 only has data in the `title` field.
 
-# Gives me back a nice post object
+# This gives me back a nice post object.
 Post.find(uuid)
 
-# Raises Cequel::Model::RecordNotFound, because there was no data in the row
+# This aises `Cequel::Model::RecordNotFound`, because there was no data in the
+# row.
 Post.select(:blog_id).find(uuid)
 
-# Fails fast before any interaction with Cassandra: this is a meaningless query
+# This fails fast before any interaction with Cassandra: this is a meaningless
+# query.
 Post.select(:id).find(uuid)
 
 # #### Key and Secondary Index Selection ####
@@ -384,7 +384,7 @@ Post.where(:id => uuid).where('created_at > ?', 1.day.ago)
 # [this article](http://www.rackspace.com/blog/cassandra-by-example/?072d7a80)).
 # Cequel provides the `Cequel::Model::Dictionary` class, which abstracts wide rows
 # as a dictionary object, behaving much like a Hash.
-#
+
 # Applications should define subclasses of the `Dictionary` class to interact with
 # data in a certain column family. For instance, let's say I've got a `blog_posts`
 # column family.
@@ -412,9 +412,8 @@ end
 # common pattern of storing blobs of JSON, msgpack, etc. in wide-row values.
 
 # ### Reading data ###
-#
-# To grab a handle to a dictionary, use the bracket operator.
 
+# To grab a handle to a dictionary, use the bracket operator.
 posts = BlogPosts[blog_id]
 
 # This does not perform any queries against Cassandra; it just gives you an object
