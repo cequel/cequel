@@ -126,16 +126,8 @@ module Cequel
       def each_pair(options = {}, &block)
         return Enumerator.new(self, :each_pair, options) unless block
         return @row.each_pair(&block) if @loaded
-        batch_size = options[:batch_size] || self.class.default_batch_size
-        batch_scope = scope.select(:first => batch_size)
-        key_alias = self.class.key_alias
-        last_key = nil
         new_columns = @changed_columns.dup
-        begin
-          batch_results = batch_scope.first
-          batch_results.delete(key_alias)
-          result_length = batch_results.length
-          batch_results.delete(last_key) unless last_key.nil?
+        each_slice do |batch_results|
           batch_results.each_pair do |key, value|
             if @changed_columns.include?(key)
               new_columns.delete(key)
@@ -144,9 +136,7 @@ module Cequel
               yield key, deserialize_value(key, value)
             end
           end
-          last_key = batch_results.keys.last
-          batch_scope = batch_scope.select(:from => last_key)
-        end while result_length == batch_size
+        end
         new_columns.each do |key|
           yield key, @row[key]
         end
@@ -154,6 +144,22 @@ module Cequel
 
       def each(&block)
         each_pair(&block)
+      end
+
+      def each_slice(options = {})
+        batch_size = options[:batch_size] || self.class.default_batch_size
+        batch_scope = scope.select(:first => batch_size)
+        key_alias = self.class.key_alias
+        last_key = nil
+        begin
+          batch_results = batch_scope.first
+          batch_results.delete(key_alias)
+          result_length = batch_results.length
+          batch_results.delete(last_key) unless last_key.nil?
+          yield batch_results
+          last_key = batch_results.keys.last
+          batch_scope = batch_scope.select(:from => last_key)
+        end while result_length == batch_size
       end
 
       def load
