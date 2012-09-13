@@ -97,9 +97,8 @@ module Cequel
         if @loaded
           @row.slice(*columns)
         else
-          {}.tap do |slice|
-            row = scope.select(*columns).first.except(self.class.key_alias)
-            row.each { |col, value| slice[col] = deserialize_value(col, value) }
+          row = scope.select(*columns).first.except(self.class.key_alias)
+          deserialize_row(row).tap do |slice|
             slice.merge!(@row.slice(*columns))
             @deleted_columns.each { |column| slice.delete(column) }
           end
