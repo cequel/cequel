@@ -201,7 +201,7 @@ module Cequel
         value
       end
 
-      def deserialize_row(rows)
+      def deserialize_row(row)
         {}.tap do |slice|
           row.each_pair do |column, value|
             slice[column] = deserialize_value(column, value)
