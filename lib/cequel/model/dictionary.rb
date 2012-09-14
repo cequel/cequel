@@ -97,12 +97,15 @@ module Cequel
         if @loaded
           @row.slice(*columns)
         else
-          row = scope.select(*columns).first.except(self.class.key_alias)
-          deserialize_row(row).tap do |slice|
+          deserialize_row(load_raw_slice(columns)).tap do |slice|
             slice.merge!(@row.slice(*columns))
             @deleted_columns.each { |column| slice.delete(column) }
           end
         end
+      end
+
+      def key?(column)
+        @row.key?(column) || load_raw_slice([column])[column].present?
       end
 
       def destroy
@@ -206,6 +209,10 @@ module Cequel
             slice[column] = deserialize_value(column, value)
           end
         end
+      end
+
+      def load_raw_slice(columns)
+        row = scope.select(*columns).first.except(self.class.key_alias)
       end
 
     end
