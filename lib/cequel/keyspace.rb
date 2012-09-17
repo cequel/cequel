@@ -17,7 +17,7 @@ module Cequel
     def initialize(configuration = {})
       @name = configuration[:keyspace]
       @hosts = configuration[:host] || configuration[:hosts]
-      @thrift_options = configuration[:thrift].try(:symbolize_keys)
+      @thrift_options = configuration[:thrift].try(:symbolize_keys) || {}
     end
 
     def connection
