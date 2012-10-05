@@ -5,6 +5,8 @@ Cequel is a
 query builder and object-row mapper for
 [Cassandra](http://cassandra.apache.org/).
 
+[![Build Status](https://secure.travis-ci.org/brewster/cequel.png)](http://travis-ci.org/brewster/cequel)
+
 The library consists of two layers. The lower Cequel layer is a lightweight
 CQL query builder, which uses chained scopes to construct CQL queries, execute
 them against your Cassandra instance, and return results in friendly form.
