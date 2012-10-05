@@ -527,10 +527,15 @@ look forward to in future Cequel versions:
 * Using defined column types to ensure objects passed to CassandraCQL layer are
   of the correct type/encoding.
 
-## Getting Help ##
+## Support & Bugs ##
 
-Send me an email at mat@brewster.com; find me on Freenode on #cassandra (I'm
-outoftime); or file an issue on GitHub.
+If you find a bug, feel free to
+[open an issue](https://github.com/brewster/cequel/issues/new) on GitHub.
+Pull requests are most welcome.
+
+For questions or feedback, hit up our mailing list at
+[cequel@groups.google.com](http://groups.google.com/group/cequel)
+or find outoftime in the #cassandra IRC channel on Freenode.
 
 ## License ##
 
