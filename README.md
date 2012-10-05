@@ -63,7 +63,7 @@ To connect to a keyspace, use `Cequel.connect`:
 ``` ruby
 cassandra = Cequel.connect(
   :host => '127.0.0.1:9160',
-  :keyspace => 'myapp_development
+  :keyspace => 'myapp_development'
 )
 ```
 
