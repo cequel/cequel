@@ -10,6 +10,9 @@ require 'cequel/keyspace'
 require 'cequel/row_specification'
 require 'cequel/statement'
 
+require 'cequel/migration'
+require 'cequel/migrator'
+
 module Cequel
   def self.connect(configuration = nil)
     Keyspace.new(configuration || {})

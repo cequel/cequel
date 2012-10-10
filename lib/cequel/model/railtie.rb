@@ -27,7 +27,5 @@ module Cequel
         end
       end
     end
-
   end
-
 end
