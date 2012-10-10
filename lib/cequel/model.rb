@@ -63,27 +63,27 @@ module Cequel
     end
 
     def self.keyspace
-      @keyspace ||= Cequel.connect(@configuration).tap do |keyspace|
-        keyspace.logger = @logger if @logger
-        keyspace.slowlog = @slowlog if @slowlog
-        keyspace.slowlog_threshold = @slowlog_threshold if @slowlog_threshold
-      end
+      @keyspace ||= Cequel.connect
     end
 
     def self.configure(configuration)
-      @configuration = configuration
+      Cequel::Keyspace.configure(configuration)
+    end
+
+    def self.configuration
+      Cequel::Keyspace.configuration
     end
 
     def self.logger=(logger)
-      @logger = logger
+      Cequel::Keyspace.logger = logger
     end
 
     def self.slowlog=(slowlog)
-      @slowlog = slowlog
+      Cequel::Keyspace.slowlog = slowlog
     end
 
     def self.slowlog_threshold=(slowlog_threshold)
-      @slowlog_threshold = slowlog_threshold
+      Cequel::Keyspace.slowlog_threshold = slowlog_threshold
     end
 
     def initialize

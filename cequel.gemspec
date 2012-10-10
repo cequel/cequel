@@ -21,6 +21,7 @@ DESC
   s.add_runtime_dependency 'activesupport', '~> 3.1'
   s.add_runtime_dependency 'activemodel', '~> 3.1'
   s.add_runtime_dependency 'cassandra-cql', '~> 1.0'
+  s.add_runtime_dependency 'connection_pool', '~> 0.9.2'
   s.add_runtime_dependency 'i18n'
   s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.6'
