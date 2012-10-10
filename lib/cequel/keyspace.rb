@@ -54,7 +54,7 @@ module Cequel
     end
 
     def self.connection_pool
-      @connection_pool ||= ConnectionPool.new(:size => 50, :timeout => 5) do
+      @connection_pool ||= ConnectionPool.new(:size => 10, :timeout => 5) do
         @connection || CassandraCQL::Database.new(
           @hosts,
           { :keyspace => @keyspace },
