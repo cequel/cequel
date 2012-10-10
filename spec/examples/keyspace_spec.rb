@@ -51,7 +51,7 @@ CQL
     
     before do
       logger.level = Logger::DEBUG
-      cequel.logger = logger
+      Cequel::Keyspace.logger = logger
     end
 
     it 'should log queries with bind variables resolved' do
