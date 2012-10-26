@@ -16,7 +16,7 @@ module Cequel
         end
 
         def all
-          @_cequel.current_scope || @_cequel.default_scope || empty_scope
+          current_scope || @_cequel.default_scope || empty_scope
         end
 
         def select(*rows)
@@ -25,12 +25,12 @@ module Cequel
 
         def with_scope(scope)
           @_cequel.synchronize do
-            old_scope = @_cequel.current_scope
+            old_scope = current_scope
             begin
-              @_cequel.current_scope = scope
+              self.current_scope = scope
               yield
             ensure
-              @_cequel.current_scope = old_scope
+              self.current_scope = old_scope
             end
           end
         end
@@ -39,6 +39,18 @@ module Cequel
 
         def empty_scope
           Scope.new(self, [column_family])
+        end
+
+        def current_scope
+          ::Thread.current[current_scope_key]
+        end
+
+        def current_scope=(scope)
+          ::Thread.current[current_scope_key] = scope
+        end
+
+        def current_scope_key
+          :"cequel-current_scope-#{object_id}"
         end
 
       end

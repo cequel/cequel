@@ -60,7 +60,6 @@ module Cequel
         append(generate_upsert_options(options)).
         append(" SET " << data.keys.map { |k| "? = ?" }.join(', '), *data.to_a.flatten).
         append(*row_specifications_cql)
-
       @keyspace.write(*statement.args)
     rescue EmptySubquery
       # Noop -- no rows to update
