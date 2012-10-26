@@ -56,13 +56,24 @@ module Cequel
           new(key)
         end
         private :new
+
+        def load(*keys)
+          options = keys.extract_options!
+          keys.flatten!
+          batch_size = options[:columns] || options[:batch_size] ||
+            default_batch_size
+          column_family.select(:first => batch_size).
+            where(key_alias.to_s => keys).
+            map { |row| new(row.delete(key_alias.to_s), row) }
+        end
+
       end
 
       include Enumerable
 
-      def initialize(key)
+      def initialize(key, row = nil)
         @key = key
-        setup
+        setup(row)
       end
 
       def []=(column, value)
@@ -177,8 +188,9 @@ module Cequel
 
       private
 
-      def setup
-        @row = {}
+      def setup(init_row = nil)
+        @row = deserialize_row(init_row || {})
+        @loaded = !!init_row
         @changed_columns = Set[]
         @deleted_columns = Set[]
       end

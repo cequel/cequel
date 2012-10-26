@@ -405,6 +405,42 @@ describe Cequel::Model::Dictionary do
     end
   end
 
+  describe '::load' do
+    let :comments do
+      [
+        {'user' => 'Cequel User', 'comment' => 'How do I load multiple rows?'},
+        {'user' => 'Mat Brown', 'comment' => 'Just use the ::load class method'}
+      ]
+    end
+
+    it 'should load all rows in one query' do
+      connection.stub(:execute).
+        with(
+          'SELECT FIRST 1000 * FROM post_comments WHERE ? IN (?)',
+          'post_id', [1, 2]
+        ).and_return result_stub(
+          *comments.each_with_index.
+            map { |comment, i| {'post_id' => i+1, i+4 => comment.to_json} }
+          )
+      rows = PostComments.load(1, 2)
+      rows.map { |row| row.post_id }.should == [1, 2]
+      rows.map { |row| row.values.first }.should == comments
+    end
+
+    it 'should respect columns option' do
+      connection.stub(:execute).
+        with(
+          'SELECT FIRST 20 * FROM post_comments WHERE ? IN (?)',
+          'post_id', [1, 2]
+        ).and_return result_stub(
+          *comments.each_with_index.
+            map { |comment, i| {'post_id' => i+1, i+4 => comment.to_json} }
+          )
+      rows = PostComments.load(1, 2, :columns => 20)
+      rows.map { |row| row.post_id }.should == [1, 2]
+    end
+  end
+
   private
 
   def uuid
