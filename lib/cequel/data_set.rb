@@ -66,7 +66,29 @@ module Cequel
       # Noop -- no rows to update
     end
 
-    # 
+    def increment(data, options = {})
+      operations = data.map do |key, value|
+        operator = value < 0 ? '-' : '+'
+        "? = ? #{operator} ?"
+      end
+      statement = Statement.new.
+        append("UPDATE #{@column_family}").
+        append(generate_upsert_options(options)).
+        append(
+          " SET " << operations.join(', '),
+          *data.flat_map { |column, count| [column, column, count.abs] }
+        ).append(*row_specifications_cql)
+
+      @keyspace.write(*statement.args)
+    end
+    alias_method :incr, :increment
+
+    def decrement(data, options = {})
+      increment(Hash[data.map { |column, count| [column, -count] }], options)
+    end
+    alias_method :decr, :decrement
+
+    #
     # Delete data from the column family
     #
     # @param columns zero or more columns to delete. Deletes the entire row if none specified.

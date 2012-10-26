@@ -93,6 +93,32 @@ describe Cequel::DataSet do
     end
   end
 
+  describe '#increment' do
+    it 'should increment counter columns' do
+      connection.should_receive(:execute).with(
+        'UPDATE comment_counts SET ? = ? + ?, ? = ? + ? WHERE ? = ?',
+        'somepost', 'somepost', 1,
+        'anotherpost', 'anotherpost', 2,
+        'blog_id', 'myblog'
+      )
+      cequel[:comment_counts].where('blog_id' => 'myblog').
+        increment('somepost' => 1, 'anotherpost' => 2)
+    end
+  end
+
+  describe '#decrement' do
+    it 'should decrement counter columns' do
+      connection.should_receive(:execute).with(
+        'UPDATE comment_counts SET ? = ? - ?, ? = ? - ? WHERE ? = ?',
+        'somepost', 'somepost', 1,
+        'anotherpost', 'anotherpost', 2,
+        'blog_id', 'myblog'
+      )
+      cequel[:comment_counts].where('blog_id' => 'myblog').
+        decrement('somepost' => 1, 'anotherpost' => 2)
+    end
+  end
+
   describe '#delete' do
     it 'should send basic delete statement' do
       connection.should_receive(:execute).
