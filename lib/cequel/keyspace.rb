@@ -55,12 +55,17 @@ module Cequel
 
     def self.connection_pool
       @connection_pool ||= ConnectionPool.new(:size => 10, :timeout => 5) do
-        @connection || CassandraCQL::Database.new(
+        connection
+      end
+    end
+
+    def self.connection
+      options = @keyspace ? {:keyspace => @keyspace } : {}
+      @connection || CassandraCQL::Database.new(
           @hosts,
-          { :keyspace => @keyspace },
+          options,
           @thrift_options
         )
-      end
     end
 
     def self.clear_active_connections!
@@ -134,7 +139,18 @@ module Cequel
       set_batch(old_batch)
     end
 
-    private
+    def self.create(configuration)
+      configure(configuration.merge(:keyspace => nil))
+      connection.execute "CREATE KEYSPACE #{configuration[:keyspace]} with #{configuration[:strategy]}"
+      configure(configuration)
+    end
+
+    def self.drop(configuration)
+      configure(configuration.merge(:keyspace => nil))
+      connection.execute "DROP KEYSPACE #{configuration[:keyspace]}"
+    end
+
+  private
 
     def get_batch
       ::Thread.current[batch_key]
