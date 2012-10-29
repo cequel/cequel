@@ -153,6 +153,14 @@ write:
 cassandra[:posts].where(:id => [1, 2]).update(:title => 'My Post')
 ```
 
+To update a [counter column](http://wiki.apache.org/cassandra/Counters), use
+the `increment` or `decrement` method:
+
+``` ruby
+cassandra[:comment_counts].where(:id => 1).increment(post_id => 1)
+cassandra[:comment_counts].where(:id => 1).decrement(post2_id => 4)
+```
+
 To delete entire rows, call the `delete` method; to delete certain columns from
 a row, pass those columns to `delete`:
 
@@ -507,6 +515,46 @@ sense that it will write an attribute even if you set it to the same value it
 had previously.
 
 Write behavior is the same regardless of loaded status.
+
+### Loading data in bulk ###
+
+Dictionaries implement the `::load` method, which allows you to read multiple
+rows at once. Unlike the `#each` and `#load` methods, `::load` will not attempt
+to paginate over very wide rows (1000+ columns); if your rows are very wide, you
+will probably want to load them one at a time anyway.
+
+```ruby
+post_rows = BlogPosts.load(blog1_id, blog2_id) # load rows at key blog1_id, blog2_id
+post_rows = BlogPosts.load(blog1_id, blog2_id, :columns => 10_000) # wider rows
+```
+
+### Counters ###
+
+Counters are a special type of Cassandra column that implements a consistent
+distributed counter. The only write operations that are possible on counter
+columns are increment and decrement (they can be deleted, technically, but the
+behavior is undesirable). You can create a counter dictionary using the
+`Cequel::Model::Counter` class:
+
+```ruby
+class CommentCounts < Cequel::Model::Counter
+  key :blog_id, :int
+  columns :uuid # values are always of 'counter' type
+end
+```
+
+For read operations, counters work exactly like normal dictionaries. For write
+operations, counters have `#increment` and `#decrement` methods available
+(but not `#[]=`):
+
+```ruby
+comment_counts = CommentCounts[blog_id]
+comment_counts.increment(post_id) # increment by 1
+comment_counts.increment(post_id, 4) # increment by 4
+comment_counts.increment([post1_id, post2_id], 3) # increment multiple at once
+comment_counts.increment(post1_id => 2, post2_id => 4) # by different values
+comment_counts.decrement(post_id) # accepts all the same forms as #increment
+```
 
 ## Road Map ##
 
