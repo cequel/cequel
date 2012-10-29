@@ -38,6 +38,8 @@ module Cequel
   #
   module Model
 
+    @lock = Monitor.new
+
     extend ActiveSupport::Concern
     extend ActiveModel::Observing::ClassMethods
 
@@ -64,27 +66,29 @@ module Cequel
     end
 
     def self.keyspace
-      @keyspace ||= Cequel.connect
+      @lock.synchronize do
+        @keyspace ||= Cequel.connect(@configuration).tap do |keyspace|
+          keyspace.logger = @logger if @logger
+          keyspace.slowlog = @slowlog if @slowlog
+          keyspace.slowlog_threshold = @slowlog_threshold if @slowlog_threshold
+        end
+      end
     end
 
     def self.configure(configuration)
-      Cequel::Keyspace.configure(configuration)
-    end
-
-    def self.configuration
-      Cequel::Keyspace.configuration
+      @configuration = configuration
     end
 
     def self.logger=(logger)
-      Cequel::Keyspace.logger = logger
+      @logger = logger
     end
 
     def self.slowlog=(slowlog)
-      Cequel::Keyspace.slowlog = slowlog
+      @slowlog = slowlog
     end
 
     def self.slowlog_threshold=(slowlog_threshold)
-      Cequel::Keyspace.slowlog_threshold = slowlog_threshold
+      @slowlog_threshold = slowlog_threshold
     end
 
     def initialize
