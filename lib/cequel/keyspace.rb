@@ -139,10 +139,14 @@ module Cequel
       set_batch(old_batch)
     end
 
-    def self.create(configuration)
+    def self.create(configuration, schema_migration=false)
       configure(configuration.merge(:keyspace => nil))
       connection.execute "CREATE KEYSPACE #{configuration[:keyspace]} with #{configuration[:strategy]}"
       configure(configuration)
+      if schema_migration
+        db = self.new(configuration)
+        db.execute "CREATE TABLE schema_migrations (migration varchar PRIMARY KEY)"
+      end
     end
 
     def self.drop(configuration)
