@@ -143,17 +143,6 @@ module Cequel
       set_batch(old_batch)
     end
 
-    def self.create(configuration)
-      configure(configuration.merge(:keyspace => nil))
-      connection.execute "CREATE KEYSPACE #{configuration[:keyspace]} with #{configuration[:strategy]}"
-      configure(configuration)
-    end
-
-    def self.drop(configuration)
-      configure(configuration.merge(:keyspace => nil))
-      connection.execute "DROP KEYSPACE #{configuration[:keyspace]}"
-    end
-
     private
 
     def build_connection
