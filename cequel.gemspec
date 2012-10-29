@@ -3,7 +3,7 @@ require File.expand_path('../lib/cequel/version', __FILE__)
 Gem::Specification.new do |s|
   s.name = 'cequel'
   s.version = Cequel::VERSION
-  s.authors = ['Mat Brown']
+  s.authors = ['Mat Brown', 'Aubrey Holland', 'Keenan Brock']
   s.email = 'mat.a.brown@gmail.com'
   s.license = 'MIT'
   s.summary = 'Query abstraction layer and object-row mapper for Cassandra and CQL'
