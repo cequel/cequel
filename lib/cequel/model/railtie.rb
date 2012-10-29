@@ -10,7 +10,7 @@ module Cequel
         config_path = Rails.root.join('config/cequel.yml').to_s
 
         if File.exist?(config_path)
-          yaml = YAML.load_file(config_path)[Rails.env]
+          yaml = YAML::load(ERB.new(IO.read(config_path)).result)[Rails.env]
           Cequel::Model.configure(yaml.symbolize_keys) if yaml
         end
 
