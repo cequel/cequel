@@ -48,10 +48,10 @@ CQL
   describe '::logger=' do
     let(:io) { StringIO.new }
     let(:logger) { Logger.new(io) }
-    
+
     before do
       logger.level = Logger::DEBUG
-      Cequel::Keyspace.logger = logger
+      cequel.logger = logger
     end
 
     it 'should log queries with bind variables resolved' do

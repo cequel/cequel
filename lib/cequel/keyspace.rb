@@ -10,71 +10,75 @@ module Cequel
     # @see Cequel.connect
     #
     def initialize(configuration={})
+      configure(configuration)
     end
 
-    def self.connection=(connection)
+    def connection=(connection)
       @connection = connection
     end
 
-    def self.configure(configuration = {})
+    def configure(configuration = {})
       @configuration = configuration
       @hosts = configuration[:host] || configuration[:hosts]
       @thrift_options = configuration[:thrift].try(:symbolize_keys) || {}
       @keyspace = configuration[:keyspace]
       # reset the connections
-      @connection_pool = nil
+      clear_active_connections!
     end
 
-    def self.configuration
-      @configuration
-    end
-
-    def self.logger=(logger)
+    def logger=(logger)
       @logger = logger
     end
 
-    def self.logger
+    def logger
       @logger
     end
 
-    def self.slowlog=(slowlog)
+    def slowlog=(slowlog)
       @slowlog = slowlog
     end
 
-    def self.slowlog
+    def slowlog
       @slowlog
     end
 
-    def self.slowlog_threshold=(slowlog_threshold)
+    def slowlog_threshold=(slowlog_threshold)
       @slowlog_threshold = slowlog_threshold
     end
 
-    def self.slowlog_threshold
+    def slowlog_threshold
       @slowlog_threshold
     end
 
-    def self.connection_pool
-      @connection_pool ||= ConnectionPool.new(:size => 10, :timeout => 5) do
-        connection
+    def connection_pool
+      return @connection_pool if defined? @connection_pool
+      if @configuration[:pool]
+        options = {
+          :size => configuration[:pool],
+          :timeout => configuration[:pool_timeout]
+        }
+        @connection_pool = ConnectionPool.new(:size => 10, :timeout => 5) do
+          build_connection
+        end
+      else
+        @connection_pool = nil
       end
     end
 
-    def self.connection
-      options = @keyspace ? {:keyspace => @keyspace } : {}
-      @connection || CassandraCQL::Database.new(
-          @hosts,
-          options,
-          @thrift_options
-        )
+    def connection
+      @connection ||= build_connection
     end
 
-    def self.clear_active_connections!
-      @connection_pool = nil
+    def clear_active_connections!
+      remove_instance_variable(:@connection) if defined? @connection
+      remove_instance_variable(:@connection_pool) if defined? @connection_pool
     end
 
     def with_connection(&block)
-      self.class.connection_pool.with do |conn|
-        block.call(conn)
+      if connection_pool
+        connection_pool.with(&block)
+      else
+        yield connection
       end
     end
 
@@ -150,7 +154,16 @@ module Cequel
       connection.execute "DROP KEYSPACE #{configuration[:keyspace]}"
     end
 
-  private
+    private
+
+    def build_connection
+      options = @keyspace ? {:keyspace => @keyspace } : {}
+      CassandraCQL::Database.new(
+        @hosts,
+        options,
+        @thrift_options
+      )
+    end
 
     def get_batch
       ::Thread.current[batch_key]
@@ -165,7 +178,7 @@ module Cequel
     end
 
     def log(label, statement, *bind_vars)
-      return yield unless self.class.logger || self.class.slowlog
+      return yield unless logger || slowlog
       response = nil
       time = Benchmark.ms { response = yield }
       generate_message = proc do
@@ -174,10 +187,10 @@ module Cequel
           CassandraCQL::Statement.sanitize(statement, bind_vars)
         )
       end
-      self.class.logger.debug(&generate_message) if self.class.logger
-      threshold = self.class.slowlog_threshold || 2000
-      if self.class.slowlog && time >= threshold
-        self.class.slowlog.warn(&generate_message)
+      logger.debug(&generate_message) if self.logger
+      threshold = self.slowlog_threshold || 2000
+      if slowlog && time >= threshold
+        slowlog.warn(&generate_message)
       end
       response
     end

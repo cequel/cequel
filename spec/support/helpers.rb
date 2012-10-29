@@ -11,13 +11,13 @@ module Cequel
       end
 
       def connection
-        Connection.stub(:keyspace=)
         Connection
       end
 
       def cequel
-        Cequel::Keyspace.connection = connection
-        @cequel ||= Cequel::Keyspace.new({})
+        @cequel ||= Cequel::Keyspace.new({}).tap do |keyspace|
+          keyspace.connection = connection
+        end
       end
     end
 

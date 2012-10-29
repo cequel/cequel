@@ -7,6 +7,6 @@ end
 
 RSpec.configure do |config|
   config.before :each do
-    Cequel::Keyspace.connection = connection
+    Cequel::Model.keyspace.connection = connection
   end
 end
