@@ -41,3 +41,18 @@ desc 'Run the specs'
 task :test do
   abort unless system 'bundle', 'exec', 'rspec', 'spec/examples'
 end
+
+desc 'Update changelog'
+task :changelog do
+  require './lib/cequel/version.rb'
+
+  last_tag = `git tag`.each_line.map(&:strip).last
+  existing_changelog = File.read('./CHANGELOG.md')
+  File.open('./CHANGELOG.md', 'w') do |f|
+    f.puts "## #{Cequel::VERSION}"
+    f.puts ""
+    f.puts `git log --no-merges --pretty=format:'* %s' #{last_tag}..`
+    f.puts ""
+    f.puts existing_changelog
+  end
+end
