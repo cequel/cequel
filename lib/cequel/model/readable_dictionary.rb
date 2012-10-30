@@ -98,11 +98,18 @@ module Cequel
       end
 
       def first
-        slice(:first => 1).first
+        @loaded ?  @row.first : slice(:first => 1).first
       end
 
       def last
-        slice(:last => 1).first
+        if @loaded
+          unless @row.empty?
+            key = @row.keys.last
+            [key, @row[key]]
+          end
+        else
+          slice(:last => 1).first
+        end
       end
 
       def key?(column)

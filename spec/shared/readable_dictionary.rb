@@ -134,6 +134,18 @@ shared_examples 'readable dictionary' do
       end
     end
 
+    describe '#first' do
+      it 'should return first element in memory' do
+        dictionary.first.should == [uuid1, 1]
+      end
+    end
+
+    describe '#last' do
+      it 'should return first element in memory' do
+        dictionary.last.should == [uuid3, 3]
+      end
+    end
+
     describe '#keys' do
       it 'should return keys from memory' do
         dictionary.keys.should == [uuid1, uuid2, uuid3]
