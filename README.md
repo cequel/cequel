@@ -520,12 +520,12 @@ Write behavior is the same regardless of loaded status.
 
 Dictionaries implement the `::load` method, which allows you to read multiple
 rows at once. Unlike the `#each` and `#load` methods, `::load` will not attempt
-to paginate over very wide rows (1000+ columns); if your rows are very wide, you
+to paginate over very wide rows (10K+ columns); if your rows are very wide, you
 will probably want to load them one at a time anyway.
 
 ```ruby
 post_rows = BlogPosts.load(blog1_id, blog2_id) # load rows at key blog1_id, blog2_id
-post_rows = BlogPosts.load(blog1_id, blog2_id, :columns => 10_000) # wider rows
+post_rows = BlogPosts.load(blog1_id, blog2_id) # wider rows
 ```
 
 ### Counters ###

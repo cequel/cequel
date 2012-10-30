@@ -58,11 +58,8 @@ module Cequel
         private :new
 
         def load(*keys)
-          options = keys.extract_options!
           keys.flatten!
-          batch_size = options[:columns] || options[:batch_size] ||
-            default_batch_size
-          column_family.select(:first => batch_size).
+          column_family.
             where(key_alias.to_s => keys).
             map { |row| new(row.delete(key_alias.to_s), row) }
         end
