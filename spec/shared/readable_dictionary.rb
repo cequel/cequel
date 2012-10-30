@@ -77,6 +77,24 @@ shared_examples 'readable dictionary' do
       end
     end
 
+    describe '#first' do
+      it 'should load value from data store' do
+        connection.should_receive(:execute).
+          with("SELECT FIRST 1 * FROM #{cf} WHERE ? = ? LIMIT 1", :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid1 => 1)
+        dictionary.first.should == [uuid1, 1]
+      end
+    end
+
+    describe '#last' do
+      it 'should load value from data store' do
+        connection.should_receive(:execute).
+          with("SELECT FIRST 1 REVERSED * FROM #{cf} WHERE ? = ? LIMIT 1", :blog_id, 1).
+          and_return result_stub('blog_id' => 1, uuid3 => 3)
+        dictionary.last.should == [uuid3, 3]
+      end
+    end
+
   end
 
   context 'with data loaded in memory' do

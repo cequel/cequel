@@ -97,6 +97,14 @@ module Cequel
         end
       end
 
+      def first
+        slice(:first => 1).first
+      end
+
+      def last
+        slice(:last => 1).first
+      end
+
       def key?(column)
         @row.key?(column) || load_raw_slice([column])[column].present?
       end
