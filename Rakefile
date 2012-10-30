@@ -2,7 +2,7 @@ require File.expand_path('../lib/cequel/version', __FILE__)
 require 'rspec/core/rake_task'
 
 task :default => :release
-task :release => [:test, :build, :tag, :update_stable, :push, :cleanup]
+task :release => [:verify_changelog, :test, :build, :tag, :update_stable, :push, :cleanup]
 
 desc 'Build gem'
 task :build do
@@ -54,5 +54,13 @@ task :changelog do
     f.puts `git log --no-merges --pretty=format:'* %s' #{last_tag}..`
     f.puts ""
     f.puts existing_changelog
+  end
+end
+
+task :verify_changelog do
+  require './lib/cequel/version.rb'
+
+  if File.read('./CHANGELOG.md').each_line.first.strip != "## #{Cequel::VERSION}"
+    abort "Changelog is not up-to-date."
   end
 end
