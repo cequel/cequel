@@ -37,6 +37,10 @@ module Cequel
           @_cequel.column_family_name
         end
 
+        def column_family_name=(name)
+          @_cequel.column_family_name = name
+        end
+
         def column_family
           keyspace[column_family_name]
         end
@@ -56,7 +60,7 @@ module Cequel
         end
 
         private
-        
+
         def find_one(key)
           all.where!(key_alias => key).first.tap do |result|
             if result.nil?

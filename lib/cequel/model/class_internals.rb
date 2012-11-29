@@ -9,6 +9,7 @@ module Cequel
 
       attr_accessor :key, :default_scope
       attr_reader :columns, :associations, :index_preference
+      attr_writer :column_family_name
 
       def initialize(clazz)
         @clazz = clazz
