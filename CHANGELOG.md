@@ -1,3 +1,7 @@
+## 0.5.2
+
+* Allow overriding of default column family name for model
+
 ## 0.5.1
 
 * Implement `Dictionary#first` and `Dictionary#last`
