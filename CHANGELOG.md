@@ -1,3 +1,7 @@
+## 0.5.3
+
+* Persist Dictionary changes in batches
+
 ## 0.5.2
 
 * Allow overriding of default column family name for model
