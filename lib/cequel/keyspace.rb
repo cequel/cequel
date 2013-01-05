@@ -13,6 +13,10 @@ module Cequel
       configure(configuration)
     end
 
+    def name
+      @keyspace
+    end
+
     def connection=(connection)
       @connection = connection
     end
@@ -24,6 +28,10 @@ module Cequel
       @keyspace = configuration[:keyspace]
       # reset the connections
       clear_active_connections!
+    end
+
+    def schema
+      Schema::Keyspace.new(self)
     end
 
     def logger=(logger)
@@ -146,7 +154,8 @@ module Cequel
     private
 
     def build_connection
-      options = @keyspace ? {:keyspace => @keyspace } : {}
+      options = {:cql_version => '3.0.0'}
+      options[:keyspace] = @keyspace if @keyspace
       CassandraCQL::Database.new(
         @hosts,
         options,

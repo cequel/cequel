@@ -2,22 +2,24 @@ module Cequel
 
   module SpecSupport
 
-    Connection = Object.new
-
     module Helpers
-
-      def result_stub(*results)
-        ResultStub.new(results)
+      def self.cequel
+        @cequel ||= Cequel.connect(
+          :host => host,
+          :keyspace => keyspace_name
+        )
       end
 
-      def connection
-        Connection
+      def self.host
+        ENV['CEQUEL_TEST_HOST'] || '127.0.0.1:9160'
+      end
+
+      def self.keyspace_name
+        ENV['CEQUEL_TEST_KEYSPACE'] || 'cequel_test'
       end
 
       def cequel
-        @cequel ||= Cequel::Keyspace.new({}).tap do |keyspace|
-          keyspace.connection = connection
-        end
+        Helpers.cequel
       end
     end
 
