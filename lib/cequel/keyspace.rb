@@ -99,9 +99,19 @@ module Cequel
     # @param *bind_vars [Object] values for bind variables
     #
     def execute(statement, *bind_vars)
-      log('CQL', statement, *bind_vars) do
-        with_connection do |conn|
-          conn.execute(statement, *bind_vars)
+      begin
+        log('CQL', statement, *bind_vars) do
+          with_connection do |conn|
+            conn.execute(statement, *bind_vars)
+          end
+        end
+      rescue CassandraCQL::Thrift::Client::TransportException
+        connection.disconnect!
+        clear_active_connections!
+        log('CQL', statement, *bind_vars) do
+          with_connection do |conn|
+            conn.execute(statement, *bind_vars)
+          end
         end
       end
     end

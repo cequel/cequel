@@ -2,6 +2,9 @@ require File.expand_path('../spec_helper', __FILE__)
 require 'stringio'
 require 'logger'
 
+class CassandraCQL::Thrift::Client::TransportException < Exception
+end
+
 describe Cequel::Keyspace do
   describe '::batch' do
     it 'should send enclosed write statements in bulk' do
@@ -58,6 +61,43 @@ CQL
       connection.stub(:execute).with("SELECT ? FROM posts", [:id, :title]).and_return result_stub
       cequel[:posts].select(:id, :title).to_a
       io.string.should =~ /CQL \(\d+ms\) SELECT 'id','title' FROM posts/
+    end
+  end
+
+  describe "#execute" do
+    context "when CassandraCQL::Thrift::Client::TransportException is raised" do
+      before(:each) do
+        @times_called = 0
+        @connection = mock('connection')
+        @connection.stub(:execute).and_return do
+          @times_called += 1
+          raise CassandraCQL::Thrift::Client::TransportException if @times_called == 1
+        end
+      end
+
+      it "disconnects the connection" do
+        keyspace = Cequel::Keyspace.new({}) 
+        keyspace.stub(:connection).and_return(@connection)
+        @connection.should_receive(:disconnect!)
+        keyspace.execute("SELECT * FROM posts")
+      end
+
+      it "clears the active connection flags" do
+        keyspace = Cequel::Keyspace.new({}) 
+        @connection.stub(:disconnect!)
+        keyspace.stub(:connection).and_return(@connection)
+        keyspace.should_receive(:clear_active_connections!)
+        keyspace.execute("SELECT * FROM posts")
+      end
+
+      it "retries the execute" do
+        keyspace = Cequel::Keyspace.new({}) 
+        @connection.stub(:disconnect!)
+        keyspace.stub(:clear_active_connections!)
+        keyspace.stub(:connection).and_return(@connection)
+        keyspace.should_receive(:with_connection)
+        keyspace.execute("SELECT * FROM posts")
+      end
     end
   end
 end
