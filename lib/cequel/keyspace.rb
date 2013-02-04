@@ -106,6 +106,7 @@ module Cequel
           end
         end
       rescue CassandraCQL::Thrift::Client::TransportException
+        logger.debug("rescued CassandraCQL::Thrift::Client::TransportException, disconnecting and retrying execute") if self.logger
         connection.disconnect!
         clear_active_connections!
         log('CQL', statement, *bind_vars) do

@@ -75,6 +75,18 @@ CQL
         end
       end
 
+      it "logs that a CassandraCQL::Thrift::Client::TransportException exception was raised if logger exists" do
+        keyspace = Cequel::Keyspace.new({}) 
+        keyspace.class.stub(:logger).and_return(true)
+        keyspace.stub(:connection).and_return(@connection)
+        keyspace.stub(:log).and_yield
+        @connection.stub(:disconnect!)
+        logger = mock('logger')
+        keyspace.stub(:logger).and_return(logger)
+        logger.should_receive(:debug).with("rescued CassandraCQL::Thrift::Client::TransportException, disconnecting and retrying execute") 
+        keyspace.execute("SELECT * FROM posts")
+      end
+
       it "disconnects the connection" do
         keyspace = Cequel::Keyspace.new({}) 
         keyspace.stub(:connection).and_return(@connection)
