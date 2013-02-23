@@ -54,10 +54,10 @@ module Cequel
       return @connection_pool if defined? @connection_pool
       if @configuration[:pool]
         options = {
-          :size => configuration[:pool],
-          :timeout => configuration[:pool_timeout]
+          :size => @configuration[:pool] || 10,
+          :timeout => @configuration[:pool_timeout] || 5
         }
-        @connection_pool = ConnectionPool.new(:size => 10, :timeout => 5) do
+        @connection_pool = ConnectionPool.new(options) do
           build_connection
         end
       else
