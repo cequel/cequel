@@ -177,6 +177,18 @@ cassandra[:posts].where(:id => [1, 2]).delete(:title)
 low-level functionality described above. Cequel models are
 ActiveModel-compliant and generally follow ActiveRecord-like patterns.
 
+### Keyspace setup and migrations ###
+
+The current version of Cequel does not provide built-in functionality for
+schema creation and modification, but ActiveRecord-like migrations for Cequel
+are available via the
+[cequel-migrations-rails](https://github.com/reachlocal/cequel-migrations-rails)
+library.
+
+The [forthcoming release](https://github.com/brewster/cequel/tree/1.0) of Cequel
+will support full schema introspection and modification, and will also provide
+auto-migration functionality for models.
+
 ### Defining a model ###
 
 Cequel models include the `Cequel::Model` module; the example below demonstrates
