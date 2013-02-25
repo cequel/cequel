@@ -32,7 +32,6 @@ DELETE FROM posts
 APPLY BATCH
 CQL
 
-      
       cequel.batch(:auto_apply => 2) do
         cequel[:posts].insert(:id => 1, :title => 'Hey')
         cequel[:posts].update(:body => 'Body')
@@ -42,6 +41,28 @@ CQL
 
     it 'should do nothing if no statements executed in batch' do
       expect { cequel.batch {} }.to_not raise_error
+    end
+  end
+
+  describe '::connection_pool' do
+    it 'should use connection pool if pool specified' do
+      #NOTE: called one time per pool entry
+      Cequel::Keyspace.any_instance.should_receive(:build_connection).once.and_return(connection)
+      Cequel::Keyspace.any_instance.should_receive(:connection).never
+      keyspace = Cequel::Keyspace.new(:pool => 1)
+
+      keyspace.with_connection { |conn| }
+      keyspace.with_connection { |conn| }
+      keyspace.with_connection { |conn| }
+    end
+
+    it 'should not use connection pool if no pool specified' do
+      Cequel::Keyspace.any_instance.should_receive(:connection).exactly(3).times.and_return(connection)
+      keyspace = Cequel::Keyspace.new({})
+
+      keyspace.with_connection { |conn| }
+      keyspace.with_connection { |conn| }
+      keyspace.with_connection { |conn| }
     end
   end
 
