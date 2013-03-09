@@ -10,19 +10,19 @@ module Cequel
       end
 
       def add_column(name, type)
-        add_column_statement(Column.new(name, type))
+        add_data_column(Column.new(name, type))
       end
 
       def add_list(name, type)
-        add_column_statement(List.new(name, type))
+        add_data_column(List.new(name, type))
       end
 
       def add_set(name, type)
-        add_column_statement(Set.new(name, type))
+        add_data_column(Set.new(name, type))
       end
 
       def add_map(name, key_type, value_type)
-        add_column_statement(Map.new(name, key_type, value_type))
+        add_data_column(Map.new(name, key_type, value_type))
       end
 
       def change_column(name, type)
@@ -50,6 +50,10 @@ module Cequel
 
       def to_cql
         @statements
+      end
+
+      def add_data_column(column)
+        add_column_statement(column)
       end
 
       private

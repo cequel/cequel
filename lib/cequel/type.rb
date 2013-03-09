@@ -53,6 +53,15 @@ module Cequel
     end
     register Blob.instance
 
+    class Int < Base
+
+      def internal_name
+        'org.apache.cassandra.db.marshal.Int32Type'
+      end
+
+    end
+    register Int.instance
+
     class Text < Base
 
       def internal_name
