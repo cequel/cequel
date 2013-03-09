@@ -43,6 +43,16 @@ module Cequel
       end
       alias_method :change_options, :change_properties
 
+      def create_index(column_name, index_name = nil)
+        @updater.create_index(column_name, index_name)
+      end
+      alias_method :add_index, :create_index
+
+      def drop_index(index_name)
+        @updater.drop_index(index_name)
+      end
+      alias_method :remove_index, :drop_index
+
     end
 
   end

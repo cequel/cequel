@@ -117,6 +117,31 @@ describe Cequel::Schema::TableUpdater do
     end
   end
 
+  describe '#add_index' do
+    before do
+      cequel.schema.alter_table(:posts) do
+        create_index :title
+      end
+    end
+
+    it 'should add the index' do
+      table.data_column(:title).should be_indexed
+    end
+  end
+
+  describe '#drop_index' do
+    before do
+      cequel.schema.alter_table(:posts) do
+        create_index :title
+        drop_index :posts_title_idx
+      end
+    end
+
+    it 'should drop the index' do
+      table.data_column(:title).should_not be_indexed
+    end
+  end
+
   describe '#drop_column' do
     before do
       pending 'Support in a future Cassandra version'
