@@ -25,7 +25,7 @@ module Cequel
       def create_table(name, &block)
         table = Table.new(name)
         TableDSL.apply(table, &block)
-        table.create_cql.each do |statement|
+        TableWriter.new(table).to_cql.each do |statement|
           @keyspace.execute(statement)
         end
       end

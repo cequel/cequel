@@ -1,6 +1,6 @@
-require File.expand_path('../spec_helper', __FILE__)
+require File.expand_path('../../spec_helper', __FILE__)
 
-describe Cequel::Schema do
+describe Cequel::Schema::TableWriter do
 
   let(:table) { cequel.schema.read_table(:posts) }
 

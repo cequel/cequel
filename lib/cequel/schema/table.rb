@@ -9,7 +9,8 @@ module Cequel
       attr_reader :name,
                   :partition_keys,
                   :nonpartition_keys,
-                  :data_columns
+                  :data_columns,
+                  :properties
       attr_writer :compact_storage
 
       def initialize(name)
@@ -77,56 +78,6 @@ module Cequel
 
       def compact_storage?
         !!@compact_storage
-      end
-
-      def create_cql
-        create_statement = "CREATE TABLE #{@name} (#{columns_cql}, #{keys_cql})"
-        properties = properties_cql
-        create_statement << " WITH #{properties}" if properties
-        [create_statement, *index_statements]
-      end
-
-      private
-
-      def index_statements
-        [].tap do |statements|
-          @data_columns.each do |column|
-            if column.indexed?
-              statements <<
-                "CREATE INDEX #{column.index_name} ON #{@name} (#{column.name})"
-            end
-          end
-        end
-      end
-
-      def columns_cql
-        columns.map(&:to_cql).join(', ')
-      end
-
-      def key_columns_cql
-        @keys.map { |key| "#{key.name} #{key.type}" }.join(', ')
-      end
-
-      def keys_cql
-        partition_cql = @partition_keys.map { |key| key.name }.join(', ')
-        if @nonpartition_keys.any?
-          nonpartition_cql =
-            @nonpartition_keys.map { |key| key.name }.join(', ')
-          "PRIMARY KEY ((#{partition_cql}), #{nonpartition_cql})"
-        else
-          "PRIMARY KEY ((#{partition_cql}))"
-        end
-      end
-
-      def properties_cql
-        properties_fragments = @properties.map { |_, property| property.to_cql }
-        properties_fragments << 'COMPACT STORAGE' if @compact_storage
-        if @nonpartition_keys.any?
-          clustering_fragment =
-            @nonpartition_keys.map(&:clustering_order_cql).join(',')
-          properties_fragments << "CLUSTERING ORDER BY (#{clustering_fragment})"
-        end
-        properties_fragments.join(' AND ') if properties_fragments.any?
       end
 
     end
