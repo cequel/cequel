@@ -50,11 +50,11 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create non-partition key components' do
-        table.nonpartition_keys.map(&:name).should == [:permalink]
+        table.clustering_columns.map(&:name).should == [:permalink]
       end
 
       it 'should set type for non-partition key components' do
-        table.nonpartition_keys.map(&:type).should == [Cequel::Type[:ascii]]
+        table.clustering_columns.map(&:type).should == [Cequel::Type[:ascii]]
       end
     end
 
@@ -98,11 +98,11 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create non-partition key components' do
-        table.nonpartition_keys.map(&:name).should == [:month]
+        table.clustering_columns.map(&:name).should == [:month]
       end
 
       it 'should set type for non-partition key components' do
-        table.nonpartition_keys.map(&:type).should == [Cequel::Type[:timestamp]]
+        table.clustering_columns.map(&:type).should == [Cequel::Type[:timestamp]]
       end
     end
 
@@ -196,7 +196,7 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should set clustering order' do
-        table.nonpartition_keys.map(&:clustering_order).should == [:desc]
+        table.clustering_columns.map(&:clustering_order).should == [:desc]
       end
     end
 

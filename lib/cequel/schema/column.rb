@@ -18,7 +18,7 @@ module Cequel
 
     class PartitionKey < Column; end
 
-    class NonpartitionKey < Column
+    class ClusteringColumn < Column
 
       attr_reader :clustering_order
 

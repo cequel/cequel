@@ -8,14 +8,14 @@ module Cequel
 
       attr_reader :name,
                   :partition_keys,
-                  :nonpartition_keys,
+                  :clustering_columns,
                   :data_columns,
                   :properties
       attr_writer :compact_storage
 
       def initialize(name)
         @name = name
-        @partition_keys, @nonpartition_keys, @data_columns = [], [], []
+        @partition_keys, @clustering_columns, @data_columns = [], [], []
         @properties = ActiveSupport::HashWithIndifferentAccess.new
       end
 
@@ -27,7 +27,7 @@ module Cequel
           end
           add_partition_key(name, type)
         else
-          add_nonpartition_key(name, type, clustering_order)
+          add_clustering_column(name, type, clustering_order)
         end
       end
 
@@ -36,9 +36,9 @@ module Cequel
         @partition_keys << column
       end
 
-      def add_nonpartition_key(name, type, clustering_order = nil)
-        column = NonpartitionKey.new(name, type, clustering_order)
-        @nonpartition_keys << column
+      def add_clustering_column(name, type, clustering_order = nil)
+        column = ClusteringColumn.new(name, type, clustering_order)
+        @clustering_columns << column
       end
 
       def add_column(name, type, index_name)
@@ -64,7 +64,7 @@ module Cequel
       end
 
       def columns
-        @partition_keys + @nonpartition_keys + @data_columns
+        @partition_keys + @clustering_columns + @data_columns
       end
 
       def column(name)
@@ -75,8 +75,8 @@ module Cequel
         @partition_keys.find { |column| column.name == name }
       end
 
-      def nonpartition_key(name)
-        @nonpartition_keys.find { |column| column.name == name }
+      def clustering_column(name)
+        @clustering_columns.find { |column| column.name == name }
       end
 
       def data_column(name)

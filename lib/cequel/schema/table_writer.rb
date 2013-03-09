@@ -39,9 +39,9 @@ module Cequel
 
       def keys_cql
         partition_cql = @table.partition_keys.map { |key| key.name }.join(', ')
-        if @table.nonpartition_keys.any?
+        if @table.clustering_columns.any?
           nonpartition_cql =
-            @table.nonpartition_keys.map { |key| key.name }.join(', ')
+            @table.clustering_columns.map { |key| key.name }.join(', ')
           "PRIMARY KEY ((#{partition_cql}), #{nonpartition_cql})"
         else
           "PRIMARY KEY ((#{partition_cql}))"
@@ -52,9 +52,9 @@ module Cequel
         properties_fragments = @table.properties.
           map { |_, property| property.to_cql }
         properties_fragments << 'COMPACT STORAGE' if @table.compact_storage?
-        if @table.nonpartition_keys.any?
+        if @table.clustering_columns.any?
           clustering_fragment =
-            @table.nonpartition_keys.map(&:clustering_order_cql).join(',')
+            @table.clustering_columns.map(&:clustering_order_cql).join(',')
           properties_fragments << "CLUSTERING ORDER BY (#{clustering_fragment})"
         end
         properties_fragments.join(' AND ') if properties_fragments.any?

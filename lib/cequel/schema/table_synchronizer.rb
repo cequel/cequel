@@ -79,12 +79,12 @@ module Cequel
           raise InvalidSchemaMigration,
             "Existing partition keys #{@existing.partition_keys.map { |key| key.name }.join(',')} differ from specified partition keys #{@updated.partition_keys.map { |key| key.name }.join(',')}"
         end
-        if @existing.nonpartition_keys.length != @updated.nonpartition_keys.length
+        if @existing.clustering_columns.length != @updated.clustering_columns.length
           raise InvalidSchemaMigration,
-            "Existing clustering keys #{@existing.nonpartition_keys.map { |key| key.name }.join(',')} differ from specified clustering keys #{@updated.nonpartition_keys.map { |key| key.name }.join(',')}"
+            "Existing clustering keys #{@existing.clustering_columns.map { |key| key.name }.join(',')} differ from specified clustering keys #{@updated.clustering_columns.map { |key| key.name }.join(',')}"
         end
         @existing.partition_keys.zip(@updated.partition_keys, &block)
-        @existing.nonpartition_keys.zip(@updated.nonpartition_keys, &block)
+        @existing.clustering_columns.zip(@updated.clustering_columns, &block)
       end
 
       def each_column_pair(&block)

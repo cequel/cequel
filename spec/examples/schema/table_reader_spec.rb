@@ -22,7 +22,7 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should have no nonpartition keys' do
-      table.nonpartition_keys.should be_empty
+      table.clustering_columns.should be_empty
     end
   end # describe 'reading simple key'
 
@@ -46,16 +46,16 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read non-partition key name' do
-      table.nonpartition_keys.map(&:name).should == [:permalink]
+      table.clustering_columns.map(&:name).should == [:permalink]
     end
 
     it 'should read non-partition key type' do
-      table.nonpartition_keys.map(&:type).
+      table.clustering_columns.map(&:type).
         should == [Cequel::Type::Ascii.instance]
     end
 
     it 'should default clustering order to asc' do
-      table.nonpartition_keys.map(&:clustering_order).should == [:asc]
+      table.clustering_columns.map(&:clustering_order).should == [:asc]
     end
   end # describe 'reading single non-partition key'
 
@@ -72,16 +72,16 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read non-partition key name' do
-      table.nonpartition_keys.map(&:name).should == [:permalink]
+      table.clustering_columns.map(&:name).should == [:permalink]
     end
 
     it 'should read non-partition key type' do
-      table.nonpartition_keys.map(&:type).
+      table.clustering_columns.map(&:type).
         should == [Cequel::Type::Ascii.instance]
     end
 
     it 'should recognize reversed clustering order' do
-      table.nonpartition_keys.map(&:clustering_order).should == [:desc]
+      table.clustering_columns.map(&:clustering_order).should == [:desc]
     end
   end # describe 'reading reverse-ordered non-partition key'
 
@@ -99,16 +99,16 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read non-partition key names' do
-      table.nonpartition_keys.map(&:name).should == [:permalink, :author_id]
+      table.clustering_columns.map(&:name).should == [:permalink, :author_id]
     end
 
     it 'should read non-partition key types' do
-      table.nonpartition_keys.map(&:type).
+      table.clustering_columns.map(&:type).
         should == [Cequel::Type::Ascii.instance, Cequel::Type::Uuid.instance]
     end
 
     it 'should read heterogeneous clustering orders' do
-      table.nonpartition_keys.map(&:clustering_order).should == [:desc, :asc]
+      table.clustering_columns.map(&:clustering_order).should == [:desc, :asc]
     end
   end # describe 'reading compound non-partition key'
 
@@ -133,7 +133,7 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should have empty nonpartition keys' do
-      table.nonpartition_keys.should be_empty
+      table.clustering_columns.should be_empty
     end
 
   end # describe 'reading compound partition key'
@@ -162,17 +162,17 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read non-partition key names' do
-      table.nonpartition_keys.map(&:name).
+      table.clustering_columns.map(&:name).
         should == [:author_id, :published_at]
     end
 
     it 'should read non-partition key types' do
-      table.nonpartition_keys.map(&:type).should ==
+      table.clustering_columns.map(&:type).should ==
         [Cequel::Type::Uuid.instance, Cequel::Type::Timestamp.instance]
     end
 
     it 'should read clustering order' do
-      table.nonpartition_keys.map(&:clustering_order).should == [:asc, :desc]
+      table.clustering_columns.map(&:clustering_order).should == [:asc, :desc]
     end
 
   end # describe 'reading compound partition and non-partition keys'

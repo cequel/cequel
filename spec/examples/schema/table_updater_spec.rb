@@ -100,8 +100,8 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should change the name' do
-      table.nonpartition_key(:slug).should be
-      table.nonpartition_key(:permalink).should be_nil
+      table.clustering_column(:slug).should be
+      table.clustering_column(:permalink).should be_nil
     end
   end
 

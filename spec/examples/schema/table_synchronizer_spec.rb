@@ -57,7 +57,7 @@ describe Cequel::Schema::TableSynchronizer do
       end
 
       it 'should rename keys' do
-        table.nonpartition_keys.first.name.should == :post_permalink
+        table.clustering_columns.first.name.should == :post_permalink
       end
 
       it 'should add new columns' do

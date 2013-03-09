@@ -27,7 +27,7 @@ module Cequel
 
       def read
         read_partition_keys
-        read_nonpartition_keys
+        read_clustering_columns
         read_data_columns
         read_properties
         @table
@@ -44,7 +44,7 @@ module Cequel
         end
       end
 
-      def read_nonpartition_keys
+      def read_clustering_columns
         column_aliases = JSON.parse(@table_data['column_aliases'])
         comparators = parse_composite_types(@table_data['comparator'])
         unless comparators
@@ -56,7 +56,7 @@ module Cequel
             type = $1
             clustering_order = :desc
           end
-          @table.add_nonpartition_key(
+          @table.add_clustering_column(
             column_alias.to_sym,
             Type.lookup_internal(type),
             clustering_order
