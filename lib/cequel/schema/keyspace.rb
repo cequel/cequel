@@ -24,8 +24,16 @@ module Cequel
 
       def create_table(name, &block)
         table = Table.new(name)
-        TableDSL.apply(table, &block)
+        CreateTableDSL.apply(table, &block)
         TableWriter.new(table).to_cql.each do |statement|
+          @keyspace.execute(statement)
+        end
+      end
+
+      def alter_table(name, &block)
+        updater = TableUpdater.new(name)
+        UpdateTableDSL.apply(updater, &block)
+        updater.to_cql.each do |statement|
           @keyspace.execute(statement)
         end
       end

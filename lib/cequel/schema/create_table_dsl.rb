@@ -2,7 +2,7 @@ module Cequel
 
   module Schema
 
-    class TableDSL < BasicObject
+    class CreateTableDSL < BasicObject
 
       def self.apply(table, &block)
         dsl = new(table)

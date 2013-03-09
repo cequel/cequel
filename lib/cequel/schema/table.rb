@@ -67,6 +67,18 @@ module Cequel
         @partition_keys + @nonpartition_keys + @data_columns
       end
 
+      def column(name)
+        columns.find { |column| column.name == name }
+      end
+
+      def partition_key(name)
+        @partition_keys.find { |column| column.name == name }
+      end
+
+      def nonpartition_key(name)
+        @nonpartition_keys.find { |column| column.name == name }
+      end
+
       def data_column(name)
         name = name.to_sym
         @data_columns.find { |column| column.name == name }
