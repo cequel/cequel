@@ -7,7 +7,9 @@ module Cequel
         @cequel ||= Cequel.connect(
           :host => host,
           :keyspace => keyspace_name
-        )
+        ).tap do |cequel|
+          cequel.logger = Logger.new(STDOUT) if ENV['CEQUEL_LOG_QUERIES']
+        end
       end
 
       def self.host

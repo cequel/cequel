@@ -1,3 +1,12 @@
+GIT
+  remote: git://github.com/outoftime/cassandra-cql.git
+  revision: fe27c613580580ca913a1d29ca3e394e26462813
+  branch: 1.2
+  specs:
+    cassandra-cql (1.1.5)
+      simple_uuid (>= 0.2.0)
+      thrift_client (>= 0.7.1, < 0.9)
+
 PATH
   remote: .
   specs:
@@ -7,13 +16,6 @@ PATH
       cassandra-cql (~> 1.1)
       connection_pool (~> 0.9.2)
       i18n
-
-PATH
-  remote: ../cassandra-cql
-  specs:
-    cassandra-cql (1.1.4)
-      simple_uuid (>= 0.2.0)
-      thrift_client (>= 0.7.1)
 
 GEM
   remote: http://rubygems.org/
@@ -63,9 +65,9 @@ GEM
       rack (~> 1.4)
       rack-protection (~> 1.3)
       tilt (~> 1.3, >= 1.3.3)
-    thrift (0.9.0)
-    thrift_client (0.9.1)
-      thrift (~> 0.9.0)
+    thrift (0.8.0)
+    thrift_client (0.8.4)
+      thrift (~> 0.8.0)
     tilt (1.3.4)
     yard (0.8.5.2)
 

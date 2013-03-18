@@ -40,6 +40,10 @@ module Cequel
         end
       end
 
+      def truncate_table(name)
+        @keyspace.execute("TRUNCATE #{name}")
+      end
+
       def drop_table(name)
         @keyspace.execute("DROP TABLE #{name}")
       end

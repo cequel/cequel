@@ -17,44 +17,14 @@ module Cequel
 
     def cql
       case @value
-      when DataSet
-        subquery_cql
       when Array
         if @value.length == 1
-          ["? = ?", @column, @value.first]
+          ["#{@column} = ?", @value.first]
         else
-          [
-            "? IN (?)",
-            @column, @value
-          ]
+          ["#{@column} IN (?)", @value]
         end
       else
-        ["? = ?", @column, @value]
-      end
-    end
-
-    private
-
-    def subquery_cql
-      values = values_from_subquery
-      case values.length
-      when 0
-        raise EmptySubquery,
-          "Unable to generate CQL row specification: subquery (#{@value.cql}) returned no results."
-      when 1
-        RowSpecification.new(@column, values.first).cql
-      else
-        RowSpecification.new(@column, values).cql
-      end
-    end
-
-    def values_from_subquery
-      results = @value.map do |row|
-        if row.length > 1
-          raise ArgumentError,
-            "Subqueries must return a single row per column"
-        end
-        row.values.first
+        ["#{@column} = ?", @value]
       end
     end
 

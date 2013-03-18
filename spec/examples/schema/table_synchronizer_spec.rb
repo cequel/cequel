@@ -162,6 +162,8 @@ describe Cequel::Schema::TableSynchronizer do
         }.to raise_error(Cequel::InvalidSchemaMigration)
       end
 
+      it 'should not allow changing of clustering order'
+
     end
 
 

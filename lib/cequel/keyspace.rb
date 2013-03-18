@@ -178,7 +178,18 @@ module Cequel
     def log(label, statement, *bind_vars)
       return yield unless logger || slowlog
       response = nil
-      time = Benchmark.ms { response = yield }
+      begin
+        time = Benchmark.ms { response = yield }
+      rescue Exception => e
+        generate_message = proc do
+          sprintf(
+            '%s (ERROR) %s', label,
+            CassandraCQL::Statement.sanitize(statement, bind_vars)
+          )
+        end
+        logger.debug(&generate_message) if self.logger
+        raise
+      end
       generate_message = proc do
         sprintf(
           '%s (%dms) %s', label, time.to_i,
