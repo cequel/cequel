@@ -235,15 +235,6 @@ module Cequel
       delete_with(column_aliases, [], options)
     end
 
-    def delete_with(specifications, bindings, options)
-      to_delete = specifications ? " #{specifications}" : ''
-      statement = Statement.new.
-        append("DELETE#{to_delete} FROM #{@column_family}", *bindings).
-        append(generate_upsert_options(options)).
-        append(*row_specifications_cql)
-      @keyspace.write(*statement.args)
-    end
-
     #
     # Select specified columns from this data set.
     #
@@ -489,6 +480,15 @@ module Cequel
         append(" SET ")
       statement.append(mutator_fragment, *bind_variables)
       statement.append(*row_specifications_cql)
+      @keyspace.write(*statement.args)
+    end
+
+    def delete_with(specifications, bindings, options)
+      to_delete = specifications ? " #{specifications}" : ''
+      statement = Statement.new.
+        append("DELETE#{to_delete} FROM #{@column_family}", *bindings).
+        append(generate_upsert_options(options)).
+        append(*row_specifications_cql)
       @keyspace.write(*statement.args)
     end
 
