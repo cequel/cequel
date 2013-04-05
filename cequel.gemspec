@@ -4,6 +4,7 @@ Gem::Specification.new do |s|
   s.name = 'cequel'
   s.version = Cequel::VERSION
   s.authors = ['Mat Brown', 'Aubrey Holland', 'Keenan Brock']
+  s.homepage = "https://github.com/brewster/cequel"
   s.email = 'mat.a.brown@gmail.com'
   s.license = 'MIT'
   s.summary = 'Query abstraction layer and object-row mapper for Cassandra and CQL'
@@ -26,7 +27,8 @@ DESC
   s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.6'
   s.add_development_dependency 'geminabox'
-  s.add_development_dependency 'rocco'
-  s.add_development_dependency 'redcarpet', '< 2.0' # for rocco compatibility
+  s.add_development_dependency 'ruby-debug'
+#  s.add_development_dependency 'rocco'
+#  s.add_development_dependency 'redcarpet', '< 2.0' # for rocco compatibility
   s.requirements << 'Cassandra 1.0+'
 end
