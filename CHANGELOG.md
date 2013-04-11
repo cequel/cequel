@@ -1,3 +1,10 @@
+## 0.5.4
+
+* Clear out Dictionary @row on save unless loaded
+* Add homepage link so rubygems users can easily get to github
+* Add link to cequel-migrations-rails to README
+* Use parameters for pooling
+
 ## 0.5.3
 
 * Persist Dictionary changes in batches
