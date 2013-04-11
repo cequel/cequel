@@ -27,8 +27,6 @@ DESC
   s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.6'
   s.add_development_dependency 'geminabox'
-  s.add_development_dependency 'ruby-debug'
-#  s.add_development_dependency 'rocco'
-#  s.add_development_dependency 'redcarpet', '< 2.0' # for rocco compatibility
+  s.add_development_dependency 'debugger'
   s.requirements << 'Cassandra 1.0+'
 end
