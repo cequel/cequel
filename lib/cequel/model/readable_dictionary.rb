@@ -145,6 +145,7 @@ module Cequel
       end
 
       def load
+        return self if @loaded
         @row = {}
         each_pair { |column, value| @row[column] = value }
         @loaded = true

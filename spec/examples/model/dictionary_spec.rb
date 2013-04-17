@@ -256,6 +256,17 @@ describe Cequel::Model::Dictionary do
         connection.should_not_receive(:execute)
         dictionary[4].should == comment
       end
+
+      it 'should be a no-op if already loaded' do
+        connection.stub(:execute).with(
+          'SELECT FIRST 1000 * FROM post_comments WHERE ? = ? LIMIT 1',
+          :post_id, 1
+        ).and_return result_stub(4 => comment.to_json)
+        dictionary.load
+        connection.should_not_receive(:execute)
+        dictionary.load
+        dictionary[4].should == comment
+      end
     end
 
     describe '#each_pair' do
