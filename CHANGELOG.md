@@ -1,3 +1,7 @@
+## 0.5.5
+
+* Calling ::load on a loaded Dictionary is a no-op
+
 ## 0.5.4
 
 * Clear out Dictionary @row on save unless loaded
