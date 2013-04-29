@@ -50,6 +50,22 @@ module Cequel
       @slowlog_threshold
     end
 
+    def with_consistency(consistency)
+      previous_consistency = default_consistency
+      Thread.current[consistency_key] = consistency
+      yield
+    ensure
+      Thread.current[consistency_key] = previous_consistency
+    end
+
+    def default_consistency
+      Thread.current[consistency_key]
+    end
+
+    def consistency_key
+      "Cequel::Keyspace[#{object_id}]#default_consistency"
+    end
+
     def connection_pool
       return @connection_pool if defined? @connection_pool
       if @configuration[:pool]

@@ -49,6 +49,10 @@ module Cequel
           Cequel::Model.keyspace
         end
 
+        def with_consistency(consistency, &block)
+          keyspace.with_consistency(consistency, &block)
+        end
+
         def _hydrate(row)
           type_column_name = @_cequel.type_column.try(:name)
           if type_column_name && row[type_column_name]

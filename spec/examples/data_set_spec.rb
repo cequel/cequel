@@ -19,6 +19,15 @@ describe Cequel::DataSet do
       )
     end
 
+    it 'should respect with_consistency block' do
+      connection.should_receive(:execute).
+        with "INSERT INTO posts (?) VALUES (?) USING CONSISTENCY QUORUM", [:id, :title], [1, 'Fun times']
+
+      cequel.with_consistency(:quorum) do
+        cequel[:posts].insert(:id => 1, :title => 'Fun times')
+      end
+    end
+
     it 'should include ttl argument' do
       connection.should_receive(:execute).
         with "INSERT INTO posts (?) VALUES (?) USING TTL 600", [:id, :title], [1, 'Fun times']
@@ -73,6 +82,15 @@ describe Cequel::DataSet do
         {:title => 'Fun times', :body => 'Fun'},
         :consistency => :quorum, :ttl => 600, :timestamp => time
       )
+    end
+
+    it 'should respect default consistency' do
+      connection.should_receive(:execute).
+        with "UPDATE posts USING CONSISTENCY QUORUM SET ? = ?, ? = ?", :title, 'Fun times', :body, 'Fun'
+
+      cequel.with_consistency(:quorum) do
+        cequel[:posts].update(:title => 'Fun times', :body => 'Fun')
+      end
     end
 
     it 'should send update statement scoped to current row specifications' do
@@ -144,6 +162,15 @@ describe Cequel::DataSet do
         :title, :body,
         :consistency => :quorum, :timestamp => time
       )
+    end
+
+    it 'should respect default consistency' do
+      connection.should_receive(:execute).
+        with "DELETE ? FROM posts USING CONSISTENCY QUORUM", [:title, :body]
+
+      cequel.with_consistency(:quorum) do
+        cequel[:posts].delete(:title, :body)
+      end
     end
 
     it 'should send delete statement with scoped row specifications' do
@@ -307,6 +334,15 @@ describe Cequel::DataSet do
     it 'should add USING CONSISTENCY to select' do
       cequel[:posts].consistency(:quorum).cql.
         should == ["SELECT * FROM posts USING CONSISTENCY QUORUM"]
+    end
+  end
+
+  describe 'in with_consistency block' do
+    it 'should use default consistency' do
+      cequel.with_consistency(:quorum) do
+        cequel[:posts].cql.
+          should == ["SELECT * FROM posts USING CONSISTENCY QUORUM"]
+      end
     end
   end
 

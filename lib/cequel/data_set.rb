@@ -294,6 +294,9 @@ module Cequel
     # @option options [Time,Integer] :timestamp the timestamp associated with the column values
     #
     def generate_upsert_options(options)
+      if keyspace.default_consistency
+        options[:consistency] ||= keyspace.default_consistency
+      end
       if options.empty?
         ''
       else
@@ -331,8 +334,9 @@ module Cequel
     end
 
     def consistency_cql
-      if @consistency
-        " USING CONSISTENCY #{@consistency.upcase}"
+      consistency = @consistency || keyspace.default_consistency
+      if consistency
+        " USING CONSISTENCY #{consistency.upcase}"
       else ''
       end
     end
