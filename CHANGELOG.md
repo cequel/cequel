@@ -1,3 +1,7 @@
+## 0.5.6
+
+* Ability to change default consistency within a block
+
 ## 0.5.5
 
 * Calling ::load on a loaded Dictionary is a no-op
