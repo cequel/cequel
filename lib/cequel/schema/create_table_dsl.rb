@@ -22,7 +22,7 @@ module Cequel
       end
 
       def column(name, type, options = {})
-        column = @table.add_column(name, type, options[:index])
+        column = @table.add_data_column(name, type, options[:index])
       end
 
       def list(name, type)

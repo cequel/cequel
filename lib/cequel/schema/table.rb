@@ -7,6 +7,7 @@ module Cequel
     class Table
 
       attr_reader :name,
+                  :columns,
                   :partition_keys,
                   :clustering_columns,
                   :data_columns,
@@ -16,6 +17,7 @@ module Cequel
       def initialize(name)
         @name = name
         @partition_keys, @clustering_columns, @data_columns = [], [], []
+        @columns, @columns_by_name = [], {}
         @properties = ActiveSupport::HashWithIndifferentAccess.new
       end
 
@@ -33,42 +35,39 @@ module Cequel
 
       def add_partition_key(name, type)
         column = PartitionKey.new(name, type(type))
-        @partition_keys << column
+        @partition_keys << add_column(column)
       end
 
       def add_clustering_column(name, type, clustering_order = nil)
         column = ClusteringColumn.new(name, type(type), clustering_order)
-        @clustering_columns << column
+        @clustering_columns << add_column(column)
       end
 
-      def add_column(name, type, index_name)
+      def add_data_column(name, type, index_name)
         index_name = :"#{@name}_#{name}_idx" if index_name == true
         DataColumn.new(name, type(type), index_name).
-          tap { |column| @data_columns << column }
+          tap { |column| @data_columns << add_column(column) }
       end
 
       def add_list(name, type)
-        @data_columns << List.new(name, type(type))
+        @data_columns << add_column(List.new(name, type(type)))
       end
 
       def add_set(name, type)
-        @data_columns << Set.new(name, type(type))
+        @data_columns << add_column(Set.new(name, type(type)))
       end
 
       def add_map(name, key_type, value_type)
-        @data_columns << Map.new(name, type(key_type), type(value_type))
+        @data_columns <<
+          add_column(Map.new(name, type(key_type), type(value_type)))
       end
 
       def add_property(name, value)
         @properties[name] = TableProperty.new(name, value)
       end
 
-      def columns
-        @partition_keys + @clustering_columns + @data_columns
-      end
-
       def column(name)
-        columns.find { |column| column.name == name }
+        columns_by_name[name.to_sym]
       end
 
       def partition_key(name)
@@ -92,7 +91,15 @@ module Cequel
         !!@compact_storage
       end
 
+      protected
+      attr_reader :columns_by_name
+
       private
+
+      def add_column(column)
+        columns << column
+        columns_by_name[column.name] = column
+      end
 
       def type(type)
         ::Cequel::Type[type]

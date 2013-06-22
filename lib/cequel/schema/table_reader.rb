@@ -80,7 +80,7 @@ module Cequel
               *$2.split(',')
             )
           else
-            table.add_column(
+            table.add_data_column(
               result['column_name'].to_sym,
               Type.lookup_internal(result['validator']),
               result['index_name'].try(:to_sym)
