@@ -1,6 +1,6 @@
-require File.expand_path('../spec_helper', __FILE__)
+require File.expand_path('../../spec_helper', __FILE__)
 
-describe Cequel::DataSet do
+describe Cequel::Metal::DataSet do
   before :all do
     cequel.schema.create_table(:posts) do
       key :blog_subdomain, :text
