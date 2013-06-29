@@ -4,9 +4,20 @@ module Cequel
 
     class TableUpdater
 
-      def initialize(name)
-        @name = name
+      def self.apply(keyspace, table_name)
+        new(keyspace, table_name).
+          tap { |updater| yield updater if block_given? }.
+          apply
+      end
+
+      def initialize(keyspace, table_name)
+        @keyspace, @table_name = keyspace, table_name
         @statements = []
+      end
+      private_class_method :new
+
+      def apply
+        statements.each { |statement| keyspace.execute(statement) }
       end
 
       def add_column(name, type)
@@ -40,26 +51,25 @@ module Cequel
       end
 
       def create_index(column, index_name)
-        index_name ||= "#{@name}_#{column}_idx"
-        @statements << "CREATE INDEX #{index_name} ON #{@name} (#{column})"
+        index_name ||= "#{table_name}_#{column}_idx"
+        statements << "CREATE INDEX #{index_name} ON #{table_name} (#{column})"
       end
 
       def drop_index(index_name)
-        @statements << "DROP INDEX #{index_name}"
-      end
-
-      def to_cql
-        @statements
+        statements << "DROP INDEX #{index_name}"
       end
 
       def add_data_column(column)
         add_column_statement(column)
       end
 
+      protected
+      attr_reader :keyspace, :table_name, :statements
+
       private
 
       def alter_table(statement)
-        @statements << "ALTER TABLE #{@name} #{statement}"
+        statements << "ALTER TABLE #{table_name} #{statement}"
       end
 
       def add_column_statement(column)

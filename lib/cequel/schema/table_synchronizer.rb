@@ -4,18 +4,29 @@ module Cequel
 
     class TableSynchronizer
 
-      def initialize(existing, updated)
-        @existing, @updated = existing, updated
+      def self.apply(keyspace, existing, updated)
+        if existing
+          TableUpdater.apply(keyspace, existing.name) do |updater|
+            new(updater, existing, updated).apply
+          end
+        else
+          TableWriter.apply(keyspace, updated)
+        end
       end
 
-      def updater
-        return @updater if @updater
-        @updater = TableUpdater.new(@existing.name)
+      def initialize(updater, existing, updated)
+        @updater, @existing, @updated = updater, existing, updated
+      end
+      private_class_method :new
+
+      def apply
         update_keys
         update_columns
         update_properties
-        @updater
       end
+
+      protected
+      attr_reader :updater, :existing, :updated
 
       private
 
@@ -26,7 +37,7 @@ module Cequel
               "Can't change type of key column #{old_key.name} from #{old_key.type} to #{new_key.type}"
           end
           if old_key.name != new_key.name
-            @updater.rename_column(old_key.name, new_key.name)
+            updater.rename_column(old_key.name, new_key.name)
           end
         end
       end
@@ -46,50 +57,50 @@ module Cequel
       end
 
       def add_column(column)
-        @updater.add_data_column(column)
+        updater.add_data_column(column)
         if column.indexed?
-          @updater.create_index(column.name, column.index_name)
+          updater.create_index(column.name, column.index_name)
         end
       end
 
       def update_column(old_column, new_column)
         if old_column.type != new_column.type
-          @updater.change_column(new_column.name, new_column.type)
+          updater.change_column(new_column.name, new_column.type)
         end
         if !old_column.indexed? && new_column.indexed?
-          @updater.create_index(new_column.name, new_column.index_name)
+          updater.create_index(new_column.name, new_column.index_name)
         elsif old_column.indexed? && !new_column.indexed?
-          @updater.drop_index(old_column.index_name)
+          updater.drop_index(old_column.index_name)
         end
       end
 
       def update_properties
         changes = {}
-        @updated.properties.each_pair do |name, new_property|
-          old_property = @existing.property(name)
+        updated.properties.each_pair do |name, new_property|
+          old_property = existing.property(name)
           if old_property != new_property.value
             changes[name] = new_property.value
           end
         end
-        @updater.change_properties(changes) if changes.any?
+        updater.change_properties(changes) if changes.any?
       end
 
       def each_key_pair(&block)
-        if @existing.partition_keys.length != @updated.partition_keys.length
+        if existing.partition_keys.length != updated.partition_keys.length
           raise InvalidSchemaMigration,
-            "Existing partition keys #{@existing.partition_keys.map { |key| key.name }.join(',')} differ from specified partition keys #{@updated.partition_keys.map { |key| key.name }.join(',')}"
+            "Existing partition keys #{existing.partition_keys.map { |key| key.name }.join(',')} differ from specified partition keys #{updated.partition_keys.map { |key| key.name }.join(',')}"
         end
-        if @existing.clustering_columns.length != @updated.clustering_columns.length
+        if existing.clustering_columns.length != updated.clustering_columns.length
           raise InvalidSchemaMigration,
-            "Existing clustering keys #{@existing.clustering_columns.map { |key| key.name }.join(',')} differ from specified clustering keys #{@updated.clustering_columns.map { |key| key.name }.join(',')}"
+            "Existing clustering keys #{existing.clustering_columns.map { |key| key.name }.join(',')} differ from specified clustering keys #{updated.clustering_columns.map { |key| key.name }.join(',')}"
         end
-        @existing.partition_keys.zip(@updated.partition_keys, &block)
-        @existing.clustering_columns.zip(@updated.clustering_columns, &block)
+        existing.partition_keys.zip(updated.partition_keys, &block)
+        existing.clustering_columns.zip(updated.clustering_columns, &block)
       end
 
       def each_column_pair(&block)
-        old_columns = @existing.data_columns.index_by { |col| col.name }
-        new_columns = @updated.data_columns.index_by { |col| col.name }
+        old_columns = existing.data_columns.index_by { |col| col.name }
+        new_columns = updated.data_columns.index_by { |col| col.name }
         all_column_names = (old_columns.keys + new_columns.keys).uniq!
         all_column_names.each do |name|
           yield old_columns[name], new_columns[name]

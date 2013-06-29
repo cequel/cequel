@@ -9,59 +9,39 @@ module Cequel
       end
 
       def read_table(name)
-        table_query = @keyspace.execute(<<-CQL, @keyspace.name, name)
-          SELECT * FROM system.schema_columnfamilies
-          WHERE keyspace_name = ? AND columnfamily_name = ?
-        CQL
-        table_data = table_query.first.try(:to_hash)
-        if table_data
-          column_query = @keyspace.execute(<<-CQL, @keyspace.name, name)
-          SELECT * FROM system.schema_columns
-          WHERE keyspace_name = ? AND columnfamily_name = ?
-          CQL
-          column_data = column_query.map(&:to_hash)
-          TableReader.read(table_data, column_data)
-        end
+        TableReader.read(keyspace, name)
       end
 
       def create_table(name, &block)
         table = Table.new(name)
         CreateTableDSL.apply(table, &block)
-        TableWriter.new(table).to_cql.each do |statement|
-          @keyspace.execute(statement)
-        end
+        TableWriter.apply(keyspace, table)
       end
 
       def alter_table(name, &block)
-        updater = TableUpdater.new(name)
-        UpdateTableDSL.apply(updater, &block)
-        updater.to_cql.each do |statement|
-          @keyspace.execute(statement)
+        updater = TableUpdater.apply(keyspace, name) do |updater|
+          UpdateTableDSL.apply(updater, &block)
         end
       end
 
       def truncate_table(name)
-        @keyspace.execute("TRUNCATE #{name}")
+        keyspace.execute("TRUNCATE #{name}")
       end
 
       def drop_table(name)
-        @keyspace.execute("DROP TABLE #{name}")
+        keyspace.execute("DROP TABLE #{name}")
       end
 
       def sync_table(name, &block)
         existing = read_table(name)
-        if existing
-          updated = Table.new(name)
-          CreateTableDSL.apply(updated, &block)
-          updater = TableSynchronizer.new(existing, updated).updater
-          updater.to_cql.each do |statement|
-            @keyspace.execute(statement)
-          end
-        else
-          create_table(name, &block)
-        end
+        updated = Table.new(name)
+        CreateTableDSL.apply(updated, &block)
+        TableSynchronizer.apply(keyspace, existing, updated)
       end
       alias_method :synchronize_table, :sync_table
+
+      protected
+      attr_reader :keyspace
 
     end
 

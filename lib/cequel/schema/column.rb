@@ -14,6 +14,14 @@ module Cequel
         "#{@name} #{@type}"
       end
 
+      def ==(other)
+        to_cql == other.to_cql
+      end
+
+      def inspect
+        %Q(#<#{self.class.name}: #{to_cql}>)
+      end
+
     end
 
     class PartitionKey < Column; end
