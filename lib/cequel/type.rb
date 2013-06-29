@@ -16,6 +16,10 @@ module Cequel
     end
 
     def self.[](cql_name)
+      cql_name.is_a?(Base) ? cql_name : lookup_cql(cql_name)
+    end
+
+    def self.lookup_cql(cql_name)
       BY_CQL_NAME.fetch(cql_name.to_sym)
     end
 

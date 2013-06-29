@@ -32,31 +32,31 @@ module Cequel
       end
 
       def add_partition_key(name, type)
-        column = PartitionKey.new(name, type)
+        column = PartitionKey.new(name, type(type))
         @partition_keys << column
       end
 
       def add_clustering_column(name, type, clustering_order = nil)
-        column = ClusteringColumn.new(name, type, clustering_order)
+        column = ClusteringColumn.new(name, type(type), clustering_order)
         @clustering_columns << column
       end
 
       def add_column(name, type, index_name)
         index_name = :"#{@name}_#{name}_idx" if index_name == true
-        DataColumn.new(name, type, index_name).
+        DataColumn.new(name, type(type), index_name).
           tap { |column| @data_columns << column }
       end
 
       def add_list(name, type)
-        @data_columns << List.new(name, type)
+        @data_columns << List.new(name, type(type))
       end
 
       def add_set(name, type)
-        @data_columns << Set.new(name, type)
+        @data_columns << Set.new(name, type(type))
       end
 
       def add_map(name, key_type, value_type)
-        @data_columns << Map.new(name, key_type, value_type)
+        @data_columns << Map.new(name, type(key_type), type(value_type))
       end
 
       def add_property(name, value)
@@ -90,6 +90,12 @@ module Cequel
 
       def compact_storage?
         !!@compact_storage
+      end
+
+      private
+
+      def type(type)
+        ::Cequel::Type[type]
       end
 
     end
