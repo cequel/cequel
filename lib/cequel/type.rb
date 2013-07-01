@@ -44,25 +44,55 @@ module Cequel
         "org.apache.cassandra.db.marshal.#{self.class.name.demodulize}Type"
       end
 
+      def cast(value)
+        value
+      end
+
       def to_s
         cql_name.to_s
       end
 
     end
 
-    class Ascii < Base; end
+    class String < Base
+
+      private
+
+      def ensure_encoding(value, encoding)
+        str = value.to_s
+        str.encoding.name == encoding ? str : str.dup.force_encoding(encoding)
+      end
+
+    end
+
+    class Ascii < String
+      def cast(value)
+        ensure_encoding(value, 'US-ASCII')
+      end
+    end
     register Ascii.instance
 
-    class Blob < Base
+    class Blob < String
 
       def internal_name
         'org.apache.cassandra.db.marshal.BytesType'
       end
 
+      def cast(value)
+        case value
+        when Integer then ensure_encoding(value.to_s(16), 'ASCII-8BIT')
+        else ensure_encoding(value.to_s, 'ASCII-8BIT')
+        end
+      end
+
     end
     register Blob.instance
 
-    class Boolean < Base; end
+    class Boolean < Base
+      def cast(value)
+        !!value
+      end
+    end
     register Boolean.instance
 
     class Counter < Base
@@ -71,13 +101,25 @@ module Cequel
         'org.apache.cassandra.db.marshal.CounterColumnType'
       end
 
+      def cast(value)
+        value.to_i
+      end
+
     end
     register Counter.instance
 
-    class Decimal < Base; end
+    class Decimal < Base
+      def cast(value)
+        BigDecimal.new(value, 0)
+      end
+    end
     register Decimal.instance
 
-    class Double < Base; end
+    class Double < Base
+      def cast(value)
+        value.to_f
+      end
+    end
     register Double.instance
 
     class Inet < Base
@@ -95,16 +137,26 @@ module Cequel
         'org.apache.cassandra.db.marshal.Int32Type'
       end
 
+      def cast(value)
+        value.to_i
+      end
+
     end
     register Int.instance
 
-    class Float < Base; end
+    class Float < Double; end
     register Float.instance
 
-    class Long < Base; end
+    class Long < Int
+
+      def internal_name
+        'org.apache.cassandra.db.marshal.LongType'
+      end
+
+    end
     register Long.instance
 
-    class Text < Base
+    class Text < String
 
       def internal_name
         'org.apache.cassandra.db.marshal.UTF8Type'
@@ -112,6 +164,10 @@ module Cequel
 
       def cql_aliases
         [:varchar]
+      end
+
+      def cast(value)
+        ensure_encoding(value, 'UTF-8')
       end
 
     end
@@ -123,10 +179,34 @@ module Cequel
         'org.apache.cassandra.db.marshal.DateType'
       end
 
+      def cast(value)
+        if value.respond_to?(:to_time) then value.to_time
+        elsif Numeric === value then Time.at(value)
+        else value.to_s.to_time
+        end
+      end
+
     end
     register Timestamp.instance
 
-    class Timeuuid < Base
+    class Uuid < Base
+
+      def internal_name
+        'org.apache.cassandra.db.marshal.UUIDType'
+      end
+
+      def cast(value)
+        case value
+        when CassandraCQL::UUID then value
+        when SimpleUUID::UUID then CassandraCQL::UUID.new(value.to_s)
+        else CassandraCQL::UUID.new(value)
+        end
+      end
+
+    end
+    register Uuid.instance
+
+    class Timeuuid < Uuid
 
       def internal_name
         'org.apache.cassandra.db.marshal.TimeUUIDType'
@@ -135,16 +215,7 @@ module Cequel
     end
     register Timeuuid.instance
 
-    class Uuid < Base
-
-      def internal_name
-        'org.apache.cassandra.db.marshal.UUIDType'
-      end
-
-    end
-    register Uuid.instance
-
-    class Varint < Base
+    class Varint < Int
 
       def internal_name
         'org.apache.cassandra.db.marshal.IntegerType'

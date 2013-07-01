@@ -14,6 +14,10 @@ module Cequel
         "#{@name} #{@type}"
       end
 
+      def cast(value)
+        @type.cast(value)
+      end
+
       def ==(other)
         to_cql == other.to_cql
       end
@@ -70,12 +74,22 @@ module Cequel
         "#{@name} LIST <#{@type}>"
       end
 
+      def cast(value)
+        value.map { |element| @type.cast(element) }
+      end
+
     end
 
     class Set < CollectionColumn
 
       def to_cql
         "#{@name} SET <#{@type}>"
+      end
+
+      def cast(value)
+        value.each_with_object(::Set[]) do |element, set|
+          set << @type.cast(element)
+        end
       end
 
     end
@@ -92,6 +106,12 @@ module Cequel
 
       def to_cql
         "#{@name} MAP <#{@key_type}, #{@type}>"
+      end
+
+      def cast(value)
+        value.each_with_object({}) do |(key, element), hash|
+          hash[@key_type.cast(key)] = @type.cast(element)
+        end
       end
 
     end

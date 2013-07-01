@@ -27,3 +27,7 @@ RSpec.configure do |config|
     cequel.execute("DROP KEYSPACE #{keyspace}")
   end
 end
+
+if defined? byebug
+  Kernel.module_eval { alias_method :debugger, :byebug }
+end

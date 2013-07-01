@@ -1,5 +1,4 @@
-require 'cequel/model'
-require File.expand_path('../../spec_helper', __FILE__)
+require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Model::Schema do
   before { Cequel::Model::Base.connection = cequel }
