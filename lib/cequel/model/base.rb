@@ -1,5 +1,6 @@
 require 'cequel/model/schema'
 require 'cequel/model/properties'
+require 'cequel/model/persistence'
 
 module Cequel
 
@@ -9,6 +10,7 @@ module Cequel
 
       include Cequel::Model::Properties
       include Cequel::Model::Schema
+      include Cequel::Model::Persistence
 
       class_attribute :table_name, :connection, :default_attributes,
         :instance_writer => false
@@ -31,5 +33,7 @@ module Cequel
     end
 
   end
+
+  Base = Model::Base
 
 end

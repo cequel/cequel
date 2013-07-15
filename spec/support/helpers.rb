@@ -1,8 +1,43 @@
 module Cequel
 
   module SpecSupport
+    module Macros
+      def model(class_name, options = {}, &block)
+        clazz = Class.new(Cequel::Base) do
+          self.table_name = class_name.to_s.tableize
+          class_eval(&block)
+        end
+
+        let(:model_class) { clazz }
+        let(:mc) { clazz }
+
+        if options.fetch(:create_table, true)
+          before(:all) { clazz.synchronize_schema }
+          after(:all) { cequel.schema.drop_table(clazz.table_name) }
+          before :each do
+            scope = cequel[clazz.table_name]
+            keys = clazz.table_schema.key_columns.map(&:name)
+            scope.each { |row| scope.where(row.slice(*keys)).delete }
+          end
+        end
+
+        around do |example|
+          Kernel.module_eval do
+            if const_defined?(class_name)
+              previous = const_get(class_name)
+              remove_const(class_name)
+            end
+            const_set(class_name, clazz)
+            example.run
+            remove_const(class_name)
+            const_set(class_name, previous) if previous
+          end
+        end
+      end
+    end
 
     module Helpers
+
       def self.cequel
         @cequel ||= Cequel.connect(
           :host => host,

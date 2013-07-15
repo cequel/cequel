@@ -4,7 +4,7 @@ require File.expand_path('../spec_helper', __FILE__)
 describe Cequel::Model::Properties do
 
   describe 'property accessors' do
-    Post = Class.new(Cequel::Model::Base) do
+    model :Post do
       key :permalink, :text
       column :title, :text
       list :tags, :text
@@ -83,7 +83,7 @@ describe Cequel::Model::Properties do
   end
 
   describe 'configured property defaults' do
-    PostWithDefaults = Class.new(Cequel::Model::Base) do
+    model :Post do
       key :permalink, :text
       column :title, :text, :default => 'New Post'
       list :tags, :text, :default => ['new']
@@ -92,19 +92,19 @@ describe Cequel::Model::Properties do
     end
 
     it 'should respect default for data column' do
-      PostWithDefaults.new.title.should == 'New Post'
+      Post.new.title.should == 'New Post'
     end
 
     it 'should respect default for list column' do
-      PostWithDefaults.new.tags.should == ['new']
+      Post.new.tags.should == ['new']
     end
 
     it 'should respect default for set column' do
-      PostWithDefaults.new.categories.should == Set['Big Data']
+      Post.new.categories.should == Set['Big Data']
     end
 
     it 'should respect default for map column' do
-      PostWithDefaults.new.shares.should == {'facebook' => 0}
+      Post.new.shares.should == {'facebook' => 0}
     end
   end
 end

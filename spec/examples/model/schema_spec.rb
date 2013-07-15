@@ -1,7 +1,6 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Model::Schema do
-  before { Cequel::Model::Base.connection = cequel }
   after { cequel.schema.drop_table(:posts) }
   subject { cequel.schema.read_table(:posts) }
 

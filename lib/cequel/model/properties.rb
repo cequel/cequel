@@ -12,36 +12,36 @@ module Cequel
 
         def key(name, type)
           def_accessors(name)
-          schema.add_key(name, type)
+          table_schema.add_key(name, type)
           set_attribute_default(name, nil)
         end
 
         def column(name, type, options = {})
           def_accessors(name)
-          schema.add_data_column(name, type, options[:index])
+          table_schema.add_data_column(name, type, options[:index])
           set_attribute_default(name, options[:default])
         end
 
         def list(name, type, options = {})
           def_accessors(name)
-          schema.add_list(name, type)
+          table_schema.add_list(name, type)
           set_attribute_default(name, options.fetch(:default, []))
         end
 
         def set(name, type, options = {})
           def_accessors(name)
-          schema.add_set(name, type)
+          table_schema.add_set(name, type)
           set_attribute_default(name, options.fetch(:default, Set[]))
         end
 
         def map(name, key_type, value_type, options = {})
           def_accessors(name)
-          schema.add_map(name, key_type, value_type)
+          table_schema.add_map(name, key_type, value_type)
           set_attribute_default(name, options.fetch(:default, {}))
         end
 
         def table_property(name, value)
-          schema.add_property(name, value)
+          table_schema.add_property(name, value)
         end
 
         private
@@ -61,12 +61,12 @@ module Cequel
       end
 
       protected
-      delegate :schema, :to => 'self.class'
+      delegate :table_schema, :to => 'self.class'
 
       def read_attribute(name)
         attributes.fetch(name)
       rescue KeyError
-        if schema.column(name)
+        if table_schema.column(name)
           raise MissingAttributeError, "missing attribute: #{name}"
         else
           raise UnknownAttributeError, "unknown attribute: #{name}"
@@ -74,7 +74,7 @@ module Cequel
       end
 
       def write_attribute(name, value)
-        column = schema.column(name)
+        column = table_schema.column(name)
         raise UnknownAttributeError,
           "unknown attribute: #{name}" unless column
         attributes[name] = value.nil? ? nil : column.cast(value)

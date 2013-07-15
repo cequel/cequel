@@ -70,6 +70,10 @@ module Cequel
         columns_by_name[name.to_sym]
       end
 
+      def key_columns
+        @partition_keys + @clustering_columns
+      end
+
       def partition_key(name)
         @partition_keys.find { |column| column.name == name }
       end
