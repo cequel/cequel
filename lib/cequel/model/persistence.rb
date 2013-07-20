@@ -14,13 +14,13 @@ module Cequel
 
         def [](id)
           attributes = {local_key_column.name => id}
-          allocate.instance_eval { @attributes = attributes; self }
+          new_empty { @attributes = attributes; self }
         end
 
         private
 
         def hydrate(row)
-          allocate.instance_eval { hydrate(row) }
+          new_empty { hydrate(row) }
         end
 
       end
@@ -48,9 +48,12 @@ module Cequel
       end
 
       def save
-        if persisted? then update
-        else create
+        if new_record? then create
+        else update
         end
+        @new_record = false
+        attributes_for_update.clear
+        attributes_for_deletion.clear
         true
       end
 
@@ -58,6 +61,10 @@ module Cequel
         metal_scope.delete
         transient!
         self
+      end
+
+      def new_record?
+        !!@new_record
       end
 
       def persisted?
@@ -79,14 +86,22 @@ module Cequel
       end
 
       def create
-        metal_scope.insert(attributes_for_create)
+        if attributes_for_create.except(self.class.local_key_column.name).present?
+          metal_scope.insert(attributes_for_create)
+        end
+        loaded!
         persisted!
       end
 
       def update
         connection.batch do
-          metal_scope.update(attributes_for_update)
-          metal_scope.delete(nil_attributes_for_update)
+          if attributes_for_update.present?
+            metal_scope.update(attributes_for_update)
+          end
+          collection_proxies.each_value { |proxy| proxy._update(metal_scope) }
+          if attributes_for_deletion.present?
+            metal_scope.delete(attributes_for_deletion)
+          end
         end
       end
 
@@ -97,6 +112,18 @@ module Cequel
       rescue MissingAttributeError
         load
         super
+      end
+
+      def write_attribute(attribute, value)
+        super.tap do
+          unless attribute.to_sym == self.class.local_key_column.name
+            if value.nil?
+              attributes_for_deletion << attribute
+            else
+              attributes_for_update[attribute] = value
+            end
+          end
+        end
       end
 
       def hydrate(row)
@@ -123,13 +150,11 @@ module Cequel
       end
 
       def attributes_for_update
-        attributes_for_create.except(self.class.local_key_column.name) #XXX
+        @attributes_for_update ||= {}
       end
 
-      def nil_attributes_for_update
-        @attributes.each_with_object([]) do |(column, value), columns|
-          columns << column if value.nil?
-        end
+      def attributes_for_deletion
+        @attributes_for_deletion ||= []
       end
 
     end

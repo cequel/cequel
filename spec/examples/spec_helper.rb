@@ -1,4 +1,5 @@
 require File.expand_path('../../environment', __FILE__)
+require 'cequel/model'
 
 Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |file|
   require file

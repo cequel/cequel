@@ -1,5 +1,6 @@
 require 'cequel/model/schema'
 require 'cequel/model/properties'
+require 'cequel/model/collection'
 require 'cequel/model/persistence'
 
 module Cequel
@@ -25,10 +26,26 @@ module Cequel
         self.connection = Cequel.connect(configuration)
       end
 
+      def self.new_empty(&block)
+        allocate.tap do |instance|
+          instance.initialize_empty
+          instance.instance_eval(&block) if block
+        end
+      end
+
       def initialize
+        initialize_empty
         @attributes = Marshal.load(Marshal.dump(default_attributes))
+        @new_record = true
         yield self if block_given?
       end
+
+      def initialize_empty
+        @attributes, @collection_proxies = {}, {}
+      end
+
+      protected
+      attr_reader :collection_proxies
 
     end
 
