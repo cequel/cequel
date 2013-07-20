@@ -4,6 +4,8 @@ describe Cequel::Model::Persistence do
   model :Post do
     key :permalink, :text
     column :title, :text
+    column :body, :text
+    column :author_id, :uuid
     list :tags, :text
     set :categories, :text
     map :shares, :text, :int
@@ -56,6 +58,65 @@ describe Cequel::Model::Persistence do
         subject.title
         expect(cequel).not_to receive(:execute)
         subject.tags.should == %w(big-data cql)
+      end
+    end
+  end
+
+  describe 'writing' do
+    subject { cequel[:posts].where(:permalink => 'cequel').first }
+
+    let!(:post) do
+      Post.new do |post|
+        post.permalink = 'cequel'
+        post.title = 'Cequel'
+        post.body = 'A Ruby ORM for Cassandra 1.2'
+      end.tap(&:save)
+    end
+
+    describe '#save' do
+      context 'on create' do
+        it 'should save row to database' do
+          subject[:title].should == 'Cequel'
+        end
+
+        it 'should mark row persisted' do
+          post.should be_persisted
+        end
+      end
+
+      context 'on update' do
+        uuid :author_id
+
+        before do
+          post.title = 'Cequel 1.0'
+          post.author_id = author_id
+          post.body = nil
+          post.save
+        end
+
+        it 'should change existing column value' do
+          subject[:title].should == 'Cequel 1.0'
+        end
+
+        it 'should add new column value' do
+          subject[:author_id].should == author_id
+        end
+
+        it 'should remove old column values' do
+          subject[:body].should be_nil
+        end
+      end
+    end
+
+    describe '#destroy' do
+      before { post.destroy }
+
+      it 'should delete entire row' do
+        subject.should be_nil
+      end
+
+      it 'should mark record transient' do
+        post.should be_transient
       end
     end
   end

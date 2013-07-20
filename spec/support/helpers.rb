@@ -34,6 +34,10 @@ module Cequel
           end
         end
       end
+
+      def uuid(name)
+        let(name) { CassandraCQL::UUID.new }
+      end
     end
 
     module Helpers
@@ -58,6 +62,7 @@ module Cequel
       def cequel
         Helpers.cequel
       end
+
     end
 
   end

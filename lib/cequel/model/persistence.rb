@@ -47,6 +47,19 @@ module Cequel
         !!@loaded
       end
 
+      def save
+        if persisted? then update
+        else create
+        end
+        true
+      end
+
+      def destroy
+        metal_scope.delete
+        transient!
+        self
+      end
+
       def persisted?
         !!@persisted
       end
@@ -63,6 +76,18 @@ module Cequel
 
       def transient!
         @persisted = false
+      end
+
+      def create
+        metal_scope.insert(attributes_for_create)
+        persisted!
+      end
+
+      def update
+        connection.batch do
+          metal_scope.update(attributes_for_update)
+          metal_scope.delete(nil_attributes_for_update)
+        end
       end
 
       private
@@ -89,6 +114,22 @@ module Cequel
         key_column_name = self.class.local_key_column.name
         connection[table_name].
           where(key_column_name => read_attribute(key_column_name))
+      end
+
+      def attributes_for_create
+        @attributes.each_with_object({}) do |(column, value), attributes|
+          attributes[column] = value unless value.nil?
+        end
+      end
+
+      def attributes_for_update
+        attributes_for_create.except(self.class.local_key_column.name) #XXX
+      end
+
+      def nil_attributes_for_update
+        @attributes.each_with_object([]) do |(column, value), columns|
+          columns << column if value.nil?
+        end
       end
 
     end
