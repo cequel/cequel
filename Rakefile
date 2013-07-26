@@ -1,8 +1,10 @@
-require File.expand_path('../lib/cequel/version', __FILE__)
+require 'bundler/setup'
 require 'rspec/core/rake_task'
+require 'appraisal'
+require File.expand_path('../lib/cequel/version', __FILE__)
 
 task :default => :release
-task :release => [:verify_changelog, :test, :build, :tag, :update_stable, :push, :cleanup]
+task :release => [:verify_changelog, :"test:all", :build, :tag, :update_stable, :push, :cleanup]
 
 desc 'Build gem'
 task :build do
@@ -38,8 +40,27 @@ task :cleanup do
 end
 
 desc 'Run the specs'
-task :test do
-  abort unless system 'bundle', 'exec', 'rspec', 'spec/examples'
+RSpec::Core::RakeTask.new(:test) do |t|
+  t.pattern = './spec/examples/**/*_spec.rb'
+  t.rspec_opts = '--fail-fast'
+  t.fail_on_error = true
+end
+
+namespace :test do
+  desc 'Run the specs with progress formatter'
+  RSpec::Core::RakeTask.new(:concise) do |t|
+    t.pattern = './spec/examples/**/*_spec.rb'
+    t.rspec_opts = '--fail-fast --format=progress'
+    t.fail_on_error = true
+  end
+end
+
+namespace :test do
+  task :all do
+    abort unless system('rvm', '1.9,2.0', 'do',
+                        'bundle', 'exec',
+                        'rake', 'appraisal', 'test:concise')
+  end
 end
 
 desc 'Update changelog'

@@ -180,9 +180,10 @@ module Cequel
       end
 
       def cast(value)
-        if value.respond_to?(:to_time) then value.to_time
+        if ::String === value then Time.parse(value)
+        elsif value.respond_to?(:to_time) then value.to_time
         elsif Numeric === value then Time.at(value)
-        else value.to_s.to_time
+        else Time.parse(value.to_s)
         end
       end
 
