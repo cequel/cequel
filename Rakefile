@@ -46,6 +46,13 @@ RSpec::Core::RakeTask.new(:test) do |t|
   t.fail_on_error = true
 end
 
+namespace :bundle do
+  desc 'Run bundler for all environments'
+  task :all do
+    abort unless system('rvm', '1.9,2.0', 'do', 'rake', 'appraisal:install')
+  end
+end
+
 namespace :test do
   desc 'Run the specs with progress formatter'
   RSpec::Core::RakeTask.new(:concise) do |t|

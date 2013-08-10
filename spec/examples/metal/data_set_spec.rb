@@ -138,6 +138,20 @@ describe Cequel::Metal::DataSet do
       cequel[:posts].where(row_keys).first[:trackbacks].
         should == {time1 => 'foo', time2 => 'bar'}
     end
+
+    it 'should perform various types of update in one go' do
+      cequel[:posts].insert(
+        row_keys.merge(title: 'Big Data',
+                       body: 'Cassandra',
+                       categories: ['Scalability']))
+      cequel[:posts].where(row_keys).update do
+        set(title: 'Bigger Data')
+        list_append(:categories, 'Fault-Tolerance')
+      end
+      cequel[:posts].where(row_keys).first[:title].should == 'Bigger Data'
+      cequel[:posts].where(row_keys).first[:categories].
+        should == %w(Scalability Fault-Tolerance)
+    end
   end
 
   describe '#list_prepend' do
@@ -493,15 +507,6 @@ describe Cequel::Metal::DataSet do
       cequel[:posts].where(:permalink => 'bogus').
         where!(:blog_subdomain => row_keys[:blog_subdomain]).
         first[:title].should == 'Big Data'
-    end
-  end
-
-  describe '#consistency' do
-    pending 'cassandra-cql support for consistency'
-
-    it 'should add USING CONSISTENCY to select' do
-      cequel[:posts].consistency(:quorum).cql.
-        should == ["SELECT * FROM posts USING CONSISTENCY QUORUM"]
     end
   end
 

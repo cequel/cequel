@@ -11,21 +11,24 @@ module Cequel
     class DataSet
 
       include Enumerable
+      extend Forwardable
 
       # @return [Keyspace] the keyspace this data set lives in
       attr_reader :keyspace
 
       # @return [Symbol] the name of the column family this data set draws from
-      attr_reader :column_family
+      attr_reader :table_name
+
+      def_delegator :keyspace, :execute, :execute_cql
 
       #
-      # @param column_family [Symbol] column family for this data set
+      # @param table_name [Symbol] column family for this data set
       # @param keyspace [Keyspace] keyspace this data set's column family lives in
       #
       # @see Keyspace#[]
       #
-      def initialize(column_family, keyspace)
-        @column_family, @keyspace = column_family, keyspace
+      def initialize(table_name, keyspace)
+        @table_name, @keyspace = table_name, keyspace
         @select_columns, @ttl_columns, @writetime_columns, @row_specifications,
           @sort_order = [], [], [], [], {}
       end
@@ -39,22 +42,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def insert(data, options = {})
-        options.symbolize_keys!
-
-        bound_values, value_bindings = [], []
-
-        data.each_value do |value|
-          prepare_upsert_value(value) do |bindings, *values|
-            bound_values.concat(values)
-            value_bindings << bindings
-          end
-        end
-
-        cql = "INSERT INTO #{@column_family}" <<
-        " (#{data.keys.join(',')}) VALUES (#{value_bindings.flatten.join(',')})" <<
-        generate_upsert_options(options)
-
-        @keyspace.write(cql, *bound_values)
+        inserter(options) { insert(data) }.execute
       end
 
       #
@@ -65,36 +53,21 @@ module Cequel
       # @option (see #generate_upsert_options)
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
-      def update(data, options = {})
-        set_statements, bound_values = [], []
-        data.each_pair do |column, value|
-          prepare_upsert_value(value) do |binding, *values|
-            set_statements << "#{column} = #{binding}"
-            bound_values.concat(values)
-          end
+      def update(*args, &block)
+        if block
+          updater(args.extract_options!, &block).execute
+        else
+          data = args.shift
+          updater(args.extract_options!) { set(data) }.execute
         end
-        update_with(set_statements.join(', '), bound_values, options)
       end
 
       def increment(data, options = {})
-        operations = data.map do |key, value|
-          operator = value < 0 ? '-' : '+'
-          "#{key} = #{key} #{operator} ?"
-        end
-        statement = Statement.new.
-          append("UPDATE #{@column_family}").
-          append(generate_upsert_options(options)).
-          append(
-            " SET " << operations.join(', '),
-            *data.each_value.map { |count| count.abs }
-        ).append(*row_specifications_cql)
-
-        @keyspace.write(*statement.args)
+        incrementer(options) { increment(data) }.execute
       end
-      alias_method :incr, :increment
 
       def decrement(data, options = {})
-        increment(Hash[data.map { |column, count| [column, -count] }], options)
+        incrementer(options) { decrement(data) }.execute
       end
       alias_method :decr, :decrement
 
@@ -109,7 +82,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def list_prepend(column, elements, options = {})
-        update_with("#{column} = [?] + #{column}", [elements], options)
+        updater(options) { list_prepend(column, elements) }.execute
       end
 
       #
@@ -122,7 +95,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def list_append(column, elements, options = {})
-        update_with("#{column} = #{column} + [?]", [elements], options)
+        updater(options) { list_append(column, elements) }.execute
       end
 
       #
@@ -136,7 +109,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def list_replace(column, index, value, options = {})
-        update_with("#{column}[#{index}] = ?", [value], options)
+        updater(options) { list_replace(column, index, value) }.execute
       end
 
       #
@@ -149,7 +122,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def list_remove(column, value, options = {})
-        update_with("#{column} = #{column} - [?]", [value], options)
+        updater(options) { list_remove(column, value) }.execute
       end
 
       #
@@ -163,9 +136,7 @@ module Cequel
       #
       def list_remove_at(column, *positions)
         options = positions.extract_options!
-        to_delete = positions.
-          map { |position| "#{column}[#{position}]" }.join(',')
-        delete_with(to_delete, [], options)
+        deleter(options) { list_remove_at(column, *positions) }.execute
       end
 
       #
@@ -179,8 +150,7 @@ module Cequel
       #
       def map_remove(column, *keys)
         options = keys.extract_options!
-        to_delete = keys.length.times.map { "#{column}[?]" }.join(',')
-        delete_with(to_delete, keys, options)
+        deleter(options) { map_remove(column, *keys) }.execute
       end
 
       #
@@ -193,7 +163,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def set_add(column, values, options = {})
-        update_with("#{column} = #{column} + {?}", [values], options)
+        updater(options) { set_add(column, values) }.execute
       end
 
       #
@@ -206,7 +176,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def set_remove(column, value, options = {})
-        update_with("#{column} = #{column} - {?}", [Array(value)], options)
+        updater(options) { set_remove(column, value) }.execute
       end
 
       #
@@ -219,9 +189,7 @@ module Cequel
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
       def map_update(column, updates, options = {})
-        binding_pairs = Array.new(updates.length) { '?:?' }.join(',')
-        update_with("#{column} = #{column} + {#{binding_pairs}}",
-                    updates.flatten, options)
+        updater(options) { map_update(column, updates) }.execute
       end
 
       #
@@ -231,10 +199,15 @@ module Cequel
       # @param options persistence options
       # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
       #
-      def delete(*columns)
+      def delete(*columns, &block)
         options = columns.extract_options!
-        column_aliases = columns.join(', ') unless columns.empty?
-        delete_with(column_aliases, [], options)
+        if block
+          deleter(options, &block).execute
+        elsif columns.empty?
+          deleter(options) { delete_row }.execute
+        else
+          deleter(options) { delete_columns(*columns) }.execute
+        end
       end
 
       #
@@ -286,16 +259,6 @@ module Cequel
       end
 
       #
-      # Add consistency option for data set retrieval
-      #
-      # @param consistency [:one,:quorum,:local_quorum,:each_quorum]
-      # @return [DataSet] new data set with specified consistency
-      #
-      def consistency(consistency)
-        clone.tap { |data_set| data_set.consistency = consistency.to_sym }
-      end
-
-      #
       # Add a row_specification to this data set
       #
       # @param row_specification [Hash, String] row_specification statement
@@ -331,7 +294,7 @@ module Cequel
       # @return [DataSet] new data set scoped with given limit
       #
       def limit(limit)
-        clone.tap { |data_set| data_set.limit = limit }
+        clone.tap { |data_set| data_set.row_limit = limit }
       end
 
       #
@@ -356,7 +319,7 @@ module Cequel
       def each
         if block_given?
           begin
-            @keyspace.execute(*cql).fetch do |row|
+            keyspace.execute(*cql).fetch do |row|
               yield Row.from_result_row(row)
             end
           rescue EmptySubquery
@@ -371,7 +334,7 @@ module Cequel
       # @return [Hash] the first row in this data set
       #
       def first
-        row = @keyspace.execute(*limit(1).cql).fetch_row
+        row = keyspace.execute(*limit(1).cql).fetch_row
         Row.from_result_row(row)
       rescue EmptySubquery
         nil
@@ -381,7 +344,7 @@ module Cequel
       # @return [Fixnum] the number of rows in this data set
       #
       def count
-        @keyspace.execute(*count_cql).fetch_row['count']
+        keyspace.execute(*count_cql).fetch_row['count']
       rescue EmptySubquery
         0
       end
@@ -392,8 +355,7 @@ module Cequel
       def cql
         statement = Statement.new.
           append(select_cql).
-          append(" FROM #{@column_family}").
-          append(consistency_cql).
+          append(" FROM #{table_name}").
           append(*row_specifications_cql).
           append(sort_order_cql).
           append(limit_cql).
@@ -405,8 +367,7 @@ module Cequel
       #
       def count_cql
         Statement.new.
-          append("SELECT COUNT(*) FROM #{@column_family}").
-          append(consistency_cql).
+          append("SELECT COUNT(*) FROM #{table_name}").
           append(*row_specifications_cql).
           append(limit_cql).args
       end
@@ -419,11 +380,39 @@ module Cequel
         cql == other.cql
       end
 
-      protected
+      def inserter(options, &block)
+        Inserter.new(self, options, &block)
+      end
 
+      def updater(options, &block)
+        Updater.new(self, options, &block)
+      end
+
+      def incrementer(options, &block)
+        Incrementer.new(self, options, &block)
+      end
+
+      def deleter(options, &block)
+        Deleter.new(self, options, &block)
+      end
+
+      def row_specifications_cql
+        if row_specifications.any?
+          cql_fragments, bind_vars = [], []
+          row_specifications.each do |spec|
+            cql_with_vars = spec.cql
+            cql_fragments << cql_with_vars.shift
+            bind_vars.concat(cql_with_vars)
+          end
+          [" WHERE #{cql_fragments.join(' AND ')}", *bind_vars]
+        else ['']
+        end
+      end
+
+      protected
       attr_reader :select_columns, :ttl_columns, :writetime_columns,
         :row_specifications, :sort_order
-      attr_writer :consistency, :limit
+      attr_accessor :row_limit
 
       private
 
@@ -436,68 +425,10 @@ module Cequel
         @sort_order = source.sort_order.clone
       end
 
-      #
-      # Generate CQL option statement for inserts and updates
-      #
-      # @param [Hash] options options for insert
-      # @option options [Symbol,String] :consistency required consistency for the write
-      # @option options [Integer] :ttl time-to-live in seconds for the written data
-      # @option options [Time,Integer] :timestamp the timestamp associated with the column values
-      #
-      def generate_upsert_options(options)
-        if options.empty?
-          ''
-        else
-          ' USING ' <<
-          options.map do |key, value|
-            serialized_value =
-              case key
-              when :consistency then value.to_s.upcase
-              when :timestamp then (value.to_f * 1_000_000).to_i
-              else value
-              end
-            "#{key.to_s.upcase} #{serialized_value}"
-          end.join(' AND ')
-        end
-      end
-
-      def prepare_upsert_value(value)
-        case value
-        when Array
-          yield '[?]', value
-        when Set then
-          yield '{?}', value.to_a
-        when Hash then
-          binding_pairs = Array.new(value.length) { '?:?' }.join(',')
-          yield "{#{binding_pairs}}", *value.flatten
-        else
-          yield '?', value
-        end
-      end
-
-      def update_with(mutator_fragment, bind_variables, options)
-        statement = Statement.new.
-          append("UPDATE #{@column_family}").
-          append(generate_upsert_options(options)).
-          append(" SET ")
-        statement.append(mutator_fragment, *bind_variables)
-        statement.append(*row_specifications_cql)
-        @keyspace.write(*statement.args)
-      end
-
-      def delete_with(specifications, bindings, options)
-        to_delete = specifications ? " #{specifications}" : ''
-        statement = Statement.new.
-          append("DELETE#{to_delete} FROM #{@column_family}", *bindings).
-          append(generate_upsert_options(options)).
-          append(*row_specifications_cql)
-        @keyspace.write(*statement.args)
-      end
-
       def select_cql
-        all_columns = @select_columns +
-          @ttl_columns.map { |column| "TTL(#{column})" } +
-          @writetime_columns.map { |column| "WRITETIME(#{column})" }
+        all_columns = select_columns +
+          ttl_columns.map { |column| "TTL(#{column})" } +
+          writetime_columns.map { |column| "WRITETIME(#{column})" }
 
           if all_columns.any?
             "SELECT #{all_columns.join(',')}"
@@ -506,36 +437,13 @@ module Cequel
           end
       end
 
-      def consistency_cql
-        if @consistency
-          " USING CONSISTENCY #{@consistency.upcase}"
-        else ''
-        end
-      end
-
-      def row_specifications_cql
-        if @row_specifications.any?
-          cql_fragments, bind_vars = [], []
-          @row_specifications.each do |spec|
-            cql_with_vars = spec.cql
-            cql_fragments << cql_with_vars.shift
-            bind_vars.concat(cql_with_vars)
-          end
-          [" WHERE #{cql_fragments.join(' AND ')}", *bind_vars]
-        else ['']
-        end
-      end
-
-      def generate_insert_statement(values)
-      end
-
       def limit_cql
-        @limit ? " LIMIT #{@limit}" : ''
+        row_limit ? " LIMIT #{row_limit}" : ''
       end
 
       def sort_order_cql
-        if @sort_order.any?
-          order = @sort_order.
+        if sort_order.any?
+          order = sort_order.
             map { |column, direction| "#{column} #{direction.to_s.upcase}" }.
             join(', ')
           " ORDER BY #{order}"
