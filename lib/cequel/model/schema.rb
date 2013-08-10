@@ -17,18 +17,12 @@ module Cequel
           connection.schema.read_table(table_name)
         end
 
-        def schema
-          @schema ||= Cequel::Schema::Table.new(table_name)
+        def table_schema
+          @table_schema ||= Cequel::Schema::Table.new(table_name)
         end
-
-        protected
 
         def local_key_column
           @local_key_column ||= table_schema.key_columns.last
-        end
-
-        def table_schema
-          @table_schema ||= Cequel::Schema::Table.new(table_name)
         end
 
       end

@@ -215,7 +215,81 @@ module Cequel
       end
 
     end
-    class Map < DelegateClass(::Hash); include Collection; end
+
+    class Map < DelegateClass(::Hash)
+
+      include Collection
+
+      NON_ATOMIC_MUTATORS = [
+        :default,
+        :default=,
+        :default_proc,
+        :default_proc=,
+        :delete_if,
+        :deep_merge!,
+        :except!,
+        :extract!,
+        :keep_if,
+        :reject!,
+        :reverse_merge!,
+        :reverse_update,
+        :select!,
+        :shift,
+        :slice!,
+        :stringify_keys!,
+        :symbolize_keys!,
+        :to_options!,
+        :transform_keys!
+      ]
+      NON_ATOMIC_MUTATORS.each { |method| undef_method(method) }
+
+      def []=(key, value)
+        modify!(:update, [key, value])
+        super if loaded?
+      end
+      alias_method :store, :[]=
+
+      def clear
+        modify!(:delete)
+        super if loaded?
+        self
+      end
+
+      def delete(key)
+        modify!(:remove, key)
+        super if loaded?
+        self
+      end
+
+      def merge!(hash)
+        modify!(:update, *hash.to_a)
+        super if loaded?
+        self
+      end
+      alias_method :update, :merge!
+
+      def replace(hash)
+        modify!(:overwrite, hash)
+        super if loaded?
+        self
+      end
+
+      def _update(scope)
+        @modifications.each do |type, value|
+          case type
+          when :update
+            scope.map_update(@column_name, Hash[value])
+          when :delete
+            scope.delete(@column_name)
+          when :overwrite
+            scope.update(@column_name => value.first)
+          when :remove
+            scope.map_remove(@column_name, value)
+          end
+        end
+      end
+
+    end
 
   end
 
