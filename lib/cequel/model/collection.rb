@@ -158,7 +158,63 @@ module Cequel
 
     end
 
-    class Set < DelegateClass(::Set); include Collection; end
+    class Set < DelegateClass(::Set)
+
+      include Collection
+
+      NON_ATOMIC_MUTATORS = [
+        :add?,
+        :collect!,
+        :delete?,
+        :delete_if,
+        :flatten!,
+        :keep_if,
+        :map!,
+        :reject!,
+        :select!
+      ]
+      NON_ATOMIC_MUTATORS.each { |method| undef_method(method) }
+
+      def add(object)
+        modify!(:add, object)
+        super if loaded?
+        self
+      end
+
+      def clear
+        modify!(:delete)
+        super if loaded?
+        self
+      end
+
+      def delete(object)
+        modify!(:remove, object)
+        super if loaded?
+        self
+      end
+
+      def replace(set)
+        modify!(:overwrite, set)
+        super
+        self
+      end
+
+      def _update(scope)
+        @modifications.each do |type, value|
+          case type
+          when :add
+            scope.set_add(@column_name, value)
+          when :delete
+            scope.delete(@column_name)
+          when :overwrite
+            scope.update(@column_name => value.first)
+          when :remove
+            scope.set_remove(@column_name, value)
+          end
+        end
+      end
+
+    end
     class Map < DelegateClass(::Hash); include Collection; end
 
   end

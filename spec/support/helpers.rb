@@ -63,6 +63,10 @@ module Cequel
         Helpers.cequel
       end
 
+      def max_statements!(number)
+        cequel.should_receive(:execute).at_most(number).times.and_call_original
+      end
+
     end
 
   end
