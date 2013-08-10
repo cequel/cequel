@@ -16,8 +16,6 @@ module Cequel
           connection.schema.read_table(table_name)
         end
 
-        protected
-
         def schema
           @schema ||= Cequel::Schema::Table.new(table_name)
         end

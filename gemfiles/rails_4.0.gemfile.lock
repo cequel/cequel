@@ -1,5 +1,5 @@
 PATH
-  remote: .
+  remote: /Users/mat/Projects/cequel
   specs:
     cequel (0.5.3)
       activemodel
@@ -24,7 +24,6 @@ GEM
       bundler
       rake
     atomic (1.1.12)
-    atomic (1.1.12-java)
     builder (3.1.4)
     byebug (1.7.0)
       columnize (~> 0.3.6)
@@ -61,8 +60,6 @@ GEM
     simple_uuid (0.3.0)
     thread_safe (0.1.2)
       atomic
-    thread_safe (0.1.2-java)
-      atomic
     thrift (0.8.0)
     thrift_client (0.8.4)
       thrift (~> 0.8.0)
@@ -70,10 +67,10 @@ GEM
     yard (0.8.7)
 
 PLATFORMS
-  java
   ruby
 
 DEPENDENCIES
+  activesupport (~> 4.0.0)
   appraisal
   byebug
   cequel!
