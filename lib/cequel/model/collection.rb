@@ -61,7 +61,8 @@ module Cequel
         :sort_by!,
         :uniq!
       ]
-      NON_ATOMIC_MUTATORS.each { |method| undef_method(method) }
+      NON_ATOMIC_MUTATORS.
+        each { |method| undef_method(method) if method_defined? method }
 
       def self.empty; []; end
 
@@ -145,7 +146,8 @@ module Cequel
         :reject!,
         :select!
       ]
-      NON_ATOMIC_MUTATORS.each { |method| undef_method(method) }
+      NON_ATOMIC_MUTATORS.
+        each { |method| undef_method(method) if method_defined? method }
 
       def add(object)
         updater.set_add(column_name, object)
@@ -198,7 +200,8 @@ module Cequel
         :to_options!,
         :transform_keys!
       ]
-      NON_ATOMIC_MUTATORS.each { |method| undef_method(method) }
+      NON_ATOMIC_MUTATORS.
+        each { |method| undef_method(method) if method_defined? method }
 
       def []=(key, value)
         updater.map_update(column_name, key => value)
