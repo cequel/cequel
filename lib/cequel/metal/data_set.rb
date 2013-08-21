@@ -380,19 +380,19 @@ module Cequel
         cql == other.cql
       end
 
-      def inserter(options, &block)
+      def inserter(options = {}, &block)
         Inserter.new(self, options, &block)
       end
 
-      def updater(options, &block)
+      def updater(options = {}, &block)
         Updater.new(self, options, &block)
       end
 
-      def incrementer(options, &block)
+      def incrementer(options = {}, &block)
         Incrementer.new(self, options, &block)
       end
 
-      def deleter(options, &block)
+      def deleter(options = {}, &block)
         Deleter.new(self, options, &block)
       end
 

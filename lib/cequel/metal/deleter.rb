@@ -36,6 +36,10 @@ module Cequel
         statement.append(generate_upsert_options)
       end
 
+      def empty?
+        super && !@delete_row
+      end
+
     end
 
   end

@@ -52,8 +52,6 @@ module Cequel
         else update
         end
         @new_record = false
-        attributes_for_update.clear
-        attributes_for_deletion.clear
         true
       end
 
@@ -86,23 +84,29 @@ module Cequel
       end
 
       def create
-        if attributes_for_create.except(self.class.local_key_column.name).present?
-          metal_scope.insert(attributes_for_create)
-        end
+        inserter.execute
         loaded!
         persisted!
       end
 
       def update
         connection.batch do
-          if attributes_for_update.present?
-            metal_scope.update(attributes_for_update)
-          end
-          collection_proxies.each_value { |proxy| proxy._update(metal_scope) }
-          if attributes_for_deletion.present?
-            metal_scope.delete(attributes_for_deletion)
-          end
+          updater.execute
+          deleter.execute
+          @updater, @deleter = nil
         end
+      end
+
+      def inserter
+        @inserter ||= metal_scope.inserter
+      end
+
+      def updater
+        @updater ||= metal_scope.updater
+      end
+
+      def deleter
+        @deleter ||= metal_scope.deleter
       end
 
       private
@@ -116,11 +120,13 @@ module Cequel
 
       def write_attribute(attribute, value)
         super.tap do
-          unless attribute.to_sym == self.class.local_key_column.name
+          if !persisted?
+            inserter.insert(attribute => value) unless value.nil?
+          elsif attribute.to_sym != self.class.local_key_column.name
             if value.nil?
-              attributes_for_deletion << attribute
+              deleter.delete_columns(attribute)
             else
-              attributes_for_update[attribute] = value
+              updater.set(attribute => value)
             end
           end
         end

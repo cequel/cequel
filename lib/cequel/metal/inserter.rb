@@ -9,6 +9,12 @@ module Cequel
         super
       end
 
+      def execute
+        statement = Statement.new
+        write_to_statement(statement)
+        data_set.execute_cql(*statement.args)
+      end
+
       def insert(data)
         data.each_pair do |column_name, value|
           column_names << column_name

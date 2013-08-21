@@ -15,6 +15,7 @@ module Cequel
       end
 
       def execute
+        return if empty?
         statement = Statement.new
         write_to_statement(statement)
         statement.append(*data_set.row_specifications_cql)
@@ -24,6 +25,7 @@ module Cequel
       private
       attr_reader :data_set, :options, :statements, :bind_vars
       def_delegator :data_set, :table_name
+      def_delegator :statements, :empty?
 
       def prepare_upsert_value(value)
         case value
