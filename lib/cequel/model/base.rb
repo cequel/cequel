@@ -26,26 +26,29 @@ module Cequel
         self.connection = Cequel.connect(configuration)
       end
 
-      def self.new_empty(&block)
-        allocate.tap do |instance|
-          instance.initialize_empty
-          instance.instance_eval(&block) if block
+      class <<self; alias_method :new_empty, :new; end
+      def self.new(*args, &block)
+        new_empty.tap do |record|
+          record.__send__(:initialize_new_record, *args)
+          yield record if block_given?
         end
       end
 
-      def initialize
-        initialize_empty
-        @attributes = Marshal.load(Marshal.dump(default_attributes))
-        @new_record = true
-        yield self if block_given?
-      end
-
-      def initialize_empty
+      def initialize(&block)
         @attributes, @collection_proxies = {}, {}
+        instance_eval(&block) if block
       end
 
       protected
       attr_reader :collection_proxies
+
+      private
+
+      def initialize_new_record
+        @attributes = Marshal.load(Marshal.dump(default_attributes))
+        @new_record = true
+        yield self if block_given?
+      end
 
     end
 
