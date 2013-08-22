@@ -47,6 +47,11 @@ describe Cequel::Model::List do
       unloaded_post.should_not be_loaded
       subject[:tags].should == %w(one two four five)
     end
+
+    it 'should add new items in memory when loaded' do
+      unloaded_post.tags << 'four' << 'five'
+      unloaded_post.tags.should == %w(one two four five)
+    end
   end
 
   describe '#[]=' do
@@ -68,6 +73,11 @@ describe Cequel::Model::List do
       unloaded_post.tags[1] = 'TWO'
       unloaded_post.save
       subject[:tags].should == %w(one TWO three)
+    end
+
+    it 'should apply local modifications when loaded later' do
+      unloaded_post.tags[1] = 'TWO'
+      unloaded_post.tags.should == %w(one TWO three)
     end
 
     it 'should atomically replace a given number of arguments' do
@@ -119,6 +129,11 @@ describe Cequel::Model::List do
       unloaded_post.save
       subject[:tags].should be_blank
     end
+
+    it 'should apply local modifications post-hoc' do
+      unloaded_post.tags.clear
+      unloaded_post.tags.should == []
+    end
   end
 
   describe '#collect!' do
@@ -146,6 +161,11 @@ describe Cequel::Model::List do
       unloaded_post.save
       subject[:tags].should == %w(one two four five)
     end
+
+    it 'should apply local modifications when loaded later' do
+      unloaded_post.tags.concat(['four', 'five'])
+      unloaded_post.tags.should == %w(one two four five)
+    end
   end
 
   describe '#delete' do
@@ -168,6 +188,11 @@ describe Cequel::Model::List do
       unloaded_post.save
       subject[:tags].should == %w(one)
     end
+
+    it 'should modify local copy after the fact' do
+      unloaded_post.tags.delete('two')
+      unloaded_post.tags.should == %w(one)
+    end
   end
 
   describe '#delete_at' do
@@ -188,6 +213,11 @@ describe Cequel::Model::List do
       unloaded_post.tags.delete_at(1)
       unloaded_post.save
       subject[:tags].should == %w(one)
+    end
+
+    it 'should apply deletion after the fact' do
+      unloaded_post.tags.delete_at(1)
+      unloaded_post.tags.should == %w(one)
     end
   end
 
@@ -272,6 +302,11 @@ describe Cequel::Model::List do
       unloaded_post.save
       subject[:tags].should == %w(four five)
     end
+
+    it 'should apply replace post-hoc' do
+      unloaded_post.tags.replace(%w(four five))
+      unloaded_post.tags.should == %w(four five)
+    end
   end
 
   describe '#reverse!' do
@@ -348,6 +383,11 @@ describe Cequel::Model::List do
       unloaded_post.tags.unshift('minustwo', 'minusone')
       unloaded_post.save
       subject[:tags].should == %w(minustwo minusone one two)
+    end
+
+    it 'should apply unshift after the fact' do
+      unloaded_post.tags.unshift('minustwo', 'minusone')
+      unloaded_post.tags.should == %w(minustwo minusone one two)
     end
   end
 end

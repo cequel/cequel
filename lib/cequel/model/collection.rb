@@ -24,6 +24,18 @@ module Cequel
         @model, @column_name = model, column_name
       end
 
+      def inspect
+        __getobj__.inspect
+      end
+
+      def loaded!
+        modifications.each { |modification| modification.() }.clear
+      end
+
+      def persisted!
+        modifications.clear
+      end
+
       protected
 
       def __getobj__
@@ -33,6 +45,19 @@ module Cequel
 
       def __setobj__(obj)
         raise "Attempted to call __setobj__ on read-only delegate!"
+      end
+
+      private
+
+      def to_modify(&block)
+        if loaded? then block.()
+        else modifications << block
+        end
+        self
+      end
+
+      def modifications
+        @modifications ||= []
       end
 
     end
@@ -87,46 +112,43 @@ module Cequel
             end
           end
         end
-        super if loaded?
+        to_modify { super }
       end
 
       def clear
         deleter.delete_columns(column_name)
-        super if loaded?
+        to_modify { super }
       end
 
       def concat(array)
         updater.list_append(column_name, array)
-        super if loaded?
+        to_modify { super }
       end
 
       def delete(object)
         updater.list_remove(column_name, object)
-        super if loaded?
+        to_modify { super }
       end
 
       def delete_at(index)
         deleter.list_remove_at(column_name, index)
-        super if loaded?
+        to_modify { super }
       end
 
       def push(object)
         updater.list_append(column_name, object)
-        super if loaded?
-        self
+        to_modify { super }
       end
       alias_method :<<, :push
 
       def replace(array)
         updater.set(column_name => array)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
       def unshift(*objs)
         updater.list_prepend(column_name, objs.reverse)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
     end
@@ -151,26 +173,22 @@ module Cequel
 
       def add(object)
         updater.set_add(column_name, object)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
       def clear
         deleter.delete_columns(column_name)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
       def delete(object)
         updater.set_remove(column_name, object)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
       def replace(set)
         updater.set(column_name => set)
-        super
-        self
+        to_modify { super }
       end
 
     end
@@ -205,33 +223,29 @@ module Cequel
 
       def []=(key, value)
         updater.map_update(column_name, key => value)
-        super if loaded?
+        to_modify { super }
       end
       alias_method :store, :[]=
 
       def clear
         deleter.delete_columns(column_name)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
       def delete(key)
         deleter.map_remove(column_name, key)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
       def merge!(hash)
         updater.map_update(column_name, hash)
-        super if loaded?
-        self
+        to_modify { super }
       end
       alias_method :update, :merge!
 
       def replace(hash)
         updater.set(column_name => hash)
-        super if loaded?
-        self
+        to_modify { super }
       end
 
     end

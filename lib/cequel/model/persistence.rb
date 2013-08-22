@@ -29,6 +29,7 @@ module Cequel
         unless loaded?
           row = metal_scope.first
           hydrate(row) unless row.nil?
+          collection_proxies.each_value { |collection| collection.loaded! }
         end
         self
       end
@@ -141,6 +142,7 @@ module Cequel
 
       def loaded!
         @loaded = true
+        collection_proxies.each_value { |collection| collection.loaded! }
       end
 
       def metal_scope

@@ -43,7 +43,13 @@ describe Cequel::Model::Map do
         max_statements! 2
         unloaded_post.likes['david'] = 4
         unloaded_post.save
-        subject[:likes].should == 
+        subject[:likes].should ==
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
+      end
+
+      it 'should set key value post-hoc' do
+        unloaded_post.likes['david'] = 4
+        unloaded_post.likes.should ==
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
       end
     end
@@ -62,6 +68,11 @@ describe Cequel::Model::Map do
         unloaded_post.save
         subject[:likes].should be_blank
       end
+
+      it 'should clear post-hoc' do
+        unloaded_post.likes.clear
+        unloaded_post.likes.should be_blank
+      end
     end
 
     describe '#delete' do
@@ -77,6 +88,11 @@ describe Cequel::Model::Map do
         unloaded_post.likes.delete('bob')
         unloaded_post.save
         subject[:likes].should == {'alice' => 1, 'charles' => 3}
+      end
+
+      it 'should delete post-hoc' do
+        unloaded_post.likes.delete('bob')
+        unloaded_post.likes.should == {'alice' => 1, 'charles' => 3}
       end
     end
 
@@ -94,7 +110,13 @@ describe Cequel::Model::Map do
         max_statements! 2
         unloaded_post.likes.merge!('david' => 4, 'emily' => 5)
         unloaded_post.save
-        subject[:likes].should == 
+        subject[:likes].should ==
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
+      end
+
+      it 'should merge post-hoc' do
+        unloaded_post.likes.merge!('david' => 4, 'emily' => 5)
+        unloaded_post.likes.should ==
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
       end
     end
@@ -112,6 +134,11 @@ describe Cequel::Model::Map do
         unloaded_post.likes.replace('david' => 4, 'emily' => 5)
         unloaded_post.save
         subject[:likes].should == {'david' => 4, 'emily' => 5}
+      end
+
+      it 'should replace post-hoc' do
+        unloaded_post.likes.replace('david' => 4, 'emily' => 5)
+        unloaded_post.likes.should == {'david' => 4, 'emily' => 5}
       end
     end
 
@@ -131,6 +158,12 @@ describe Cequel::Model::Map do
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
       end
+
+      it 'should store post-hoc' do
+        unloaded_post.likes.store('david', 4)
+        unloaded_post.likes.should == 
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
+      end
     end
 
     describe '#update' do
@@ -148,6 +181,12 @@ describe Cequel::Model::Map do
         unloaded_post.likes.update('david' => 4, 'emily' => 5)
         unloaded_post.save
         subject[:likes].should == 
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
+      end
+
+      it 'should update post-hoc' do
+        unloaded_post.likes.update('david' => 4, 'emily' => 5)
+        unloaded_post.likes.should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
       end
     end

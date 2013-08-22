@@ -44,6 +44,11 @@ describe Cequel::Model::Set do
         unloaded_post.save
         subject[:tags].should == Set['one', 'two', 'three', 'four']
       end
+
+      it 'should apply add post-hoc' do
+        unloaded_post.tags.add('four')
+        unloaded_post.tags.should == Set['one', 'two', 'three', 'four']
+      end
     end
 
     describe '#clear' do
@@ -59,6 +64,11 @@ describe Cequel::Model::Set do
         unloaded_post.tags.clear
         unloaded_post.save
         subject[:tags].should be_blank
+      end
+
+      it 'should apply clear post-hoc' do
+        unloaded_post.tags.clear
+        unloaded_post.tags.should == Set[]
       end
     end
 
@@ -76,6 +86,11 @@ describe Cequel::Model::Set do
         unloaded_post.save
         subject[:tags].should == Set['one', 'three']
       end
+
+      it 'should apply delete post-hoc' do
+        unloaded_post.tags.delete('two')
+        unloaded_post.tags.should == Set['one', 'three']
+      end
     end
 
     describe '#replace' do
@@ -88,9 +103,14 @@ describe Cequel::Model::Set do
 
       it 'should replace without reading' do
         max_statements! 2
-        post.tags.replace(Set['a', 'b'])
-        post.save
+        unloaded_post.tags.replace(Set['a', 'b'])
+        unloaded_post.save
         subject[:tags].should == Set['a', 'b']
+      end
+
+      it 'should apply delete post-hoc' do
+        unloaded_post.tags.replace(Set['a', 'b'])
+        unloaded_post.tags.should == Set['a', 'b']
       end
     end
 
