@@ -49,7 +49,7 @@ end
 namespace :bundle do
   desc 'Run bundler for all environments'
   task :all do
-    abort unless system('rvm', '1.9,2.0', 'do', 'rake', 'appraisal:install')
+    abort unless system('rvm', '2.0,1.9,rbx-d19', 'do', 'rake', 'appraisal:install')
   end
 end
 
@@ -64,7 +64,7 @@ end
 
 namespace :test do
   task :all do
-    abort unless system('rvm', '1.9,2.0', 'do',
+    abort unless system('rvm', '2.0,1.9,rbx-d19', 'do',
                         'bundle', 'exec',
                         'rake', 'appraisal', 'test:concise')
   end
