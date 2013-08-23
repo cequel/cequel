@@ -1,0 +1,13 @@
+language: ruby
+rvm:
+  - "1.9.3"
+  - "2.0.0"
+  - "rbx-19mode"
+gemfile:
+  - "gemfiles/rails_3.1.gemfile"
+  - "gemfiles/rails_3.2.gemfile"
+  - "gemfiles/rails_4.0.gemfile"
+script: bundle exec rspec spec/examples
+bundler_args: --without=debug
+services:
+  - cassandra
