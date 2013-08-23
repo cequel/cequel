@@ -13,11 +13,8 @@ module Cequel
       include Enumerable
       extend Forwardable
 
-      # @return [Keyspace] the keyspace this data set lives in
-      attr_reader :keyspace
-
-      # @return [Symbol] the name of the column family this data set draws from
-      attr_reader :table_name
+      attr_reader :keyspace, :table_name, :select_columns, :ttl_columns,
+        :writetime_columns, :row_specifications, :sort_order, :row_limit
 
       def_delegator :keyspace, :execute, :execute_cql
       def_delegator :keyspace, :write
@@ -411,9 +408,7 @@ module Cequel
       end
 
       protected
-      attr_reader :select_columns, :ttl_columns, :writetime_columns,
-        :row_specifications, :sort_order
-      attr_accessor :row_limit
+      attr_writer :row_limit
 
       private
 
