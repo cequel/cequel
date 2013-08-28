@@ -5,7 +5,7 @@ Cequel is a
 query builder and object-row mapper for
 [Cassandra](http://cassandra.apache.org/).
 
-[![Build Status](https://secure.travis-ci.org/brewster/cequel.png)](http://travis-ci.org/brewster/cequel)
+[![Build Status](https://secure.travis-ci.org/cequel/cequel.png)](http://travis-ci.org/cequel/cequel)
 
 The library consists of two layers. The lower Cequel layer is a lightweight
 CQL query builder, which uses chained scopes to construct CQL queries, execute
@@ -185,7 +185,7 @@ are available via the
 [cequel-migrations-rails](https://github.com/reachlocal/cequel-migrations-rails)
 library.
 
-The [forthcoming release](https://github.com/brewster/cequel/tree/1.0) of Cequel
+The [forthcoming release](https://github.com/cequel/cequel/tree/1.0) of Cequel
 will support full schema introspection and modification, and will also provide
 auto-migration functionality for models.
 
@@ -592,7 +592,7 @@ look forward to in future Cequel versions:
 ## Support & Bugs ##
 
 If you find a bug, feel free to
-[open an issue](https://github.com/brewster/cequel/issues/new) on GitHub.
+[open an issue](https://github.com/cequel/cequel/issues/new) on GitHub.
 Pull requests are most welcome.
 
 For questions or feedback, hit up our mailing list at
@@ -601,5 +601,5 @@ or find outoftime in the #cassandra IRC channel on Freenode.
 
 ## License ##
 
-Cequel is distributed under the MIT license. See the attached LICENSE for all
-the sordid details.
+Cequel is distributed under the MIT license, Copyright (c) 2012-2013 Brewster Inc.
+&amp; Mat Brown. See the attached LICENSE for all the sordid details.
