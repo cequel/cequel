@@ -19,7 +19,7 @@ module Cequel
         statement = Statement.new
         write_to_statement(statement)
         statement.append(*data_set.row_specifications_cql)
-        data_set.execute_cql(*statement.args)
+        data_set.write(*statement.args)
       end
 
       private

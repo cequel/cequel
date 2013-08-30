@@ -20,6 +20,7 @@ module Cequel
       attr_reader :table_name
 
       def_delegator :keyspace, :execute, :execute_cql
+      def_delegator :keyspace, :write
 
       #
       # @param table_name [Symbol] column family for this data set
