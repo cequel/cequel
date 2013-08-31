@@ -17,8 +17,6 @@ module Cequel
           new_empty { @attributes = attributes; self }
         end
 
-        private
-
         def hydrate(row)
           new_empty { hydrate(row) }
         end
@@ -44,8 +42,8 @@ module Cequel
         end
       end
 
-      def loaded?
-        !!@loaded
+      def loaded?(column = nil)
+        !!@loaded && (column.nil? || @attributes.key?(column.to_sym))
       end
 
       def save
