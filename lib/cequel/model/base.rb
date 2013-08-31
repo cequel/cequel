@@ -1,8 +1,3 @@
-require 'cequel/model/schema'
-require 'cequel/model/properties'
-require 'cequel/model/collection'
-require 'cequel/model/persistence'
-
 module Cequel
 
   module Model
@@ -12,6 +7,7 @@ module Cequel
       include Cequel::Model::Properties
       include Cequel::Model::Schema
       include Cequel::Model::Persistence
+      extend Cequel::Model::Scoped
 
       class_attribute :table_name, :connection, :default_attributes,
         :instance_writer => false
