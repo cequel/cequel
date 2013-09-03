@@ -25,6 +25,10 @@ module Cequel
           @local_key_column ||= table_schema.key_columns.last
         end
 
+        def primary_keys
+          @primary_keys ||= table_schema.partition_keys + table_schema.clustering_columns
+        end
+
       end
 
     end

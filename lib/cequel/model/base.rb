@@ -40,10 +40,16 @@ module Cequel
 
       private
 
-      def initialize_new_record
+      def initialize_new_record(*args)
         @attributes = Marshal.load(Marshal.dump(default_attributes))
         @new_record = true
         yield self if block_given?
+        if Hash === args.first
+          args.first.each_pair do |k, v|
+            self.send("#{k}=", v)
+          end
+        end
+        self
       end
 
     end
