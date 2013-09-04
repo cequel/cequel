@@ -7,6 +7,9 @@ module Cequel
       extend ActiveSupport::Concern
 
       module ClassMethods
+        extend Forwardable
+
+        def_delegators :table_schema, :key_columns, :key_column_names
 
         def synchronize_schema
           Cequel::Schema::TableSynchronizer.
@@ -19,14 +22,6 @@ module Cequel
 
         def table_schema
           @table_schema ||= Cequel::Schema::Table.new(table_name)
-        end
-
-        def local_key_column
-          @local_key_column ||= table_schema.key_columns.last
-        end
-
-        def primary_keys
-          @primary_keys ||= table_schema.partition_keys + table_schema.clustering_columns
         end
 
       end
