@@ -59,7 +59,7 @@ module Cequel
         batch_size = options.fetch(:batch_size, 1000)
         base_batch_data_set = data_set.limit(options.fetch(:batch_size, 1000))
         batch_data_set = base_batch_data_set
-        key_column = clazz.local_key_column.name
+        key_column = clazz.primary_keys.first.name
         begin
           batch = batch_data_set.entries
           yield batch

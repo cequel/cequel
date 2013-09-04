@@ -12,7 +12,7 @@ module Cequel
       def execute
         statement = Statement.new
         write_to_statement(statement)
-        data_set.execute_cql(*statement.args)
+        data_set.write(*statement.args)
       end
 
       def insert(data)
