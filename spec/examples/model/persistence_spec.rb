@@ -1,72 +1,89 @@
 require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Model::Persistence do
+  model :Blog do
+    key :subdomain, :text
+    column :name, :text
+    column :description, :text
+    column :owner_id, :uuid
+  end
+
   model :Post do
+    key :blog_subdomain, :text
     key :permalink, :text
     column :title, :text
     column :body, :text
     column :author_id, :uuid
-    list :tags, :text
-    set :categories, :text
-    map :shares, :text, :int
   end
 
-  describe 'reading' do
-    before do
-      cequel[:posts].insert(
-        :permalink => 'cequel',
-        :title => 'Cequel',
-        :tags => %w(big-data cql),
-        :categories => Set['Big Data', 'CQL'],
-        :shares => {'facebook' => 1}
-      )
+  context 'simple keys' do
+    subject { cequel[:blogs].where(:subdomain => 'cequel').first }
+
+    let!(:blog) do
+      Blog.new do |blog|
+        blog.subdomain = 'cequel'
+        blog.name = 'Cequel'
+        blog.description = 'A Ruby ORM for Cassandra 1.2'
+      end.tap(&:save)
     end
 
-    describe '::find' do
-      subject { Post.find('cequel') }
+    describe '#save' do
+      context 'on create' do
+        it 'should save row to database' do
+          subject[:name].should == 'Cequel'
+        end
 
-      its(:permalink) { should == 'cequel' }
-      its(:title) { should == 'Cequel' }
-      its(:tags) { should == %w(big-data cql) }
-      its(:categories) { should == Set['Big Data', 'CQL'] }
-      its(:shares) { should == {'facebook' => 1} }
+        it 'should mark row persisted' do
+          blog.should be_persisted
+        end
+      end
 
-      it { should be_persisted }
-      it { should_not be_transient }
-      specify { Post.new.should_not be_persisted }
-      specify { Post.new.should be_transient }
+      context 'on update' do
+        uuid :owner_id
 
-      specify do
-        expect { Post.find('bogus') }.
-          to raise_error(Cequel::Model::RecordNotFound)
+        before do
+          blog.name = 'Cequel 1.0'
+          blog.owner_id = owner_id
+          blog.description = nil
+          blog.save
+        end
+
+        it 'should change existing column value' do
+          subject[:name].should == 'Cequel 1.0'
+        end
+
+        it 'should add new column value' do
+          subject[:owner_id].should == owner_id
+        end
+
+        it 'should remove old column values' do
+          subject[:description].should be_nil
+        end
       end
     end
 
-    describe '::[]' do
-      subject { Post['cequel'] }
+    describe '#destroy' do
+      before { blog.destroy }
 
-      it 'should not query the database' do
-        expect(cequel).not_to receive(:execute)
-        subject.permalink.should == 'cequel'
+      it 'should delete entire row' do
+        subject.should be_nil
       end
 
-      it 'should lazily query the database when attribute accessed' do
-        subject.title.should == 'Cequel'
-      end
-
-      it 'should get all eager-loadable attributes on first lazy load' do
-        subject.title
-        expect(cequel).not_to receive(:execute)
-        subject.tags.should == %w(big-data cql)
+      it 'should mark record transient' do
+        blog.should be_transient
       end
     end
   end
 
-  describe 'writing' do
-    subject { cequel[:posts].where(:permalink => 'cequel').first }
+  context 'compound keys' do
+    subject do
+      cequel[:posts].
+        where(:blog_subdomain => 'cassandra', :permalink => 'cequel').first
+    end
 
     let!(:post) do
       Post.new do |post|
+        post.blog_subdomain = 'cassandra'
         post.permalink = 'cequel'
         post.title = 'Cequel'
         post.body = 'A Ruby ORM for Cassandra 1.2'
@@ -119,5 +136,6 @@ describe Cequel::Model::Persistence do
         post.should be_transient
       end
     end
+  end
   end
 end

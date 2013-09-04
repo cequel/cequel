@@ -22,13 +22,23 @@ module Cequel
         to_cql == other.to_cql
       end
 
+      def to_s
+        name
+      end
+
       def inspect
         %Q(#<#{self.class.name}: #{to_cql}>)
       end
 
     end
 
-    class PartitionKey < Column; end
+    class PartitionKey < Column
+
+      def partition_key?
+        true
+      end
+
+    end
 
     class ClusteringColumn < Column
 
@@ -41,6 +51,10 @@ module Cequel
 
       def clustering_order_cql
         "#{@name} #{@clustering_order}"
+      end
+
+      def partition_key?
+        false
       end
 
     end

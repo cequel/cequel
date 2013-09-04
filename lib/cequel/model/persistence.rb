@@ -8,32 +8,14 @@ module Cequel
 
       module ClassMethods
 
-        def find(id)
-          self[id].load!
-        end
-
-        def [](*id)
-          if Hash === id.first
-            attributes = id.first
-          else
-            attributes = {}
-            id.each_with_index do |_id_, _index_|
-              attributes.merge!(primary_keys[_index_].name => _id_)
-            end
-          end
-          new_empty { @attributes = attributes; self }
-        end
-
         def hydrate(row)
           new_empty { hydrate(row) }
         end
 
       end
 
-      def primary_keys_hash
-        self.class.primary_keys.inject({}) do |memo, col|
-          memo.merge!(col.name => @attributes[col.name])
-        end
+      def key_attributes
+        @attributes.slice(*self.class.key_column_names)
       end
 
       def exists?
@@ -57,7 +39,7 @@ module Cequel
         load.tap do
           if transient?
             raise Cequel::Model::RecordNotFound,
-              "Couldn't find #{self.class.name} with #{primary_keys_hash.inspect}"
+              "Couldn't find #{self.class.name} with #{key_attributes.inspect}"
           end
         end
       end
@@ -141,7 +123,7 @@ module Cequel
         super.tap do
           if !persisted?
             inserter.insert(attribute => value) unless value.nil?
-          elsif !self.class.primary_keys.index{|k| k.name == attribute.to_sym}
+          elsif !self.class.key_column_names.include?(attribute.to_sym)
             if value.nil?
               deleter.delete_columns(attribute)
             else
@@ -165,7 +147,7 @@ module Cequel
 
       def metal_scope
         connection[table_name].
-          where(primary_keys_hash)
+          where(key_attributes)
       end
 
       def attributes_for_create
