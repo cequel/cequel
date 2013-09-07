@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+pattern, line_number = *ARGV
+
+files = pattern ? Dir.glob("spec/examples/**/*#{pattern}*") : 'spec/examples'
+line_args = ['-l', line_number] if line_number
+
+command = ['bundle', 'exec', 'rspec', '--fail-fast', *line_args, *files]
+puts command.join(' ')
+system(*command)
