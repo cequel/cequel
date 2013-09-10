@@ -82,6 +82,28 @@ describe Cequel::Model::RecordSet do
           to raise_error(Cequel::Model::RecordNotFound)
       end
     end
+
+    context 'find at once compound primary key' do
+      subject { Post.find('cassandra', 'cequel0') }
+
+      its(:blog_subdomain) { should == 'cassandra' }
+      its(:permalink) { should == 'cequel0' }
+      its(:title) { should == 'Cequel 0' }
+
+      it { should be_persisted }
+      it { should_not be_transient }
+      specify { Post.new.should_not be_persisted }
+      specify { Post.new.should be_transient }
+
+      specify do
+        expect { Post.find('cequel', 'bogus')}.
+          to raise_error(Cequel::Model::RecordNotFound)
+      end
+      specify do
+        expect { Post.find('cequel') }.
+          to raise_error(Cequel::Model::MissingAttributeError)
+      end
+    end
   end
 
   describe '::[]' do

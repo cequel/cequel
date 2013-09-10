@@ -50,7 +50,13 @@ module Cequel
       end
 
       def find(*scoped_key_values)
-        self[*scoped_key_values].load!
+        attributes = {}
+        key_values = [*self.scoped_key_values, *scoped_key_values]
+        clazz.key_column_names.zip(key_values) do |key_name, key_value|
+          raise MissingAttributeError, "#{key_name} is empty" if key_value.nil?
+          attributes[key_name] = key_value
+        end
+        (clazz.new_empty { @attributes = attributes }).load!
       end
 
       def /(scoped_key_value)
