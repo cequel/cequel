@@ -137,5 +137,4 @@ describe Cequel::Model::Persistence do
       end
     end
   end
-  end
 end
