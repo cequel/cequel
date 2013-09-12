@@ -5,6 +5,8 @@ describe Cequel::Model::Associations do
   model :Blog do
     key :subdomain, :text
     column :name, :text
+
+    has_many :posts
   end
 
   model :User do
@@ -74,6 +76,44 @@ describe Cequel::Model::Associations do
       end.to raise_error(Cequel::Model::InvalidRecordConfiguration)
     end
 
+  end
+
+  describe '::has_many' do
+    let(:blog) { Blog.new { |blog| blog.subdomain = 'cequel' }.tap(&:save) }
+    let!(:posts) do
+      3.times.map do |i|
+        Post.new do |post|
+          post.blog = blog
+          post.id = CassandraCQL::UUID.new
+          post.title = "Post #{i}"
+        end.tap(&:save)
+      end
+    end
+    let!(:other_posts) do
+      3.times.map do |i|
+        Post.new do |post|
+          post.blog_subdomain = 'mycat'
+          post.id = CassandraCQL::UUID.new
+          post.title = "My Cat #{i}"
+        end.tap(&:save)
+      end
+    end
+
+    it 'should return scope of posts' do
+      blog.posts.map(&:title).should == ["Post 0", "Post 1", "Post 2"]
+    end
+
+    it 'should retain scope when hydrated multiple times' do
+      blog.posts.map(&:id)
+      disallow_queries!
+      blog.posts.map(&:title).should == ["Post 0", "Post 1", "Post 2"]
+    end
+
+    it 'should reload when reload argument passed' do
+      blog.posts.map(&:id)
+      posts.first.destroy
+      blog.posts(true).map(&:title).should == ['Post 1', 'Post 2']
+    end
   end
 
 end

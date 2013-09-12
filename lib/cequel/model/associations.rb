@@ -8,6 +8,8 @@ module Cequel
 
       included do
         class_attribute :parent_association
+        class_attribute :child_associations
+        self.child_associations = {}
       end
 
       module ClassMethods
@@ -23,11 +25,18 @@ module Cequel
             raise InvalidRecordConfiguration,
               "belongs_to association must be declared before declaring key(s)"
           end
-          self.parent_association = BelongsToAssociation.new(self, name)
+          self.parent_association = BelongsToAssociation.new(self, name.to_sym)
           parent_association.association_key_columns.each do |column|
             key :"#{name}_#{column.name}", column.type
           end
           def_parent_association_accessors
+        end
+
+        def has_many(name)
+          association = HasManyAssociation.new(self, name.to_sym)
+          self.child_associations =
+            child_associations.merge(name => association)
+          def_child_association_reader(association)
         end
 
         private
@@ -45,6 +54,14 @@ module Cequel
         def def_parent_association_writer
           def_delegator 'self', :write_parent_association,
             "#{parent_association.name}="
+        end
+
+        def def_child_association_reader(association)
+          module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{association.name}(reload = false)
+              read_child_association(#{association.name.inspect}, reload)
+            end
+          RUBY
         end
 
       end
@@ -85,6 +102,19 @@ module Cequel
             end
             write_attribute(column_name, value)
           end
+      end
+
+      def read_child_association(association_name, reload = false)
+        association = child_associations[association_name]
+        ivar = association.instance_variable_name
+        if !reload && instance_variable_defined?(ivar)
+          return instance_variable_get(ivar)
+        end
+        association_record_set = key_values.inject(association.association_class) do |record_set, key_value|
+          record_set[key_value]
+        end
+        instance_variable_set(
+          ivar, AssociationCollection.new(association_record_set))
       end
 
     end

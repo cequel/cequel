@@ -10,6 +10,7 @@ module Cequel
       include Cequel::Model::Associations
       extend Cequel::Model::Scoped
 
+      #XXX Should figure out a way to put these in the modules they concern
       class_attribute :table_name, :connection, :default_attributes,
         :instance_writer => false
       attr_reader :attributes
