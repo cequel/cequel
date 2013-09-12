@@ -3,34 +3,40 @@ module Cequel
   module SpecSupport
     module Macros
       def model(class_name, options = {}, &block)
-        clazz = Class.new(Cequel::Base) do
-          self.table_name = class_name.to_s.tableize
-          class_eval(&block)
-        end
+        setup_models = !self.metadata.key?(:models)
+        self.metadata[:models] ||= {}
 
-        let(:model_class) { clazz }
-        let(:mc) { clazz }
+        metadata[:models][class_name] = [options, block]
 
-        if options.fetch(:create_table, true)
-          before(:all) { clazz.synchronize_schema }
-          after(:all) { cequel.schema.drop_table(clazz.table_name) }
-          before :each do
-            scope = cequel[clazz.table_name]
-            keys = clazz.table_schema.key_columns.map(&:name)
-            scope.each { |row| scope.where(row.slice(*keys)).delete }
-          end
-        end
-
-        around do |example|
-          Kernel.module_eval do
-            if const_defined?(class_name)
-              previous = const_get(class_name)
-              remove_const(class_name)
+        if setup_models
+          before :all do
+            metadata = self.class.metadata
+            metadata[:models].each do |name, (options, block)|
+              clazz = Class.new(Cequel::Base) do
+                self.table_name = name.to_s.tableize
+                class_eval(&block)
+              end
+              Object.module_eval { const_set(name, clazz) }
             end
-            const_set(class_name, clazz)
-            example.run
-            remove_const(class_name)
-            const_set(class_name, previous) if previous
+            metadata[:models].each_key do |name|
+              if options.fetch(:synchronize_schema, true)
+                Object.const_get(name).synchronize_schema
+              end
+            end
+          end
+
+          before :each do
+            metadata = self.class.metadata
+            metadata[:models].each_key do |name|
+              name.to_s.constantize.find_each(&:destroy)
+            end
+          end
+
+          after :all do
+            self.class.metadata[:models].each_key do |name|
+              cequel.schema.drop_table(Object.const_get(name).table_name)
+              Object.module_eval { remove_const(name) }
+            end
           end
         end
       end
