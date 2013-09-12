@@ -18,6 +18,10 @@ module Cequel
         @attributes.slice(*self.class.key_column_names)
       end
 
+      def key_values
+        key_attributes.values
+      end
+
       def exists?
         load!
         true
