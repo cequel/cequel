@@ -6,10 +6,10 @@ module Cequel
 
       extend Forwardable
 
-      def_delegators :current_scope, *Scope.instance_methods(false)
+      def_delegators :current_scope, *RecordSet.instance_methods(false)
 
       def current_scope
-        Scope.new(self)
+        RecordSet.new(self)
       end
 
     end

@@ -74,6 +74,10 @@ module Cequel
         @partition_keys + @clustering_columns
       end
 
+      def key_column_names
+        key_columns.map { |key| key.name }
+      end
+
       def partition_key(name)
         @partition_keys.find { |column| column.name == name }
       end

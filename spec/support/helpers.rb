@@ -67,6 +67,10 @@ module Cequel
         cequel.should_receive(:execute).at_most(number).times.and_call_original
       end
 
+      def disallow_queries!
+        cequel.should_not_receive(:execute)
+      end
+
     end
 
   end

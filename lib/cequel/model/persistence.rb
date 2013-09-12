@@ -8,20 +8,23 @@ module Cequel
 
       module ClassMethods
 
-        def find(id)
-          self[id].load!
-        end
-
-        def [](id)
-          attributes = {local_key_column.name => id}
-          new_empty { @attributes = attributes; self }
-        end
-
         def hydrate(row)
           new_empty { hydrate(row) }
         end
 
       end
+
+      def key_attributes
+        @attributes.slice(*self.class.key_column_names)
+      end
+
+      def exists?
+        load!
+        true
+      rescue Cequel::Model::RecordNotFound
+        false
+      end
+      alias :exist? :exists?
 
       def load
         unless loaded?
@@ -35,9 +38,8 @@ module Cequel
       def load!
         load.tap do
           if transient?
-            key_name = self.class.local_key_column.name
             raise Cequel::Model::RecordNotFound,
-              "Couldn't find #{self.class.name} with #{key_name}=#{attributes[key_name]}"
+              "Couldn't find #{self.class.name} with #{key_attributes.inspect}"
           end
         end
       end
@@ -121,7 +123,7 @@ module Cequel
         super.tap do
           if !persisted?
             inserter.insert(attribute => value) unless value.nil?
-          elsif attribute.to_sym != self.class.local_key_column.name
+          elsif !self.class.key_column_names.include?(attribute.to_sym)
             if value.nil?
               deleter.delete_columns(attribute)
             else
@@ -144,9 +146,8 @@ module Cequel
       end
 
       def metal_scope
-        key_column_name = self.class.local_key_column.name
         connection[table_name].
-          where(key_column_name => read_attribute(key_column_name))
+          where(key_attributes)
       end
 
       def attributes_for_create
