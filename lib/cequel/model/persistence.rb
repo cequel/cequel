@@ -52,7 +52,8 @@ module Cequel
         !!@loaded && (column.nil? || @attributes.key?(column.to_sym))
       end
 
-      def save
+      def save(options = {})
+        options.assert_valid_keys
         if new_record? then create
         else update
         end

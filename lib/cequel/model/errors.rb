@@ -6,6 +6,7 @@ module Cequel
     UnknownAttributeError = Class.new(ArgumentError)
     RecordNotFound = Class.new(StandardError)
     InvalidRecordConfiguration = Class.new(StandardError)
+    RecordInvalid = Class.new(StandardError)
 
   end
 

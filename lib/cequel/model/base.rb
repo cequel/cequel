@@ -11,6 +11,8 @@ module Cequel
       extend Cequel::Model::Scoped
       extend ActiveModel::Naming
 
+      include Cequel::Model::Validations
+
       class_attribute :table_name, :connection, :default_attributes,
         :instance_writer => false
       attr_reader :attributes
@@ -51,6 +53,7 @@ module Cequel
             self.send("#{k}=", v)
           end
         end
+        loaded!
         self
       end
 
