@@ -45,15 +45,11 @@ module Cequel
 
       private
 
-      def initialize_new_record(*args)
+      def initialize_new_record(attributes = {})
         @attributes = Marshal.load(Marshal.dump(default_attributes))
         @new_record = true
         yield self if block_given?
-        if Hash === args.first
-          args.first.each_pair do |k, v|
-            self.send("#{k}=", v)
-          end
-        end
+        self.attributes = attributes #XXX this should really be in Properties
         loaded!
         self
       end

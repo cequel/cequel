@@ -92,6 +92,12 @@ module Cequel
 
       end
 
+      def attributes=(attributes)
+        attributes.each_pair do |attribute, value|
+          __send__(:"#{attribute}=", value)
+        end
+      end
+
       protected
       delegate :table_schema, :to => 'self.class'
 

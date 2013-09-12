@@ -8,6 +8,10 @@ module Cequel
 
       module ClassMethods
 
+        def create(attributes = {}, &block)
+          new(attributes, &block).tap { |record| record.save }
+        end
+
         def hydrate(row)
           new_empty { hydrate(row) }
         end
@@ -59,6 +63,11 @@ module Cequel
         end
         @new_record = false
         true
+      end
+
+      def update_attributes(attributes)
+        self.attributes = attributes
+        save
       end
 
       def destroy
