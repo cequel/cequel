@@ -12,6 +12,11 @@ RSpec.configure do |config|
   config.include(Cequel::SpecSupport::Helpers)
   config.extend(Cequel::SpecSupport::Macros)
 
+  config.filter_run_excluding rails: ->(requirement) {
+    !Gem::Requirement.new(requirement).
+      satisfied_by?(Gem::Version.new(ActiveSupport::VERSION::STRING))
+  }
+
   config.before(:all) do
     connection = CassandraCQL::Database.new(
       Cequel::SpecSupport::Helpers.host,
