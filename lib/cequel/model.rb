@@ -1,6 +1,8 @@
 require 'active_model'
 
 require 'cequel'
+require 'cequel/model/associations'
+require 'cequel/model/belongs_to_association'
 require 'cequel/model/errors'
 require 'cequel/model/schema'
 require 'cequel/model/properties'

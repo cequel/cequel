@@ -7,6 +7,7 @@ module Cequel
       include Cequel::Model::Properties
       include Cequel::Model::Schema
       include Cequel::Model::Persistence
+      include Cequel::Model::Associations
       extend Cequel::Model::Scoped
 
       class_attribute :table_name, :connection, :default_attributes,
@@ -14,7 +15,7 @@ module Cequel
       attr_reader :attributes
 
       def self.inherited(base)
-        base.table_name = name.underscore.to_sym
+        base.table_name = name.tableize.to_sym
         base.default_attributes = {}
       end
 
