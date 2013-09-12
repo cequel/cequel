@@ -11,6 +11,7 @@ module Cequel
       extend Cequel::Model::Scoped
       extend ActiveModel::Naming
 
+      include Cequel::Model::Callbacks
       include Cequel::Model::Validations
 
       class_attribute :table_name, :connection, :default_attributes,
