@@ -7,14 +7,16 @@ module Cequel
       include Cequel::Model::Properties
       include Cequel::Model::Schema
       include Cequel::Model::Persistence
+      include Cequel::Model::Associations
       extend Cequel::Model::Scoped
 
+      #XXX Should figure out a way to put these in the modules they concern
       class_attribute :table_name, :connection, :default_attributes,
         :instance_writer => false
       attr_reader :attributes
 
       def self.inherited(base)
-        base.table_name = name.underscore.to_sym
+        base.table_name = name.tableize.to_sym
         base.default_attributes = {}
       end
 

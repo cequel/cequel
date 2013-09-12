@@ -8,6 +8,10 @@ require 'cequel/model/collection'
 require 'cequel/model/persistence'
 require 'cequel/model/record_set'
 require 'cequel/model/scoped'
+require 'cequel/model/associations'
+require 'cequel/model/association_collection'
+require 'cequel/model/belongs_to_association'
+require 'cequel/model/has_many_association'
 
 require 'cequel/model/base'
 
