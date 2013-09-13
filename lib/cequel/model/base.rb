@@ -9,14 +9,18 @@ module Cequel
       include Cequel::Model::Persistence
       include Cequel::Model::Associations
       extend Cequel::Model::Scoped
+      include Cequel::Model::MassAssignment
+      include Cequel::Model::Callbacks
+      include Cequel::Model::Validations
+      extend ActiveModel::Naming
+      include ActiveModel::Serializers::JSON
+      include ActiveModel::Serializers::Xml
 
-      #XXX Should figure out a way to put these in the modules they concern
       class_attribute :table_name, :connection, :default_attributes,
         :instance_writer => false
-      attr_reader :attributes
 
       def self.inherited(base)
-        base.table_name = name.tableize.to_sym
+        base.table_name = base.name.tableize.to_sym
         base.default_attributes = {}
       end
 
@@ -37,20 +41,27 @@ module Cequel
         instance_eval(&block) if block
       end
 
+      def inspect
+        inspected_attributes = attributes.each_pair.map do |attr, value|
+          inspected_value = value.is_a?(CassandraCQL::UUID) ?
+            value.to_guid :
+            value.inspect
+          "#{attr}: #{inspected_value}"
+        end
+        "#<#{self.class} #{inspected_attributes.join(", ")}>"
+      end
+
       protected
       attr_reader :collection_proxies
 
       private
 
-      def initialize_new_record(*args)
+      def initialize_new_record(attributes = {})
         @attributes = Marshal.load(Marshal.dump(default_attributes))
         @new_record = true
         yield self if block_given?
-        if Hash === args.first
-          args.first.each_pair do |k, v|
-            self.send("#{k}=", v)
-          end
-        end
+        self.attributes = attributes #XXX this should really be in Properties
+        loaded!
         self
       end
 

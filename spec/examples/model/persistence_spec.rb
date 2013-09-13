@@ -62,6 +62,57 @@ describe Cequel::Model::Persistence do
       end
     end
 
+    describe '::create' do
+      uuid :owner_id
+
+      describe 'with block' do
+        let! :blog do
+          Blog.create do |blog|
+            blog.subdomain = 'big-data'
+            blog.name = 'Big Data'
+          end
+        end
+
+        it 'should initialize with block' do
+          blog.name.should == 'Big Data'
+        end
+
+        it 'should save instance' do
+          Blog.find(blog.subdomain).name.should == 'Big Data'
+        end
+      end
+
+      describe 'with attributes' do
+        let!(:blog) do
+          Blog.create(:subdomain => 'big-data', :name => 'Big Data')
+        end
+
+        it 'should initialize with block' do
+          blog.name.should == 'Big Data'
+        end
+
+        it 'should save instance' do
+          Blog.find(blog.subdomain).name.should == 'Big Data'
+        end
+      end
+    end
+
+    describe '#update_attributes' do
+      let! :blog do
+        Blog.create(:subdomain => 'big-data', :name => 'Big Data')
+      end
+
+      before { blog.update_attributes(:name => 'The Big Data Blog') }
+
+      it 'should update instance in memory' do
+        blog.name.should == 'The Big Data Blog'
+      end
+
+      it 'should save instance' do
+        Blog.find(blog.subdomain).name.should == 'The Big Data Blog'
+      end
+    end
+
     describe '#destroy' do
       before { blog.destroy }
 
