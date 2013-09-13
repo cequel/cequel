@@ -18,6 +18,10 @@ require 'cequel/model/validations'
 
 require 'cequel/model/base'
 
+if defined? Rails
+  require 'cequel/model/railtie'
+end
+
 module Cequel
   module Model
   end
