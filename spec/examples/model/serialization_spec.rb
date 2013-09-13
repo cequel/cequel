@@ -19,6 +19,7 @@ describe 'serialization' do
   end
 
   it 'should provide JSON serialization' do
+    Post.include_root_in_json = false
     Post.new(attributes).as_json.symbolize_keys.
       should == attributes.merge(body: nil)
   end
