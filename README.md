@@ -17,7 +17,7 @@ inspired by the excellent [Sequel](http://sequel.rubyforge.org/) library.
 Add it to your Gemfile:
 
 ``` ruby
-gem 'cequel', :require => 'cequel/model'
+gem 'cequel', require: 'cequel/model'
 ```
 
 ### Rails integration ###
@@ -208,7 +208,7 @@ class Post < Cequel::Model::Base
   column :title, :text
   column :body, :text
 
-  validates :body, :presence => true
+  validates :body, presence: true
 
   after_save :notify_followers
 end
@@ -236,14 +236,14 @@ you're overwriting data at an existing record:
 ``` ruby
 # I'm just creating a blog here.
 blog1 = Blog.create!(
-  :subdomain => 'big-data',
-  :name => 'Big Data',
-  :description => 'A blog about all things big data')
+  subdomain: 'big-data',
+  name: 'Big Data',
+  description: 'A blog about all things big data')
 
 # And another new blog.
 blog2 = Blog.create!(
-  :subdomain => 'big-data',
-  :name => 'The Big Data Blog')
+  subdomain: 'big-data',
+  name: 'The Big Data Blog')
 ```
 
 Living in a relational world, we'd expect the second statement to throw an
