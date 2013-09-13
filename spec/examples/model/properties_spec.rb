@@ -10,6 +10,10 @@ describe Cequel::Model::Properties do
       list :tags, :text
       set :categories, :text
       map :shares, :text, :int
+
+      def downcased_title=(downcased_title)
+        self.title = downcased_title.titleize
+      end
     end
 
     it 'should provide accessor for key' do
@@ -37,6 +41,20 @@ describe Cequel::Model::Properties do
 
     it 'should have nil data column value if unset' do
       Post.new.title.should be_nil
+    end
+
+    it 'should allow setting attributes via #attributes=' do
+      Post.new.tap { |post| post.attributes = {:title => 'Big Data' }}.
+        title.should == 'Big Data'
+    end
+
+    it 'should use writers when setting attributes' do
+      Post.new.tap { |post| post.attributes = {:downcased_title => 'big data' }}.
+        title.should == 'Big Data'
+    end
+
+    it 'should take attribute arguments to ::new' do
+      Post.new(:downcased_title => 'big data').title.should == 'Big Data'
     end
 
     it 'should provide accessor for list column' do

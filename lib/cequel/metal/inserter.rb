@@ -5,7 +5,7 @@ module Cequel
     class Inserter < Writer
 
       def initialize(data_set, options = {})
-        @column_names = []
+        @row = {}
         super
       end
 
@@ -16,17 +16,27 @@ module Cequel
       end
 
       def insert(data)
-        data.each_pair do |column_name, value|
-          column_names << column_name
-          prepare_upsert_value(value) do |statement, *values|
-            statements << statement
-            bind_vars.concat(values)
-          end
-        end
+        @row.merge!(data.symbolize_keys)
       end
 
       private
-      attr_reader :column_names
+      attr_reader :row
+
+      def column_names
+        row.keys
+      end
+
+      def statements
+        [].tap do |statements|
+          row.each_pair do |column_name, value|
+            column_names << column_name
+            prepare_upsert_value(value) do |statement, *values|
+              statements << statement
+              bind_vars.concat(values)
+            end
+          end
+        end
+      end
 
       def write_to_statement(statement)
         statement.append("INSERT INTO #{table_name}")

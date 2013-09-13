@@ -12,8 +12,15 @@ require 'cequel/model/associations'
 require 'cequel/model/association_collection'
 require 'cequel/model/belongs_to_association'
 require 'cequel/model/has_many_association'
+require 'cequel/model/mass_assignment'
+require 'cequel/model/callbacks'
+require 'cequel/model/validations'
 
 require 'cequel/model/base'
+
+if defined? Rails
+  require 'cequel/model/railtie'
+end
 
 module Cequel
   module Model
