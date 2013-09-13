@@ -41,6 +41,16 @@ module Cequel
         instance_eval(&block) if block
       end
 
+      def inspect
+        inspected_attributes = attributes.each_pair.map do |attr, value|
+          inspected_value = value.is_a?(CassandraCQL::UUID) ?
+            value.to_guid :
+            value.inspect
+          "#{attr}: #{inspected_value}"
+        end
+        "#<#{self.class} #{inspected_attributes.join(", ")}>"
+      end
+
       protected
       attr_reader :collection_proxies
 
