@@ -17,7 +17,7 @@ inspired by the excellent [Sequel](http://sequel.rubyforge.org/) library.
 Add it to your Gemfile:
 
 ``` ruby
-gem 'cequel', require: 'cequel/model'
+gem 'cequel', '1.0.0.pre.1', require: 'cequel/model'
 ```
 
 ### Rails integration ###
