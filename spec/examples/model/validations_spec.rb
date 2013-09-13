@@ -7,6 +7,9 @@ describe Cequel::Model::Validations do
     column :body, :text
 
     validates :title, :presence => true
+    before_validation { |post| post.called_validate_callback = true }
+
+    attr_accessor :called_validate_callback
   end
 
   let(:invalid_post) do
@@ -62,50 +65,35 @@ describe Cequel::Model::Validations do
   end
 
   describe '#update_attributes!' do
-    before { pending 'update_attributes' }
-    let(:post) do
-      connection.stub(:execute).with("SELECT * FROM posts WHERE ? = ? LIMIT 1", :id, 1).
-        and_return result_stub(:id => 1, :blog_id => 1, :title => 'Cequel')
-      Post.find(1)
-    end
-
-    it 'should change attributes and save them if valid' do
-      connection.should_receive(:execute).
-        with "UPDATE posts SET ? = ? WHERE ? = ?", 'body', 'Cequel cequel', :id, 1
-      post.update_attributes!(:body => 'Cequel cequel')
-    end
-
-    it 'should raise error if not valid' do
-      post.require_title = true
-      expect { post.update_attributes!(:title => nil) }.
+    it 'should raise error and not update data in the database' do
+      expect { invalid_post.update_attributes!(:body => 'My Post') }.
         to raise_error(Cequel::Model::RecordInvalid)
+    end
+
+    it 'should return successfully and update data in the database if valid' do
+      invalid_post.update_attributes!(:title => 'My Post')
+      Post.find(invalid_post.permalink).title.should == 'My Post'
     end
   end
 
   describe '::create!' do
-    before { pending 'create' }
     it 'should raise RecordInvalid and not persist model if invalid' do
       expect do
-        Post.create!(:id => 1, :body => 'Cequel')
+        Post.create!(:permalink => 'cequel', :body => 'Cequel')
       end.to raise_error(Cequel::Model::RecordInvalid)
     end
 
-    it 'should and return model if valid' do
-      connection.should_receive(:execute).
-        with "INSERT INTO posts (?) VALUES (?)", ['id', 'title'], [1, 'Cequel']
-
-      Post.create!(:id => 1, :title => 'Cequel').
-        title.should == 'Cequel'
+    it 'should persist record to database if valid' do
+      Post.create!(:permalink => 'cequel', :title => 'Cequel')
+      Post.find('cequel').title.should == 'Cequel'
     end
   end
 
   describe 'callbacks' do
-    before { pending 'callbacks' }
-
     it 'should call validation callbacks' do
-      post = Post.new(:id => 1)
+      post = Post.new(:title => 'cequel')
       post.valid?
-      post.should have_callback(:validation)
+      post.called_validate_callback.should be_true
     end
   end
 end
