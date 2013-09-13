@@ -20,7 +20,7 @@ module Cequel
         :instance_writer => false
 
       def self.inherited(base)
-        base.table_name = base.name.tableize.to_sym
+        base.table_name = base.name.tableize.to_sym unless base.name.nil?
         base.default_attributes = {}
       end
 
