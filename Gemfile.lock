@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cequel (0.5.3)
+    cequel (1.0.0.pre.1)
       activemodel
       activesupport (>= 3.1)
       cassandra-cql (~> 1.2)
@@ -24,8 +24,7 @@ GEM
     appraisal (0.5.2)
       bundler
       rake
-    atomic (1.1.13)
-    atomic (1.1.13-java)
+    atomic (1.1.14)
     backports (3.3.3)
     builder (3.1.4)
     byebug (1.8.2)
@@ -104,9 +103,7 @@ GEM
     slop (3.4.6)
     spoon (0.0.4)
       ffi
-    thread_safe (0.1.2)
-      atomic
-    thread_safe (0.1.2-java)
+    thread_safe (0.1.3)
       atomic
     thrift (0.8.0)
     thrift_client (0.8.4)
