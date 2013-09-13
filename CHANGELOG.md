@@ -2,6 +2,21 @@
 
 * Essentially a ground-up rewrite to support CQL3
 
+## 0.5.6
+
+* Ability to change default consistency within a block
+
+## 0.5.5
+
+* Calling ::load on a loaded Dictionary is a no-op
+
+## 0.5.4
+
+* Clear out Dictionary @row on save unless loaded
+* Add homepage link so rubygems users can easily get to github
+* Add link to cequel-migrations-rails to README
+* Use parameters for pooling
+
 ## 0.5.3
 
 * Persist Dictionary changes in batches

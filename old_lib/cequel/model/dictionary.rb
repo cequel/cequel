@@ -81,6 +81,7 @@ module Cequel
         @deleted_columns.each_slice(batch_size) do |slice|
           scope.delete(*slice.to_a) if slice.any?
         end
+        @row.clear unless @loaded
         @changed_columns.clear
         @deleted_columns.clear
         self
