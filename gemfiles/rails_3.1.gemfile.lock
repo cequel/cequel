@@ -1,7 +1,7 @@
 PATH
   remote: /Users/mat/Projects/cequel
   specs:
-    cequel (0.5.3)
+    cequel (1.0.0.pre.1)
       activemodel
       activesupport (>= 3.1)
       cassandra-cql (~> 1.2)
@@ -37,7 +37,7 @@ GEM
     faraday_middleware (0.9.0)
       faraday (>= 0.7.4, < 0.9)
     ffi (1.9.0)
-    gh (0.11.3)
+    gh (0.13.0)
       addressable
       backports
       faraday (~> 0.8)
@@ -50,8 +50,8 @@ GEM
     launchy (2.3.0)
       addressable (~> 2.3)
     method_source (0.8.2)
-    mime-types (1.24)
-    multi_json (1.7.9)
+    mime-types (1.25)
+    multi_json (1.8.0)
     multipart-post (1.2.0)
     mustache (0.99.4)
     net-http-persistent (2.9)
@@ -80,26 +80,28 @@ GEM
     ruby-hmac (0.4.0)
     simple_uuid (0.3.0)
     slop (3.4.6)
+    terminal-notifier (1.5.1)
     thrift (0.8.0)
     thrift_client (0.8.4)
       thrift (~> 0.8.0)
-    travis (1.5.3)
+    travis (1.5.4)
       backports
       faraday (~> 0.8.7)
       faraday_middleware (~> 0.9)
-      gh
+      gh (~> 0.13)
       highline (~> 1.6)
       launchy (~> 2.1)
       netrc (~> 0.7)
       pry (~> 0.9)
       pusher-client (~> 0.3, >= 0.3.1)
-      typhoeus (~> 0.5)
+      terminal-notifier (>= 1.4.2)
+      typhoeus (~> 0.6)
     travis-lint (1.7.0)
       hashr (~> 0.0.22)
     typhoeus (0.6.5)
       ethon (~> 0.6.1)
     websocket (1.0.7)
-    yard (0.8.7)
+    yard (0.8.7.1)
 
 PLATFORMS
   ruby
