@@ -92,6 +92,16 @@ module Cequel
 
       end
 
+      def attribute_names
+        @attributes.keys
+      end
+
+      def attributes
+        attribute_names.each_with_object({}) do |name, attributes|
+          attributes[name] = read_attribute(name)
+        end
+      end
+
       def attributes=(attributes)
         attributes.each_pair do |attribute, value|
           __send__(:"#{attribute}=", value)
@@ -102,7 +112,7 @@ module Cequel
       delegate :table_schema, :to => 'self.class'
 
       def read_attribute(name)
-        attributes.fetch(name)
+        @attributes.fetch(name)
       rescue KeyError
         if table_schema.column(name)
           raise MissingAttributeError, "missing attribute: #{name}"
@@ -115,7 +125,7 @@ module Cequel
         column = table_schema.column(name)
         raise UnknownAttributeError,
           "unknown attribute: #{name}" unless column
-        attributes[name] = value.nil? ? nil : column.cast(value)
+        @attributes[name] = value.nil? ? nil : column.cast(value)
       end
 
       private

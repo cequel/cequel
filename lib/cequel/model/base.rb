@@ -9,15 +9,15 @@ module Cequel
       include Cequel::Model::Persistence
       include Cequel::Model::Associations
       extend Cequel::Model::Scoped
-      extend ActiveModel::Naming
-
       include Cequel::Model::MassAssignment
       include Cequel::Model::Callbacks
       include Cequel::Model::Validations
+      extend ActiveModel::Naming
+      include ActiveModel::Serializers::JSON
+      include ActiveModel::Serializers::Xml
 
       class_attribute :table_name, :connection, :default_attributes,
         :instance_writer => false
-      attr_reader :attributes
 
       def self.inherited(base)
         base.table_name = name.tableize.to_sym
