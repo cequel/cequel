@@ -252,6 +252,24 @@ above code will just overwrite the `name` in that row.  Note that the
 `description` will not be touched by the second statement; upserts only work on
 the columns that are given.
 
+## Compatibility ##
+
+### Rails ###
+
+* 4.0
+* 3.2
+* 3.1
+
+### Ruby ###
+
+* 2.0
+* 1.9.3
+* Rubinius 1.0 in 1.9 mode
+
+### Cassandra ###
+
+* Cassandra 1.2
+
 ## Support & Bugs ##
 
 If you find a bug, feel free to
