@@ -1,3 +1,7 @@
+## 1.0.0.pre.1
+
+* Essentially a ground-up rewrite to support CQL3
+
 ## 0.5.3
 
 * Persist Dictionary changes in batches
