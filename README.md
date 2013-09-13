@@ -208,7 +208,7 @@ class Post < Cequel::Model::Base
   column :title, :text
   column :body, :text
 
-  validates :body, :presence =&gt; true
+  validates :body, :presence => true
 
   after_save :notify_followers
 end
