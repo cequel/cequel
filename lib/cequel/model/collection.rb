@@ -10,6 +10,7 @@ module Cequel
       extend Forwardable
 
       def_delegators :@model, :loaded?, :updater, :deleter
+      def_delegators :__getobj__, :clone, :dup
 
       attr_reader :column_name
 
@@ -50,7 +51,9 @@ module Cequel
       private
 
       def to_modify(&block)
-        if loaded? then block.()
+        if loaded?
+          @model.__send__("#{@column_name}_will_change!")
+          block.()
         else modifications << block
         end
         self
@@ -175,6 +178,7 @@ module Cequel
         updater.set_add(column_name, object)
         to_modify { super }
       end
+      alias_method :<<, :add
 
       def clear
         deleter.delete_columns(column_name)

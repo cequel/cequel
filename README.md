@@ -196,10 +196,11 @@ the `categories` set.
 
 ### ActiveModel Support ###
 
-Cequel supports most ActiveModel functionality, such as callbacks, validations,
-naming, and serialization. If you're using Rails 3, mass-assignment protection
-works as usual, and in Rails 4, strong parameters are treated correctly. So we
-can add some extra ActiveModel goodness to our post model:
+Cequel supports ActiveModel functionality, such as callbacks, validations,
+dirty attribute tracking, naming, and serialization. If you're using Rails 3,
+mass-assignment protection works as usual, and in Rails 4, strong parameters are
+treated correctly. So we can add some extra ActiveModel goodness to our post
+model:
 
 ```ruby
 class Post < Cequel::Model::Base
@@ -217,6 +218,8 @@ end
 Note that validations or callbacks that need to read data attributes will cause
 unloaded models to load their row during the course of the save operation, so if
 you are following a write-without-reading pattern, you will need to be careful.
+
+Dirty attribute tracking is only enabled on loaded models.
 
 ### CQL Gotchas ###
 
