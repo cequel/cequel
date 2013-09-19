@@ -15,6 +15,7 @@ require 'cequel/model/has_many_association'
 require 'cequel/model/mass_assignment'
 require 'cequel/model/callbacks'
 require 'cequel/model/validations'
+require 'cequel/model/dirty'
 
 require 'cequel/model/base'
 

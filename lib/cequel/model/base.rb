@@ -12,6 +12,7 @@ module Cequel
       include Cequel::Model::MassAssignment
       include Cequel::Model::Callbacks
       include Cequel::Model::Validations
+      include Cequel::Model::Dirty
       extend ActiveModel::Naming
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml
