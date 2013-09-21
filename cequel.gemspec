@@ -7,11 +7,12 @@ Gem::Specification.new do |s|
   s.homepage = "https://github.com/cequel/cequel"
   s.email = 'mat.a.brown@gmail.com'
   s.license = 'MIT'
-  s.summary = 'Query abstraction layer and object-row mapper for Cassandra and CQL'
+  s.summary = 'Full-featured, ActiveModel-compliant ORM for Cassandra using CQL3'
   s.description = <<DESC
-Cequel is a lightweight query abstraction layer for Cassandra's CQL language. It
-also provides Cequel::Model, which is an ActiveModel-compliant object-row mapper
-for Cassandra. Cequel is heavily inspired by the Sequel library.
+Cequel is an ActiveRecord-like domain model layer for Cassandra that exposes
+the robust data modeling capabilities of CQL3, including parent-child
+relationships via compound primary keys and in-memory atomic manipulation of
+collection columns.
 DESC
 
   s.files = Dir['lib/**/*.rb', 'spec/**/*.rb']
