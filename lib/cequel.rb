@@ -7,7 +7,7 @@ require 'cequel/metal'
 require 'cequel/schema'
 require 'cequel/type'
 require 'cequel/util'
-require 'cequel/model'
+require 'cequel/record'
 
 module Cequel
   def self.connect(configuration = nil)

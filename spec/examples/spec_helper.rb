@@ -1,5 +1,5 @@
 require File.expand_path('../../environment', __FILE__)
-require 'cequel/model'
+require 'cequel'
 
 Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |file|
   require file
@@ -27,7 +27,7 @@ RSpec.configure do |config|
       CREATE KEYSPACE #{keyspace}
       WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}
     CQL
-    Cequel::Model::Base.connection = cequel
+    Cequel::Record::Base.connection = cequel
   end
 
   config.after(:all) do
