@@ -1,3 +1,11 @@
+## 1.0.0.pre.2
+
+* Secondary index support
+* Dirty attribute tracking
+* == implementation for model
+* Add missing attributes argument to #create!
+* Load cequel/model by default
+
 ## 1.0.0.pre.1
 
 * Essentially a ground-up rewrite to support CQL3
