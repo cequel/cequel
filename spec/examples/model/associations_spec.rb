@@ -16,7 +16,7 @@ describe Cequel::Model::Associations do
 
   model :Post do
     belongs_to :blog
-    key :id, :uuid
+    key :id, :uuid, auto: true
     column :title, :text
   end
 
@@ -84,7 +84,6 @@ describe Cequel::Model::Associations do
       3.times.map do |i|
         Post.new do |post|
           post.blog = blog
-          post.id = CassandraCQL::UUID.new
           post.title = "Post #{i}"
         end.tap(&:save)
       end
@@ -93,7 +92,6 @@ describe Cequel::Model::Associations do
       3.times.map do |i|
         Post.new do |post|
           post.blog_subdomain = 'mycat'
-          post.id = CassandraCQL::UUID.new
           post.title = "My Cat #{i}"
         end.tap(&:save)
       end
