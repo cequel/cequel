@@ -51,7 +51,8 @@ module Cequel
       end
 
       def keys_cql
-        partition_cql = table.partition_keys.map { |key| key.name }.join(', ')
+        partition_cql = table.partition_key_columns.
+          map { |key| key.name }.join(', ')
         if table.clustering_columns.any?
           nonpartition_cql =
             table.clustering_columns.map { |key| key.name }.join(', ')

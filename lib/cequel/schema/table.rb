@@ -8,7 +8,7 @@ module Cequel
 
       attr_reader :name,
                   :columns,
-                  :partition_keys,
+                  :partition_key_columns,
                   :clustering_columns,
                   :data_columns,
                   :properties
@@ -16,13 +16,13 @@ module Cequel
 
       def initialize(name)
         @name = name
-        @partition_keys, @clustering_columns, @data_columns = [], [], []
+        @partition_key_columns, @clustering_columns, @data_columns = [], [], []
         @columns, @columns_by_name = [], {}
         @properties = ActiveSupport::HashWithIndifferentAccess.new
       end
 
       def add_key(name, type, clustering_order = nil)
-        if @partition_keys.empty?
+        if @partition_key_columns.empty?
           unless clustering_order.nil?
             raise ArgumentError,
               "Can't set clustering order for partition key #{name}"
@@ -35,7 +35,7 @@ module Cequel
 
       def add_partition_key(name, type)
         column = PartitionKey.new(name, type(type))
-        @partition_keys << add_column(column)
+        @partition_key_columns << add_column(column)
       end
 
       def add_clustering_column(name, type, clustering_order = nil)
@@ -71,7 +71,7 @@ module Cequel
       end
 
       def key_columns
-        @partition_keys + @clustering_columns
+        @partition_key_columns + @clustering_columns
       end
 
       def key_column_names
@@ -79,7 +79,7 @@ module Cequel
       end
 
       def partition_key(name)
-        @partition_keys.find { |column| column.name == name }
+        @partition_key_columns.find { |column| column.name == name }
       end
 
       def clustering_column(name)

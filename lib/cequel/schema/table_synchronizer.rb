@@ -86,15 +86,15 @@ module Cequel
       end
 
       def each_key_pair(&block)
-        if existing.partition_keys.length != updated.partition_keys.length
+        if existing.partition_key_columns.length != updated.partition_key_columns.length
           raise InvalidSchemaMigration,
-            "Existing partition keys #{existing.partition_keys.map { |key| key.name }.join(',')} differ from specified partition keys #{updated.partition_keys.map { |key| key.name }.join(',')}"
+            "Existing partition keys #{existing.partition_key_columns.map { |key| key.name }.join(',')} differ from specified partition keys #{updated.partition_key_columns.map { |key| key.name }.join(',')}"
         end
         if existing.clustering_columns.length != updated.clustering_columns.length
           raise InvalidSchemaMigration,
             "Existing clustering keys #{existing.clustering_columns.map { |key| key.name }.join(',')} differ from specified clustering keys #{updated.clustering_columns.map { |key| key.name }.join(',')}"
         end
-        existing.partition_keys.zip(updated.partition_keys, &block)
+        existing.partition_key_columns.zip(updated.partition_key_columns, &block)
         existing.clustering_columns.zip(updated.clustering_columns, &block)
       end
 

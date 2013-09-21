@@ -20,7 +20,7 @@ describe Cequel::Model::Schema do
   context 'new model with simple primary key' do
     before { model.synchronize_schema }
 
-    its(:partition_keys) { should == [Cequel::Schema::Column.new(:permalink, :text)] }
+    its(:partition_key_columns) { should == [Cequel::Schema::Column.new(:permalink, :text)] }
     its(:data_columns) { should include(Cequel::Schema::Column.new(:title, :text)) }
     its(:data_columns) { should include(Cequel::Schema::List.new(:categories, :text)) }
     its(:data_columns) { should include(Cequel::Schema::Set.new(:tags, :text)) }

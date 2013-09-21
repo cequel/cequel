@@ -19,11 +19,11 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create key alias' do
-        table.partition_keys.map(&:name).should == [:permalink]
+        table.partition_key_columns.map(&:name).should == [:permalink]
       end
 
       it 'should set key validator' do
-        table.partition_keys.map(&:type).should == [Cequel::Type[:ascii]]
+        table.partition_key_columns.map(&:type).should == [Cequel::Type[:ascii]]
       end
 
       it 'should set non-key columns' do
@@ -42,11 +42,11 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create key alias' do
-        table.partition_keys.map(&:name).should == [:blog_subdomain]
+        table.partition_key_columns.map(&:name).should == [:blog_subdomain]
       end
 
       it 'should set key validator' do
-        table.partition_keys.map(&:type).should == [Cequel::Type[:ascii]]
+        table.partition_key_columns.map(&:type).should == [Cequel::Type[:ascii]]
       end
 
       it 'should create non-partition key components' do
@@ -68,11 +68,11 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create all partition key components' do
-        table.partition_keys.map(&:name).should == [:blog_subdomain, :permalink]
+        table.partition_key_columns.map(&:name).should == [:blog_subdomain, :permalink]
       end
 
       it 'should set key validators' do
-        table.partition_keys.map(&:type).
+        table.partition_key_columns.map(&:type).
           should == [Cequel::Type[:ascii], Cequel::Type[:ascii]]
       end
     end
@@ -88,12 +88,12 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create all partition key components' do
-        table.partition_keys.map(&:name).
+        table.partition_key_columns.map(&:name).
           should == [:blog_subdomain, :permalink]
       end
 
       it 'should set key validators' do
-        table.partition_keys.map(&:type).
+        table.partition_key_columns.map(&:type).
           should == [Cequel::Type[:ascii], Cequel::Type[:ascii]]
       end
 

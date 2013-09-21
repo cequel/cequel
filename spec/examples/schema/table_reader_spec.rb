@@ -14,11 +14,11 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read name correctly' do
-      table.partition_keys.first.name.should == :permalink
+      table.partition_key_columns.first.name.should == :permalink
     end
 
     it 'should read type correctly' do
-      table.partition_keys.first.type.should be_a(Cequel::Type::Text)
+      table.partition_key_columns.first.type.should be_a(Cequel::Type::Text)
     end
 
     it 'should have no nonpartition keys' do
@@ -38,11 +38,11 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read partition key name' do
-      table.partition_keys.map(&:name).should == [:blog_subdomain]
+      table.partition_key_columns.map(&:name).should == [:blog_subdomain]
     end
 
     it 'should read partition key type' do
-      table.partition_keys.map(&:type).should == [Cequel::Type::Text.instance]
+      table.partition_key_columns.map(&:type).should == [Cequel::Type::Text.instance]
     end
 
     it 'should read non-partition key name' do
@@ -124,11 +124,11 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read partition key names' do
-      table.partition_keys.map(&:name).should == [:blog_subdomain, :permalink]
+      table.partition_key_columns.map(&:name).should == [:blog_subdomain, :permalink]
     end
 
     it 'should read partition key types' do
-      table.partition_keys.map(&:type).
+      table.partition_key_columns.map(&:type).
         should == [Cequel::Type::Text.instance, Cequel::Type::Ascii.instance]
     end
 
@@ -153,11 +153,11 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read partition key names' do
-      table.partition_keys.map(&:name).should == [:blog_subdomain, :permalink]
+      table.partition_key_columns.map(&:name).should == [:blog_subdomain, :permalink]
     end
 
     it 'should read partition key types' do
-      table.partition_keys.map(&:type).
+      table.partition_key_columns.map(&:type).
         should == [Cequel::Type::Text.instance, Cequel::Type::Ascii.instance]
     end
 
