@@ -221,6 +221,47 @@ Cequel would send the CQL equivalent of "Add the category 'Kittens' to the post
 at the given `(blog_subdomain, id)`", without ever reading the saved value of
 the `categories` set.
 
+### Secondary indexes ###
+
+Cassandra supports secondary indexes, although with notable restrictions:
+
+* Only scalar data columns can be indexed; key columns and collection columns
+  cannot.
+* A secondary index consists of exactly one column.
+* Though you can have more than one secondary index on a table, you can only use
+  one in any given query.
+
+Cequel supports the `:index` option to add secondary indexes to column
+definitions:
+
+```ruby
+class Post < Cequel::Model::Base
+  belongs_to :blog
+  key :id, :uuid
+  column :title, :text
+  column :body, :text
+  column :author_id, :uuid, :index => true
+  set :categories, :text
+end
+```
+
+Defining a column with a secondary index adds several "magic methods" for using
+the index:
+
+```ruby
+Post.with_author_id(id) # returns a record set scoped to that author_id
+Post.find_by_author_id(id) # returns the first post with that author_id
+Post.find_all_by_author_id(id) # returns an array of all posts with that author_id
+```
+
+You can also call the `where` method directly on record sets:
+
+```ruby
+Post.where(:author_id, id)
+```
+
+Note that `where` is only for 
+
 ### ActiveModel Support ###
 
 Cequel supports ActiveModel functionality, such as callbacks, validations,

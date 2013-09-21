@@ -7,6 +7,7 @@ module Cequel
     RecordNotFound = Class.new(StandardError)
     InvalidRecordConfiguration = Class.new(StandardError)
     RecordInvalid = Class.new(StandardError)
+    IllegalQuery = Class.new(StandardError)
 
   end
 

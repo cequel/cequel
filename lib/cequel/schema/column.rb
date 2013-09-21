@@ -10,6 +10,22 @@ module Cequel
         @name, @type = name, type
       end
 
+      def key?
+        partition_key? || clustering_column?
+      end
+
+      def partition_key?
+        false
+      end
+
+      def clustering_column?
+        false
+      end
+
+      def data_column?
+        !key?
+      end
+
       def to_cql
         "#{@name} #{@type}"
       end
@@ -53,8 +69,8 @@ module Cequel
         "#{@name} #{@clustering_order}"
       end
 
-      def partition_key?
-        false
+      def clustering_column?
+        true
       end
 
     end

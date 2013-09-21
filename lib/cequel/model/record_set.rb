@@ -40,6 +40,19 @@ module Cequel
         scoped(:row_limit => count)
       end
 
+      def where(column_name, value)
+        column = clazz.table_schema.column(column_name)
+        raise IllegalQuery,
+          "Can't scope by more than one indexed column in the same query" if scoped_indexed_column
+        raise ArgumentError,
+          "No column #{column_name} configured for #{clazz.name}" unless column
+        raise ArgumentError,
+          "Use the `at` method to restrict scope by primary key" unless column.data_column?
+        raise ArgumentError,
+          "Can't scope by non-indexed column #{column_name}" unless column.indexed?
+        scoped(scoped_indexed_column: {column_name => value})
+      end
+
       def at(*scoped_key_values)
         scoped do |attributes|
           attributes[:scoped_key_values].concat(scoped_key_values)
@@ -129,7 +142,7 @@ module Cequel
       protected
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
-        :lower_bound, :upper_bound
+        :lower_bound, :upper_bound, :scoped_indexed_column
 
       def next_batch_from(row)
         after(row[range_key_name])
@@ -198,6 +211,7 @@ module Cequel
           fragment = construct_bound_fragment(upper_bound, '<')
           data_set = data_set.where(fragment, upper_bound.value)
         end
+        data_set = data_set.where(scoped_indexed_column) if scoped_indexed_column
         data_set
       end
 
