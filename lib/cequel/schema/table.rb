@@ -34,13 +34,15 @@ module Cequel
       end
 
       def add_partition_key(name, type)
-        column = PartitionKey.new(name, type(type))
-        @partition_key_columns << add_column(column)
+        PartitionKey.new(name, type(type)).tap do |column|
+          @partition_key_columns << add_column(column)
+        end
       end
 
       def add_clustering_column(name, type, clustering_order = nil)
-        column = ClusteringColumn.new(name, type(type), clustering_order)
-        @clustering_columns << add_column(column)
+        ClusteringColumn.new(name, type(type), clustering_order).tap do |column|
+          @clustering_columns << add_column(column)
+        end
       end
 
       def add_data_column(name, type, index_name)
@@ -50,20 +52,27 @@ module Cequel
       end
 
       def add_list(name, type)
-        @data_columns << add_column(List.new(name, type(type)))
+        List.new(name, type(type)).tap do |column|
+          @data_columns << add_column(column)
+        end
       end
 
       def add_set(name, type)
-        @data_columns << add_column(Set.new(name, type(type)))
+        Set.new(name, type(type)).tap do |column|
+          @data_columns << add_column(column)
+        end
       end
 
       def add_map(name, key_type, value_type)
-        @data_columns <<
-          add_column(Map.new(name, type(key_type), type(value_type)))
+        Map.new(name, type(key_type), type(value_type)).tap do |column|
+          @data_columns << add_column(column)
+        end
       end
 
       def add_property(name, value)
-        @properties[name] = TableProperty.new(name, value)
+        TableProperty.new(name, value).tap do |property|
+          @properties[name] = property
+        end
       end
 
       def column(name)
