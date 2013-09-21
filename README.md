@@ -260,7 +260,8 @@ You can also call the `where` method directly on record sets:
 Post.where(:author_id, id)
 ```
 
-Note that `where` is only for 
+Note that `where` is only for secondary indexed columns; use `at` to scope
+record sets by primary keys.
 
 ### ActiveModel Support ###
 
