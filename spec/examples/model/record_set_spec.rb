@@ -12,13 +12,15 @@ describe Cequel::Model::RecordSet do
     key :permalink, :text
     column :title, :text
     column :body, :text
-    column :author_id, :uuid
+    column :author_id, :uuid, :index => true
+    column :author_name, :text, :index => true
     list :tags, :text
     set :categories, :text
     map :shares, :text, :int
   end
 
   let(:subdomains) { [] }
+  let(:uuids) { Array.new(2) { CassandraCQL::UUID.new }}
 
   before do
     cequel.batch do
@@ -36,7 +38,8 @@ describe Cequel::Model::RecordSet do
           :blog_subdomain => 'cassandra',
           :permalink => "cequel#{i}",
           :title => "Cequel #{i}",
-          :body => "Post number #{i}"
+          :body => "Post number #{i}",
+          :author_id => uuids[i%2]
         )
         cequel[:posts].insert(
           :blog_subdomain => 'postgres',
@@ -273,6 +276,34 @@ describe Cequel::Model::RecordSet do
         Blog.all.select { |p| p.subdomain[/\d+/].to_i.even? }.
           map(&:subdomain).should =~ %w(blog-0 blog-2)
       end
+    end
+  end
+
+  describe '#where' do
+    it 'should correctly query for secondary indexed columns' do
+      Post.where(:author_id, uuids.first).map(&:permalink).
+        should == %w(cequel0 cequel2 cequel4)
+    end
+
+    it 'should raise ArgumentError if column is not recognized' do
+      expect { Post.where(:bogus, 'Business') }.
+        to raise_error(ArgumentError)
+    end
+
+    it 'should raise ArgumentError if column is not indexed' do
+      expect { Post.where(:title, 'Cequel 0') }.
+        to raise_error(ArgumentError)
+    end
+
+    it 'should raise ArgumentError if column is a key' do
+      expect { Post.where(:permalink, 'cequel0') }.
+        to raise_error(ArgumentError)
+    end
+
+    it 'should raise IllegalQuery if applied twice' do
+      expect { Post.where(:author_id, uuids.first).
+        where(:author_name, 'Mat Brown') }.
+        to raise_error(Cequel::Model::IllegalQuery)
     end
   end
 

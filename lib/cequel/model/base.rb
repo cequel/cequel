@@ -9,6 +9,7 @@ module Cequel
       include Cequel::Model::Persistence
       include Cequel::Model::Associations
       extend Cequel::Model::Scoped
+      extend Cequel::Model::SecondaryIndexes
       include Cequel::Model::MassAssignment
       include Cequel::Model::Callbacks
       include Cequel::Model::Validations

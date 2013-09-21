@@ -119,6 +119,33 @@ Blog.synchronize_schema
 Post.synchronize_schema
 ```
 
+### Record sets ###
+
+Record sets are lazy-loaded collections of records that correspond to a
+particular CQL query. They behave similarly to ActiveRecord scopes:
+
+```ruby
+Post.select(:id, :title).reverse.limit(10)
+```
+
+To scope a record set to a primary key value, use the `at` method. This will
+define a scoped value for the first unscoped primary key in the record set:
+
+```ruby
+Post.at('bigdata') # scopes posts with blog_subdomain="bigdata"
+```
+
+To select ranges of data, use `before`, `after`, `from`, `upto`, and `in`. Like
+the `at` method, these methods operate on the first unscoped primary key:
+
+```ruby
+Post.at('bigdata').after(last_id) # scopes posts with blog_subdomain="bigdata" and id > last_id
+```
+
+Note that record sets always load records in batches; Cassandra does not support
+result sets of unbounded size. This process is transparent to you but you'll see
+multiple queries in your logs if you're iterating over a huge result set.
+
 ### Updating records ###
 
 When you update an existing record, Cequel will only write statements to the
@@ -193,6 +220,47 @@ If we were to then update a post like so:
 Cequel would send the CQL equivalent of "Add the category 'Kittens' to the post
 at the given `(blog_subdomain, id)`", without ever reading the saved value of
 the `categories` set.
+
+### Secondary indexes ###
+
+Cassandra supports secondary indexes, although with notable restrictions:
+
+* Only scalar data columns can be indexed; key columns and collection columns
+  cannot.
+* A secondary index consists of exactly one column.
+* Though you can have more than one secondary index on a table, you can only use
+  one in any given query.
+
+Cequel supports the `:index` option to add secondary indexes to column
+definitions:
+
+```ruby
+class Post < Cequel::Model::Base
+  belongs_to :blog
+  key :id, :uuid
+  column :title, :text
+  column :body, :text
+  column :author_id, :uuid, :index => true
+  set :categories, :text
+end
+```
+
+Defining a column with a secondary index adds several "magic methods" for using
+the index:
+
+```ruby
+Post.with_author_id(id) # returns a record set scoped to that author_id
+Post.find_by_author_id(id) # returns the first post with that author_id
+Post.find_all_by_author_id(id) # returns an array of all posts with that author_id
+```
+
+You can also call the `where` method directly on record sets:
+
+```ruby
+Post.where(:author_id, id)
+```
+
+Note that `where` is only for 
 
 ### ActiveModel Support ###
 
