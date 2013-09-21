@@ -9,7 +9,7 @@ module Cequel
       def_delegators :current_scope, *RecordSet.instance_methods(false)
 
       def current_scope
-        RecordSet.new(self)
+        RecordSet.create(self)
       end
 
     end

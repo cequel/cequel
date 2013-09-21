@@ -5,14 +5,26 @@ module Cequel
     class RecordSet
 
       extend Forwardable
+      extend Cequel::Util::HashAccessors
       include Enumerable
 
       Bound = Struct.new(:value, :inclusive)
 
-      def initialize(clazz)
-        @clazz = clazz
-        @select_columns = []
-        @scoped_key_values = []
+      def self.default_attributes
+        {:scoped_key_values => [], :select_columns => []}
+      end
+
+      def self.create(clazz, attributes = {})
+        attributes = default_attributes.merge!(attributes)
+        if attributes[:scoped_key_values].length >= clazz.partition_key_columns.length
+          SinglePartitionRecordSet.new(clazz, attributes)
+        else
+          RecordSet.new(clazz, attributes)
+        end
+      end
+
+      def initialize(clazz, attributes)
+        @clazz, @attributes = clazz, attributes
       end
 
       def all
@@ -21,18 +33,16 @@ module Cequel
 
       def select(*columns)
         return super if block_given?
-        scoped { |record_set| record_set.select_columns.concat(columns) }
+        scoped { |attributes| attributes[:select_columns].concat(columns) }
       end
 
       def limit(count)
-        scoped { |record_set| record_set.row_limit = count }
+        scoped(:row_limit => count)
       end
 
       def at(*scoped_key_values)
-        record_set_class = next_key_column.partition_key? ?
-          RecordSet : SortableRecordSet
-        scoped(record_set_class) do |record_set|
-          record_set.scoped_key_values.concat(scoped_key_values)
+        scoped do |attributes|
+          attributes[:scoped_key_values].concat(scoped_key_values)
         end
       end
 
@@ -58,22 +68,18 @@ module Cequel
       end
 
       def after(start_key)
-        scoped do |record_set|
-          record_set.lower_bound = Bound.new(start_key, false)
-        end
+        scoped(lower_bound: Bound.new(start_key, false))
       end
 
       def before(end_key)
-        scoped do |record_set|
-          record_set.upper_bound = Bound.new(end_key, false)
-        end
+        scoped(upper_bound: Bound.new(end_key, false))
       end
 
       def in(range)
-        scoped do |record_set|
-          record_set.lower_bound = Bound.new(range.first, true)
-          record_set.upper_bound = Bound.new(range.last, !range.exclude_end?)
-        end
+        scoped(
+          lower_bound: Bound.new(range.first, true),
+          upper_bound: Bound.new(range.last, !range.exclude_end?)
+        )
       end
 
       def first(count = nil)
@@ -116,29 +122,17 @@ module Cequel
         end
       end
 
-      protected
-      attr_accessor :row_limit
-      attr_reader :select_columns, :scoped_key_values,
-        :lower_bound, :upper_bound
-
-      def reversed?
-        false
-      end
-
-      def lower_bound=(bound)
-        @lower_bound = bound
-      end
-
-      def upper_bound=(bound)
-        @upper_bound = bound
-      end
-
       def data_set
         @data_set ||= construct_data_set
       end
 
+      protected
+      attr_reader :attributes
+      hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
+        :lower_bound, :upper_bound
+
       def next_batch_from(row)
-        reversed? ? before(row[range_key_name]) : after(row[range_key_name])
+        after(row[range_key_name])
       end
 
       def find_nested_batches_from(row, options, &block)
@@ -176,22 +170,9 @@ module Cequel
         scoped_key_columns.map { |column| column.name }
       end
 
-      def chain_from(collection)
-        @select_columns = collection.select_columns.dup
-        @scoped_key_values = collection.scoped_key_values.dup
-        @lower_bound = collection.lower_bound
-        @upper_bound = collection.upper_bound
-        @row_limit = collection.row_limit
-        self
-      end
-
       private
       attr_reader :clazz
       def_delegators :clazz, :connection
-
-      def scoped(record_set_class = self.class, &block)
-        record_set_class.new(clazz).chain_from(self).tap(&block)
-      end
 
       def next_key_column
         clazz.key_columns[scoped_key_values.length + 1]
@@ -225,52 +206,46 @@ module Cequel
         "TOKEN(#{range_key_name}) #{operator} TOKEN(?)"
       end
 
-    end
-
-    class SortableRecordSet < RecordSet
-
-      def initialize(clazz)
-        super
-        @reversed = false
+      def scoped(new_attributes = {}, &block)
+        attributes_copy = Marshal.load(Marshal.dump(attributes))
+        attributes_copy.merge!(new_attributes)
+        attributes_copy.tap(&block) if block
+        RecordSet.create(clazz, attributes_copy)
       end
 
+    end
+
+    class SinglePartitionRecordSet < RecordSet
+
+      hattr_inquirer :attributes, :reversed
+
       def from(start_key)
-        scoped do |record_set|
-          record_set.lower_bound = Bound.new(start_key, true)
-        end
+        scoped(lower_bound: Bound.new(start_key, true))
       end
 
       def upto(end_key)
-        scoped do |record_set|
-          record_set.upper_bound = Bound.new(end_key, true)
-        end
+        scoped(upper_bound: Bound.new(end_key, true))
       end
 
       def reverse
-        scoped { |scope| scope.reversed = !reversed? }
+        scoped(reversed: !reversed?)
       end
 
       def last
         reverse.first
       end
 
-      def chain_from(collection)
-        super
-        @reversed = collection.reversed?
-        self
+      # @api private
+      def next_batch_from(row)
+        reversed? ? before(row[range_key_name]) : super
       end
 
       protected
-      attr_writer :reversed
 
       def construct_data_set
         data_set = super
         data_set = data_set.order(range_key_name => :desc) if reversed?
         data_set
-      end
-
-      def reversed?
-        @reversed
       end
 
       def construct_bound_fragment(bound, base_operator)
