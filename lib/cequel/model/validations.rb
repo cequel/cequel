@@ -14,7 +14,7 @@ module Cequel
 
       module ClassMethods
 
-        def create!(attributes, &block)
+        def create!(attributes = {}, &block)
           new(attributes, &block).save!
         end
 
