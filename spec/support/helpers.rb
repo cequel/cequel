@@ -13,7 +13,8 @@ module Cequel
           before :all do
             metadata = self.class.metadata
             metadata[:models].each do |name, (options, block)|
-              clazz = Class.new(Cequel::Base) do
+              clazz = Class.new do
+                include Cequel::Record
                 self.table_name = name.to_s.tableize
                 class_eval(&block)
               end
