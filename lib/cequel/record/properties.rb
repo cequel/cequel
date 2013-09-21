@@ -6,6 +6,28 @@ module Cequel
 
       extend ActiveSupport::Concern
 
+      included do
+        class_attribute :default_attributes, :instance_writer => false
+        self.default_attributes = {}
+
+        class <<self; alias_method :new_empty, :new; end
+        extend ConstructorMethods
+
+        attr_reader :collection_proxies
+        private :collection_proxies
+      end
+
+      module ConstructorMethods
+
+        def new(*args, &block)
+          new_empty.tap do |record|
+            record.__send__(:initialize_new_record, *args)
+            yield record if block_given?
+          end
+        end
+
+      end
+
       module ClassMethods
 
         protected
@@ -98,6 +120,11 @@ module Cequel
 
       end
 
+      def initialize(&block)
+        @attributes, @collection_proxies = {}, {}
+        instance_eval(&block) if block
+      end
+
       def attribute_names
         @attributes.keys
       end
@@ -112,6 +139,24 @@ module Cequel
         attributes.each_pair do |attribute, value|
           __send__(:"#{attribute}=", value)
         end
+      end
+
+      def ==(other)
+        if key_values.any? { |value| value.nil? }
+          super
+        else
+          self.class == other.class && key_values == other.key_values
+        end
+      end
+
+      def inspect
+        inspected_attributes = attributes.each_pair.map do |attr, value|
+          inspected_value = value.is_a?(CassandraCQL::UUID) ?
+            value.to_guid :
+            value.inspect
+          "#{attr}: #{inspected_value}"
+        end
+        "#<#{self.class} #{inspected_attributes.join(", ")}>"
       end
 
       protected
@@ -142,6 +187,19 @@ module Cequel
 
       def reset_collection_proxy(name)
         collection_proxies.delete(name)
+      end
+
+      def initialize_new_record(attributes = {})
+        dynamic_defaults = default_attributes.
+          select { |name, value| value.is_a?(Proc) }
+        @attributes = Marshal.load(Marshal.dump(
+          default_attributes.except(*dynamic_defaults.keys)))
+          dynamic_defaults.each { |name, p| @attributes[name] = p.() }
+          @new_record = true
+          yield self if block_given?
+          self.attributes = attributes
+          loaded!
+          self
       end
 
     end

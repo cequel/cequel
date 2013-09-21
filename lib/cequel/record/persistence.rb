@@ -5,8 +5,12 @@ module Cequel
     module Persistence
 
       extend ActiveSupport::Concern
+      extend Forwardable
 
       module ClassMethods
+
+        extend Forwardable
+        def_delegator 'Cequel::Record', :connection
 
         def create(attributes = {}, &block)
           new(attributes, &block).tap { |record| record.save }
@@ -17,6 +21,8 @@ module Cequel
         end
 
       end
+
+      def_delegator 'self.class', :connection
 
       def key_attributes
         @attributes.slice(*self.class.key_column_names)

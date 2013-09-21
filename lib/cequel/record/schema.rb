@@ -6,6 +6,11 @@ module Cequel
 
       extend ActiveSupport::Concern
 
+      included do
+        class_attribute :table_name, :instance_writer => false
+        self.table_name = name.tableize.to_sym unless name.nil?
+      end
+
       module ClassMethods
         extend Forwardable
 
