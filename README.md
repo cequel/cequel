@@ -119,6 +119,33 @@ Blog.synchronize_schema
 Post.synchronize_schema
 ```
 
+### Record sets ###
+
+Record sets are lazy-loaded collections of records that correspond to a
+particular CQL query. They behave similarly to ActiveRecord scopes:
+
+```ruby
+Post.select(:id, :title).reverse.limit(10)
+```
+
+To scope a record set to a primary key value, use the `at` method. This will
+define a scoped value for the first unscoped primary key in the record set:
+
+```ruby
+Post.at('bigdata') # scopes posts with blog_subdomain="bigdata"
+```
+
+To select ranges of data, use `before`, `after`, `from`, `upto`, and `in`. Like
+the `at` method, these methods operate on the first unscoped primary key:
+
+```ruby
+Post.at('bigdata').after(last_id) # scopes posts with blog_subdomain="bigdata" and id > last_id
+```
+
+Note that record sets always load records in batches; Cassandra does not support
+result sets of unbounded size. This process is transparent to you but you'll see
+multiple queries in your logs if you're iterating over a huge result set.
+
 ### Updating records ###
 
 When you update an existing record, Cequel will only write statements to the
