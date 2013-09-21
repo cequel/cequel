@@ -5,7 +5,7 @@ Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
 
 <!--[![Build Status](https://secure.travis-ci.org/outoftime/cequel.png)](http://travis-ci.org/outoftime/cequel) -->
 
-`Cequel::Model` is an ActiveRecord-like domain model layer that exposes
+`Cequel::Record` is an ActiveRecord-like domain model layer that exposes
 the robust data modeling capabilities of CQL3, including parent-child
 relationships via compound primary keys and collection columns.
 
@@ -23,7 +23,7 @@ gem 'cequel', '1.0.0.pre.2'
 ### Rails integration ###
 
 Cequel does not require Rails, but if you are using Rails, you
-will need version 3.2+. Cequel::Model will read from the configuration file
+will need version 3.2+. Cequel::Record will read from the configuration file
 `config/cequel.yml` if it is present. A simple example configuration would look
 like this:
 
@@ -50,7 +50,9 @@ Unlike in ActiveRecord, models declare their properties inline. We'll start with
 a simple `Blog` model:
 
 ```ruby
-class Blog < Cequel::Model::Base
+class Blog
+  include Cequel::Record
+
   key :subdomain, :text
   column :name, :text
   column :description, :text
@@ -70,7 +72,8 @@ to parent-child relationships. Cequel supports this explicitly with the
 as the child of the blog model:
 
 ```ruby
-class Post < Cequel::Model::Base
+class Post
+  include Cequel::Record
   belongs_to :blog
   key :id, :uuid
   column :title, :text
@@ -89,7 +92,9 @@ Practically speaking, this means that posts are accessed using both the
 `has_many` association. Let's add one to `Blog`:
 
 ```ruby
-class Blog < Cequel::Model::Base
+class Blog
+  include Cequel::Record
+
   key :subdomain, :text
   column :name, :text
   column :description, :text
@@ -200,7 +205,9 @@ Let's add a category set to our post model:
 
 
 ```ruby
-class Post < Cequel::Model::Base
+class Post
+  include Cequel::Record
+
   belongs_to :blog
   key :id, :uuid
   column :title, :text
@@ -235,7 +242,9 @@ Cequel supports the `:index` option to add secondary indexes to column
 definitions:
 
 ```ruby
-class Post < Cequel::Model::Base
+class Post
+  include Cequel::Record
+
   belongs_to :blog
   key :id, :uuid
   column :title, :text
@@ -272,7 +281,9 @@ treated correctly. So we can add some extra ActiveModel goodness to our post
 model:
 
 ```ruby
-class Post < Cequel::Model::Base
+class Post
+  include Cequel::Record
+
   belongs_to :blog
   key :id, :uuid
   column :title, :text
