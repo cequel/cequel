@@ -42,6 +42,14 @@ module Cequel
         instance_eval(&block) if block
       end
 
+      def ==(other)
+        if key_values.any? { |value| value.nil? }
+          super
+        else
+          self.class == other.class && key_values == other.key_values
+        end
+      end
+
       def inspect
         inspected_attributes = attributes.each_pair.map do |attr, value|
           inspected_value = value.is_a?(CassandraCQL::UUID) ?
