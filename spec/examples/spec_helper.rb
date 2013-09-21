@@ -27,7 +27,7 @@ RSpec.configure do |config|
       CREATE KEYSPACE #{keyspace}
       WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}
     CQL
-    Cequel::Record::Base.connection = cequel
+    Cequel::Record.connection = cequel
   end
 
   config.after(:all) do

@@ -60,7 +60,8 @@ describe Cequel::Record::Associations do
 
     it 'should not allow declaring belongs_to after key' do
       expect do
-        Class.new(Cequel::Record::Base) do
+        Class.new do
+          include Cequel::Record
           key :permalink, :text
           belongs_to :blog
         end
@@ -69,7 +70,8 @@ describe Cequel::Record::Associations do
 
     it 'should not allow declaring belongs_to more than once' do
       expect do
-        Class.new(Cequel::Record::Base) do
+        Class.new do
+          include Cequel::Record
           belongs_to :blog
           belongs_to :user
         end

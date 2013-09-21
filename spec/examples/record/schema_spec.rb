@@ -5,7 +5,8 @@ describe Cequel::Record::Schema do
   subject { cequel.schema.read_table(:posts) }
 
   let(:model) do
-    Class.new(Cequel::Record::Base) do
+    Class.new do
+      include Cequel::Record
       self.table_name = 'posts'
 
       key :permalink, :text

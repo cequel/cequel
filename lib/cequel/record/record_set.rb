@@ -143,6 +143,8 @@ module Cequel
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
         :lower_bound, :upper_bound, :scoped_indexed_column
+      protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
+        :upper_bound, :scoped_indexed_column
 
       def next_batch_from(row)
         after(row[range_key_name])
@@ -186,6 +188,7 @@ module Cequel
       private
       attr_reader :clazz
       def_delegators :clazz, :connection
+      private :connection
 
       def next_key_column
         clazz.key_columns[scoped_key_values.length + 1]

@@ -4,7 +4,7 @@ module Cequel
 
     class Railtie < Rails::Railtie
 
-      config.cequel = Base
+      config.cequel = Record
 
       initializer "cequel.configure_rails" do
         app_name = Rails.application.railtie_name.sub(/_application$/, '')
@@ -31,7 +31,7 @@ module Cequel
           retry
         end
         connection.logger = Rails.logger
-        Record::Base.connection = connection
+        Record.connection = connection
       end
     end
 

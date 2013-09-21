@@ -137,7 +137,10 @@ describe Cequel::Record::Properties do
 
     it 'should raise ArgumentError if auto specified for non-UUID' do
       expect do
-        Class.new(Cequel::Record::Base) { key :subdomain, :text, auto: true }
+        Class.new do
+          include Cequel::Record
+          key :subdomain, :text, auto: true
+        end
       end.to raise_error(ArgumentError)
     end
 
