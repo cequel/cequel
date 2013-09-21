@@ -162,6 +162,12 @@ module Cequel
         @data_set ||= construct_data_set
       end
 
+      def_delegators :entries, :inspect
+
+      def ==(other)
+        entries == other.to_a
+      end
+
       protected
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
