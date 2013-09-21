@@ -3,7 +3,7 @@ require_relative 'spec_helper'
 describe 'serialization' do
   model :Post do
     key :blog_subdomain, :text
-    key :id, :uuid
+    key :id, :uuid, auto: true
     column :title, :text
     column :body, :text
   end

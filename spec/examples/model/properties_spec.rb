@@ -125,4 +125,25 @@ describe Cequel::Model::Properties do
       Post.new.shares.should == {'facebook' => 0}
     end
   end
+
+  describe 'dynamic property generation' do
+    model :Post do
+      key :id, :uuid, auto: true
+      column :title, :text, default: -> { "Post #{Date.today}" }
+    end
+
+    it 'should auto-generate UUID key' do
+      Post.new.id.should be_a(CassandraCQL::UUID)
+    end
+
+    it 'should raise ArgumentError if auto specified for non-UUID' do
+      expect do
+        Class.new(Cequel::Model::Base) { key :subdomain, :text, auto: true }
+      end.to raise_error(ArgumentError)
+    end
+
+    it 'should run default proc' do
+      Post.new.title.should == "Post #{Date.today}"
+    end
+  end
 end

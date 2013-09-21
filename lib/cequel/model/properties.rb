@@ -10,10 +10,16 @@ module Cequel
 
         protected
 
-        def key(name, type)
+        def key(name, type, options = {})
           def_accessors(name)
-          table_schema.add_key(name, type)
-          set_attribute_default(name, nil)
+          column = table_schema.add_key(name, type)
+          if options.fetch(:auto, false)
+            unless column.type.is_a?(Cequel::Type::Uuid)
+              raise ArgumentError, ":auto option only valid for UUID columns"
+            end
+            default = -> { CassandraCQL::UUID.new } if options.fetch(:auto, false)
+          end
+          set_attribute_default(name, default)
         end
 
         def column(name, type, options = {})

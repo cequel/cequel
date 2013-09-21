@@ -99,7 +99,7 @@ module Cequel
       end
 
       def create
-        inserter.execute
+        metal_scope.insert(attributes.reject { |attr, value| value.nil? })
         loaded!
         persisted!
       end
@@ -110,10 +110,6 @@ module Cequel
           deleter.execute
           @updater, @deleter = nil
         end
-      end
-
-      def inserter
-        @inserter ||= metal_scope.inserter
       end
 
       def updater
@@ -135,9 +131,7 @@ module Cequel
 
       def write_attribute(attribute, value)
         super.tap do
-          if !persisted?
-            inserter.insert(attribute => value) unless value.nil?
-          elsif !self.class.key_column_names.include?(attribute.to_sym)
+          unless new_record?
             if value.nil?
               deleter.delete_columns(attribute)
             else
