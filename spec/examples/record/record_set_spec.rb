@@ -236,6 +236,11 @@ describe Cequel::Record::RecordSet do
     it 'should return the last instance' do
       Post.at('cassandra').last.title.should == "Cequel 4"
     end
+
+    it 'should return the last N instances if specified' do
+      Post.at('cassandra').last(3).map(&:title).
+        should == ["Cequel 2", "Cequel 3", "Cequel 4"]
+    end
   end
 
   describe '#first' do

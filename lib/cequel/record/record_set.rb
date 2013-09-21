@@ -248,8 +248,10 @@ module Cequel
         scoped(reversed: !reversed?)
       end
 
-      def last
-        reverse.first
+      def last(count = nil)
+        reverse.first(count).tap do |results|
+          results.reverse! if count
+        end
       end
 
       # @api private
