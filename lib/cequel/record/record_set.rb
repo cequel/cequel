@@ -2,7 +2,7 @@ module Cequel
 
   module Record
 
-    class RecordSet
+    class RecordSet < SimpleDelegator
 
       extend Forwardable
       extend Cequel::Util::HashAccessors
@@ -17,6 +17,7 @@ module Cequel
       def initialize(clazz, attributes = {})
         attributes = self.class.default_attributes.merge!(attributes)
         @clazz, @attributes = clazz, attributes
+        super(clazz)
       end
 
       def all
@@ -217,6 +218,10 @@ module Cequel
       attr_reader :clazz
       def_delegators :clazz, :connection
       private :connection
+
+      def method_missing(method, *args, &block)
+        clazz.with_scope(self) { super }
+      end
 
       def next_key_column
         clazz.key_columns[scoped_key_values.length + 1]

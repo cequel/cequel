@@ -17,6 +17,10 @@ describe Cequel::Record::RecordSet do
     list :tags, :text
     set :categories, :text
     map :shares, :text, :int
+
+    def self.latest(count)
+      reverse.limit(count)
+    end
   end
 
   let(:subdomains) { [] }
@@ -316,6 +320,17 @@ describe Cequel::Record::RecordSet do
   describe '#count' do
     it 'should count records' do
       Blog.count.should == 3
+    end
+  end
+
+  describe 'scope methods' do
+    it 'should delegate unknown methods to class singleton with current scope' do
+      Post['cassandra'].latest(3).map(&:permalink).
+        should == %w(cequel4 cequel3 cequel2)
+    end
+
+    it 'should raise NoMethodError if undefined method called' do
+      expect { Post['cassandra'].bogus }.to raise_error(NoMethodError)
     end
   end
 
