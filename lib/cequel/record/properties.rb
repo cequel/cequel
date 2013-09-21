@@ -34,9 +34,8 @@ module Cequel
 
         def key(name, type, options = {})
           def_accessors(name)
-          column = table_schema.add_key(name, type)
           if options.fetch(:auto, false)
-            unless column.type.is_a?(Cequel::Type::Uuid)
+            unless Type[type].is_a?(Cequel::Type::Uuid)
               raise ArgumentError, ":auto option only valid for UUID columns"
             end
             default = -> { CassandraCQL::UUID.new } if options.fetch(:auto, false)
@@ -46,30 +45,22 @@ module Cequel
 
         def column(name, type, options = {})
           def_accessors(name)
-          table_schema.add_data_column(name, type, options[:index])
           set_attribute_default(name, options[:default])
         end
 
         def list(name, type, options = {})
           def_collection_accessors(name, List)
-          table_schema.add_list(name, type)
           set_attribute_default(name, options.fetch(:default, []))
         end
 
         def set(name, type, options = {})
           def_collection_accessors(name, Set)
-          table_schema.add_set(name, type)
           set_attribute_default(name, options.fetch(:default, ::Set[]))
         end
 
         def map(name, key_type, value_type, options = {})
           def_collection_accessors(name, Map)
-          table_schema.add_map(name, key_type, value_type)
           set_attribute_default(name, options.fetch(:default, {}))
-        end
-
-        def table_property(name, value)
-          table_schema.add_property(name, value)
         end
 
         private
@@ -160,12 +151,11 @@ module Cequel
       end
 
       protected
-      delegate :table_schema, :to => 'self.class'
 
       def read_attribute(name)
         @attributes.fetch(name)
       rescue KeyError
-        if table_schema.column(name)
+        if self.class.reflect_on_column(name)
           raise MissingAttributeError, "missing attribute: #{name}"
         else
           raise UnknownAttributeError, "unknown attribute: #{name}"
@@ -173,7 +163,7 @@ module Cequel
       end
 
       def write_attribute(name, value)
-        column = table_schema.column(name)
+        column = self.class.reflect_on_column(name)
         raise UnknownAttributeError,
           "unknown attribute: #{name}" unless column
         @attributes[name] = value.nil? ? nil : column.cast(value)
