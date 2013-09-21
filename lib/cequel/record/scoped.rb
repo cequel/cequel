@@ -10,7 +10,7 @@ module Cequel
         *(RecordSet.public_instance_methods(false) - Object.instance_methods)
 
       def current_scope
-        RecordSet.create(self)
+        RecordSet.new(self)
       end
 
     end

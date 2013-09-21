@@ -14,16 +14,8 @@ module Cequel
         {:scoped_key_values => [], :select_columns => []}
       end
 
-      def self.create(clazz, attributes = {})
-        attributes = default_attributes.merge!(attributes)
-        if attributes[:scoped_key_values].length >= clazz.partition_key_columns.length
-          SinglePartitionRecordSet.new(clazz, attributes)
-        else
-          RecordSet.new(clazz, attributes)
-        end
-      end
-
-      def initialize(clazz, attributes)
+      def initialize(clazz, attributes = {})
+        attributes = self.class.default_attributes.merge!(attributes)
         @clazz, @attributes = clazz, attributes
       end
 
@@ -95,8 +87,38 @@ module Cequel
         )
       end
 
+      def from(start_key)
+        unless single_partition?
+          raise IllegalQuery,
+            "Can't construct exclusive range on partition key #{range_key_name}"
+        end
+        scoped(lower_bound: Bound.new(start_key, true))
+      end
+
+      def upto(end_key)
+        unless single_partition?
+          raise IllegalQuery,
+            "Can't construct exclusive range on partition key #{range_key_name}"
+        end
+        scoped(upper_bound: Bound.new(end_key, true))
+      end
+
+      def reverse
+        unless single_partition?
+          raise IllegalQuery,
+            "Can't reverse without scoping to partition key #{range_key_name}"
+        end
+        scoped(reversed: !reversed?)
+      end
+
       def first(count = nil)
         count ? limit(count).entries : limit(1).each.first
+      end
+
+      def last(count = nil)
+        reverse.first(count).tap do |results|
+          results.reverse! if count
+        end
       end
 
       def count
@@ -145,9 +167,11 @@ module Cequel
         :lower_bound, :upper_bound, :scoped_indexed_column
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
         :upper_bound, :scoped_indexed_column
+      hattr_inquirer :attributes, :reversed
+      protected :reversed?
 
       def next_batch_from(row)
-        after(row[range_key_name])
+        reversed? ? before(row[range_key_name]) : after(row[range_key_name])
       end
 
       def find_nested_batches_from(row, options, &block)
@@ -169,12 +193,12 @@ module Cequel
         end
       end
 
-      def range_key
+      def range_key_column
         clazz.key_columns[scoped_key_values.length]
       end
 
       def range_key_name
-        range_key.name
+        range_key_column.name
       end
 
       def scoped_key_columns
@@ -183,6 +207,10 @@ module Cequel
 
       def scoped_key_names
         scoped_key_columns.map { |column| column.name }
+      end
+
+      def single_partition?
+        scoped_key_values.length >= clazz.partition_key_columns.length
       end
 
       private
@@ -214,62 +242,24 @@ module Cequel
           fragment = construct_bound_fragment(upper_bound, '<')
           data_set = data_set.where(fragment, upper_bound.value)
         end
+        data_set = data_set.order(range_key_name => :desc) if reversed?
         data_set = data_set.where(scoped_indexed_column) if scoped_indexed_column
         data_set
       end
 
       def construct_bound_fragment(bound, base_operator)
         operator = bound.inclusive ? "#{base_operator}=" : base_operator
-        "TOKEN(#{range_key_name}) #{operator} TOKEN(?)"
+        single_partition? ?
+          "#{range_key_name} #{operator} ?" :
+          "TOKEN(#{range_key_name}) #{operator} TOKEN(?)"
+
       end
 
       def scoped(new_attributes = {}, &block)
         attributes_copy = Marshal.load(Marshal.dump(attributes))
         attributes_copy.merge!(new_attributes)
         attributes_copy.tap(&block) if block
-        RecordSet.create(clazz, attributes_copy)
-      end
-
-    end
-
-    class SinglePartitionRecordSet < RecordSet
-
-      hattr_inquirer :attributes, :reversed
-
-      def from(start_key)
-        scoped(lower_bound: Bound.new(start_key, true))
-      end
-
-      def upto(end_key)
-        scoped(upper_bound: Bound.new(end_key, true))
-      end
-
-      def reverse
-        scoped(reversed: !reversed?)
-      end
-
-      def last(count = nil)
-        reverse.first(count).tap do |results|
-          results.reverse! if count
-        end
-      end
-
-      # @api private
-      def next_batch_from(row)
-        reversed? ? before(row[range_key_name]) : super
-      end
-
-      protected
-
-      def construct_data_set
-        data_set = super
-        data_set = data_set.order(range_key_name => :desc) if reversed?
-        data_set
-      end
-
-      def construct_bound_fragment(bound, base_operator)
-        operator = bound.inclusive ? "#{base_operator}=" : base_operator
-        "#{range_key_name} #{operator} ?"
+        RecordSet.new(clazz, attributes_copy)
       end
 
     end
