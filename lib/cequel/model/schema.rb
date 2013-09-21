@@ -9,7 +9,8 @@ module Cequel
       module ClassMethods
         extend Forwardable
 
-        def_delegators :table_schema, :key_columns, :key_column_names
+        def_delegators :table_schema, :key_columns, :key_column_names,
+          :partition_key_columns, :clustering_columns
 
         def synchronize_schema
           Cequel::Schema::TableSynchronizer.
