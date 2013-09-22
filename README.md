@@ -4,6 +4,8 @@ Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
 [CQL3](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html).
 
 <!--[![Build Status](https://secure.travis-ci.org/outoftime/cequel.png)](http://travis-ci.org/outoftime/cequel) -->
+[![Code
+Climate](https://codeclimate.com/github/cequel/cequel.png)](https://codeclimate.com/github/cequel/cequel)
 
 `Cequel::Record` is an ActiveRecord-like domain model layer that exposes
 the robust data modeling capabilities of CQL3, including parent-child
