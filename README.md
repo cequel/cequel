@@ -19,7 +19,7 @@ inspired by the excellent [Sequel](http://sequel.rubyforge.org/) library.
 Add it to your Gemfile:
 
 ``` ruby
-gem 'cequel', '1.0.0.pre.2'
+gem 'cequel', '1.0.0.pre.3'
 ```
 
 ### Rails integration ###
@@ -77,11 +77,15 @@ as the child of the blog model:
 class Post
   include Cequel::Record
   belongs_to :blog
-  key :id, :uuid
+  key :id, :timeuuid, auto: true
   column :title, :text
   column :body, :text
 end
 ```
+
+The `auto` option for the `key` declaration means Cequel will initialize new
+records with a UUID already generated. This option is only valid for `:uuid` and
+`:timeuuid` key columns.
 
 Note that the `belongs_to` declaration must come *before* the `key` declaration.
 This is because `belongs_to` defines the

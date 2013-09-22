@@ -1,3 +1,15 @@
+## 1.0.0.pre.3
+
+* **BIG BREAKING CHANGE:** Instead of inheriting from `Cequel::Model::Base`,
+  include `Cequel::Record`.
+* RecordSet can chain class methods defined in the model class
+* New records are initialized using the key attributes from the current scope
+* Auto-generated UUIDs
+* Implement RecordSet#== and #inspect
+* RecordSet#last takes optional count argument
+* Dynamic column defaults
+* Fix insertion of default values in new records
+
 ## 1.0.0.pre.2
 
 * Secondary index support
