@@ -2,7 +2,7 @@ module Cequel
 
   module Record
 
-    class RecordSet
+    class RecordSet < SimpleDelegator
 
       extend Forwardable
       extend Cequel::Util::HashAccessors
@@ -14,17 +14,10 @@ module Cequel
         {:scoped_key_values => [], :select_columns => []}
       end
 
-      def self.create(clazz, attributes = {})
-        attributes = default_attributes.merge!(attributes)
-        if attributes[:scoped_key_values].length >= clazz.partition_key_columns.length
-          SinglePartitionRecordSet.new(clazz, attributes)
-        else
-          RecordSet.new(clazz, attributes)
-        end
-      end
-
-      def initialize(clazz, attributes)
+      def initialize(clazz, attributes = {})
+        attributes = self.class.default_attributes.merge!(attributes)
         @clazz, @attributes = clazz, attributes
+        super(clazz)
       end
 
       def all
@@ -95,8 +88,38 @@ module Cequel
         )
       end
 
+      def from(start_key)
+        unless single_partition?
+          raise IllegalQuery,
+            "Can't construct exclusive range on partition key #{range_key_name}"
+        end
+        scoped(lower_bound: Bound.new(start_key, true))
+      end
+
+      def upto(end_key)
+        unless single_partition?
+          raise IllegalQuery,
+            "Can't construct exclusive range on partition key #{range_key_name}"
+        end
+        scoped(upper_bound: Bound.new(end_key, true))
+      end
+
+      def reverse
+        unless single_partition?
+          raise IllegalQuery,
+            "Can't reverse without scoping to partition key #{range_key_name}"
+        end
+        scoped(reversed: !reversed?)
+      end
+
       def first(count = nil)
         count ? limit(count).entries : limit(1).each.first
+      end
+
+      def last(count = nil)
+        reverse.first(count).tap do |results|
+          results.reverse! if count
+        end
       end
 
       def count
@@ -139,15 +162,27 @@ module Cequel
         @data_set ||= construct_data_set
       end
 
+      def scoped_key_attributes
+        Hash[scoped_key_columns.map { |col| col.name }.zip(scoped_key_values)]
+      end
+
+      def_delegators :entries, :inspect
+
+      def ==(other)
+        entries == other.to_a
+      end
+
       protected
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
         :lower_bound, :upper_bound, :scoped_indexed_column
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
         :upper_bound, :scoped_indexed_column
+      hattr_inquirer :attributes, :reversed
+      protected :reversed?
 
       def next_batch_from(row)
-        after(row[range_key_name])
+        reversed? ? before(row[range_key_name]) : after(row[range_key_name])
       end
 
       def find_nested_batches_from(row, options, &block)
@@ -169,12 +204,12 @@ module Cequel
         end
       end
 
-      def range_key
+      def range_key_column
         clazz.key_columns[scoped_key_values.length]
       end
 
       def range_key_name
-        range_key.name
+        range_key_column.name
       end
 
       def scoped_key_columns
@@ -185,10 +220,18 @@ module Cequel
         scoped_key_columns.map { |column| column.name }
       end
 
+      def single_partition?
+        scoped_key_values.length >= clazz.partition_key_columns.length
+      end
+
       private
       attr_reader :clazz
       def_delegators :clazz, :connection
       private :connection
+
+      def method_missing(method, *args, &block)
+        clazz.with_scope(self) { super }
+      end
 
       def next_key_column
         clazz.key_columns[scoped_key_values.length + 1]
@@ -214,60 +257,24 @@ module Cequel
           fragment = construct_bound_fragment(upper_bound, '<')
           data_set = data_set.where(fragment, upper_bound.value)
         end
+        data_set = data_set.order(range_key_name => :desc) if reversed?
         data_set = data_set.where(scoped_indexed_column) if scoped_indexed_column
         data_set
       end
 
       def construct_bound_fragment(bound, base_operator)
         operator = bound.inclusive ? "#{base_operator}=" : base_operator
-        "TOKEN(#{range_key_name}) #{operator} TOKEN(?)"
+        single_partition? ?
+          "#{range_key_name} #{operator} ?" :
+          "TOKEN(#{range_key_name}) #{operator} TOKEN(?)"
+
       end
 
       def scoped(new_attributes = {}, &block)
         attributes_copy = Marshal.load(Marshal.dump(attributes))
         attributes_copy.merge!(new_attributes)
         attributes_copy.tap(&block) if block
-        RecordSet.create(clazz, attributes_copy)
-      end
-
-    end
-
-    class SinglePartitionRecordSet < RecordSet
-
-      hattr_inquirer :attributes, :reversed
-
-      def from(start_key)
-        scoped(lower_bound: Bound.new(start_key, true))
-      end
-
-      def upto(end_key)
-        scoped(upper_bound: Bound.new(end_key, true))
-      end
-
-      def reverse
-        scoped(reversed: !reversed?)
-      end
-
-      def last
-        reverse.first
-      end
-
-      # @api private
-      def next_batch_from(row)
-        reversed? ? before(row[range_key_name]) : super
-      end
-
-      protected
-
-      def construct_data_set
-        data_set = super
-        data_set = data_set.order(range_key_name => :desc) if reversed?
-        data_set
-      end
-
-      def construct_bound_fragment(bound, base_operator)
-        operator = bound.inclusive ? "#{base_operator}=" : base_operator
-        "#{range_key_name} #{operator} ?"
+        RecordSet.new(clazz, attributes_copy)
       end
 
     end
