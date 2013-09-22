@@ -186,7 +186,7 @@ describe Cequel::Record::RecordSet do
 
     it 'should raise ArgumentError when called on partition key' do
       expect { Post.from('cassandra') }.
-        to raise_error(Cequel::Model::IllegalQuery)
+        to raise_error(Cequel::Record::IllegalQuery)
     end
   end
 
@@ -233,7 +233,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should raise an error if range key is a partition key' do
-      expect { Post.all.reverse }.to raise_error(Cequel::Model::IllegalQuery)
+      expect { Post.all.reverse }.to raise_error(Cequel::Record::IllegalQuery)
     end
   end
 
