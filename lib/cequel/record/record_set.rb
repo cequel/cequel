@@ -162,6 +162,10 @@ module Cequel
         @data_set ||= construct_data_set
       end
 
+      def scoped_key_attributes
+        Hash[scoped_key_columns.map { |col| col.name }.zip(scoped_key_values)]
+      end
+
       def_delegators :entries, :inspect
 
       def ==(other)

@@ -36,7 +36,7 @@ module Cequel
       include Schema
       include Persistence
       include Associations
-      extend Scoped
+      include Scoped
       extend SecondaryIndexes
       include MassAssignment
       include Callbacks
