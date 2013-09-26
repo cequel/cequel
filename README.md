@@ -19,7 +19,7 @@ inspired by the excellent [Sequel](http://sequel.rubyforge.org/) library.
 Add it to your Gemfile:
 
 ``` ruby
-gem 'cequel', '1.0.0.pre.3'
+gem 'cequel', github: 'cequel/cequel'
 ```
 
 ### Rails integration ###
