@@ -37,7 +37,7 @@ module Cequel
               "Can't change type of key column #{old_key.name} from #{old_key.type} to #{new_key.type}"
           end
           if old_key.name != new_key.name
-            updater.rename_column(old_key.name, new_key.name)
+            updater.rename_column(old_key.name || :column1, new_key.name)
           end
         end
       end
@@ -64,6 +64,9 @@ module Cequel
       end
 
       def update_column(old_column, new_column)
+        if old_column.name != new_column.name
+          updater.rename_column(old_column.name || :value, new_column.name)
+        end
         if old_column.type != new_column.type
           updater.change_column(new_column.name, new_column.type)
         end
@@ -99,11 +102,15 @@ module Cequel
       end
 
       def each_column_pair(&block)
-        old_columns = existing.data_columns.index_by { |col| col.name }
-        new_columns = updated.data_columns.index_by { |col| col.name }
-        all_column_names = (old_columns.keys + new_columns.keys).uniq!
-        all_column_names.each do |name|
-          yield old_columns[name], new_columns[name]
+        if existing.compact_storage? && existing.clustering_columns.any?
+          yield existing.data_columns.first, updated.data_columns.first
+        else
+          old_columns = existing.data_columns.index_by { |col| col.name }
+          new_columns = updated.data_columns.index_by { |col| col.name }
+          all_column_names = (old_columns.keys + new_columns.keys).tap(&:uniq!)
+          all_column_names.each do |name|
+            yield old_columns[name], new_columns[name]
+          end
         end
       end
 

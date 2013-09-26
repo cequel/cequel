@@ -307,6 +307,90 @@ you are following a write-without-reading pattern, you will need to be careful.
 
 Dirty attribute tracking is only enabled on loaded models.
 
+## Upgrading from Cequel 0.x ##
+
+Cequel 0.x targeted CQL2, which has a substantially different data
+representation from CQL3. Accordingly, upgrading from Cequel 0.x to Cequel 1.0
+requires some changes to your data models.
+
+### Upgrading a Cequel::Model ###
+
+Upgrading from a `Cequel::Model` class is fairly straightforward; simply add the
+`compact_storage` directive to your class definition:
+
+```ruby
+# Model definition in Cequel 0.x
+class Post
+  include Cequel::Model
+
+  key :id, :uuid
+  column :title, :text
+  column :body, :text
+end
+
+# Model definition in Cequel 1.0
+class Post
+  include Cequel::Record
+
+  key :id, :uuid
+  column :title, :text
+  column :body, :text
+
+  compact_storage
+end
+```
+
+Note that the semantics of `belongs_to` and `has_many` are completely different
+between Cequel 0.x and Cequel 1.0; if you have data columns that reference keys
+in other tables, you will need to hand-roll those associations for now.
+
+### Upgrading a Cequel::Model::Dictionary ###
+
+CQL3 does not have a direct "wide row" representation like CQL2, so the
+`Dictionary` class does not have a direct analog in Cequel 1.0. Instead, each
+row key-map key-value tuple in a `Dictionary` corresponds to a single row in
+CQL3. Upgrading a `Dictionary` to Cequel 1.0 involves defining two primary keys
+and a single data column, again using the `compact_storage` directive:
+
+``` ruby
+# Dictionary definition in Cequel 0.x
+class BlogPosts < Cequel::Model::Dictionary
+  key :blog_id, :uuid
+  maps :uuid => :text
+
+  private
+
+  def serialize_value(column, value)
+    value.to_json
+  end
+
+  def deserialize_value(column, value)
+    JSON.parse(value)
+  end
+end
+
+# Equivalent model in Cequel 1.0
+class BlogPost
+  include Cequel::Record
+
+  key :blog_id, :uuid
+  key :id, :uuid
+  column :data, :text
+
+  def data
+    JSON.parse(read_attribute(:data))
+  end
+
+  def data=(new_data)
+    write_attribute(:data, new_data.to_json)
+  end
+end
+```
+
+Note that you will want to run `::synchronize_schema` on your models when
+upgrading; this will not change the underlying data structure, but will add some
+CQL3-specific metadata to the table definition which will allow you to query it.
+
 ### CQL Gotchas ###
 
 CQL is designed to be immediately familiar to those of us who are used to

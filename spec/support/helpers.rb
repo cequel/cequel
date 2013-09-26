@@ -68,8 +68,20 @@ module Cequel
         ENV['CEQUEL_TEST_KEYSPACE'] || 'cequel_test'
       end
 
+      def self.legacy_connection
+        @legacy_connection ||= CassandraCQL::Database.new(
+          Cequel::SpecSupport::Helpers.host,
+          :keyspace => Cequel::SpecSupport::Helpers.keyspace_name,
+          :cql_version => '2.0.0'
+        )
+      end
+
       def cequel
         Helpers.cequel
+      end
+
+      def legacy_connection
+        Helpers.legacy_connection
       end
 
       def max_statements!(number)
