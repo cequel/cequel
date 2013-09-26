@@ -14,25 +14,29 @@ module Cequel
           *(RecordSet.public_instance_methods(false) - Object.instance_methods)
 
         def current_scope
-          Thread.current[current_scope_key] || RecordSet.new(self)
+          delegating_scope || RecordSet.new(self)
         end
 
         def with_scope(record_set)
-          previous_scope = current_scope
-          self.current_scope = record_set
+          previous_scope = delegating_scope
+          self.delegating_scope = record_set
           yield
         ensure
-          self.current_scope = previous_scope
+          self.delegating_scope = previous_scope
         end
 
         protected
 
-        def current_scope=(current_scope)
-          Thread.current[current_scope_key] = current_scope
+        def delegating_scope
+          Thread.current[delegating_scope_key]
         end
 
-        def current_scope_key
-          @current_scope_key ||= :"#{name}::current_scope"
+        def delegating_scope=(delegating_scope)
+          Thread.current[delegating_scope_key] = delegating_scope
+        end
+
+        def delegating_scope_key
+          @delegating_scope_key ||= :"#{name}::delegating_scope"
         end
 
       end
