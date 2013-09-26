@@ -52,8 +52,9 @@ module Cequel
 
       def self.cequel
         @cequel ||= Cequel.connect(
-          :host => host,
-          :keyspace => keyspace_name
+          host: host,
+          keyspace: keyspace_name,
+          thrift: {retries: 5, cached_connections: true}
         ).tap do |cequel|
           cequel.logger = Logger.new(STDOUT) if ENV['CEQUEL_LOG_QUERIES']
         end
