@@ -77,6 +77,14 @@ module Cequel
       end
 
       def destroy
+        child_associations.select { |name, assoc|
+          assoc.dependent == :destroy
+        }.each { |name, assoc|
+          connection[name].where(
+            send(name).scoped_key_attributes
+          ).delete
+        }
+
         metal_scope.delete
         transient!
         self

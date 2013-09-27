@@ -32,8 +32,8 @@ module Cequel
           def_parent_association_accessors
         end
 
-        def has_many(name)
-          association = HasManyAssociation.new(self, name.to_sym)
+        def has_many(name, opts = {})
+          association = HasManyAssociation.new(self, name.to_sym, opts)
           self.child_associations =
             child_associations.merge(name => association)
           def_child_association_reader(association)

@@ -18,6 +18,14 @@ describe Cequel::Record::Associations do
     belongs_to :blog
     key :id, :uuid, auto: true
     column :title, :text
+
+    has_many :comments, dependent: :destroy
+  end
+
+  model :Comment do
+    belongs_to :post
+    key :id, :uuid, auto: true
+    column :content, :text
   end
 
   describe '::belongs_to' do
@@ -114,6 +122,22 @@ describe Cequel::Record::Associations do
       posts.first.destroy
       blog.posts(true).map(&:title).should == ['Post 1', 'Post 2']
     end
-  end
 
+    context "with dependent => destroy" do
+      let(:post_with_comments) { posts.first }
+
+      it "should destroy all children when destroying the parent" do
+        2.times.map do |i|
+          Comment.new do |comment|
+            comment.content = "cat #{i} is awesome"
+            comment.post = post_with_comments
+          end.tap(&:save)
+        end
+
+        expect {
+          post_with_comments.destroy
+        }.to change { Comment.count }.by(-2)
+      end
+    end
+  end
 end

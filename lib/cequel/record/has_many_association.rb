@@ -4,11 +4,12 @@ module Cequel
 
     class HasManyAssociation
 
-      attr_reader :owner_class, :name, :association_class_name
+      attr_reader :owner_class, :name, :association_class_name, :dependent
 
       def initialize(owner_class, name, options = {})
         @owner_class, @name = owner_class, name
         @association_class_name = options.fetch(:class_name, name.to_s.classify)
+        @dependent = options[:dependent]
       end
 
       def association_class
