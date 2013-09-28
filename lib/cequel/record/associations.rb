@@ -33,10 +33,27 @@ module Cequel
         end
 
         def has_many(name, opts = {})
-          association = HasManyAssociation.new(self, name.to_sym, opts)
+          association = HasManyAssociation.new(self, name.to_sym)
           self.child_associations =
             child_associations.merge(name => association)
           def_child_association_reader(association)
+
+          case opts[:dependent]
+          when :destroy
+            after_destroy do
+              self.send(name).each(&:destroy)
+            end
+          when :delete
+            after_destroy do
+              connection[name].where(
+                send(name).scoped_key_attributes
+              ).delete
+            end
+          when nil
+            # all good
+          else
+            raise ArgumentError, "Invalid option provided for :dependent. Valid options are :destroy and :delete"
+          end
         end
 
         private
