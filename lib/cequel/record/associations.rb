@@ -42,18 +42,12 @@ module Cequel
 
           case options[:dependent]
           when :destroy
-            after_destroy do
-              self.send(name).each(&:destroy)
-            end
+            after_destroy { delete_children(name, true) }
           when :delete
-            after_destroy do
-              connection[name].where(
-                send(name).scoped_key_attributes
-              ).delete
-            end
+            after_destroy { delete_children(name) }
           when nil
           else
-            raise ArgumentError, "Invalid option #{options[:dependent].inspect} provided for :dependent. Valid options are :destroy and :delete"
+            raise ArgumentError, "Invalid option #{options[:dependent].inspect} provided for :dependent. Specify :destroy or :delete."
           end
         end
 
@@ -133,6 +127,17 @@ module Cequel
         end
         instance_variable_set(
           ivar, AssociationCollection.new(association_record_set))
+      end
+
+      def delete_children(association_name, run_callbacks = false)
+        if run_callbacks
+          self.send(association_name).each do |c|
+            c.run_callbacks(:destroy)
+          end
+        end
+        connection[association_name].where(
+          send(association_name).scoped_key_attributes
+        ).delete
       end
 
     end
