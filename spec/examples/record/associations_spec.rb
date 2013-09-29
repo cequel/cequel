@@ -141,21 +141,29 @@ describe Cequel::Record::Associations do
     context "with dependent => destroy" do
       let(:post_with_comments) { posts.first }
 
-      it "calls #destroy on all children when destroying the parent" do
+      before :each do
         2.times.map do |i|
           Comment.new do |comment|
             comment.content = "cat #{i} is awesome"
             comment.post = post_with_comments
           end.tap(&:save)
         end
-        destroy_count = 0
-        Comment.any_instance.stub(:destroy) do
-          destroy_count += 1
+        @callback_count = 0
+        Comment.any_instance.stub(:run_callbacks).with(:destroy) do
+          @callback_count += 1
         end
+      end
 
+      it "deletes all children when destroying the parent" do
         expect {
           post_with_comments.destroy
-        }.to change { destroy_count }.by(2)
+        }.to change { Comment.count }.by(-2)
+      end
+
+      it "executes :destroy callbacks on the children" do
+        expect {
+          post_with_comments.destroy
+        }.to change { @callback_count }.by(2)
       end
     end
 
@@ -169,16 +177,16 @@ describe Cequel::Record::Associations do
             comment.post = post_with_attachments
           end.tap(&:save)
         end
-        @destroy_count = 0
-        Attachment.any_instance.stub(:destroy) do
-          @destroy_count += 1
+        @callback_count = 0
+        Attachment.any_instance.stub(:run_callbacks).with(:destroy) do
+          @callback_count += 1
         end
       end
 
-      it "does not call #destroy on child models when destroying the parent" do
+      it "does execute callbacks on the children when destroying the parent" do
         expect {
           post_with_attachments.destroy
-        }.to change { @destroy_count }.by(0)
+        }.to change { @callback_count }.by(0)
       end
 
       it "deletes all children when destroying the parent" do
