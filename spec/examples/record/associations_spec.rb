@@ -183,16 +183,16 @@ describe Cequel::Record::Associations do
         end
       end
 
-      it "does execute callbacks on the children when destroying the parent" do
-        expect {
-          post_with_attachments.destroy
-        }.to change { @callback_count }.by(0)
-      end
-
       it "deletes all children when destroying the parent" do
         expect {
           post_with_attachments.destroy
         }.to change { Attachment.count }.by(-2)
+      end
+
+      it "executes :destroy callbacks on the children" do
+        expect {
+          post_with_attachments.destroy
+        }.to change { @callback_count }.by(0)
       end
     end
   end
