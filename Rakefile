@@ -74,9 +74,11 @@ end
 
 namespace :test do
   task :all do
-    abort unless system('rvm', '2.0,1.9,rbx-d19', 'do',
-                        'bundle', 'exec',
-                        'rake', 'appraisal', 'test:concise')
+    %w(2.0 1.9 rbx-d19).each do |version|
+      abort unless system('rvm', version, 'do',
+                          'bundle', 'exec',
+                          'rake', 'appraisal', 'test:concise')
+    end
   end
 end
 
