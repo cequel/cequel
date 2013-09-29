@@ -377,6 +377,7 @@ Cequel was written by:
 * Aubrey Holland
 * Keenan Brock
 * Insoo Buzz Jung
+* Louis Simoneau
 * Randy Meech
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
