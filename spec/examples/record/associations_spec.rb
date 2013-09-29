@@ -18,6 +18,21 @@ describe Cequel::Record::Associations do
     belongs_to :blog
     key :id, :uuid, auto: true
     column :title, :text
+
+    has_many :comments, dependent: :destroy
+    has_many :attachments, dependent: :delete
+  end
+
+  model :Comment do
+    belongs_to :post
+    key :id, :uuid, auto: true
+    column :content, :text
+  end
+
+  model :Attachment do
+    belongs_to :post
+    key :id, :uuid, auto: true
+    column :caption, :text
   end
 
   describe '::belongs_to' do
@@ -114,6 +129,71 @@ describe Cequel::Record::Associations do
       posts.first.destroy
       blog.posts(true).map(&:title).should == ['Post 1', 'Post 2']
     end
-  end
 
+    it "does not allow invalid :dependent options" do
+      expect {
+        Post.class_eval do
+          has_many :users, dependent: :bar
+        end
+      }.to raise_error(ArgumentError)
+    end
+
+    context "with dependent => destroy" do
+      let(:post_with_comments) { posts.first }
+
+      before :each do
+        2.times.map do |i|
+          Comment.new do |comment|
+            comment.content = "cat #{i} is awesome"
+            comment.post = post_with_comments
+          end.tap(&:save)
+        end
+        @callback_count = 0
+        Comment.any_instance.stub(:run_callbacks).with(:destroy) do
+          @callback_count += 1
+        end
+      end
+
+      it "deletes all children when destroying the parent" do
+        expect {
+          post_with_comments.destroy
+        }.to change { Comment.count }.by(-2)
+      end
+
+      it "executes :destroy callbacks on the children" do
+        expect {
+          post_with_comments.destroy
+        }.to change { @callback_count }.by(2)
+      end
+    end
+
+    context "with dependent => delete" do
+      let(:post_with_attachments) { posts.first }
+
+      before :each do
+        2.times.map do |i|
+          Attachment.new do |comment|
+            comment.caption = "cat #{i} is awesome"
+            comment.post = post_with_attachments
+          end.tap(&:save)
+        end
+        @callback_count = 0
+        Attachment.any_instance.stub(:run_callbacks).with(:destroy) do
+          @callback_count += 1
+        end
+      end
+
+      it "deletes all children when destroying the parent" do
+        expect {
+          post_with_attachments.destroy
+        }.to change { Attachment.count }.by(-2)
+      end
+
+      it "executes :destroy callbacks on the children" do
+        expect {
+          post_with_attachments.destroy
+        }.to change { @callback_count }.by(0)
+      end
+    end
+  end
 end

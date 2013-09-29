@@ -32,11 +32,22 @@ module Cequel
           def_parent_association_accessors
         end
 
-        def has_many(name)
+        def has_many(name, opts = {})
           association = HasManyAssociation.new(self, name.to_sym)
           self.child_associations =
             child_associations.merge(name => association)
           def_child_association_reader(association)
+
+          case opts[:dependent]
+          when :destroy
+            after_destroy { delete_children(name, true) }
+          when :delete
+            after_destroy { delete_children(name) }
+          when nil
+            # all good
+          else
+            raise ArgumentError, "Invalid option provided for :dependent. Specify :destroy or :delete."
+          end
         end
 
         private
@@ -115,6 +126,17 @@ module Cequel
         end
         instance_variable_set(
           ivar, AssociationCollection.new(association_record_set))
+      end
+
+      def delete_children(association_name, run_callbacks = false)
+        if run_callbacks
+          self.send(association_name).each do |c|
+            c.run_callbacks(:destroy)
+          end
+        end
+        connection[association_name].where(
+          send(association_name).scoped_key_attributes
+        ).delete
       end
 
     end
