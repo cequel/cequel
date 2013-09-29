@@ -32,13 +32,15 @@ module Cequel
           def_parent_association_accessors
         end
 
-        def has_many(name, opts = {})
+        def has_many(name, options = {})
+          options.assert_valid_keys(:dependent)
+
           association = HasManyAssociation.new(self, name.to_sym)
           self.child_associations =
             child_associations.merge(name => association)
           def_child_association_reader(association)
 
-          case opts[:dependent]
+          case options[:dependent]
           when :destroy
             after_destroy do
               self.send(name).each(&:destroy)
@@ -50,9 +52,8 @@ module Cequel
               ).delete
             end
           when nil
-            # all good
           else
-            raise ArgumentError, "Invalid option provided for :dependent. Valid options are :destroy and :delete"
+            raise ArgumentError, "Invalid option #{options[:dependent].inspect} provided for :dependent. Valid options are :destroy and :delete"
           end
         end
 

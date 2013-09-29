@@ -138,6 +138,14 @@ describe Cequel::Record::Associations do
       }.to raise_error(ArgumentError)
     end
 
+    it "does not allow unrecognized options" do
+      expect {
+        Post.class_eval do
+          has_many :users, bogus: :buffalo
+        end
+      }.to raise_error(ArgumentError)
+    end
+
     context "with dependent => destroy" do
       let(:post_with_comments) { posts.first }
 
