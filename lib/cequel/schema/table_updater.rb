@@ -41,7 +41,7 @@ module Cequel
       end
 
       def rename_column(old_name, new_name)
-        alter_table("RENAME #{old_name} TO #{new_name}")
+        alter_table(%(RENAME "#{old_name}" TO "#{new_name}"))
       end
 
       def change_properties(options)

@@ -16,7 +16,7 @@ module Cequel
         extend Forwardable
 
         def_delegators :table_schema, :key_columns, :key_column_names,
-          :partition_key_columns, :clustering_columns
+          :partition_key_columns, :clustering_columns, :compact_storage?
         def_delegator :table_schema, :column, :reflect_on_column
 
         def synchronize_schema
@@ -61,6 +61,10 @@ module Cequel
 
         def table_property(name, value)
           table_schema.add_property(name, value)
+        end
+
+        def compact_storage
+          table_schema.compact_storage = true
         end
 
       end
