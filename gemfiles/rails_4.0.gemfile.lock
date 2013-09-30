@@ -1,7 +1,7 @@
 PATH
   remote: /Users/mat/Projects/cequel
   specs:
-    cequel (1.0.0.pre.3)
+    cequel (1.0.0.pre.4)
       activemodel
       activesupport (>= 3.1)
       cassandra-cql (~> 1.2)

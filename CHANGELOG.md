@@ -1,3 +1,8 @@
+## 1.0.0.pre.4
+
+* Full support for legacy CQL2 tables
+* `dependent` option for `has_many` associations
+
 ## 1.0.0.pre.3
 
 * **BIG BREAKING CHANGE:** Instead of inheriting from `Cequel::Model::Base`,
