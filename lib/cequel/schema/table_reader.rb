@@ -56,6 +56,8 @@ module Cequel
         comparators = parse_composite_types(table_data['comparator'])
         unless comparators
           table.compact_storage = true
+          return unless column_data.empty?
+          column_aliases << nil if column_aliases.empty?
           comparators = [table_data['comparator']]
         end
         column_aliases.zip(comparators) do |column_alias, type|
@@ -64,7 +66,7 @@ module Cequel
             clustering_order = :desc
           end
           table.add_clustering_column(
-            column_alias.to_sym,
+            column_alias.try(:to_sym),
             Type.lookup_internal(type),
             clustering_order
           )
@@ -72,19 +74,27 @@ module Cequel
       end
 
       def read_data_columns
-        column_data.each do |result|
-          if COLLECTION_TYPE_PATTERN =~ result['validator']
-            read_collection_column(
-              result['column_name'],
-              $1.underscore,
-              *$2.split(',')
-            )
-          else
-            table.add_data_column(
-              result['column_name'].to_sym,
-              Type.lookup_internal(result['validator']),
-              result['index_name'].try(:to_sym)
-            )
+        if column_data.empty?
+          table.add_data_column(
+            table_data['value_alias'],
+            Type.lookup_internal(table_data['default_validator']),
+            false
+          )
+        else
+          column_data.each do |result|
+            if COLLECTION_TYPE_PATTERN =~ result['validator']
+              read_collection_column(
+                result['column_name'],
+                $1.underscore,
+                *$2.split(',')
+              )
+            else
+              table.add_data_column(
+                result['column_name'].to_sym,
+                Type.lookup_internal(result['validator']),
+                result['index_name'].try(:to_sym)
+              )
+            end
           end
         end
       end

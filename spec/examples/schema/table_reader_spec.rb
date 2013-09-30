@@ -304,25 +304,86 @@ describe Cequel::Schema::TableReader do
       table.property(:compression)[:crc_check_chance].should == 0.5
     end
 
-  end # describe 'reading storage properties'
-
-  describe 'compact storage' do
-
-    it 'should read non-compact storage status' do
-      cequel.execute <<-CQL
-        CREATE TABLE posts (permalink text PRIMARY KEY, body text)
-      CQL
+    it 'should recognize no compact storage' do
       table.should_not be_compact_storage
     end
 
-    it 'should read compact storage status' do
+  end # describe 'reading storage properties'
+
+  describe 'skinny-row compact storage' do
+    before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (permalink text PRIMARY KEY, body text)
+        CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
         WITH COMPACT STORAGE
       CQL
-      table.should be_compact_storage
     end
+    subject { table }
 
+    it { should be_compact_storage }
+    its(:partition_key_columns) { should ==
+      [Cequel::Schema::PartitionKey.new(:permalink, :text)] }
+    its(:clustering_columns) { should be_empty }
+    its(:data_columns) { should =~
+      [Cequel::Schema::DataColumn.new(:title, :text),
+        Cequel::Schema::DataColumn.new(:body, :text)] }
+  end
+
+  describe 'wide-row compact storage' do
+    before do
+      cequel.execute <<-CQL
+        CREATE TABLE posts (
+          blog_subdomain text,
+          id uuid,
+          data text,
+          PRIMARY KEY (blog_subdomain, id)
+        )
+        WITH COMPACT STORAGE
+      CQL
+    end
+    subject { table }
+
+    it { should be_compact_storage }
+    its(:partition_key_columns) { should ==
+      [Cequel::Schema::PartitionKey.new(:blog_subdomain, :text)] }
+    its(:clustering_columns) { should ==
+      [Cequel::Schema::ClusteringColumn.new(:id, :uuid)] }
+    its(:data_columns) { should ==
+      [Cequel::Schema::DataColumn.new(:data, :text)] }
+  end
+
+  describe 'skinny-row legacy table' do
+    before do
+      legacy_connection.execute <<-CQL
+        CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
+      CQL
+    end
+    subject { table }
+
+    it { should be_compact_storage }
+    its(:partition_key_columns) { should ==
+      [Cequel::Schema::PartitionKey.new(:permalink, :text)] }
+    its(:clustering_columns) { should be_empty }
+    its(:data_columns) { should =~
+      [Cequel::Schema::DataColumn.new(:title, :text),
+        Cequel::Schema::DataColumn.new(:body, :text)] }
+  end
+
+  describe 'wide-row legacy table' do
+    before do
+      legacy_connection.execute(<<-CQL2)
+        CREATE COLUMNFAMILY posts (blog_subdomain text PRIMARY KEY)
+        WITH comparator=uuid AND default_validation=text
+      CQL2
+    end
+    subject { table }
+
+    it { should be_compact_storage }
+    its(:partition_key_columns) { should ==
+      [Cequel::Schema::PartitionKey.new(:blog_subdomain, :text)] }
+    its(:clustering_columns) { should ==
+      [Cequel::Schema::ClusteringColumn.new(nil, :uuid)] }
+    its(:data_columns) { should ==
+      [Cequel::Schema::DataColumn.new(nil, :text)] }
   end
 
 end
