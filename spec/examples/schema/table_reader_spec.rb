@@ -381,9 +381,9 @@ describe Cequel::Schema::TableReader do
     its(:partition_key_columns) { should ==
       [Cequel::Schema::PartitionKey.new(:blog_subdomain, :text)] }
     its(:clustering_columns) { should ==
-      [Cequel::Schema::ClusteringColumn.new(nil, :uuid)] }
+      [Cequel::Schema::ClusteringColumn.new(:column1, :uuid)] }
     its(:data_columns) { should ==
-      [Cequel::Schema::DataColumn.new(nil, :text)] }
+      [Cequel::Schema::DataColumn.new(:data, :text)] }
   end
 
 end

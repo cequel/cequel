@@ -83,6 +83,10 @@ describe Cequel::Record::Schema do
       its(:clustering_columns) { should == [Cequel::Schema::Column.new(:id, :uuid)] }
       it { should be_compact_storage }
       its(:data_columns) { should == [Cequel::Schema::Column.new(:data, :text)] }
+
+      it 'should be able to synchronize schema again' do
+        expect { legacy_model.synchronize_schema }.to_not raise_error
+      end
     end
   end
 end
