@@ -76,7 +76,7 @@ module Cequel
       def read_data_columns
         if column_data.empty?
           table.add_data_column(
-            (table_data['value_alias'] || :data).to_sym,
+            (table_data['value_alias'] || :value).to_sym,
             Type.lookup_internal(table_data['default_validator']),
             false
           )

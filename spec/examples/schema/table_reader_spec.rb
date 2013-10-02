@@ -383,7 +383,7 @@ describe Cequel::Schema::TableReader do
     its(:clustering_columns) { should ==
       [Cequel::Schema::ClusteringColumn.new(:column1, :uuid)] }
     its(:data_columns) { should ==
-      [Cequel::Schema::DataColumn.new(:data, :text)] }
+      [Cequel::Schema::DataColumn.new(:value, :text)] }
   end
 
 end
