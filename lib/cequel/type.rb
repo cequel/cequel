@@ -58,18 +58,18 @@ module Cequel
 
     class String < Base
 
-      private
-
-      def ensure_encoding(value, encoding)
-        str = value.to_s
+      def cast(value)
+        str = String(value)
         str.encoding.name == encoding ? str : str.dup.force_encoding(encoding)
       end
 
     end
 
     class Ascii < String
-      def cast(value)
-        ensure_encoding(value, 'US-ASCII')
+      private
+
+      def encoding
+        'US-ASCII'
       end
     end
     register Ascii.instance
@@ -81,10 +81,14 @@ module Cequel
       end
 
       def cast(value)
-        case value
-        when Integer then ensure_encoding(value.to_s(16), 'ASCII-8BIT')
-        else ensure_encoding(value.to_s, 'ASCII-8BIT')
-        end
+        value = value.to_s(16) if Integer === value
+        super
+      end
+
+      private
+
+      def encoding
+        'ASCII-8BIT'
       end
 
     end
@@ -104,7 +108,7 @@ module Cequel
       end
 
       def cast(value)
-        value.to_i
+        Integer(value)
       end
 
     end
@@ -112,14 +116,14 @@ module Cequel
 
     class Decimal < Base
       def cast(value)
-        BigDecimal.new(value, 0)
+        BigDecimal === value ? value : BigDecimal.new(value, 0)
       end
     end
     register Decimal.instance
 
     class Double < Base
       def cast(value)
-        value.to_f
+        Float(value)
       end
     end
     register Double.instance
@@ -140,7 +144,7 @@ module Cequel
       end
 
       def cast(value)
-        value.to_i
+        Integer(value)
       end
 
     end
@@ -168,8 +172,10 @@ module Cequel
         [:varchar]
       end
 
-      def cast(value)
-        ensure_encoding(value, 'UTF-8')
+      private
+
+      def encoding
+        'UTF-8'
       end
 
     end
@@ -186,7 +192,7 @@ module Cequel
         elsif value.respond_to?(:to_time) then value.to_time
         elsif Numeric === value then Time.at(value)
         else Time.parse(value.to_s)
-        end
+        end.utc
       end
 
     end
