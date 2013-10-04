@@ -72,13 +72,13 @@ module Cequel
         end
 
         def def_reader(name)
-          module_eval <<-RUBY
+          module_eval <<-RUBY, __FILE__, __LINE__+1
             def #{name}; read_attribute(#{name.inspect}); end
           RUBY
         end
 
         def def_writer(name)
-          module_eval <<-RUBY
+          module_eval <<-RUBY, __FILE__, __LINE__+1
             def #{name}=(value); write_attribute(#{name.inspect}, value); end
           RUBY
         end
@@ -89,7 +89,7 @@ module Cequel
         end
 
         def def_collection_reader(name, collection_proxy_class)
-          module_eval <<-RUBY
+          module_eval <<-RUBY, __FILE__, __LINE__+1
             def #{name}
               proxy_collection(#{name.inspect}, #{collection_proxy_class})
             end
@@ -97,7 +97,7 @@ module Cequel
         end
 
         def def_collection_writer(name)
-          module_eval <<-RUBY
+          module_eval <<-RUBY, __FILE__, __LINE__+1
             def #{name}=(value)
               reset_collection_proxy(#{name.inspect})
               write_attribute(#{name.inspect}, value)
