@@ -217,6 +217,7 @@ module Cequel
     class Map < DelegateClass(::Hash)
 
       include Collection
+      extend Forwardable
 
       NON_ATOMIC_MUTATORS = [
         :default,
@@ -243,6 +244,7 @@ module Cequel
         each { |method| undef_method(method) if method_defined? method }
 
       def []=(key, value)
+        key = cast_key(key)
         updater.map_update(column_name, key => value)
         to_modify { super }
       end
@@ -254,20 +256,27 @@ module Cequel
       end
 
       def delete(key)
+        key = cast_key(key)
         deleter.map_remove(column_name, key)
         to_modify { super }
       end
 
       def merge!(hash)
+        hash = cast_collection(hash)
         updater.map_update(column_name, hash)
         to_modify { super }
       end
       alias_method :update, :merge!
 
       def replace(hash)
+        hash = cast_collection(hash)
         updater.set(column_name => hash)
         to_modify { super }
       end
+
+      private
+      def_delegator 'column.key_type', :cast, :cast_key
+      private :cast_key
 
     end
 

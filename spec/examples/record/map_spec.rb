@@ -39,6 +39,16 @@ describe Cequel::Record::Map do
         post.likes.should == {'alice' => 1, 'bob' => 2, 'david' => 4}
       end
 
+      it 'should cast keys when updating' do
+        post.likes[:david] = 4
+        post.likes.should == {'alice' => 1, 'bob' => 2, 'david' => 4}
+      end
+
+      it 'should cast values when updating' do
+        post.likes['david'] = 4.0
+        post.likes.should == {'alice' => 1, 'bob' => 2, 'david' => 4}
+      end
+
       it 'should write without reading' do
         max_statements! 2
         unloaded_post.likes['david'] = 4
@@ -83,6 +93,11 @@ describe Cequel::Record::Map do
         post.likes.should == {'alice' => 1}
       end
 
+      it 'should cast key before deleting' do
+        post.likes.delete(:bob)
+        post.likes.should == {'alice' => 1}
+      end
+
       it 'should delete without reading' do
         max_statements! 2
         unloaded_post.likes.delete('bob')
@@ -99,6 +114,22 @@ describe Cequel::Record::Map do
     describe '#merge!' do
       it 'should atomically update' do
         post.likes.merge!('david' => 4, 'emily' => 5)
+        post.save
+        subject[:likes].should == 
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
+        post.likes.should ==
+          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5}
+      end
+
+      it 'should cast keys before updating' do
+        post.likes.merge!(david: 4, emily: 5)
+        post.save
+        post.likes.should ==
+          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5}
+      end
+
+      it 'should cast values before updating' do
+        post.likes.merge!('david' => '4', 'emily' => 5.0)
         post.save
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
@@ -124,6 +155,18 @@ describe Cequel::Record::Map do
     describe '#replace' do
       it 'should automatically overwrite' do
         post.likes.replace('david' => 4, 'emily' => 5)
+        post.save
+        subject[:likes].should == {'david' => 4, 'emily' => 5}
+        post.likes.should == {'david' => 4, 'emily' => 5}
+      end
+
+      it 'should cast keys before overwriting' do
+        post.likes.replace(david: 4, emily: 5)
+        post.likes.should == {'david' => 4, 'emily' => 5}
+      end
+
+      it 'should cast values before overwriting' do
+        post.likes.replace('david' => '4', 'emily' => 5.0)
         post.save
         subject[:likes].should == {'david' => 4, 'emily' => 5}
         post.likes.should == {'david' => 4, 'emily' => 5}
