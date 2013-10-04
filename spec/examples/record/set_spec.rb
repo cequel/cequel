@@ -27,6 +27,20 @@ describe Cequel::Record::Set do
     end
   end
 
+  context 'updating' do
+    it 'should overwrite value' do
+      post.tags = Set['three', 'four']
+      post.save!
+      subject[:tags].should == Set['three', 'four']
+    end
+
+    it 'should cast collection before overwriting' do
+      post.tags = %w(three four)
+      post.save!
+      subject[:tags].should == Set['three', 'four']
+    end
+  end
+
   describe 'atomic modification' do
     before { scope.set_add(:tags, 'three') }
 

@@ -135,13 +135,17 @@ module Cequel
         super
       end
 
-      def write_attribute(attribute, value)
+      def write_attribute(name, value)
+        column = self.class.reflect_on_column(name)
+        raise UnknownAttributeError, "unknown attribute: #{name}" unless column
+        value = column.cast(value) unless value.nil?
+
         super.tap do
           unless new_record?
             if value.nil?
-              deleter.delete_columns(attribute)
+              deleter.delete_columns(name)
             else
-              updater.set(attribute => value)
+              updater.set(name => value)
             end
           end
         end
