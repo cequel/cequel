@@ -288,7 +288,13 @@ module Cequel
       end
 
       def bound(value, inclusive)
-        Bound.new(cast_range_key(value), inclusive)
+        unless range_key_column.type.is_a?(Type::Timeuuid) && value.is_a?(Time)
+          value = cast_range_key(value)
+        end
+        Bound.new(value, inclusive)
+      end
+
+      def cast_range_key_for_bound(value, inclusive)
       end
 
       def scoped(new_attributes = {}, &block)

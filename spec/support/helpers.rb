@@ -76,6 +76,24 @@ module Cequel
         )
       end
 
+      def min_uuid(time = Time.now)
+        CassandraCQL::UUID.new(time, :randomize => false)
+      end
+
+      def max_uuid(time = Time.now)
+        time = time.stamp * 10 + SimpleUUID::UUID::GREGORIAN_EPOCH_OFFSET
+        # See http://github.com/spectra/ruby-uuid/
+        byte_array = [
+          time & 0xFFFF_FFFF,
+          time >> 32,
+          ((time >> 48) & 0x0FFF) | 0x1000,
+          (2**13 - 1) | SimpleUUID::UUID::VARIANT,
+          2**16 - 1,
+          2**32 - 1
+        ]
+        CassandraCQL::UUID.new(byte_array.pack("NnnnnN"))
+      end
+
       def cequel
         Helpers.cequel
       end
