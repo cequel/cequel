@@ -52,6 +52,11 @@ describe Cequel::Record::Set do
         post.tags.should == Set['one', 'two', 'four']
       end
 
+      it 'should cast before adding' do
+        post.tags.add(4)
+        post.tags.should == Set['one', 'two', '4']
+      end
+
       it 'should add without reading' do
         max_statements! 2
         unloaded_post.tags.add('four')
@@ -94,6 +99,11 @@ describe Cequel::Record::Set do
         post.tags.should == Set['one']
       end
 
+      it 'should cast before deleting' do
+        post.tags.delete(:two)
+        post.tags.should == Set['one']
+      end
+
       it 'should delete without reading' do
         max_statements! 2
         unloaded_post.tags.delete('two')
@@ -113,6 +123,11 @@ describe Cequel::Record::Set do
         post.save
         subject[:tags].should == Set['a', 'b']
         post.tags.should == Set['a', 'b']
+      end
+
+      it 'should cast before replacing' do
+        post.tags.replace(Set[1, 2, :three])
+        post.tags.should == Set['1', '2', 'three']
       end
 
       it 'should replace without reading' do
