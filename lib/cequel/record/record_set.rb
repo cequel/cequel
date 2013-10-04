@@ -34,7 +34,7 @@ module Cequel
       end
 
       def where(column_name, value)
-        column = clazz.table_schema.column(column_name)
+        column = clazz.reflect_on_column(column_name)
         raise IllegalQuery,
           "Can't scope by more than one indexed column in the same query" if scoped_indexed_column
         raise ArgumentError,
@@ -43,17 +43,21 @@ module Cequel
           "Use the `at` method to restrict scope by primary key" unless column.data_column?
         raise ArgumentError,
           "Can't scope by non-indexed column #{column_name}" unless column.indexed?
-        scoped(scoped_indexed_column: {column_name => value})
+        scoped(scoped_indexed_column: {column_name => column.cast(value)})
       end
 
       def at(*scoped_key_values)
         scoped do |attributes|
-          attributes[:scoped_key_values].concat(scoped_key_values)
+          type_cast_key_values = scoped_key_values.zip(unscoped_key_columns).
+            map { |value, column| column.cast(value) }
+          attributes[:scoped_key_values].concat(type_cast_key_values)
         end
       end
 
       def [](scoped_key_value)
-        if next_key_column
+        scoped_key_value = cast_range_key(scoped_key_value)
+
+        if next_range_key_column
           at(scoped_key_value)
         else
           attributes = {}
@@ -74,17 +78,17 @@ module Cequel
       end
 
       def after(start_key)
-        scoped(lower_bound: Bound.new(start_key, false))
+        scoped(lower_bound: bound(start_key, false))
       end
 
       def before(end_key)
-        scoped(upper_bound: Bound.new(end_key, false))
+        scoped(upper_bound: bound(end_key, false))
       end
 
       def in(range)
         scoped(
-          lower_bound: Bound.new(range.first, true),
-          upper_bound: Bound.new(range.last, !range.exclude_end?)
+          lower_bound: bound(range.first, true),
+          upper_bound: bound(range.last, !range.exclude_end?)
         )
       end
 
@@ -93,7 +97,7 @@ module Cequel
           raise IllegalQuery,
             "Can't construct exclusive range on partition key #{range_key_name}"
         end
-        scoped(lower_bound: Bound.new(start_key, true))
+        scoped(lower_bound: bound(start_key, true))
       end
 
       def upto(end_key)
@@ -101,7 +105,7 @@ module Cequel
           raise IllegalQuery,
             "Can't construct exclusive range on partition key #{range_key_name}"
         end
-        scoped(upper_bound: Bound.new(end_key, true))
+        scoped(upper_bound: bound(end_key, true))
       end
 
       def reverse
@@ -186,7 +190,7 @@ module Cequel
       end
 
       def find_nested_batches_from(row, options, &block)
-        if next_key_column
+        if next_range_key_column
           at(row[range_key_name]).
             next_batch_from(row).
             find_rows_in_batches(options, &block)
@@ -204,20 +208,36 @@ module Cequel
         end
       end
 
-      def range_key_column
-        clazz.key_columns[scoped_key_values.length]
-      end
-
-      def range_key_name
-        range_key_column.name
+      def scoped_key_names
+        scoped_key_columns.map { |column| column.name }
       end
 
       def scoped_key_columns
         clazz.key_columns.first(scoped_key_values.length)
       end
 
-      def scoped_key_names
-        scoped_key_columns.map { |column| column.name }
+      def unscoped_key_columns
+        clazz.key_columns.drop(scoped_key_values.length)
+      end
+
+      def unscoped_key_names
+        unscoped_key_columns.map { |column| column.name }
+      end
+
+      def range_key_column
+        unscoped_key_columns.first
+      end
+
+      def range_key_name
+        range_key_column.name
+      end
+
+      def next_range_key_column
+        unscoped_key_columns.second
+      end
+
+      def next_range_key_name
+        next_range_key_column.try(:name)
       end
 
       def single_partition?
@@ -227,18 +247,11 @@ module Cequel
       private
       attr_reader :clazz
       def_delegators :clazz, :connection
-      private :connection
+      def_delegator :range_key_column, :cast, :cast_range_key
+      private :connection, :cast_range_key
 
       def method_missing(method, *args, &block)
         clazz.with_scope(self) { super }
-      end
-
-      def next_key_column
-        clazz.key_columns[scoped_key_values.length + 1]
-      end
-
-      def next_key_name
-        next_key_column.name if next_key_column
       end
 
       def construct_data_set
@@ -267,7 +280,10 @@ module Cequel
         single_partition? ?
           "#{range_key_name} #{operator} ?" :
           "TOKEN(#{range_key_name}) #{operator} TOKEN(?)"
+      end
 
+      def bound(value, inclusive)
+        Bound.new(cast_range_key(value), inclusive)
       end
 
       def scoped(new_attributes = {}, &block)
