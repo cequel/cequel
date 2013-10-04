@@ -61,9 +61,13 @@ describe Cequel::Record::Properties do
         should == %w(one two three)
     end
 
-    it 'should cast values in list column' do
-      Post.new { |post| post.tags = Set[1, 2, 3] }.tags.
+    it 'should cast collection in list column to list' do
+      Post.new { |post| post.tags = Set['1', '2', '3'] }.tags.
         should == %w(1 2 3)
+    end
+
+    it 'should cast elements in list' do
+      Post.new { |post| post.tags = [1, 2, 3] }.tags.should == %w(1 2 3)
     end
 
     it 'should have empty list column value if unset' do
@@ -75,8 +79,13 @@ describe Cequel::Record::Properties do
         categories.should == Set['Big Data', 'Cassandra']
     end
 
-    it 'should cast values to correct type' do
-      Post.new { |post| post.categories = [1, 2, 3] }.categories.
+    it 'should cast values in set column to correct type' do
+      Post.new { |post| post.categories = Set[1, 2, 3] }.categories.
+        should == Set['1', '2', '3']
+    end
+
+    it 'should cast collection to set in set column' do
+      Post.new { |post| post.categories = ['1', '2', '3'] }.categories.
         should == Set['1', '2', '3']
     end
 
@@ -90,7 +99,12 @@ describe Cequel::Record::Properties do
     end
 
     it 'should cast values for map column' do
-      Post.new { |post| post.shares = [[:facebook, '1'], [:twitter, '2']] }.
+      Post.new { |post| post.shares = {facebook: '1', twitter: '2'} }.
+        shares.should == {'facebook' => 1, 'twitter' => 2}
+    end
+
+    it 'should cast collection passed to map column to map' do
+      Post.new { |post| post.shares = [['facebook', 1], ['twitter', 2]] }.
         shares.should == {'facebook' => 1, 'twitter' => 2}
     end
 
