@@ -139,17 +139,21 @@ module Cequel
         super
       end
 
-      def write_attribute(attribute, value)
+      def write_attribute(name, value)
+        column = self.class.reflect_on_column(name)
+        raise UnknownAttributeError, "unknown attribute: #{name}" unless column
+        value = column.cast(value) unless value.nil?
+
         super.tap do
           unless new_record?
+            if key_attributes.keys.include?(name)
+              raise ArgumentError, "Can't update key #{name} on persisted record"
+            end
+
             if value.nil?
-              deleter.delete_columns(attribute)
+              deleter.delete_columns(name)
             else
-              if key_attributes.keys.include?(attribute)
-                raise ArgumentError, "Can't update key #{attribute} on persisted record"
-              else
-                updater.set(attribute => value)
-              end
+              updater.set(name => value)
             end
           end
         end

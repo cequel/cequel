@@ -163,10 +163,7 @@ module Cequel
       end
 
       def write_attribute(name, value)
-        column = self.class.reflect_on_column(name)
-        raise UnknownAttributeError,
-          "unknown attribute: #{name}" unless column
-        @attributes[name] = value.nil? ? nil : column.cast(value)
+        @attributes[name] = value
       end
 
       private

@@ -27,6 +27,20 @@ describe Cequel::Record::List do
     end
   end
 
+  context 'updating' do
+    it 'should overwrite value' do
+      post.tags = %w(three four)
+      post.save!
+      subject[:tags].should == %w(three four)
+    end
+
+    it 'should cast collection before overwriting' do
+      post.tags = Set['three', 'four']
+      post.save!
+      subject[:tags].should == %w(three four)
+    end
+  end
+
   describe '#<<' do
     it 'should add new items' do
       post.tags << 'three' << 'four'

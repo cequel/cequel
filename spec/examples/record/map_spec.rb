@@ -27,6 +27,20 @@ describe Cequel::Record::Map do
     end
   end
 
+  context 'updating' do
+    it 'should overwrite value' do
+      post.likes = {'charlotte' => 3, 'dave' => 4}
+      post.save!
+      subject[:likes].should == {'charlotte' => 3, 'dave' => 4}
+    end
+
+    it 'should cast collection before overwriting' do
+      post.likes = [['charlotte', 3], ['dave', 4]]
+      post.save!
+      subject[:likes].should == {'charlotte' => 3, 'dave' => 4}
+    end
+  end
+
   describe 'atomic modification' do
     before { scope.map_update(:likes, 'charles' => 3) }
 
