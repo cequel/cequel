@@ -2,14 +2,14 @@ require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Record::RecordSet do
   model :Blog do
-    key :subdomain, :text
+    key :subdomain, :ascii
     column :name, :text
     column :description, :text
   end
 
   model :Post do
-    key :blog_subdomain, :text
-    key :permalink, :text
+    key :blog_subdomain, :ascii
+    key :permalink, :ascii
     column :title, :text
     column :body, :text
     column :author_id, :uuid, :index => true
@@ -81,7 +81,11 @@ describe Cequel::Record::RecordSet do
       specify { Blog.new.should_not be_persisted }
       specify { Blog.new.should be_transient }
 
-      specify do
+      it 'should cast argument to correct type' do
+        Blog.find('blog-0'.force_encoding('ASCII-8BIT')).should be
+      end
+
+      it 'should raise RecordNotFound if bad argument passed' do
         expect { Blog.find('bogus') }.
           to raise_error(Cequel::Record::RecordNotFound)
       end
@@ -99,7 +103,12 @@ describe Cequel::Record::RecordSet do
       specify { Post.new.should_not be_persisted }
       specify { Post.new.should be_transient }
 
-      specify do
+      it 'should cast all keys to correct type' do
+        Post['cassandra'.force_encoding('ASCII-8BIT')].
+          find('cequel0'.force_encoding('ASCII-8BIT')).should be
+      end
+
+      it 'should raise RecordNotFound if bad argument passed' do
         expect { Post['cequel'].find('bogus')}.
           to raise_error(Cequel::Record::RecordNotFound)
       end
@@ -124,6 +133,10 @@ describe Cequel::Record::RecordSet do
         disallow_queries!
         subject.description.should == 'This is Blog number 0'
       end
+
+      it 'should cast argument' do
+        subject.subdomain.encoding.name.should == 'US-ASCII'
+      end
     end
 
     context 'compound primary key' do
@@ -133,6 +146,11 @@ describe Cequel::Record::RecordSet do
         expect(cequel).not_to receive(:execute)
         subject.blog_subdomain.should == 'cassandra'
         subject.permalink.should == 'cequel0'
+      end
+
+      it 'should cast all keys to the correct type' do
+        subject.blog_subdomain.encoding.name.should == 'US-ASCII'
+        subject.permalink.encoding.name.should == 'US-ASCII'
       end
 
       it 'should lazily query the database when attribute accessed' do
@@ -170,6 +188,12 @@ describe Cequel::Record::RecordSet do
       Post.at('cassandra').find_each(:batch_size => 2).map(&:title).
         should == (0...5).map { |i| "Cequel #{i}" }
     end
+
+    it 'should cast arguments correctly' do
+      Post.at('cassandra'.force_encoding('ASCII-8BIT')).
+        find_each(:batch_size => 2).map(&:title).
+        should == (0...5).map { |i| "Cequel #{i}" }
+    end
   end
 
   describe '#[]' do
@@ -191,12 +215,22 @@ describe Cequel::Record::RecordSet do
       Post.at('cassandra').after('cequel1').map(&:title).
         should == (2...5).map { |i| "Cequel #{i}" }
     end
+
+    it 'should cast argument' do
+      Post.at('cassandra').after('cequel1'.force_encoding('ASCII-8BIT')).
+        map(&:title).should == (2...5).map { |i| "Cequel #{i}" }
+    end
   end
 
   describe '#from' do
     it 'should return collection starting with given key' do
       Post.at('cassandra').from('cequel1').map(&:title).
         should == (1...5).map { |i| "Cequel #{i}" }
+    end
+
+    it 'should cast argument' do
+      Post.at('cassandra').from('cequel1'.force_encoding('ASCII-8BIT')).
+        map(&:title).should == (1...5).map { |i| "Cequel #{i}" }
     end
 
     it 'should raise ArgumentError when called on partition key' do
@@ -210,6 +244,11 @@ describe Cequel::Record::RecordSet do
       Post.at('cassandra').before('cequel3').map(&:title).
         should == (0...3).map { |i| "Cequel #{i}" }
     end
+
+    it 'should cast argument' do
+      Post.at('cassandra').before('cequel3'.force_encoding('ASCII-8BIT')).
+        map(&:title).should == (0...3).map { |i| "Cequel #{i}" }
+    end
   end
 
   describe '#upto' do
@@ -217,12 +256,23 @@ describe Cequel::Record::RecordSet do
       Post.at('cassandra').upto('cequel3').map(&:title).
         should == (0..3).map { |i| "Cequel #{i}" }
     end
+
+    it 'should cast argument' do
+      Post.at('cassandra').upto('cequel3'.force_encoding('ASCII-8BIT')).
+        map(&:title).should == (0..3).map { |i| "Cequel #{i}" }
+    end
   end
 
   describe '#in' do
     it 'should return collection with inclusive upper bound' do
       Post.at('cassandra').in('cequel1'..'cequel3').map(&:title).
         should == (1..3).map { |i| "Cequel #{i}" }
+    end
+
+    it 'should cast arguments' do
+      Post.at('cassandra').in('cequel1'.force_encoding('ASCII-8BIT')..
+                              'cequel3'.force_encoding('ASCII-8BIT')).
+        map(&:title).should == (1..3).map { |i| "Cequel #{i}" }
     end
 
     it 'should return collection with exclusive upper bound' do
@@ -312,6 +362,11 @@ describe Cequel::Record::RecordSet do
   describe '#where' do
     it 'should correctly query for secondary indexed columns' do
       Post.where(:author_id, uuids.first).map(&:permalink).
+        should == %w(cequel0 cequel2 cequel4)
+    end
+
+    it 'should cast argument for column' do
+      Post.where(:author_id, uuids.first.to_s).map(&:permalink).
         should == %w(cequel0 cequel2 cequel4)
     end
 
