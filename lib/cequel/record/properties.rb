@@ -111,9 +111,8 @@ module Cequel
 
       end
 
-      def initialize(&block)
-        @attributes, @collection_proxies = {}, {}
-        instance_eval(&block) if block
+      def initialize(attributes = {})
+        @attributes, @collection_proxies = attributes, {}
       end
 
       def attribute_names

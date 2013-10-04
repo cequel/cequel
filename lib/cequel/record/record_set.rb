@@ -63,7 +63,7 @@ module Cequel
           clazz.key_column_names.zip(key_values) do |key_name, key_value|
             attributes[key_name] = key_value
           end
-          clazz.new_empty { @attributes = attributes }
+          clazz.new_empty(attributes)
         end
       end
 
