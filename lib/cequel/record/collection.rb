@@ -189,6 +189,7 @@ module Cequel
         each { |method| undef_method(method) if method_defined? method }
 
       def add(object)
+        object = cast_element(object)
         updater.set_add(column_name, object)
         to_modify { super }
       end
@@ -200,11 +201,13 @@ module Cequel
       end
 
       def delete(object)
+        object = cast_element(object)
         updater.set_remove(column_name, object)
         to_modify { super }
       end
 
       def replace(set)
+        set = cast_collection(set)
         updater.set(column_name => set)
         to_modify { super }
       end
