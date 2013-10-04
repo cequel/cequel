@@ -10,9 +10,8 @@ module Cequel
       extend Forwardable
 
       def_delegators :@model, :loaded?, :updater, :deleter
+      def_delegator :@column, :name, :column_name
       def_delegators :__getobj__, :clone, :dup
-
-      attr_reader :column_name
 
       included do
         private
@@ -21,8 +20,8 @@ module Cequel
           BasicObject.instance_method(:method_missing))
       end
 
-      def initialize(model, column_name)
-        @model, @column_name = model, column_name
+      def initialize(model, column)
+        @model, @column = model, column
       end
 
       def inspect
@@ -40,8 +39,8 @@ module Cequel
       protected
 
       def __getobj__
-        @model.__send__(:read_attribute, @column_name) ||
-          @model.__send__(:write_attribute, @column_name, self.class.empty)
+        model.__send__(:read_attribute, column_name) ||
+          model.__send__(:write_attribute, column_name, self.class.empty)
       end
 
       def __setobj__(obj)
@@ -49,10 +48,14 @@ module Cequel
       end
 
       private
+      attr_reader :model, :column
+      def_delegator :column, :cast, :cast_collection
+      def_delegator 'column.type', :cast, :cast_element
+      private :cast_collection, :cast_element
 
       def to_modify(&block)
         if loaded?
-          @model.__send__("#{@column_name}_will_change!")
+          model.__send__("#{column_name}_will_change!")
           block.()
         else modifications << block
         end
@@ -98,11 +101,17 @@ module Cequel
         if Range === position then first, count = position.first, position.count
         else first, count = position, args[-2]
         end
-        element = args[-1]
+
+        element = args[-1] =
+          if args[-1].is_a?(Array) then cast_collection(args[-1])
+          else cast_element(args[-1])
+          end
+
         if first < 0
           raise ArgumentError,
             "Bad index #{position}: CQL lists do not support negative indices"
         end
+
         if count.nil?
           updater.list_replace(column_name, first, element)
         else
@@ -124,11 +133,13 @@ module Cequel
       end
 
       def concat(array)
+        array = cast_collection(array)
         updater.list_append(column_name, array)
         to_modify { super }
       end
 
       def delete(object)
+        object = cast_element(object)
         updater.list_remove(column_name, object)
         to_modify { super }
       end
@@ -139,17 +150,20 @@ module Cequel
       end
 
       def push(object)
+        object = cast_element(object)
         updater.list_append(column_name, object)
         to_modify { super }
       end
       alias_method :<<, :push
 
       def replace(array)
+        array = cast_collection(array)
         updater.set(column_name => array)
         to_modify { super }
       end
 
       def unshift(*objs)
+        objs.map!(&method(:cast_element))
         updater.list_prepend(column_name, objs.reverse)
         to_modify { super }
       end

@@ -5,6 +5,7 @@ describe Cequel::Record::List do
     key :permalink, :text
     column :title, :text
     list :tags, :text
+    list :contributor_ids, :int
   end
 
   let(:scope) { cequel[:posts].where(:permalink => 'cequel') }
@@ -14,6 +15,7 @@ describe Cequel::Record::List do
     Post.new do |post|
       post.permalink = 'cequel'
       post.tags = %w(one two)
+      post.contributor_ids = [1, 2]
     end.tap(&:save)
   end
 
@@ -52,6 +54,11 @@ describe Cequel::Record::List do
       unloaded_post.tags << 'four' << 'five'
       unloaded_post.tags.should == %w(one two four five)
     end
+
+    it 'should cast to defined value' do
+      post.contributor_ids << '3' << 4.0
+      post.contributor_ids.should == [1, 2, 3, 4]
+    end
   end
 
   describe '#[]=' do
@@ -62,6 +69,11 @@ describe Cequel::Record::List do
       post.save
       subject[:tags].should == %w(one TWO three)
       post.tags.should == %w(one TWO)
+    end
+
+    it 'should cast element before replacing' do
+      post.contributor_ids[1] = '5'
+      post.contributor_ids.should == [1, 5]
     end
 
     it 'should replace an element without reading' do
@@ -85,6 +97,11 @@ describe Cequel::Record::List do
       post.save
       subject[:tags].should == %w(One Two three)
       post.tags.should == %w(One Two)
+    end
+
+    it 'should cast multiple elements before replacing them' do
+      post.contributor_ids[0, 2] = %w(4 5)
+      post.contributor_ids.should == [4, 5]
     end
 
     it 'should remove elements beyond positional arguments' do
@@ -151,6 +168,11 @@ describe Cequel::Record::List do
       post.tags.should == %w(one two four five)
     end
 
+    it 'should cast elements before concatentating' do
+      post.contributor_ids.concat(%w(3 4))
+      post.contributor_ids.should == [1, 2, 3, 4]
+    end
+
     it 'should concat elements without loading' do
       cequel.should_not_receive :execute
       unloaded_post.tags.concat(['four', 'five'])
@@ -176,6 +198,11 @@ describe Cequel::Record::List do
       post.save
       subject[:tags].should == %w(one three)
       post.tags.should == %w(one)
+    end
+
+    it 'should cast argument' do
+      post.contributor_ids.delete('2')
+      post.contributor_ids.should == [1]
     end
 
     it 'should delete without loading' do
@@ -292,6 +319,11 @@ describe Cequel::Record::List do
       post.tags.should == %w(four five)
     end
 
+    it 'should cast before overwriting' do
+      post.contributor_ids.replace(%w(3 4 5))
+      post.contributor_ids.should == [3, 4, 5]
+    end
+
     it 'should overwrite without reading' do
       cequel.should_not_receive :execute
       unloaded_post.tags.replace(%w(four five))
@@ -372,6 +404,11 @@ describe Cequel::Record::List do
       post.save
       subject[:tags].should == %w(minustwo minusone zero one two)
       post.tags.should == %w(minustwo minusone one two)
+    end
+
+    it 'should cast element before unshifting' do
+      post.contributor_ids.unshift('0')
+      post.contributor_ids.should == [0, 1, 2]
     end
 
     it 'should unshift without reading' do

@@ -171,8 +171,9 @@ module Cequel
 
       private
 
-      def proxy_collection(name, proxy_class)
-        collection_proxies[name] ||= proxy_class.new(self, name)
+      def proxy_collection(column_name, proxy_class)
+        column = self.class.reflect_on_column(column_name)
+        collection_proxies[column_name] ||= proxy_class.new(self, column)
       end
 
       def reset_collection_proxy(name)
