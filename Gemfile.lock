@@ -7,6 +7,7 @@ PATH
       cassandra-cql (~> 1.2)
       connection_pool (~> 0.9.2)
       i18n
+      oj
 
 GEM
   remote: https://rubygems.org/
@@ -73,6 +74,7 @@ GEM
     net-http-persistent (2.9)
     net-http-pipeline (1.0.1)
     netrc (0.7.7)
+    oj (2.1.4)
     pry (0.9.12.2)
       coderay (~> 1.0.5)
       method_source (~> 0.8)

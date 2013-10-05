@@ -79,15 +79,23 @@ module Cequel
 
       attr_reader :index_name
 
-      def initialize(name, type, index_name = nil)
+      def initialize(name, type, index_name = nil, serialization = nil)
         super(name, type)
         @index_name = index_name
+        @serialization = serialization
       end
 
       def indexed?
         !!@index_name
       end
 
+      def cast(value)
+        if @serialization == :json
+          Cequel::Serialization::Json.new(value)
+        else
+          @type.cast(value)
+        end
+      end
     end
 
     class CollectionColumn < Column

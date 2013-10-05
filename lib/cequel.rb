@@ -8,6 +8,7 @@ require 'cequel/schema'
 require 'cequel/type'
 require 'cequel/util'
 require 'cequel/record'
+require 'cequel/serialization'
 
 module Cequel
   def self.connect(configuration = nil)
