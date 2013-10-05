@@ -42,10 +42,7 @@ module Cequel
 
       def load
         assert_keys_present!
-        unless loaded?
-          row = metal_scope.first
-          hydrate(row) unless row.nil?
-        end
+        record_collection.load! unless loaded?
         self
       end
 
@@ -93,6 +90,12 @@ module Cequel
 
       def transient?
         !persisted?
+      end
+
+      def hydrate(row)
+        @attributes = row
+        hydrated!
+        self
       end
 
       protected
@@ -160,10 +163,10 @@ module Cequel
         end
       end
 
-      def hydrate(row)
-        @attributes = row
-        hydrated!
-        self
+      def record_collection
+        @record_collection ||=
+          LazyRecordCollection.new(self.class.at(*key_values)).
+          tap { |set| set.__setobj__([self]) }
       end
 
       def hydrated!

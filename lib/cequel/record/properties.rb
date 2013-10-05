@@ -111,8 +111,10 @@ module Cequel
 
       end
 
-      def initialize(attributes = {})
-        @attributes, @collection_proxies = attributes, {}
+      # FIXME this isn't empty anymore! Rethink.
+      def initialize(attributes = {}, record_collection = nil)
+        @attributes, @record_collection = attributes, record_collection
+        @collection_proxies = {}
       end
 
       def attribute_names

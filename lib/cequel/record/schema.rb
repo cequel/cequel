@@ -15,7 +15,7 @@ module Cequel
       module ClassMethods
         extend Forwardable
 
-        def_delegators :table_schema, :key_columns, :key_column_names,
+        def_delegators :table_schema, :columns, :key_columns, :key_column_names,
           :partition_key_columns, :clustering_columns, :compact_storage?
         def_delegator :table_schema, :column, :reflect_on_column
 
