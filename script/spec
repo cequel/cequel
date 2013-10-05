@@ -4,6 +4,7 @@ flags, args = ARGV.partition { |arg| arg[0] == '-' }
 pattern, line_number = *args
 
 files = pattern ? Dir.glob("spec/examples/**/*#{pattern}*") : 'spec/examples'
+abort "No spec files match `#{pattern}'" if pattern && files.empty?
 line_args = ['-l', line_number] if line_number
 
 command = ['bundle', 'exec', 'rspec', '--fail-fast', *flags, *line_args, *files]
