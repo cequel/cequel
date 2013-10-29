@@ -2,3 +2,5 @@
 doc
 *.gem
 *.swp
+.idea/
+.ruby-version
