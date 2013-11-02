@@ -105,7 +105,7 @@ module Cequel
       end
 
       def create
-        metal_scope.insert(attributes.reject { |attr, value| value.nil? })
+        metal_scope.insert(raw_attributes.reject { |attr, value| value.nil? })
         loaded!
         persisted!
       end
@@ -141,14 +141,14 @@ module Cequel
             if value.nil?
               deleter.delete_columns(attribute)
             else
-              updater.set(attribute => value)
+              updater.set(attribute => raw_attributes[attribute])
             end
           end
         end
       end
 
       def hydrate(row)
-        @attributes = row
+        self.raw_attributes = row
         loaded!
         persisted!
         self

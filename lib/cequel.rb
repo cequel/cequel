@@ -1,6 +1,7 @@
 require 'active_support/core_ext'
 require 'cassandra-cql/1.2'
 require 'connection_pool'
+require 'oj'
 
 require 'cequel/errors'
 require 'cequel/metal'

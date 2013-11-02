@@ -13,7 +13,7 @@ module Cequel
         class <<self; alias_method :new_empty, :new; end
         extend ConstructorMethods
 
-        attr_reader :collection_proxies
+        attr_reader :collection_proxies, :raw_attributes
         private :collection_proxies
       end
 
@@ -38,7 +38,7 @@ module Cequel
             unless Type[type].is_a?(Cequel::Type::Uuid)
               raise ArgumentError, ":auto option only valid for UUID columns"
             end
-            default = -> { CassandraCQL::UUID.new } if options.fetch(:auto, false)
+            default = -> { CassandraCQL::UUID.new }
           end
           set_attribute_default(name, default)
         end
@@ -69,6 +69,7 @@ module Cequel
           name = name.to_sym
           def_reader(name)
           def_writer(name)
+          def_raw_accessors(name)
         end
 
         def def_reader(name)
@@ -83,9 +84,17 @@ module Cequel
           RUBY
         end
 
+        def def_raw_accessors(name)
+          module_eval <<-RUBY
+            def #{name}_from_raw(value); value; end
+            def #{name}_to_raw(value); value; end
+          RUBY
+        end
+
         def def_collection_accessors(name, collection_proxy_class)
           def_collection_reader(name, collection_proxy_class)
           def_collection_writer(name)
+          def_raw_accessors(name)
         end
 
         def def_collection_reader(name, collection_proxy_class)
@@ -112,12 +121,24 @@ module Cequel
       end
 
       def initialize(&block)
-        @attributes, @collection_proxies = {}, {}
+        @attributes, @collection_proxies, @raw_attributes = {}, {}, {}
         instance_eval(&block) if block
       end
 
       def attribute_names
         @attributes.keys
+      end
+
+      def raw_attributes
+        @raw_attributes
+      end
+
+      def raw_attributes=(attributes)
+        @raw_attributes, @attributes = attributes, attributes
+
+        @attributes.each do |name, value|
+          @attributes[name] = __send__(:"#{name}_from_raw", value)
+        end
       end
 
       def attributes
@@ -167,6 +188,7 @@ module Cequel
         raise UnknownAttributeError,
           "unknown attribute: #{name}" unless column
         @attributes[name] = value.nil? ? nil : column.cast(value)
+        @raw_attributes[name] = __send__(:"#{name}_to_raw", value)
       end
 
       private
@@ -182,14 +204,21 @@ module Cequel
       def initialize_new_record(attributes = {})
         dynamic_defaults = default_attributes.
           select { |name, value| value.is_a?(Proc) }
-        @attributes = Marshal.load(Marshal.dump(
-          default_attributes.except(*dynamic_defaults.keys)))
-          dynamic_defaults.each { |name, p| @attributes[name] = p.() }
-          @new_record = true
-          yield self if block_given?
-          self.attributes = attributes
-          loaded!
-          self
+        @attributes = Marshal.load(
+          Marshal.dump(
+            default_attributes.except(*dynamic_defaults.keys)
+          )
+        )
+        dynamic_defaults.each do |name, p|
+          p.().tap do |val|
+            @attributes[name], @raw_attributes[name] = val, val
+          end
+        end
+        @new_record = true
+        yield self if block_given?
+        self.attributes = attributes
+        loaded!
+        self
       end
 
     end
