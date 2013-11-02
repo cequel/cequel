@@ -45,9 +45,9 @@ module Cequel
         end
       end
 
-      def add_data_column(name, type, index_name, serialization = nil)
+      def add_data_column(name, type, index_name)
         index_name = :"#{@name}_#{name}_idx" if index_name == true
-        DataColumn.new(name, type(type), index_name, serialization).
+        DataColumn.new(name, type(type), index_name).
           tap { |column| @data_columns << add_column(column) }
       end
 

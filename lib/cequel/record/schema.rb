@@ -44,8 +44,7 @@ module Cequel
           table_schema.add_data_column(
             name,
             type,
-            options[:index],
-            options[:serialize]
+            options[:index]
           )
         end
 

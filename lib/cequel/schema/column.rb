@@ -79,10 +79,9 @@ module Cequel
 
       attr_reader :index_name
 
-      def initialize(name, type, index_name = nil, serialization = nil)
+      def initialize(name, type, index_name = nil)
         super(name, type)
         @index_name = index_name
-        @serialization = serialization
       end
 
       def indexed?
@@ -90,11 +89,7 @@ module Cequel
       end
 
       def cast(value)
-        if @serialization == :json
-          Cequel::Serialization::Json.new(value)
-        else
-          @type.cast(value)
-        end
+        @type.cast(value)
       end
     end
 

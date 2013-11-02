@@ -153,13 +153,7 @@ module Cequel
       protected
 
       def read_attribute(name)
-        attr = @attributes.fetch(name)
-        case attr
-        when Cequel::Serialization::Base
-          attr.obj
-        else
-          attr
-        end
+        @attributes.fetch(name)
       rescue KeyError
         if self.class.reflect_on_column(name)
           raise MissingAttributeError, "missing attribute: #{name}"
