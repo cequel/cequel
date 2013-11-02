@@ -12,6 +12,15 @@ end
 
 
 describe 'serialized columns' do
+  model :Post do
+    key :blog_subdomain, :text
+    key :id, :uuid, auto: true
+    column :title, :text
+    column :author, :text, serialize: :json
+  end
+
+  uuid :id
+
   let(:author) {
     Author.new(
       'Sue',
@@ -21,15 +30,6 @@ describe 'serialized columns' do
   }
 
   describe 'using JSON' do
-    model :Post do
-      key :blog_subdomain, :text
-      key :id, :uuid, auto: true
-      column :title, :text
-      column :author, :text, serialize: :json
-    end
-
-    uuid :id
-
     let(:post) {
       Post.new(
         blog_subdomain: 'big-data',
@@ -55,5 +55,13 @@ describe 'serialized columns' do
         a.bio.should == author.bio
       end
     end
+  end
+
+  it "does not allow unrecognized options" do
+    expect {
+      Post.class_eval do
+        column :buffalo, :text, serialize: :xmlsonpack
+      end
+    }.to raise_error(ArgumentError)
   end
 end

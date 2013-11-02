@@ -9,8 +9,14 @@ module Cequel
       module ClassMethods
         def column(name, type, options = {})
           super
-          def_serialized_raw_accessors(name) if options[:serialize]
-          def_attr_writer_without_cast(name) if options[:serialize]
+          if options[:serialize]
+            if options[:serialize] == :json
+              def_serialized_raw_accessors(name)
+              def_attr_writer_without_cast(name)
+            else
+              raise ArgumentError, "Invalid option #{options[:serialize].inspect} provided for :serialize. Only :json is currently supported."
+            end
+          end
         end
 
         protected
