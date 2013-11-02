@@ -1,26 +1,59 @@
-require_relative 'spec_helper'
+require_relative "spec_helper"
 
-describe 'serialization' do
-  model :Post do
-    key :blog_subdomain, :text
-    key :id, :uuid, auto: true
-    column :title, :text
-    column :body, :text
+class Author
+  attr_reader :name, :avatar, :bio
+
+  def initialize(name, avatar, bio)
+    @name = name
+    @avatar = avatar
+    @bio = bio
   end
+end
 
-  uuid :id
 
-  let(:attributes) do
-    {
-      blog_subdomain: 'big-data',
-      id: id,
-      title: 'Cequel',
+describe 'serialized columns' do
+  let(:author) {
+    Author.new(
+      'Sue',
+      'http://example.com/sue.jpg',
+      'Sue has been writing about Cassandra since ...'
+    )
+  }
+
+  describe 'using JSON' do
+    model :Post do
+      key :blog_subdomain, :text
+      key :id, :uuid, auto: true
+      column :title, :text
+      column :author, :text, serialize: :json
+    end
+
+    uuid :id
+
+    let(:post) {
+      Post.new(
+        blog_subdomain: 'big-data',
+        id: id,
+        title: 'Cequel',
+        author: author
+      ).tap(&:save)
     }
-  end
 
-  it 'should provide JSON serialization' do
-    Post.include_root_in_json = false
-    Post.new(attributes).as_json.symbolize_keys.
-      should == attributes.merge(body: nil)
+    it 'serializes arbitrary objects' do
+      post.raw_attributes[:author].should ==
+        %{{"^o":"Author","name":"Sue","avatar":"http://example.com/sue.jpg","bio":"Sue has been writing about Cassandra since ..."}}
+    end
+
+    it 'should return the object instance' do
+      post.author.should == author
+    end
+
+    it 'should return an identical object instance when reloading' do
+      Post.at('big-data', post.id).first.author.tap do |a|
+        a.name.should == author.name
+        a.avatar.should == author.avatar
+        a.bio.should == author.bio
+      end
+    end
   end
 end
