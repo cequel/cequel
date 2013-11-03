@@ -1,6 +1,6 @@
 require_relative 'spec_helper'
 
-describe Cequel::Record
+describe Cequel::Record do
 
   describe 'serialization' do
     model :Post do
