@@ -149,7 +149,11 @@ module Cequel
             if value.nil?
               deleter.delete_columns(attribute)
             else
-              updater.set(attribute => value)
+              if key_attributes.keys.include?(attribute)
+                raise KeyError, "Can't update key #{attribute} on persisted record"
+              else
+                updater.set(attribute => value)
+              end
             end
           end
         end

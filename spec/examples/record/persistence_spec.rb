@@ -65,6 +65,13 @@ describe Cequel::Record::Persistence do
         it 'should remove old column values' do
           subject[:description].should be_nil
         end
+
+        it 'should not allow changing key values' do
+          expect {
+            blog.subdomain = 'soup'
+            blog.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
       end
     end
 
@@ -130,6 +137,11 @@ describe Cequel::Record::Persistence do
 
       it 'should save instance' do
         Blog.find(blog.subdomain).name.should == 'The Big Data Blog'
+      end
+
+      it 'should not allow updating key values' do
+        expect { blog.update_attributes(:subdomain => 'soup') }
+          .to raise_error(Cequel::Record::Persistence::KeyError)
       end
     end
 
@@ -210,6 +222,20 @@ describe Cequel::Record::Persistence do
 
         it 'should remove old column values' do
           subject[:body].should be_nil
+        end
+
+        it 'should not allow changing parent key values' do
+          expect {
+            post.blog_subdomain = 'soup'
+            post.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
+
+        it 'should not allow changing row key values' do
+          expect {
+            post.permalink = 'soup-recipes'
+            post.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
         end
       end
     end
