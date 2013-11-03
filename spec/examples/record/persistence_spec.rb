@@ -36,6 +36,12 @@ describe Cequel::Record::Persistence do
         it 'should mark row persisted' do
           blog.should be_persisted
         end
+
+        it 'should fail fast if keys are missing' do
+          expect {
+            Blog.new.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
       end
 
       context 'on update' do
@@ -80,6 +86,14 @@ describe Cequel::Record::Persistence do
         it 'should save instance' do
           Blog.find(blog.subdomain).name.should == 'Big Data'
         end
+
+        it 'should fail fast if keys are missing' do
+          expect {
+            Blog.create do |blog|
+              blog.name = 'Big Data'
+            end
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
       end
 
       describe 'with attributes' do
@@ -93,6 +107,12 @@ describe Cequel::Record::Persistence do
 
         it 'should save instance' do
           Blog.find(blog.subdomain).name.should == 'Big Data'
+        end
+
+        it 'should fail fast if keys are missing' do
+          expect {
+            Blog.create(:name => 'Big Data')
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
         end
       end
     end
@@ -149,6 +169,24 @@ describe Cequel::Record::Persistence do
 
         it 'should mark row persisted' do
           post.should be_persisted
+        end
+
+        it 'should fail fast if parent keys are missing' do
+          expect {
+            Post.new do |post|
+              post.permalink = 'cequel'
+              post.title = 'Cequel'
+            end.tap(&:save)
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
+
+        it 'should fail fast if row keys are missing' do
+          expect {
+            Post.new do |post|
+              post.blog_subdomain = 'cassandra'
+              post.title = 'Cequel'
+            end.tap(&:save)
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
         end
       end
 
