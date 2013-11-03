@@ -36,6 +36,12 @@ describe Cequel::Record::Persistence do
         it 'should mark row persisted' do
           blog.should be_persisted
         end
+
+        it 'should fail fast if keys are missing' do
+          expect {
+            Blog.new.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
       end
 
       context 'on update' do
@@ -59,6 +65,13 @@ describe Cequel::Record::Persistence do
         it 'should remove old column values' do
           subject[:description].should be_nil
         end
+
+        it 'should not allow changing key values' do
+          expect {
+            blog.subdomain = 'soup'
+            blog.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
       end
     end
 
@@ -80,6 +93,14 @@ describe Cequel::Record::Persistence do
         it 'should save instance' do
           Blog.find(blog.subdomain).name.should == 'Big Data'
         end
+
+        it 'should fail fast if keys are missing' do
+          expect {
+            Blog.create do |blog|
+              blog.name = 'Big Data'
+            end
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
       end
 
       describe 'with attributes' do
@@ -93,6 +114,12 @@ describe Cequel::Record::Persistence do
 
         it 'should save instance' do
           Blog.find(blog.subdomain).name.should == 'Big Data'
+        end
+
+        it 'should fail fast if keys are missing' do
+          expect {
+            Blog.create(:name => 'Big Data')
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
         end
       end
     end
@@ -110,6 +137,11 @@ describe Cequel::Record::Persistence do
 
       it 'should save instance' do
         Blog.find(blog.subdomain).name.should == 'The Big Data Blog'
+      end
+
+      it 'should not allow updating key values' do
+        expect { blog.update_attributes(:subdomain => 'soup') }
+          .to raise_error(Cequel::Record::Persistence::KeyError)
       end
     end
 
@@ -150,6 +182,24 @@ describe Cequel::Record::Persistence do
         it 'should mark row persisted' do
           post.should be_persisted
         end
+
+        it 'should fail fast if parent keys are missing' do
+          expect {
+            Post.new do |post|
+              post.permalink = 'cequel'
+              post.title = 'Cequel'
+            end.tap(&:save)
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
+
+        it 'should fail fast if row keys are missing' do
+          expect {
+            Post.new do |post|
+              post.blog_subdomain = 'cassandra'
+              post.title = 'Cequel'
+            end.tap(&:save)
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
       end
 
       context 'on update' do
@@ -172,6 +222,20 @@ describe Cequel::Record::Persistence do
 
         it 'should remove old column values' do
           subject[:body].should be_nil
+        end
+
+        it 'should not allow changing parent key values' do
+          expect {
+            post.blog_subdomain = 'soup'
+            post.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
+        end
+
+        it 'should not allow changing row key values' do
+          expect {
+            post.permalink = 'soup-recipes'
+            post.save
+          }.to raise_error(Cequel::Record::Persistence::KeyError)
         end
       end
     end

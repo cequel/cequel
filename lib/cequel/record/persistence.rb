@@ -7,6 +7,8 @@ module Cequel
       extend ActiveSupport::Concern
       extend Forwardable
 
+      KeyError = Class.new RuntimeError
+
       module ClassMethods
 
         extend Forwardable
@@ -25,7 +27,13 @@ module Cequel
       def_delegator 'self.class', :connection
 
       def key_attributes
-        @attributes.slice(*self.class.key_column_names)
+        @attributes.slice(*self.class.key_column_names).tap do |keys|
+          missing_keys = keys.select { |k, v| v.nil? }
+          if missing_keys.any?
+            raise KeyError,
+              "Missing required key values: #{missing_keys.keys.join(',')}"
+          end
+        end
       end
 
       def key_values
@@ -141,7 +149,11 @@ module Cequel
             if value.nil?
               deleter.delete_columns(attribute)
             else
-              updater.set(attribute => value)
+              if key_attributes.keys.include?(attribute)
+                raise KeyError, "Can't update key #{attribute} on persisted record"
+              else
+                updater.set(attribute => value)
+              end
             end
           end
         end
