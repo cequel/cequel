@@ -197,7 +197,7 @@ describe Cequel::Record::Associations do
         }.to change { Attachment.count }.by(-2)
       end
 
-      it "executes :destroy callbacks on the children" do
+      it "doesn't execute :destroy callbacks on the children" do
         expect {
           post_with_attachments.destroy
         }.to change { @callback_count }.by(0)

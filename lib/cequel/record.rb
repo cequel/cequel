@@ -16,6 +16,7 @@ require 'cequel/record/has_many_association'
 require 'cequel/record/mass_assignment'
 require 'cequel/record/callbacks'
 require 'cequel/record/validations'
+require 'cequel/record/serialization'
 require 'cequel/record/dirty'
 
 require 'cequel/record'
@@ -42,6 +43,7 @@ module Cequel
       include Callbacks
       include Validations
       include Dirty
+      include Serialization
       extend ActiveModel::Naming
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml

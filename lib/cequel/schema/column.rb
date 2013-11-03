@@ -88,6 +88,9 @@ module Cequel
         !!@index_name
       end
 
+      def cast(value)
+        @type.cast(value)
+      end
     end
 
     class CollectionColumn < Column
