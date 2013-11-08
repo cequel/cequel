@@ -224,6 +224,12 @@ module Cequel
         scoped_key_values.length >= clazz.partition_key_columns.length
       end
 
+      # Try to order results by the first clustering column. Fall back to partition key if none exist.
+      def order_by_column
+        return clazz.clustering_columns[0].name if clazz.clustering_columns.length > 0
+        clazz.key_columns[0].name
+      end
+
       private
       attr_reader :clazz
       def_delegators :clazz, :connection
@@ -257,7 +263,7 @@ module Cequel
           fragment = construct_bound_fragment(upper_bound, '<')
           data_set = data_set.where(fragment, upper_bound.value)
         end
-        data_set = data_set.order(range_key_name => :desc) if reversed?
+        data_set = data_set.order(order_by_column => :desc) if reversed?
         data_set = data_set.where(scoped_indexed_column) if scoped_indexed_column
         data_set
       end
