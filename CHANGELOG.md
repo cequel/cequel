@@ -1,3 +1,13 @@
+## 1.0.0.pre.5
+
+* Support time range queries over `timeuuid` columns
+* Typecast arguments to scoping functions of `RecordSet`
+* Typecast values in collection columns
+* Use correct ordering column for deeply nested keys
+* Don't allow updating keys on persisted models
+* Fail fast attempting to save a model that doesn't have all keys defined
+* Fixes for legacy schema support
+
 ## 1.0.0.pre.4
 
 * Full support for legacy CQL2 tables
