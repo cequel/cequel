@@ -7,8 +7,6 @@ module Cequel
       extend ActiveSupport::Concern
       extend Forwardable
 
-      KeyError = Class.new RuntimeError
-
       module ClassMethods
 
         extend Forwardable
@@ -27,13 +25,7 @@ module Cequel
       def_delegator 'self.class', :connection
 
       def key_attributes
-        @attributes.slice(*self.class.key_column_names).tap do |keys|
-          missing_keys = keys.select { |k, v| v.nil? }
-          if missing_keys.any?
-            raise KeyError,
-              "Missing required key values: #{missing_keys.keys.join(',')}"
-          end
-        end
+        @attributes.slice(*self.class.key_column_names)
       end
 
       def key_values
@@ -49,6 +41,7 @@ module Cequel
       alias :exist? :exists?
 
       def load
+        assert_keys_present!
         unless loaded?
           row = metal_scope.first
           hydrate(row) unless row.nil?
@@ -85,6 +78,7 @@ module Cequel
       end
 
       def destroy
+        assert_keys_present!
         metal_scope.delete
         transient!
         self
@@ -113,12 +107,14 @@ module Cequel
       end
 
       def create
+        assert_keys_present!
         metal_scope.insert(attributes.reject { |attr, value| value.nil? })
         loaded!
         persisted!
       end
 
       def update
+        assert_keys_present!
         connection.batch do
           updater.execute
           deleter.execute
@@ -150,7 +146,7 @@ module Cequel
               deleter.delete_columns(attribute)
             else
               if key_attributes.keys.include?(attribute)
-                raise KeyError, "Can't update key #{attribute} on persisted record"
+                raise ArgumentError, "Can't update key #{attribute} on persisted record"
               else
                 updater.set(attribute => value)
               end
@@ -188,6 +184,14 @@ module Cequel
 
       def attributes_for_deletion
         @attributes_for_deletion ||= []
+      end
+
+      def assert_keys_present!
+        missing_keys = key_attributes.select { |k, v| v.nil? }
+        if missing_keys.any?
+          raise MissingKeyError,
+            "Missing required key values: #{missing_keys.keys.join(', ')}"
+        end
       end
 
     end

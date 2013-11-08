@@ -40,7 +40,7 @@ describe Cequel::Record::Persistence do
         it 'should fail fast if keys are missing' do
           expect {
             Blog.new.save
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(Cequel::MissingKeyError)
         end
       end
 
@@ -70,7 +70,7 @@ describe Cequel::Record::Persistence do
           expect {
             blog.subdomain = 'soup'
             blog.save
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(ArgumentError)
         end
       end
     end
@@ -99,7 +99,7 @@ describe Cequel::Record::Persistence do
             Blog.create do |blog|
               blog.name = 'Big Data'
             end
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(Cequel::MissingKeyError)
         end
       end
 
@@ -119,7 +119,7 @@ describe Cequel::Record::Persistence do
         it 'should fail fast if keys are missing' do
           expect {
             Blog.create(:name => 'Big Data')
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(Cequel::MissingKeyError)
         end
       end
     end
@@ -141,7 +141,7 @@ describe Cequel::Record::Persistence do
 
       it 'should not allow updating key values' do
         expect { blog.update_attributes(:subdomain => 'soup') }
-          .to raise_error(Cequel::Record::Persistence::KeyError)
+          .to raise_error(ArgumentError)
       end
     end
 
@@ -189,7 +189,7 @@ describe Cequel::Record::Persistence do
               post.permalink = 'cequel'
               post.title = 'Cequel'
             end.tap(&:save)
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(Cequel::MissingKeyError)
         end
 
         it 'should fail fast if row keys are missing' do
@@ -198,7 +198,7 @@ describe Cequel::Record::Persistence do
               post.blog_subdomain = 'cassandra'
               post.title = 'Cequel'
             end.tap(&:save)
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(Cequel::MissingKeyError)
         end
       end
 
@@ -228,14 +228,14 @@ describe Cequel::Record::Persistence do
           expect {
             post.blog_subdomain = 'soup'
             post.save
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(ArgumentError)
         end
 
         it 'should not allow changing row key values' do
           expect {
             post.permalink = 'soup-recipes'
             post.save
-          }.to raise_error(Cequel::Record::Persistence::KeyError)
+          }.to raise_error(ArgumentError)
         end
       end
     end
