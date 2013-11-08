@@ -157,6 +157,21 @@ Note that record sets always load records in batches; Cassandra does not support
 result sets of unbounded size. This process is transparent to you but you'll see
 multiple queries in your logs if you're iterating over a huge result set.
 
+#### Time UUID Queries ####
+
+CQL has [special handling for the `timeuuid`
+type](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/cql_data_types_c.html#reference_ds_axc_xk5_yj),
+which allows you to return a rows whose UUID keys correspond to a range of
+timestamps. 
+
+Cequel automatically constructs timeuuid range queries if you pass a `Time`
+value for a range over a `timeuuid` column. So, if you want to get the posts
+from the last day, you can run:
+
+```ruby
+Blog['myblog'].posts.from(1.day.ago)
+```
+
 ### Updating records ###
 
 When you update an existing record, Cequel will only write statements to the
