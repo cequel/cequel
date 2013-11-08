@@ -12,8 +12,8 @@ describe Cequel::Record::RecordSet do
     key :permalink, :ascii
     column :title, :text
     column :body, :text
-    column :author_id, :uuid, :index => true
-    column :author_name, :text, :index => true
+    column :author_id, :uuid, index: true
+    column :author_name, :text, index: true
     list :tags, :text
     set :categories, :text
     map :shares, :text, :int
@@ -30,8 +30,15 @@ describe Cequel::Record::RecordSet do
     column :body, :text
   end
 
+  model :PublishedPost do
+    key :blog_subdomain, :ascii
+    key :published_at, :timeuuid
+    column :permalink, :ascii, index: true
+  end
+
   let(:subdomains) { [] }
   let(:uuids) { Array.new(2) { CassandraCQL::UUID.new }}
+  let(:now) { Time.at(Time.now.to_i) }
 
   before do
     cequel.batch do
@@ -50,6 +57,11 @@ describe Cequel::Record::RecordSet do
           :title => "Cequel #{i}",
           :body => "Post number #{i}",
           :author_id => uuids[i%2]
+        )
+        cequel[:published_posts].insert(
+          :blog_subdomain => 'cassandra',
+          :published_at => max_uuid(now + (i - 4).minutes),
+          :permalink => "cequel#{i}"
         )
         cequel[:posts].insert(
           :blog_subdomain => 'postgres',
@@ -220,6 +232,11 @@ describe Cequel::Record::RecordSet do
       Post.at('cassandra').after('cequel1'.force_encoding('ASCII-8BIT')).
         map(&:title).should == (2...5).map { |i| "Cequel #{i}" }
     end
+
+    it 'should query Time range for Timeuuid key' do
+      PublishedPost['cassandra'].after(now - 3.minutes).map(&:permalink).
+        should == %w(cequel2 cequel3 cequel4)
+    end
   end
 
   describe '#from' do
@@ -233,6 +250,11 @@ describe Cequel::Record::RecordSet do
         map(&:title).should == (1...5).map { |i| "Cequel #{i}" }
     end
 
+    it 'should query Time range for Timeuuid key' do
+      PublishedPost['cassandra'].from(now - 3.minutes).map(&:permalink).
+        should == %w(cequel1 cequel2 cequel3 cequel4)
+    end
+
     it 'should raise ArgumentError when called on partition key' do
       expect { Post.from('cassandra') }.
         to raise_error(Cequel::Record::IllegalQuery)
@@ -243,6 +265,11 @@ describe Cequel::Record::RecordSet do
     it 'should return collection before given key' do
       Post.at('cassandra').before('cequel3').map(&:title).
         should == (0...3).map { |i| "Cequel #{i}" }
+    end
+
+    it 'should query Time range for Timeuuid key' do
+      PublishedPost['cassandra'].before(now - 1.minute).map(&:permalink).
+        should == %w(cequel0 cequel1 cequel2)
     end
 
     it 'should cast argument' do
@@ -261,6 +288,11 @@ describe Cequel::Record::RecordSet do
       Post.at('cassandra').upto('cequel3'.force_encoding('ASCII-8BIT')).
         map(&:title).should == (0..3).map { |i| "Cequel #{i}" }
     end
+
+    it 'should query Time range for Timeuuid key' do
+      PublishedPost['cassandra'].upto(now - 1.minute).map(&:permalink).
+        should == %w(cequel0 cequel1 cequel2 cequel3)
+    end
   end
 
   describe '#in' do
@@ -278,6 +310,16 @@ describe Cequel::Record::RecordSet do
     it 'should return collection with exclusive upper bound' do
       Post.at('cassandra').in('cequel1'...'cequel3').map(&:title).
         should == (1...3).map { |i| "Cequel #{i}" }
+    end
+
+    it 'should query Time range for Timeuuid key' do
+      PublishedPost['cassandra'].in((now - 3.minutes)..(now - 1.minute)).
+        map(&:permalink).should == %w(cequel1 cequel2 cequel3)
+    end
+
+    it 'should query Time range for Timeuuid key with exclusive upper bound' do
+      PublishedPost['cassandra'].in((now - 3.minutes)...(now - 1.minute)).
+        map(&:permalink).should == %w(cequel1 cequel2)
     end
   end
 
