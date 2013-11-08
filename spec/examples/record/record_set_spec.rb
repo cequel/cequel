@@ -23,6 +23,13 @@ describe Cequel::Record::RecordSet do
     end
   end
 
+  model :Comment do
+    key :blog_subdomain, :text
+    key :permalink, :text
+    key :id, :uuid, :auto => true
+    column :body, :text
+  end
+
   let(:subdomains) { [] }
   let(:uuids) { Array.new(2) { CassandraCQL::UUID.new }}
 
@@ -35,8 +42,7 @@ describe Cequel::Record::RecordSet do
           blog.description = "This is Blog number #{i}"
         end.save
       end
-    end
-    cequel.batch do
+
       5.times do |i|
         cequel[:posts].insert(
           :blog_subdomain => 'cassandra',
@@ -49,6 +55,15 @@ describe Cequel::Record::RecordSet do
           :blog_subdomain => 'postgres',
           :permalink => "sequel#{i}",
           :title => "Sequel #{i}"
+        )
+      end
+
+      5.times do |i|
+        cequel[:comments].insert(
+          :blog_subdomain => 'cassandra',
+          :permalink => 'cequel0',
+          :id => CassandraCQL::UUID.new(Time.now - 5 + i),
+          :body => "Comment #{i}"
         )
       end
     end
@@ -234,6 +249,11 @@ describe Cequel::Record::RecordSet do
 
     it 'should raise an error if range key is a partition key' do
       expect { Post.all.reverse }.to raise_error(Cequel::Record::IllegalQuery)
+    end
+
+    it 'should use the correct ordering column in deeply nested models' do
+      Comment['cassandra']['cequel0'].reverse.map(&:body).
+        should == (0...5).map { |i| "Comment #{i}" }.reverse
     end
   end
 
