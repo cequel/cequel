@@ -18,6 +18,10 @@ module Cequel
         false
       end
 
+      def type?(type_in)
+        type.is_a?(type_in)
+      end
+
       def clustering_column?
         false
       end

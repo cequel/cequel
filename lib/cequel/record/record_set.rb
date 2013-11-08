@@ -8,8 +8,6 @@ module Cequel
       extend Cequel::Util::HashAccessors
       include Enumerable
 
-      Bound = Struct.new(:value, :inclusive)
-
       def self.default_attributes
         {:scoped_key_values => [], :select_columns => []}
       end
@@ -78,17 +76,17 @@ module Cequel
       end
 
       def after(start_key)
-        scoped(lower_bound: bound(start_key, false))
+        scoped(lower_bound: bound(true, false, start_key))
       end
 
       def before(end_key)
-        scoped(upper_bound: bound(end_key, false))
+        scoped(upper_bound: bound(false, false, end_key))
       end
 
       def in(range)
         scoped(
-          lower_bound: bound(range.first, true),
-          upper_bound: bound(range.last, !range.exclude_end?)
+          lower_bound: bound(true, true, range.first),
+          upper_bound: bound(false, !range.exclude_end?, range.last)
         )
       end
 
@@ -97,7 +95,7 @@ module Cequel
           raise IllegalQuery,
             "Can't construct exclusive range on partition key #{range_key_name}"
         end
-        scoped(lower_bound: bound(start_key, true))
+        scoped(lower_bound: bound(true, true, start_key))
       end
 
       def upto(end_key)
@@ -105,7 +103,7 @@ module Cequel
           raise IllegalQuery,
             "Can't construct exclusive range on partition key #{range_key_name}"
         end
-        scoped(upper_bound: bound(end_key, true))
+        scoped(upper_bound: bound(false, true, end_key))
       end
 
       def reverse
@@ -268,33 +266,26 @@ module Cequel
           data_set = data_set.where(key_conditions)
         end
         if lower_bound
-          fragment = construct_bound_fragment(lower_bound, '>')
-          data_set = data_set.where(fragment, lower_bound.value)
+          data_set = data_set.where(*lower_bound.to_cql_with_bind_variables)
         end
         if upper_bound
-          fragment = construct_bound_fragment(upper_bound, '<')
-          data_set = data_set.where(fragment, upper_bound.value)
+          data_set = data_set.where(*upper_bound.to_cql_with_bind_variables)
         end
         data_set = data_set.order(order_by_column => :desc) if reversed?
         data_set = data_set.where(scoped_indexed_column) if scoped_indexed_column
         data_set
       end
 
-      def construct_bound_fragment(bound, base_operator)
-        operator = bound.inclusive ? "#{base_operator}=" : base_operator
-        single_partition? ?
-          "#{range_key_name} #{operator} ?" :
-          "TOKEN(#{range_key_name}) #{operator} TOKEN(?)"
+      def bound(gt, inclusive, value)
+        Bound.create(range_key_column, gt, inclusive, value)
       end
 
-      def bound(value, inclusive)
-        unless range_key_column.type.is_a?(Type::Timeuuid) && value.is_a?(Time)
-          value = cast_range_key(value)
+      def cast_range_key_for_bound(value)
+        if range_key_column.type?(Type::Timeuuid) && !value.is_a?(CassandraCQL::UUID)
+          Type::Timestamp.instance.cast(value)
+        else
+          cast_range_key(value)
         end
-        Bound.new(value, inclusive)
-      end
-
-      def cast_range_key_for_bound(value, inclusive)
       end
 
       def scoped(new_attributes = {}, &block)
