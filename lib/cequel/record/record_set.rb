@@ -226,8 +226,7 @@ module Cequel
 
       # Try to order results by the first clustering column. Fall back to partition key if none exist.
       def order_by_column
-        return clazz.clustering_columns[0].name if clazz.clustering_columns.length > 0
-        clazz.key_columns[0].name
+        clazz.clustering_columns.first.name if clazz.clustering_columns.any?
       end
 
       private
