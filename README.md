@@ -139,18 +139,25 @@ particular CQL query. They behave similarly to ActiveRecord scopes:
 Post.select(:id, :title).reverse.limit(10)
 ```
 
-To scope a record set to a primary key value, use the `at` method. This will
+To scope a record set to a primary key value, use the `[]` operator. This will
 define a scoped value for the first unscoped primary key in the record set:
 
 ```ruby
-Post.at('bigdata') # scopes posts with blog_subdomain="bigdata"
+Post['bigdata'] # scopes posts with blog_subdomain="bigdata"
+```
+
+You can pass multiple arguments to the `[]` operator, which will generate an
+`IN` query:
+
+```ruby
+Post['bigdata', 'nosql'] # scopes posts with blog_subdomain IN ("bigdata", "nosql")
 ```
 
 To select ranges of data, use `before`, `after`, `from`, `upto`, and `in`. Like
-the `at` method, these methods operate on the first unscoped primary key:
+the `[]` operator, these methods operate on the first unscoped primary key:
 
 ```ruby
-Post.at('bigdata').after(last_id) # scopes posts with blog_subdomain="bigdata" and id > last_id
+Post['bigdata'].after(last_id) # scopes posts with blog_subdomain="bigdata" and id > last_id
 ```
 
 Note that record sets always load records in batches; Cassandra does not support
@@ -200,13 +207,29 @@ be a bit more efficient:
 ```ruby
 class PostsController < ActionController::Base
   def show
-    Blog[current_subdomain].posts.find(params[:id])
+    @post = Blog[current_subdomain].posts.find(params[:id])
   end
 end
 ```
 
 If you attempt to access a data attribute on an unloaded class, it will
 lazy-load the row from the database and become a normal loaded instance.
+
+You can generate a collection of unloaded instances by passing multiple
+arguments to `[]`:
+
+```ruby
+class BlogsController < ActionController::Base
+  def recommended
+    @blogs = Blog['cassandra', 'nosql']
+  end
+end
+```
+
+The above will not generate a CQL query, but when you access a property on any
+of the unloaded `Blog` instances, Cequel will load data for all of them with
+a single query. Note that CQL does not allow selecting collection columns when
+loading multiple records by primary key; only scalar columns will be loaded.
 
 There is another use for unloaded instances: you may set attributes on an
 unloaded instance and call `save` without ever actually reading the row from
@@ -290,7 +313,7 @@ You can also call the `where` method directly on record sets:
 Post.where(:author_id, id)
 ```
 
-Note that `where` is only for secondary indexed columns; use `at` to scope
+Note that `where` is only for secondary indexed columns; use `[]` to scope
 record sets by primary keys.
 
 ### ActiveModel Support ###

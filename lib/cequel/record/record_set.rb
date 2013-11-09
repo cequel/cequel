@@ -12,10 +12,13 @@ module Cequel
         {:scoped_key_values => [], :select_columns => []}
       end
 
-      def initialize(clazz, attributes = {})
+      attr_reader :target_class
+      attr_writer :unloaded_records
+
+      def initialize(target_class, attributes = {})
         attributes = self.class.default_attributes.merge!(attributes)
-        @clazz, @attributes = clazz, attributes
-        super(clazz)
+        @target_class, @attributes = target_class, attributes
+        super(target_class)
       end
 
       def all
@@ -32,11 +35,11 @@ module Cequel
       end
 
       def where(column_name, value)
-        column = clazz.reflect_on_column(column_name)
+        column = target_class.reflect_on_column(column_name)
         raise IllegalQuery,
           "Can't scope by more than one indexed column in the same query" if scoped_indexed_column
         raise ArgumentError,
-          "No column #{column_name} configured for #{clazz.name}" unless column
+          "No column #{column_name} configured for #{target_class.name}" unless column
         raise ArgumentError,
           "Use the `at` method to restrict scope by primary key" unless column.data_column?
         raise ArgumentError,
@@ -45,26 +48,20 @@ module Cequel
       end
 
       def at(*scoped_key_values)
-        scoped do |attributes|
-          type_cast_key_values = scoped_key_values.zip(unscoped_key_columns).
-            map { |value, column| column.cast(value) }
-          attributes[:scoped_key_values].concat(type_cast_key_values)
-        end
+        warn "`at` is deprecated. Use `[]` instead"
+        scoped_key_values.
+          inject(self) { |record_set, key_value| record_set[key_value] }
       end
 
-      def [](scoped_key_value)
-        scoped_key_value = cast_range_key(scoped_key_value)
+      def [](*new_scoped_key_values)
+        new_scoped_key_values =
+          new_scoped_key_values.map(&method(:cast_range_key))
 
-        if next_range_key_column
-          at(scoped_key_value)
-        else
-          attributes = {}
-          key_values = [*scoped_key_values, scoped_key_value]
-          clazz.key_column_names.zip(key_values) do |key_name, key_value|
-            attributes[key_name] = key_value
-          end
-          clazz.new_empty { @attributes = attributes }
-        end
+        new_scoped_key_values =
+          new_scoped_key_values.first if new_scoped_key_values.one?
+
+        scoped { |attributes| attributes[:scoped_key_values] <<
+          new_scoped_key_values }.resolve_if_fully_specified
       end
 
       def find(*scoped_key_values)
@@ -72,7 +69,7 @@ module Cequel
       end
 
       def /(scoped_key_value)
-        at(scoped_key_value)
+        self[scoped_key_value]
       end
 
       def after(start_key)
@@ -91,7 +88,7 @@ module Cequel
       end
 
       def from(start_key)
-        unless single_partition?
+        unless partition_specified?
           raise IllegalQuery,
             "Can't construct exclusive range on partition key #{range_key_name}"
         end
@@ -99,7 +96,7 @@ module Cequel
       end
 
       def upto(end_key)
-        unless single_partition?
+        unless partition_specified?
           raise IllegalQuery,
             "Can't construct exclusive range on partition key #{range_key_name}"
         end
@@ -107,7 +104,7 @@ module Cequel
       end
 
       def reverse
-        unless single_partition?
+        unless partition_specified?
           raise IllegalQuery,
             "Can't reverse without scoping to partition key #{range_key_name}"
         end
@@ -134,7 +131,7 @@ module Cequel
 
       def find_each(options = {})
         return enum_for(:find_each, options) unless block_given?
-        find_each_row(options) { |row| yield clazz.hydrate(row) }
+        find_each_row(options) { |row| yield target_class.hydrate(row) }
       end
 
       def find_each_row(options = {}, &block)
@@ -211,11 +208,11 @@ module Cequel
       end
 
       def scoped_key_columns
-        clazz.key_columns.first(scoped_key_values.length)
+        target_class.key_columns.first(scoped_key_values.length)
       end
 
       def unscoped_key_columns
-        clazz.key_columns.drop(scoped_key_values.length)
+        target_class.key_columns.drop(scoped_key_values.length)
       end
 
       def unscoped_key_names
@@ -238,27 +235,68 @@ module Cequel
         next_range_key_column.try(:name)
       end
 
-      def single_partition?
-        scoped_key_values.length >= clazz.partition_key_columns.length
+      def fully_specified?
+        scoped_key_values.length == target_class.key_columns.length
+      end
+
+      def partition_specified?
+        scoped_key_values.length >= target_class.partition_key_columns.length
+      end
+
+      def multiple_records_specified?
+        scoped_key_values.any? { |values| values.is_a?(Array) }
+      end
+
+      def resolve_if_fully_specified
+        if fully_specified?
+          if multiple_records_specified?
+            LazyRecordCollection.new(select_non_collection_columns!)
+          else
+            LazyRecordCollection.new(self).first
+          end
+        else
+          self
+        end
       end
 
       # Try to order results by the first clustering column. Fall back to partition key if none exist.
       def order_by_column
-        clazz.clustering_columns.first.name if clazz.clustering_columns.any?
+        target_class.clustering_columns.first.name if target_class.clustering_columns.any?
+      end
+
+      def selects_collection_columns?
+        select_columns.any? do |column_name|
+          target_class.reflect_on_column(column_name).
+            is_a?(Cequel::Schema::CollectionColumn)
+        end
+      end
+
+      def select_non_collection_columns!
+        if selects_collection_columns?
+          raise ArgumentError,
+            "Can't scope by multiple keys when selecting a collection column."
+        end
+        if select_columns.empty?
+          non_collection_columns = target_class.columns.
+            reject { |column| column.is_a?(Cequel::Schema::CollectionColumn) }.
+            map { |column| column.name }
+          select(*non_collection_columns)
+        else
+          self
+        end
       end
 
       private
-      attr_reader :clazz
-      def_delegators :clazz, :connection
+      def_delegators :target_class, :connection
       def_delegator :range_key_column, :cast, :cast_range_key
       private :connection, :cast_range_key
 
       def method_missing(method, *args, &block)
-        clazz.with_scope(self) { super }
+        target_class.with_scope(self) { super }
       end
 
       def construct_data_set
-        data_set = connection[clazz.table_name]
+        data_set = connection[target_class.table_name]
         data_set = data_set.limit(row_limit) if row_limit
         data_set = data_set.select(*select_columns) if select_columns
         if scoped_key_values
@@ -292,7 +330,7 @@ module Cequel
         attributes_copy = Marshal.load(Marshal.dump(attributes))
         attributes_copy.merge!(new_attributes)
         attributes_copy.tap(&block) if block
-        RecordSet.new(clazz, attributes_copy)
+        RecordSet.new(target_class, attributes_copy)
       end
 
     end

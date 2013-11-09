@@ -17,7 +17,7 @@ module Cequel
         end
 
         def hydrate(row)
-          new_empty { hydrate(row) }
+          new_empty(row).__send__(:hydrated!)
         end
 
       end
@@ -42,11 +42,7 @@ module Cequel
 
       def load
         assert_keys_present!
-        unless loaded?
-          row = metal_scope.first
-          hydrate(row) unless row.nil?
-          collection_proxies.each_value { |collection| collection.loaded! }
-        end
+        record_collection.load! unless loaded?
         self
       end
 
@@ -96,14 +92,22 @@ module Cequel
         !persisted?
       end
 
+      def hydrate(row)
+        @attributes = row
+        hydrated!
+        self
+      end
+
       protected
 
       def persisted!
         @persisted = true
+        self
       end
 
       def transient!
         @persisted = false
+        self
       end
 
       def create
@@ -159,8 +163,13 @@ module Cequel
         end
       end
 
-      def hydrate(row)
-        @attributes = row
+      def record_collection
+        @record_collection ||=
+          LazyRecordCollection.new(self.class.at(*key_values)).
+          tap { |set| set.__setobj__([self]) }
+      end
+
+      def hydrated!
         loaded!
         persisted!
         self
@@ -169,11 +178,11 @@ module Cequel
       def loaded!
         @loaded = true
         collection_proxies.each_value { |collection| collection.loaded! }
+        self
       end
 
       def metal_scope
-        connection[table_name].
-          where(key_attributes)
+        connection[table_name].where(key_attributes)
       end
 
       def attributes_for_create

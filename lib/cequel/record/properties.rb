@@ -111,9 +111,10 @@ module Cequel
 
       end
 
-      def initialize(&block)
-        @attributes, @collection_proxies = {}, {}
-        instance_eval(&block) if block
+      # FIXME this isn't empty anymore! Rethink.
+      def initialize(attributes = {}, record_collection = nil)
+        @attributes, @record_collection = attributes, record_collection
+        @collection_proxies = {}
       end
 
       def attribute_names

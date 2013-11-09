@@ -36,53 +36,92 @@ describe Cequel::Record::RecordSet do
     column :permalink, :ascii, index: true
   end
 
-  let(:subdomains) { [] }
+  let(:subdomains) { blogs.map(&:subdomain) }
   let(:uuids) { Array.new(2) { CassandraCQL::UUID.new }}
   let(:now) { Time.at(Time.now.to_i) }
 
-  before do
-    cequel.batch do
-      3.times do |i|
-        Blog.new do |blog|
-          subdomains << blog.subdomain = "blog-#{i}"
-          blog.name = "Blog #{i}"
-          blog.description = "This is Blog number #{i}"
-        end.save
-      end
-
-      5.times do |i|
-        cequel[:posts].insert(
-          :blog_subdomain => 'cassandra',
-          :permalink => "cequel#{i}",
-          :title => "Cequel #{i}",
-          :body => "Post number #{i}",
-          :author_id => uuids[i%2]
-        )
-        cequel[:published_posts].insert(
-          :blog_subdomain => 'cassandra',
-          :published_at => max_uuid(now + (i - 4).minutes),
-          :permalink => "cequel#{i}"
-        )
-        cequel[:posts].insert(
-          :blog_subdomain => 'postgres',
-          :permalink => "sequel#{i}",
-          :title => "Sequel #{i}"
-        )
-      end
-
-      5.times do |i|
-        cequel[:comments].insert(
-          :blog_subdomain => 'cassandra',
-          :permalink => 'cequel0',
-          :id => CassandraCQL::UUID.new(Time.now - 5 + i),
-          :body => "Comment #{i}"
-        )
+  let(:blogs) do
+    3.times.map do |i|
+      Blog.new do |blog|
+        blog.subdomain = "blog-#{i}"
+        blog.name = "Blog #{i}"
+        blog.description = "This is Blog number #{i}"
       end
     end
   end
 
+  let(:cassandra_posts) do
+    5.times.map do |i|
+      Post.new(
+        :blog_subdomain => 'cassandra',
+        :permalink => "cequel#{i}",
+        :title => "Cequel #{i}",
+        :body => "Post number #{i}",
+        :author_id => uuids[i%2]
+      )
+    end
+  end
+
+  let(:published_posts) do
+    5.times.map do |i|
+      PublishedPost.new(
+        :blog_subdomain => 'cassandra',
+        :published_at => max_uuid(now + (i - 4).minutes),
+        :permalink => "cequel#{i}"
+      )
+    end
+  end
+
+  let(:postgres_posts) do
+    5.times.map do |i|
+      Post.new(
+        :blog_subdomain => 'postgres',
+        :permalink => "sequel#{i}",
+        :title => "Sequel #{i}"
+      )
+    end
+  end
+
+  let(:mongo_posts) do
+    5.times.map do |i|
+      Post.new(
+        :blog_subdomain => 'mongo',
+        :permalink => "mongoid#{i}",
+        :title => "Mongoid #{i}"
+      )
+    end
+  end
+
+  let(:orm_posts) do
+    5.times.map do |i|
+      Post.new(
+        :blog_subdomain => 'orms',
+        :permalink => "cequel#{i}",
+        :title => "Cequel ORM #{i}"
+      )
+    end
+  end
+
+  let(:posts) { [cassandra_posts, postgres_posts] }
+
+  let(:comments) do
+    5.times.map do |i|
+      Comment.new(
+        :blog_subdomain => 'cassandra',
+        :permalink => 'cequel0',
+        :id => CassandraCQL::UUID.new(Time.now - 5 + i),
+        :body => "Comment #{i}"
+      )
+    end
+  end
+
+  let(:records) { posts }
+
+  before { cequel.batch { records.flatten.each { |record| record.save! }}}
+
   describe '::find' do
     context 'simple primary key' do
+      let(:records) { blogs }
       subject { Blog.find('blog-0') }
 
       its(:subdomain) { should == 'blog-0' }
@@ -104,6 +143,7 @@ describe Cequel::Record::RecordSet do
     end
 
     context 'compound primary key' do
+      let(:records) { cassandra_posts }
       subject { Post['cassandra'].find('cequel0') }
 
       its(:blog_subdomain) { should == 'cassandra' }
@@ -128,7 +168,8 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '::[]' do
-    context 'simple primary key' do
+    context 'fully specified simple primary key' do
+      let(:records) { blogs }
       subject { Blog['blog-0'] }
 
       it 'should not query the database' do
@@ -151,7 +192,32 @@ describe Cequel::Record::RecordSet do
       end
     end
 
-    context 'compound primary key' do
+    context 'multiple simple primary keys' do
+      let(:records) { blogs }
+      subject { Blog['blog-0', 'blog-1'] }
+
+      it 'should return both specified records' do
+        subject.map(&:subdomain).should =~ %w(blog-0 blog-1)
+      end
+
+      it 'should not query the database' do
+        disallow_queries!
+        subject.map(&:subdomain)
+      end
+
+      it 'should load value lazily' do
+        subject.first.name.should == 'Blog 0'
+      end
+
+      it 'should load values for all referenced records on first access' do
+        max_statements! 1
+        subject.first.name.should == 'Blog 0'
+        subject.last.name.should == 'Blog 1'
+      end
+    end
+
+    context 'fully specified compound primary key' do
+      let(:records) { posts }
       subject { Post['cassandra']['cequel0'] }
 
       it 'should not query the database' do
@@ -175,61 +241,118 @@ describe Cequel::Record::RecordSet do
         subject.body.should == 'Post number 0'
       end
     end
+
+    context 'fully specified compound primary key with multiple clustering columns' do
+      let(:records) { posts }
+      subject { Post['cassandra']['cequel0', 'cequel1'] }
+
+      it 'should combine partition key with each clustering column' do
+        disallow_queries!
+        subject.map(&:key_values).
+          should == [['cassandra', 'cequel0'], ['cassandra', 'cequel1']]
+      end
+
+      it 'should lazily load all records when one record accessed' do
+        max_statements! 1
+        subject.first.title.should == 'Cequel 0'
+        subject.second.title.should == 'Cequel 1'
+      end
+
+      it 'should not allow collection columns to be selected' do
+        expect { Post.select(:tags)['cassandra']['cequel0', 'cequel1'] }.
+          to raise_error(ArgumentError)
+      end
+    end
+
+    context 'partially specified compound primary key' do
+      let(:records) { posts }
+      it 'should create partial collection if not all keys specified' do
+        Post['cassandra'].find_each(:batch_size => 2).map(&:title).
+          should == (0...5).map { |i| "Cequel #{i}" }
+      end
+    end
+
+    context 'partially specified compound primary key with multiple partition keys' do
+      let(:records) { posts }
+      subject { Post['cassandra', 'postgres'] }
+
+      it 'should return scope to keys' do
+        subject.map { |post| post.title }.should =~ (0...5).
+          map { |i| ["Cequel #{i}", "Sequel #{i}"] }.flatten
+      end
+    end
+
+    context 'fully specified compound primary key with multiple partition keys' do
+      let(:records) { [posts, orm_posts] }
+
+      subject { Post['cassandra', 'orms']['cequel0'] }
+
+      it 'should return collection of unloaded models' do
+        disallow_queries!
+        subject.map(&:key_values).
+          should == [['cassandra', 'cequel0'], ['orms', 'cequel0']]
+      end
+
+      it 'should lazy-load all records when properties of one accessed' do
+        max_statements! 1
+        subject.first.title.should == 'Cequel 0'
+        subject.second.title.should == 'Cequel ORM 0'
+      end
+    end
   end
 
   describe '#all' do
+    let(:records) { blogs }
+
     it 'should return all the records' do
       Blog.all.map(&:subdomain).should =~ subdomains
     end
   end
 
   describe '#find_each' do
+    let(:records) { [posts, blogs, mongo_posts] }
+
     it 'should respect :batch_size argument' do
       cequel.should_receive(:execute).twice.and_call_original
       Blog.find_each(:batch_size => 2).map(&:subdomain).
         should =~ subdomains
     end
     it 'should iterate over all keys' do
-      Post.find_each(:batch_size => 2).map(&:title).
-        should =~ (0...5).flat_map { |i| ["Cequel #{i}", "Sequel #{i}"] }
+      Post.find_each(:batch_size => 2).map(&:title).should =~
+        (0...5).flat_map { |i| ["Cequel #{i}", "Sequel #{i}", "Mongoid #{i}"] }
     end
   end
 
-  describe '#at' do
+  describe '#[]' do
     it 'should return partial collection' do
-      Post.at('cassandra').find_each(:batch_size => 2).map(&:title).
+      Post['cassandra'].find_each(:batch_size => 2).map(&:title).
         should == (0...5).map { |i| "Cequel #{i}" }
     end
 
     it 'should cast arguments correctly' do
-      Post.at('cassandra'.force_encoding('ASCII-8BIT')).
+      Post['cassandra'.force_encoding('ASCII-8BIT')].
         find_each(:batch_size => 2).map(&:title).
         should == (0...5).map { |i| "Cequel #{i}" }
     end
   end
 
-  describe '#[]' do
-    it 'should create partial collection if not all keys specified' do
-      Post['cassandra'].find_each(:batch_size => 2).map(&:title).
-        should == (0...5).map { |i| "Cequel #{i}" }
-    end
-  end
-
   describe '#/' do
-    it 'should behave like #at' do
+    it 'should behave like #[]' do
       (Post / 'cassandra').find_each(:batch_size => 2).map(&:title).
         should == (0...5).map { |i| "Cequel #{i}" }
     end
   end
 
   describe '#after' do
+    let(:records) { [posts, published_posts] }
+
     it 'should return collection after given key' do
-      Post.at('cassandra').after('cequel1').map(&:title).
+      Post['cassandra'].after('cequel1').map(&:title).
         should == (2...5).map { |i| "Cequel #{i}" }
     end
 
     it 'should cast argument' do
-      Post.at('cassandra').after('cequel1'.force_encoding('ASCII-8BIT')).
+      Post['cassandra'].after('cequel1'.force_encoding('ASCII-8BIT')).
         map(&:title).should == (2...5).map { |i| "Cequel #{i}" }
     end
 
@@ -240,13 +363,15 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#from' do
+    let(:records) { [posts, published_posts] }
+
     it 'should return collection starting with given key' do
-      Post.at('cassandra').from('cequel1').map(&:title).
+      Post['cassandra'].from('cequel1').map(&:title).
         should == (1...5).map { |i| "Cequel #{i}" }
     end
 
     it 'should cast argument' do
-      Post.at('cassandra').from('cequel1'.force_encoding('ASCII-8BIT')).
+      Post['cassandra'].from('cequel1'.force_encoding('ASCII-8BIT')).
         map(&:title).should == (1...5).map { |i| "Cequel #{i}" }
     end
 
@@ -262,8 +387,10 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#before' do
+    let(:records) { [posts, published_posts] }
+
     it 'should return collection before given key' do
-      Post.at('cassandra').before('cequel3').map(&:title).
+      Post['cassandra'].before('cequel3').map(&:title).
         should == (0...3).map { |i| "Cequel #{i}" }
     end
 
@@ -273,19 +400,21 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should cast argument' do
-      Post.at('cassandra').before('cequel3'.force_encoding('ASCII-8BIT')).
+      Post['cassandra'].before('cequel3'.force_encoding('ASCII-8BIT')).
         map(&:title).should == (0...3).map { |i| "Cequel #{i}" }
     end
   end
 
   describe '#upto' do
+    let(:records) { [posts, published_posts] }
+
     it 'should return collection up to given key' do
-      Post.at('cassandra').upto('cequel3').map(&:title).
+      Post['cassandra'].upto('cequel3').map(&:title).
         should == (0..3).map { |i| "Cequel #{i}" }
     end
 
     it 'should cast argument' do
-      Post.at('cassandra').upto('cequel3'.force_encoding('ASCII-8BIT')).
+      Post['cassandra'].upto('cequel3'.force_encoding('ASCII-8BIT')).
         map(&:title).should == (0..3).map { |i| "Cequel #{i}" }
     end
 
@@ -296,19 +425,21 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#in' do
+    let(:records) { [posts, published_posts] }
+
     it 'should return collection with inclusive upper bound' do
-      Post.at('cassandra').in('cequel1'..'cequel3').map(&:title).
+      Post['cassandra'].in('cequel1'..'cequel3').map(&:title).
         should == (1..3).map { |i| "Cequel #{i}" }
     end
 
     it 'should cast arguments' do
-      Post.at('cassandra').in('cequel1'.force_encoding('ASCII-8BIT')..
+      Post['cassandra'].in('cequel1'.force_encoding('ASCII-8BIT')..
                               'cequel3'.force_encoding('ASCII-8BIT')).
         map(&:title).should == (1..3).map { |i| "Cequel #{i}" }
     end
 
     it 'should return collection with exclusive upper bound' do
-      Post.at('cassandra').in('cequel1'...'cequel3').map(&:title).
+      Post['cassandra'].in('cequel1'...'cequel3').map(&:title).
         should == (1...3).map { |i| "Cequel #{i}" }
     end
 
@@ -324,18 +455,20 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#reverse' do
+    let(:records) { [posts, comments] }
+
     it 'should not call the database' do
       disallow_queries!
-      Post.at('cassandra').reverse
+      Post['cassandra'].reverse
     end
 
     it 'should return collection in reverse' do
-      Post.at('cassandra').reverse.map(&:title).
+      Post['cassandra'].reverse.map(&:title).
         should == (0...5).map { |i| "Cequel #{i}" }.reverse
     end
 
     it 'should batch iterate over collection in reverse' do
-      Post.at('cassandra').reverse.find_each(:batch_size => 2).map(&:title).
+      Post['cassandra'].reverse.find_each(:batch_size => 2).map(&:title).
         should == (0...5).map { |i| "Cequel #{i}" }.reverse
     end
 
@@ -351,16 +484,18 @@ describe Cequel::Record::RecordSet do
 
   describe 'last' do
     it 'should return the last instance' do
-      Post.at('cassandra').last.title.should == "Cequel 4"
+      Post['cassandra'].last.title.should == "Cequel 4"
     end
 
     it 'should return the last N instances if specified' do
-      Post.at('cassandra').last(3).map(&:title).
+      Post['cassandra'].last(3).map(&:title).
         should == ["Cequel 2", "Cequel 3", "Cequel 4"]
     end
   end
 
   describe '#first' do
+    let(:records) { blogs }
+
     context 'with no arguments' do
       it 'should return an arbitrary record' do
         subdomains.should include(Blog.first.subdomain)
@@ -377,12 +512,16 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#limit' do
-    it 'should return the number of blogs requested' do
+    let(:records) { blogs }
+
+    it 'should return the number of records requested' do
       Blog.limit(2).should have(2).entries
     end
   end
 
   describe '#select' do
+    let(:records) { blogs }
+
     context 'with no block' do
       subject { Blog.select(:subdomain, :name).first }
 
@@ -435,6 +574,8 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#count' do
+    let(:records) { blogs }
+
     it 'should count records' do
       Blog.count.should == 3
     end
