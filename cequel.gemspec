@@ -28,5 +28,6 @@ DESC
   s.add_development_dependency 'appraisal'
   s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.6'
+  s.add_development_dependency 'rubocop'
   s.requirements << 'Cassandra 1.0+'
 end
