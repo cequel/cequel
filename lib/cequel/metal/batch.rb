@@ -43,7 +43,10 @@ module Cequel
       #
       def apply
         return if @statement_count.zero?
-        @statement.append("APPLY BATCH\n")
+        if @statement_count > 1
+          @statement.prepend("BEGIN BATCH\n")
+          @statement.append("APPLY BATCH\n")
+        end
         @keyspace.execute(*@statement.args)
       end
 
@@ -51,7 +54,6 @@ module Cequel
 
       def reset
         @statement = Statement.new
-        @statement.append("BEGIN BATCH\n")
         @statement_count = 0
       end
 

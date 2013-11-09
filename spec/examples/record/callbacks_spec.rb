@@ -24,6 +24,28 @@ describe Cequel::Record::Callbacks do
 
   end
 
+  model :Comment do
+    belongs_to :post
+    key :id, :timeuuid, :auto => true
+    column :body, :text
+
+    before_save :create_post
+    after_save :run_instance_after_save
+
+    attr_writer :instance_after_save
+
+    private
+
+    def create_post
+      post = Post.create!(permalink: 'autopost', title: 'Auto Post')
+      self.post = post
+    end
+
+    def run_instance_after_save
+      @instance_after_save.call
+    end
+  end
+
   let(:new_post) do
     Post.new do |post|
       post.permalink = 'new-post'
@@ -82,5 +104,16 @@ describe Cequel::Record::Callbacks do
     it { should_not include(:after_update) }
     it { should include(:before_destroy) }
     it { should include(:after_destroy) }
+  end
+
+  describe 'atomic writes' do
+    it 'should run callbacks in a logged batch' do
+      comment = Comment.new(:body => 'Great web site!')
+      comment.instance_after_save =
+        -> { expect { Post.find('autopost') }.
+          to raise_error(Cequel::Record::RecordNotFound) }
+      comment.save!
+      Post.find('autopost').title.should == 'Auto Post'
+    end
   end
 end

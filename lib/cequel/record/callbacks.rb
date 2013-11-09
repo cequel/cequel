@@ -12,11 +12,11 @@ module Cequel
       end
 
       def save(options = {})
-        run_callbacks(:save) { super }
+        connection.batch { run_callbacks(:save) { super }}
       end
 
       def destroy
-        run_callbacks(:destroy) { super }
+        connection.batch { run_callbacks(:destroy) { super }}
       end
 
       protected
