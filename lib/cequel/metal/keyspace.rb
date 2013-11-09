@@ -144,13 +144,14 @@ module Cequel
       #   end
       #
       def batch(options = {})
-        old_batch = get_batch
-        new_batch = Batch.new(self, options)
-        set_batch(new_batch)
-        yield
-        new_batch.apply
-      ensure
-        set_batch(old_batch)
+        return yield if get_batch
+        begin
+          new_batch = Batch.new(self, options)
+          set_batch(new_batch)
+          yield.tap { new_batch.apply }
+        ensure
+          set_batch(nil)
+        end
       end
 
       private
