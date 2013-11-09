@@ -1,3 +1,11 @@
+## 1.0.0.pre.6
+
+* Allow record sets to be scoped by multiple primary keys
+* If a batch is a single statement, just send it as a statement
+* Don't start a new batch if you're already in a batch
+* Wrap record callbacks in logged batch
+* Update `connection_pool` dependency
+
 ## 1.0.0.pre.5
 
 * Support time range queries over `timeuuid` columns
