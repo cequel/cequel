@@ -3,14 +3,19 @@ module Cequel
   module Metal
 
     class Statement
-      attr_reader :bind_vars
+      attr_reader :bind_vars, :length
 
       def initialize
-        @cql, @bind_vars = StringIO.new, []
+        @cql, @bind_vars = [], []
       end
 
       def cql
-        @cql.string
+        @cql.join
+      end
+
+      def prepend(cql, *bind_vars)
+        @cql.unshift(cql)
+        @bind_vars.unshift(*bind_vars)
       end
 
       def append(cql, *bind_vars)
