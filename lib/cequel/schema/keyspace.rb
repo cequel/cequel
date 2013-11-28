@@ -25,6 +25,10 @@ module Cequel
         CQL
       end
 
+      def drop!
+        keyspace.execute("DROP KEYSPACE #{keyspace.name}")
+      end
+
       def read_table(name)
         TableReader.read(keyspace, name)
       end
