@@ -1,9 +1,6 @@
 module Cequel
-
   module Record
-
     class Railtie < Rails::Railtie
-
       config.cequel = Record
 
       initializer "cequel.configure_rails" do
@@ -19,22 +16,9 @@ module Cequel
         config.reverse_merge!(keyspace: "#{app_name}_#{Rails.env}")
         connection = Cequel.connect(config)
 
-        begin
-          connection = Cequel.connect(config)
-        rescue CassandraCQL::Error::InvalidRequestException
-          connection = Cequel.connect(config.except(:keyspace))
-          #XXX This should be read from the configuration
-          connection.execute(<<-CQL)
-            CREATE KEYSPACE #{keyspace}
-            WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}
-          CQL
-          retry
-        end
         connection.logger = Rails.logger
         Record.connection = connection
       end
     end
-
   end
-
 end
