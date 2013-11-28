@@ -16,13 +16,17 @@ module Cequel
           new(attributes, &block).tap { |record| record.save }
         end
 
+        def keyspace
+          connection[table_name]
+        end
+
         def hydrate(row)
           new_empty(row).__send__(:hydrated!)
         end
 
       end
 
-      def_delegator 'self.class', :connection
+      def_delegators 'self.class', :connection, :keyspace
 
       def key_attributes
         @attributes.slice(*self.class.key_column_names)
@@ -182,7 +186,7 @@ module Cequel
       end
 
       def metal_scope
-        connection[table_name].where(key_attributes)
+        keyspace.where(key_attributes)
       end
 
       def attributes_for_create

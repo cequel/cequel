@@ -7,6 +7,7 @@ module Cequel
       extend Forwardable
       extend Cequel::Util::HashAccessors
       include Enumerable
+      include BulkWrites
 
       def self.default_attributes
         {:scoped_key_values => [], :select_columns => []}
@@ -134,9 +135,16 @@ module Cequel
         find_each_row(options) { |row| yield target_class.hydrate(row) }
       end
 
+      def find_in_batches(options = {})
+        return enum_for(:find_in_batches, options) unless block_given?
+        find_rows_in_batches(options) do |rows|
+          yield rows.map { |row| target_class.hydrate(row) }
+        end
+      end
+
       def find_each_row(options = {}, &block)
         return enum_for(:find_each_row, options) unless block
-        find_rows_in_batches(options) { |row| row.each(&block) }
+        find_rows_in_batches(options) { |rows| rows.each(&block) }
       end
 
       def find_rows_in_batches(options = {}, &block)
@@ -331,6 +339,13 @@ module Cequel
         attributes_copy.merge!(new_attributes)
         attributes_copy.tap(&block) if block
         RecordSet.new(target_class, attributes_copy)
+      end
+
+      def key_attributes_for_each_row
+        return enum_for(:key_attributes_for_each_row) unless block_given?
+        select(*key_column_names).find_each do |record|
+          yield record.key_attributes
+        end
       end
 
     end

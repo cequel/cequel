@@ -102,7 +102,7 @@ describe Cequel::Record::RecordSet do
     end
   end
 
-  let(:posts) { [cassandra_posts, postgres_posts] }
+  let(:posts) { [*cassandra_posts, *postgres_posts] }
 
   let(:comments) do
     5.times.map do |i|
@@ -592,4 +592,70 @@ describe Cequel::Record::RecordSet do
     end
   end
 
+  describe '#update_all' do
+    let(:records) { posts }
+
+    it 'should be able to update with no scoping' do
+      Post.update_all(title: 'Same Title')
+      Post.all.map(&:title).should == Array.new(posts.length) { 'Same Title' }
+    end
+
+    it 'should update posts with scoping' do
+      Post['cassandra'].update_all(title: 'Same Title')
+      Post['cassandra'].map(&:title).
+        should == Array.new(cassandra_posts.length) { 'Same Title' }
+      Post['postgres'].map(&:title).should == postgres_posts.map(&:title)
+    end
+
+    it 'should update fully specified collection' do
+      Post['cassandra']['cequel0', 'cequel1', 'cequel2'].
+        update_all(title: 'Same Title')
+      Post['cassandra']['cequel0', 'cequel1', 'cequel2'].map(&:title).
+        should == Array.new(3) { 'Same Title' }
+      Post['cassandra']['cequel3', 'cequel4'].map(&:title).
+        should == cassandra_posts.drop(3).map(&:title)
+    end
+  end
+
+  describe '#delete_all' do
+    let(:records) { posts }
+
+    it 'should be able to delete with no scoping' do
+      Post.delete_all
+      Post.count.should be_zero
+    end
+
+    it 'should be able to delete with scoping' do
+      Post['postgres'].delete_all
+      Post['postgres'].count.should be_zero
+      Post['cassandra'].count.should == cassandra_posts.length
+    end
+
+    it 'should be able to delete fully specified collection' do
+      Post['postgres']['sequel0', 'sequel1'].delete_all
+      Post['postgres'].map(&:permalink).
+        should == postgres_posts.drop(2).map(&:permalink)
+    end
+  end
+
+  describe '#destroy_all' do
+    let(:records) { posts }
+
+    it 'should be able to delete with no scoping' do
+      Post.destroy_all
+      Post.count.should be_zero
+    end
+
+    it 'should be able to delete with scoping' do
+      Post['postgres'].destroy_all
+      Post['postgres'].count.should be_zero
+      Post['cassandra'].count.should == cassandra_posts.length
+    end
+
+    it 'should be able to delete fully specified collection' do
+      Post['postgres']['sequel0', 'sequel1'].destroy_all
+      Post['postgres'].map(&:permalink).
+        should == postgres_posts.drop(2).map(&:permalink)
+    end
+  end
 end

@@ -4,6 +4,11 @@ module Cequel
 
     class LazyRecordCollection < DelegateClass(Array)
 
+      extend Forwardable
+      include BulkWrites
+
+      def_delegators :record_set, :keyspace, :connection
+
       def initialize(record_set)
         raise ArgumentError if record_set.nil?
 
@@ -36,6 +41,10 @@ module Cequel
 
       private
       attr_reader :record_set
+
+      def key_attributes_for_each_row
+        map { |record| record.key_attributes }
+      end
 
     end
 

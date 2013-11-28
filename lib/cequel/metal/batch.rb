@@ -20,7 +20,8 @@ module Cequel
       #
       def initialize(keyspace, options = {})
         @keyspace = keyspace
-        @auto_apply = options[:auto_apply]
+        @auto_apply = options.fetch(:auto_apply, false)
+        @unlogged = options.fetch(:unlogged, false)
         reset
       end
 
@@ -44,10 +45,18 @@ module Cequel
       def apply
         return if @statement_count.zero?
         if @statement_count > 1
-          @statement.prepend("BEGIN BATCH\n")
+          @statement.prepend(begin_statement)
           @statement.append("APPLY BATCH\n")
         end
         @keyspace.execute(*@statement.args)
+      end
+
+      def unlogged?
+        @unlogged
+      end
+
+      def logged?
+        !unlogged?
       end
 
       private
@@ -55,6 +64,10 @@ module Cequel
       def reset
         @statement = Statement.new
         @statement_count = 0
+      end
+
+      def begin_statement
+        "BEGIN #{"UNLOGGED " if unlogged?}BATCH\n"
       end
 
     end

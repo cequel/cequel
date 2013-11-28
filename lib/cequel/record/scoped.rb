@@ -11,7 +11,9 @@ module Cequel
         extend Forwardable
 
         def_delegators :current_scope,
-          *(RecordSet.public_instance_methods(false) - Object.instance_methods)
+          *(RecordSet.public_instance_methods(false) +
+            BulkWrites.public_instance_methods -
+            Object.instance_methods)
 
         def current_scope
           delegating_scope || RecordSet.new(self)

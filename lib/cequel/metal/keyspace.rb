@@ -144,9 +144,20 @@ module Cequel
       #   end
       #
       def batch(options = {})
-        return yield if get_batch
+        new_batch = Batch.new(self, options)
+
+        if get_batch
+          if get_batch.unlogged? && new_batch.logged?
+            raise ArgumentError,
+              "Already in a logged batch; can't start an unlogged batch."
+          elsif get_batch.logged? && new_batch.unlogged?
+            raise ArgumentError,
+              "Already in an unlogged batch; can't start a logged batch."
+          end
+          return yield
+        end
+
         begin
-          new_batch = Batch.new(self, options)
           set_batch(new_batch)
           yield.tap { new_batch.apply }
         ensure
