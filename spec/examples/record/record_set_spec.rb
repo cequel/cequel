@@ -637,4 +637,25 @@ describe Cequel::Record::RecordSet do
         should == postgres_posts.drop(2).map(&:permalink)
     end
   end
+
+  describe '#destroy_all' do
+    let(:records) { posts }
+
+    it 'should be able to delete with no scoping' do
+      Post.destroy_all
+      Post.count.should be_zero
+    end
+
+    it 'should be able to delete with scoping' do
+      Post['postgres'].destroy_all
+      Post['postgres'].count.should be_zero
+      Post['cassandra'].count.should == cassandra_posts.length
+    end
+
+    it 'should be able to delete fully specified collection' do
+      Post['postgres']['sequel0', 'sequel1'].destroy_all
+      Post['postgres'].map(&:permalink).
+        should == postgres_posts.drop(2).map(&:permalink)
+    end
+  end
 end

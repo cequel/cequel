@@ -9,6 +9,10 @@ module Cequel
         each_data_set { |data_set| data_set.delete }
       end
 
+      def destroy_all
+        each { |record| record.destroy }
+      end
+
       private
 
       def each_data_set
