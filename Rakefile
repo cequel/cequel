@@ -47,10 +47,17 @@ RSpec::Core::RakeTask.new(:test) do |t|
 end
 
 namespace :bundle do
+  ruby_versions = %w(2.0.0-p353 1.9.3-p484)
+
   desc 'Run bundler for all environments'
   task :all do
-    abort unless system('rvm', '2.0,1.9,rbx-d19', 'do', 'bundle')
-    abort unless system('rvm', '2.0,1.9,rbx-d19', 'do', 'rake', 'appraisal:install')
+    default_version = ENV['RBENV_VERSION']
+    ruby_versions.each do |version|
+      ENV['RBENV_VERSION'] = version
+      abort unless system 'bundle'
+      abort unless system 'rake', 'appraisal:install'
+    end
+    ENV['RBENV_VERSION'] = default_version
   end
 
   desc 'Update to latest dependencies on all environments'
@@ -58,8 +65,14 @@ namespace :bundle do
     gemfiles = File.expand_path("../gemfiles", __FILE__)
     FileUtils.rm_r(gemfiles, :verbose => true) if File.exist?(gemfiles)
     abort unless system('bundle', 'update')
-    abort unless system('rvm', '2.0,1.9,rbx-d19', 'do', 'bundle', 'install')
-    abort unless system('rvm', '2.0,1.9,rbx-d19', 'do', 'rake', 'appraisal:install')
+
+    default_version = ENV['RBENV_VERSION']
+    ruby_versions.each do |version|
+      ENV['RBENV_VERSION'] = version
+      abort unless system 'bundle'
+      abort unless system 'rake', 'appraisal:install'
+    end
+    ENV['RBENV_VERSION'] = default_version
   end
 end
 
