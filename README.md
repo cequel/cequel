@@ -46,6 +46,13 @@ production:
     connect_timeout: 15
 ```
 
+Once you've got things configured (or decided to accept the defaults), run this
+to create your keyspace (database):
+
+```bash
+rake cequel:keyspace:create
+```
+
 ## Setting up Models ##
 
 Unlike in ActiveRecord, models declare their properties inline. We'll start with
@@ -122,12 +129,11 @@ end
 ### Schema synchronization ###
 
 Cequel will automatically synchronize the schema stored in Cassandra to match
-the schema you have defined in your models. Synchronizing your schema for a
-model is as simple as:
+the schema you have defined in your models. If you're using Rails, you can
+synchronize your schemas for everything in `app/models` by invoking:
 
-```ruby
-Blog.synchronize_schema
-Post.synchronize_schema
+```bash
+rake cequel:migrate
 ```
 
 ### Record sets ###

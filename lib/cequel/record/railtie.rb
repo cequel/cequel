@@ -19,6 +19,10 @@ module Cequel
         connection.logger = Rails.logger
         Record.connection = connection
       end
+
+      rake_tasks do
+        require "cequel/record/tasks"
+      end
     end
   end
 end
