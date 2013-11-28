@@ -102,7 +102,7 @@ describe Cequel::Record::RecordSet do
     end
   end
 
-  let(:posts) { [cassandra_posts, postgres_posts] }
+  let(:posts) { [*cassandra_posts, *postgres_posts] }
 
   let(:comments) do
     5.times.map do |i|
@@ -589,6 +589,31 @@ describe Cequel::Record::RecordSet do
 
     it 'should raise NoMethodError if undefined method called' do
       expect { Post['cassandra'].bogus }.to raise_error(NoMethodError)
+    end
+  end
+
+  describe '#update_all' do
+    let(:records) { posts }
+
+    it 'should be able to update with no scoping' do
+      Post.update_all(title: 'Same Title')
+      Post.all.map(&:title).should == Array.new(posts.length) { 'Same Title' }
+    end
+
+    it 'should update posts with scoping' do
+      Post['cassandra'].update_all(title: 'Same Title')
+      Post['cassandra'].map(&:title).
+        should == Array.new(cassandra_posts.length) { 'Same Title' }
+      Post['postgres'].map(&:title).should == postgres_posts.map(&:title)
+    end
+
+    it 'should update fully specified collection' do
+      Post['cassandra']['cequel0', 'cequel1', 'cequel2'].
+        update_all(title: 'Same Title')
+      Post['cassandra']['cequel0', 'cequel1', 'cequel2'].map(&:title).
+        should == Array.new(3) { 'Same Title' }
+      Post['cassandra']['cequel3', 'cequel4'].map(&:title).
+        should == cassandra_posts.drop(3).map(&:title)
     end
   end
 
