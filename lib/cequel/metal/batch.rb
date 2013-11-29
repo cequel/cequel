@@ -8,15 +8,21 @@ module Cequel
     # Encapsulates a batch operation
     #
     # @see Keyspace::batch
+    # @api private
     #
     class Batch
 
       #
       # @param keyspace [Keyspace] the keyspace that this batch will be executed on
       # @param options [Hash]
-      # @option options (see Keyspace#batch)
+      # @option options [Integer] :auto_apply If specified, flush the batch
+      #   after this many statements have been added.
+      # @option options [Boolean] :unlogged (false) Whether to use an [unlogged
+      #   batch](http://www.datastax.com/documentation/cql/3.0/webhelp/cql/cql_reference/batch_r.html).
+      #   Logged batches guarantee atomicity (but not isolation) at the
+      #   cost of a performance penalty; unlogged batches are useful for bulk
+      #   write operations but behave the same as discrete writes.
       # @see Keyspace#batch
-      # @todo support batch-level consistency options
       #
       def initialize(keyspace, options = {})
         @keyspace = keyspace
@@ -39,7 +45,7 @@ module Cequel
         end
       end
 
-      # 
+      #
       # Send the batch to Cassandra
       #
       def apply
@@ -51,10 +57,19 @@ module Cequel
         @keyspace.execute(*@statement.args)
       end
 
+      #
+      # Is this an unlogged batch?
+      #
+      # @return [Boolean]
       def unlogged?
         @unlogged
       end
 
+      #
+      # Is this a logged batch?
+      #
+      # @return [Boolean]
+      #
       def logged?
         !unlogged?
       end
