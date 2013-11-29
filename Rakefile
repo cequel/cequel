@@ -47,17 +47,10 @@ RSpec::Core::RakeTask.new(:test) do |t|
 end
 
 namespace :bundle do
-  ruby_versions = %w(2.0.0-p353 1.9.3-p484)
-
   desc 'Run bundler for all environments'
   task :all do
-    default_version = ENV['RBENV_VERSION']
-    ruby_versions.each do |version|
-      ENV['RBENV_VERSION'] = version
-      abort unless system 'bundle'
-      abort unless system 'rake', 'appraisal:install'
-    end
-    ENV['RBENV_VERSION'] = default_version
+    abort unless all_rubies('bundle')
+    abort unless all_rubies('rake', 'appraisal:install')
   end
 
   desc 'Update to latest dependencies on all environments'
@@ -65,14 +58,8 @@ namespace :bundle do
     gemfiles = File.expand_path("../gemfiles", __FILE__)
     FileUtils.rm_r(gemfiles, :verbose => true) if File.exist?(gemfiles)
     abort unless system('bundle', 'update')
-
-    default_version = ENV['RBENV_VERSION']
-    ruby_versions.each do |version|
-      ENV['RBENV_VERSION'] = version
-      abort unless system 'bundle'
-      abort unless system 'rake', 'appraisal:install'
-    end
-    ENV['RBENV_VERSION'] = default_version
+    abort unless all_rubies('bundle')
+    abort unless all_rubies('rake', 'appraisal:install')
   end
 end
 
@@ -87,11 +74,7 @@ end
 
 namespace :test do
   task :all do
-    %w(2.0 1.9 rbx-d19).each do |version|
-      abort unless system('rvm', version, 'do',
-                          'bundle', 'exec',
-                          'rake', 'appraisal', 'test:concise')
-    end
+    abort unless all_rubies('rake', 'appraisal', 'test:concise')
   end
 end
 
@@ -115,5 +98,12 @@ task :verify_changelog do
 
   if File.read('./CHANGELOG.md').each_line.first.strip != "## #{Cequel::VERSION}"
     abort "Changelog is not up-to-date."
+  end
+end
+
+def all_rubies(*command)
+  ruby_versions = %w(2.0 1.9)
+  !ruby_versions.find do |version|
+    !system('rvm', version, 'do', *command)
   end
 end
