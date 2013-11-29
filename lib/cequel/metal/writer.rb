@@ -45,7 +45,6 @@ module Cequel
       # Generate CQL option statement for inserts and updates
       #
       # @param [Hash] options options for insert
-      # @option options [Symbol,String] :consistency required consistency for the write
       # @option options [Integer] :ttl time-to-live in seconds for the written data
       # @option options [Time,Integer] :timestamp the timestamp associated with the column values
       #
@@ -57,7 +56,6 @@ module Cequel
           options.map do |key, value|
             serialized_value =
               case key
-              when :consistency then value.to_s.upcase
               when :timestamp then (value.to_f * 1_000_000).to_i
               else value
               end
