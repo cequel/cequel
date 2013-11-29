@@ -315,17 +315,8 @@ module Cequel
       # @return [Enumerator] enumerator for rows, if no block given
       #
       def each
-        if block_given?
-          begin
-            keyspace.execute(*cql).fetch do |row|
-              yield Row.from_result_row(row)
-            end
-          rescue EmptySubquery
-            # Noop -- yield no results
-          end
-        else
-          enum_for(:each)
-        end
+        return enum_for(:each) if block_given?
+        keyspace.execute(*cql).fetch { |row| yield Row.from_result_row(row) }
       end
 
       #
@@ -334,8 +325,6 @@ module Cequel
       def first
         row = keyspace.execute(*limit(1).cql).fetch_row
         Row.from_result_row(row)
-      rescue EmptySubquery
-        nil
       end
 
       #
@@ -343,8 +332,6 @@ module Cequel
       #
       def count
         keyspace.execute(*count_cql).fetch_row['count']
-      rescue EmptySubquery
-        0
       end
 
       #
