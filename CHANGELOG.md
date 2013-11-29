@@ -1,3 +1,10 @@
+## 1.0.0.rc1
+
+* Rails integration: Add rake tasks for creating keyspace, migrations; generator
+  for configuration file
+* Implement update_all, delete_all, destroy_all
+* Option for unlogged batches
+
 ## 1.0.0.pre.6
 
 * Allow record sets to be scoped by multiple primary keys
