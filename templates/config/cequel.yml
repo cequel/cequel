@@ -1,0 +1,19 @@
+<% app_name = Cequel::Record::Railtie.app_name -%>
+development:
+  host: '127.0.0.1:9160'
+  keyspace: <%= app_name %>_development
+
+test:
+  host: '127.0.0.1:9160'
+  keyspace: <%= app_name %>_test
+
+production:
+  hosts:
+    - 'cass1.<%= app_name %>.biz:9160'
+    - 'cass2.<%= app_name %>.biz:9160'
+    - 'cass3.<%= app_name %>.biz:9160'
+  keyspace: <%= app_name %>_production
+  thrift:
+    retries: 10
+    timeout: 15
+    connect_timeout: 15

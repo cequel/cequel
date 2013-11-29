@@ -8,6 +8,27 @@ module Cequel
         @keyspace = keyspace
       end
 
+      def create!(options = {})
+        bare_connection =
+          Metal::Keyspace.new(keyspace.configuration.except(:keyspace))
+
+        options = options.symbolize_keys
+        options[:class] ||= 'SimpleStrategy'
+        options[:replication_factor] ||= 1 if options[:class] == 'SimpleStrategy'
+        options_strs = options.map do |name, value|
+          "'#{name}': #{CassandraCQL::Statement.quote(value)}"
+        end
+
+        bare_connection.execute(<<-CQL)
+          CREATE KEYSPACE #{keyspace.name}
+          WITH REPLICATION = {#{options_strs.join(', ')}}
+        CQL
+      end
+
+      def drop!
+        keyspace.execute("DROP KEYSPACE #{keyspace.name}")
+      end
+
       def read_table(name)
         TableReader.read(keyspace, name)
       end

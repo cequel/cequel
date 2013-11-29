@@ -6,6 +6,7 @@ module Cequel
     # Handle to a Cassandra keyspace.
     #
     class Keyspace
+      attr_reader :configuration
 
       #
       # @api private
@@ -25,7 +26,7 @@ module Cequel
 
       def configure(configuration = {})
         @configuration = configuration
-        @hosts = configuration[:host] || configuration[:hosts]
+        @hosts = configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1:9160'))
         @thrift_options = configuration[:thrift].try(:symbolize_keys) || {}
         @keyspace = configuration[:keyspace]
         # reset the connections

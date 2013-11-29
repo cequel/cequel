@@ -1,13 +1,13 @@
 module Cequel
-
   module Record
-
     class Railtie < Rails::Railtie
-
       config.cequel = Record
 
+      def self.app_name
+        Rails.application.railtie_name.sub(/_application$/, '')
+      end
+
       initializer "cequel.configure_rails" do
-        app_name = Rails.application.railtie_name.sub(/_application$/, '')
         config_path = Rails.root.join('config/cequel.yml').to_s
 
         if File.exist?(config_path)
@@ -16,25 +16,20 @@ module Cequel
         else
           config = {host: '127.0.0.1:9160'}
         end
-        config.reverse_merge!(keyspace: "#{app_name}_#{Rails.env}")
+        config.reverse_merge!(keyspace: "#{Railtie.app_name}_#{Rails.env}")
         connection = Cequel.connect(config)
 
-        begin
-          connection = Cequel.connect(config)
-        rescue CassandraCQL::Error::InvalidRequestException
-          connection = Cequel.connect(config.except(:keyspace))
-          #XXX This should be read from the configuration
-          connection.execute(<<-CQL)
-            CREATE KEYSPACE #{keyspace}
-            WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}
-          CQL
-          retry
-        end
         connection.logger = Rails.logger
         Record.connection = connection
       end
+
+      rake_tasks do
+        require "cequel/record/tasks"
+      end
+
+      generators do
+        require 'cequel/record/configuration_generator.rb'
+      end
     end
-
   end
-
 end

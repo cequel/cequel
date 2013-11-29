@@ -7,7 +7,7 @@ module Cequel
       extend Forwardable
       include BulkWrites
 
-      def_delegators :record_set, :keyspace, :connection
+      def_delegators :record_set, :table, :connection
 
       def initialize(record_set)
         raise ArgumentError if record_set.nil?
