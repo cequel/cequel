@@ -26,7 +26,7 @@ module Cequel
       #
       def initialize(keyspace, options = {})
         @keyspace = keyspace
-        @auto_apply = options.fetch(:auto_apply, false)
+        @auto_apply = options[:auto_apply]
         @unlogged = options.fetch(:unlogged, false)
         reset
       end
