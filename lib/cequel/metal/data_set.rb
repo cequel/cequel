@@ -41,9 +41,9 @@ module Cequel
       # @return [Integer] maximum number of rows to return, `nil` if no limit
       attr_reader :row_limit
 
-      # @!method execute_cql
       def_delegator :keyspace, :execute, :execute_cql
       private :execute_cql
+      def_delegator :keyspace, :write
 
       #
       # @param table_name [Symbol] column family for this data set
@@ -544,7 +544,7 @@ module Cequel
       # @return [Enumerator,void]
       #
       def each
-        return enum_for(:each) if block_given?
+        return enum_for(:each) unless block_given?
         execute_cql(*cql).fetch { |row| yield Row.from_result_row(row) }
       end
 
@@ -619,6 +619,11 @@ module Cequel
         Updater.new(self, options, &block)
       end
 
+      # @private
+      def deleter(options = {}, &block)
+        Deleter.new(self, options, &block)
+      end
+
       protected
       attr_writer :row_limit
 
@@ -630,10 +635,6 @@ module Cequel
 
       def incrementer(options = {}, &block)
         Incrementer.new(self, options, &block)
-      end
-
-      def deleter(options = {}, &block)
-        Deleter.new(self, options, &block)
       end
 
       def initialize_copy(source)
