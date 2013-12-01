@@ -23,6 +23,15 @@ module Cequel
         Record.connection = connection
       end
 
+      initializer "cequel.add_new_relic" do
+        begin
+          require 'new_relic/agent/method_tracer'
+        rescue LoadError => e
+        else
+          require 'cequel/metal/new_relic_instrumentation'
+        end
+      end
+
       rake_tasks do
         require "cequel/record/tasks"
       end
