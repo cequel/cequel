@@ -97,6 +97,7 @@ module Cequel
       #   @option (see #generate_upsert_options)
       #   @yield DSL context for adding write operations
       #
+      #   @see Updater
       #   @since 1.0.0
       #
       #   @example
