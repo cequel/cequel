@@ -173,6 +173,14 @@ module Cequel
         Hash[scoped_key_columns.map { |col| col.name }.zip(scoped_key_values)]
       end
 
+      def delete_all
+        if partition_specified?
+          data_set.delete
+        else
+          super
+        end
+      end
+
       def_delegators :entries, :inspect
 
       def ==(other)
@@ -249,6 +257,10 @@ module Cequel
 
       def partition_specified?
         scoped_key_values.length >= target_class.partition_key_columns.length
+      end
+
+      def partition_exactly_specified?
+        scoped_key_values.length == target_class.partition_key_columns.length
       end
 
       def multiple_records_specified?

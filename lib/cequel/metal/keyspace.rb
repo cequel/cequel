@@ -122,9 +122,6 @@ module Cequel
         if get_batch
           if get_batch.unlogged? && new_batch.logged?
             raise ArgumentError,
-              "Already in a logged batch; can't start an unlogged batch."
-          elsif get_batch.logged? && new_batch.unlogged?
-            raise ArgumentError,
               "Already in an unlogged batch; can't start a logged batch."
           end
           return yield

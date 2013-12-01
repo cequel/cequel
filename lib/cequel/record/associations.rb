@@ -80,11 +80,13 @@ module Cequel
         # once the record has been saved.
         #
         # @param name [Symbol] name of the parent association
+        # @param options [Options] options for association
+        # @option (see BelongsToAssociation#initialize)
         # @return [void]
         #
         # @see Associations
         #
-        def belongs_to(name)
+        def belongs_to(name, options = {})
           if parent_association
             raise InvalidRecordConfiguration,
               "Can't declare more than one belongs_to association"
@@ -93,7 +95,10 @@ module Cequel
             raise InvalidRecordConfiguration,
               "belongs_to association must be declared before declaring key(s)"
           end
-          self.parent_association = BelongsToAssociation.new(self, name.to_sym)
+
+          self.parent_association =
+            BelongsToAssociation.new(self, name.to_sym, options)
+
           parent_association.association_key_columns.each do |column|
             key :"#{name}_#{column.name}", column.type
           end
@@ -112,29 +117,17 @@ module Cequel
         #
         # @param name [Symbol] plural name of association
         # @param options [Options] options for association
-        # @option options [Symbol] :dependent (nil) whether to cascade destroy
-        #   to children. Valid values are :destroy, :delete.
+        # @option (see HasManyAssociation#initialize)
         # @return [void]
         #
         # @see Associations
         #
         def has_many(name, options = {})
-          options.assert_valid_keys(:dependent)
-
-          association = HasManyAssociation.new(self, name.to_sym)
+          association = HasManyAssociation.new(self, name.to_sym, options)
           self.child_associations =
             child_associations.merge(name => association)
           def_child_association_reader(association)
 
-          case options[:dependent]
-          when :destroy
-            after_destroy { delete_children(name, true) }
-          when :delete
-            after_destroy { delete_children(name) }
-          when nil
-          else
-            raise ArgumentError, "Invalid option #{options[:dependent].inspect} provided for :dependent. Specify :destroy or :delete."
-          end
         end
 
         private
@@ -162,6 +155,19 @@ module Cequel
           RUBY
         end
 
+      end
+
+      def destroy(*)
+        super.tap do
+          self.class.child_associations.each_value do |association|
+            case association.dependent
+            when :destroy
+              __send__(association.name).destroy_all
+            when :delete
+              __send__(association.name).delete_all
+            end
+          end
+        end
       end
 
       private
@@ -213,17 +219,6 @@ module Cequel
         end
         instance_variable_set(
           ivar, AssociationCollection.new(association_record_set))
-      end
-
-      def delete_children(association_name, run_callbacks = false)
-        if run_callbacks
-          self.send(association_name).each do |c|
-            c.run_callbacks(:destroy)
-          end
-        end
-        connection[association_name].where(
-          send(association_name).scoped_key_attributes
-        ).delete
       end
     end
   end

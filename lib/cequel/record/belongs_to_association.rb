@@ -26,10 +26,12 @@ module Cequel
       # @param name [Symbol] name of the association
       # @param options [Options] options for association
       # @option options [String] :class_name name of parent class
-      # @option options [Symbol] :dependent (nil) whether to cascade deletions.
-      #   Valid values are :destroy, :delete
+      #
+      # @api private
       #
       def initialize(owner_class, name, options = {})
+        options.assert_valid_keys(:class_name)
+
         @owner_class, @name = owner_class, name.to_sym
         @association_class_name =
           options.fetch(:class_name, @name.to_s.classify)
