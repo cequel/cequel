@@ -1,9 +1,54 @@
 module Cequel
-
   module Record
-
+    #
+    # Cequel records can have parent-child relationships defined by
+    # {ClassMethods#belongs_to belongs_to} and {ClassMethods#has_many has_many}
+    # associations. Unlike in a relational database ORM, associations are not
+    # represented by foreign keys; instead they use CQL3's compound primary
+    # keys. A child object's primary key begins with it's parent's primary key.
+    #
+    # In the below example, the `blogs` table has a one-column primary key
+    # `(subdomain)`, and the `posts` table has a two-column primary key
+    # `(blog_subdomain, permalink)`. All posts that belong to the blog with
+    # subdomain `"cassandra"` will have `"cassandra"` as their `blog_subdomain`.
+    #
+    # @example Blogs and Posts
+    #
+    #   class Blog
+    #     include Cequel::Record
+    #
+    #     key :subdomain, :text
+    #
+    #     column :name, :text
+    #
+    #     has_many :posts
+    #   end
+    #
+    #   class Post
+    #     include Cequel::Record
+    #
+    #     # This defines the first primary key column as `blog_subdomain`.
+    #     # Because `belongs_to` associations implicitly define columns in the
+    #     # primary key, it must come before any explicit key definition. For
+    #     # the same reason, a Record class can only have a single `belongs_to`
+    #     # declaration.
+    #     belongs_to :blog
+    #
+    #     # We also define an additional primary key column so that each post
+    #     # has a unique compound primary key
+    #     key :permalink
+    #
+    #     column :title, :text
+    #     column :body, :text
+    #   end
+    #
+    #   blog = Blog.new(subdomain: 'cassandra')
+    #   post = blog.posts.new(permalink: 'cequel')
+    #   post.blog_subdomain #=> "cassandra"
+    #
+    # @since 1.0.0
+    #
     module Associations
-
       extend ActiveSupport::Concern
 
       included do
@@ -13,9 +58,32 @@ module Cequel
       end
 
       module ClassMethods
-
         include Forwardable
 
+        # @!attribute parent_association
+        #   @return [BelongsToAssociation] association declared by {#belongs_to}
+        # @!attribute child_associations
+        #   @return [Hash<Symbol,HasManyAssociation>] associations declared by
+        #     {#has_many}
+
+        #
+        # Declare the parent association for this record. The name of the class
+        # is inferred from the name of the association. The `belongs_to`
+        # declaration also serves to define key columns, which are derived from
+        # the key columns of the parent class. So, if the parent class `Blog`
+        # has a primary key `(subdomain)`, this will declare a key column
+        # `blog_subdomain` of the same type.
+        #
+        # Parent associations are read/write, so declaring `belongs_to :blog`
+        # will define a `blog` getter and `blog=` setter, which will update the
+        # underlying key column. Note that a record's parent cannot be changed
+        # once the record has been saved.
+        #
+        # @param name [Symbol] name of the parent association
+        # @return [void]
+        #
+        # @see Associations
+        #
         def belongs_to(name)
           if parent_association
             raise InvalidRecordConfiguration,
@@ -32,6 +100,24 @@ module Cequel
           def_parent_association_accessors
         end
 
+        #
+        # Declare a child association. The child association should have a
+        # `belongs_to` referencing this class or, at a minimum, must have a
+        # primary key whose first N columns have the same types as the N columns
+        # in this class's primary key.
+        #
+        # `has_many` associations are read-only, so `has_many :posts` will
+        # define a `posts` reader but not a `posts=` writer; and the collection
+        # returned by `posts` will be immutable.
+        #
+        # @param name [Symbol] plural name of association
+        # @param options [Options] options for association
+        # @option options [Symbol] :dependent (nil) whether to cascade destroy
+        #   to children. Valid values are :destroy, :delete.
+        # @return [void]
+        #
+        # @see Associations
+        #
         def has_many(name, options = {})
           options.assert_valid_keys(:dependent)
 
@@ -139,9 +225,6 @@ module Cequel
           send(association_name).scoped_key_attributes
         ).delete
       end
-
     end
-
   end
-
 end

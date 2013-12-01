@@ -6,6 +6,7 @@ module Cequel
     # normal RecordSet the loaded records are held in memory after they are
     # loaded.
     #
+    # @see Associations::ClassMethods#has_many
     # @since 1.0.0
     #
     class AssociationCollection < DelegateClass(RecordSet)
