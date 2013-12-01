@@ -3,6 +3,9 @@ module Cequel
   module Metal
 
     #
+    # Encapsulates a row specification (`WHERE` clause) specified by a CQL
+    # string
+    #
     # @api private
     #
     class CqlRowSpecification
