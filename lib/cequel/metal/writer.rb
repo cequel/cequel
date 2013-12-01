@@ -1,19 +1,34 @@
-require 'delegate'
-
 module Cequel
-
   module Metal
-
+    #
+    # Internal representation of a data manipulation statement
+    #
+    # @abstract Subclasses must implement #write_to_statement, which writes
+    #   internal state to a Statement instance
+    #
+    # @since 1.0.0
+    # @api private
+    #
     class Writer
-
       extend Forwardable
 
+      #
+      # @param data_set [DataSet] data set to write to
+      # @param options [Options] options
+      # @option options [Integer] :ttl time-to-live in seconds for the written data
+      # @option options [Time,Integer] :timestamp the timestamp associated with the column values
+      #
       def initialize(data_set, options = {}, &block)
         @data_set, @options, @block = data_set, options, block
         @statements, @bind_vars = [], []
         SimpleDelegator.new(self).instance_eval(&block) if block
       end
 
+      #
+      # Execute the statement as a write operation
+      #
+      # @return [void]
+      #
       def execute
         return if empty?
         statement = Statement.new
@@ -43,10 +58,6 @@ module Cequel
 
       #
       # Generate CQL option statement for inserts and updates
-      #
-      # @param [Hash] options options for insert
-      # @option options [Integer] :ttl time-to-live in seconds for the written data
-      # @option options [Time,Integer] :timestamp the timestamp associated with the column values
       #
       def generate_upsert_options
         if options.empty?

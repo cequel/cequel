@@ -63,7 +63,7 @@ module Cequel
       #
       # @param data [Hash] column-value pairs
       # @param options [Options] options for persisting the row
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @note `INSERT` statements will succeed even if a row at the specified
@@ -169,7 +169,7 @@ module Cequel
       # @param elements [Object,Array] one element or an array of elements to
       #   prepend
       # @param options [Options] options for persisting the column data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -193,7 +193,7 @@ module Cequel
       # @param elements [Object,Array] one element or an array of elements to
       #   append
       # @param options [Options] options for persisting the column data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -216,7 +216,7 @@ module Cequel
       # @param index [Integer] which element to replace
       # @param value [Object] new value at this index
       # @param options [Options] options for persisting the data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -236,7 +236,7 @@ module Cequel
       # @param column [Symbol] name of list column
       # @param value [Object] value to remove
       # @param options [Options] options for persisting the data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -258,7 +258,7 @@ module Cequel
       # @param column [Symbol] name of list column
       # @param *positions [Integer] position(s) in list to remove value from
       # @param options [Options] options for persisting the data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -281,7 +281,7 @@ module Cequel
       # @param column [Symbol] name of map column
       # @param key [Object] map key to remove
       # @param options [Options] options for persisting the data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -303,7 +303,7 @@ module Cequel
       # @param column [Symbol] name of set column
       # @param value [Object,Set] value or values to add
       # @param options [Options] options for persisting the data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -324,7 +324,7 @@ module Cequel
       # @param column [Symbol] name of set column
       # @param value [Object] value to remove
       # @param options [Options] options for persisting the data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -345,7 +345,7 @@ module Cequel
       # @param column [Symbol] name of set column
       # @param map [Hash] updates
       # @param options [Options] options for persisting the data
-      # @option (see Writer#generate_upsert_options)
+      # @option (see Writer#initialize)
       # @return [void]
       #
       # @example
@@ -365,7 +365,7 @@ module Cequel
       #   Delete one or more rows from the table
       #
       #   @param options [Options] options for persistence
-      #   @option (See Writer#generate_upsert_options)
+      #   @option (See Writer#initialize)
       #
       #   @example
       #     posts.where(blog_subdomain: 'cassandra', permalink: 'cequel').
@@ -377,7 +377,7 @@ module Cequel
       #
       #   @param columns [Symbol] columns to remove
       #   @param options [Options] options for persistence
-      #   @option (see Writer#generate_upsert_options)
+      #   @option (see Writer#initialize)
       #
       #   @example
       #     posts.where(blog_subdomain: 'cassandra', permalink: 'cequel').
@@ -388,7 +388,7 @@ module Cequel
       #   deletions, collection element removals, etc.)
       #
       #   @param options [Options] options for persistence
-      #   @option (see Writer#generate_upsert_options)
+      #   @option (see Writer#initialize)
       #   @yield DSL context for construction delete statement
       #
       #   @example

@@ -1,3 +1,5 @@
+require 'delegate'
+
 require 'active_support/core_ext'
 require 'cassandra-cql/1.2'
 require 'connection_pool'
