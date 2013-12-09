@@ -1,14 +1,30 @@
 module Cequel
-
   module Record
-
+    #
+    # Encapsulates a collection of unloaded {Record} instances. In the case
+    # where a record set is scoped to fully specify the keys of multiple
+    # records, those records will be returned unloaded in a
+    # LazyRecordCollection. When an attribute is read from any of the records in
+    # a LazyRecordCollection, it will eagerly load all of the records' rows from
+    # the database.
+    #
+    # @since 1.0.0
+    #
     class LazyRecordCollection < DelegateClass(Array)
-
       extend Forwardable
       include BulkWrites
-
+      #
+      # @!method table
+      #   (see RecordSet#table)
+      # @!method connection
+      #   (see RecordSet#connection)
       def_delegators :record_set, :table, :connection
 
+      #
+      # @param record_set [RecordSet] record set representing the records in
+      #   this collection
+      # @api private
+      #
       def initialize(record_set)
         raise ArgumentError if record_set.nil?
 
@@ -30,6 +46,10 @@ module Cequel
         @record_set = record_set
       end
 
+      #
+      # Hydrate all the records in this collection from a database query
+      #
+      # @return [LazyRecordCollection] self
       def load!
         records_by_identity = index_by { |record| record.key_values }
 
@@ -37,6 +57,8 @@ module Cequel
           identity = row.values_at(*record_set.key_column_names)
           records_by_identity[identity].hydrate(row)
         end
+
+        self
       end
 
       private
@@ -45,9 +67,6 @@ module Cequel
       def key_attributes_for_each_row
         map { |record| record.key_attributes }
       end
-
     end
-
   end
-
 end
