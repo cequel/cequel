@@ -302,7 +302,7 @@ module Cequel
       # @return [List] self
       #
       def push(*objects)
-        object = cast_element(objects)
+        objects.map! { |object| cast_element(object) }
         updater.list_append(column_name, objects)
         to_modify { super }
       end
