@@ -36,6 +36,12 @@ module Cequel
     # @since 1.0.0
     #
     IllegalQuery = Class.new(StandardError)
-
+    #
+    # Raised when attempting to persist a Cequel::Record without defining all
+    # primary key columns
+    #
+    # @since 1.0.0
+    #
+    MissingKeyError = Class.new(StandardError)
   end
 end
