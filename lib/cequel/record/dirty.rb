@@ -1,15 +1,19 @@
 module Cequel
-
   module Record
-
+    #
+    # Cequel provides support for dirty attribute tracking via ActiveModel.
+    # Modifications to collection columns are registered by this mechanism.
+    #
+    # @see http://api.rubyonrails.org/classes/ActiveModel/Dirty.html Rails
+    #   documentation for ActiveModel::Dirty
+    #
     module Dirty
-
       extend ActiveSupport::Concern
 
       included { include ActiveModel::Dirty }
 
+      # @private
       module ClassMethods
-
         def key(name, *)
           define_attribute_method(name)
           super
@@ -34,9 +38,9 @@ module Cequel
           define_attribute_method(name)
           super
         end
-
       end
 
+      # @private
       def save(options = {})
         super.tap do |success|
           if success
@@ -54,9 +58,6 @@ module Cequel
         end
         super
       end
-
     end
-
   end
-
 end
