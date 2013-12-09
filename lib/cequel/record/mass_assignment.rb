@@ -5,11 +5,17 @@ rescue LoadError
 end
 
 module Cequel
-
   module Record
-
+    #
+    # Cequel supports mass-assignment protection in both the Rails 3 and Rails 4
+    # paradigms. Rails 3 applications may define `attr_protected` and
+    # `attr_accessible` attributes in {Record} classes. In Rails 4, Cequel will
+    # respect strong parameters.
+    #
+    # @see https://github.com/rails/strong_parameters Rails 4 Strong Parameters
+    # @see http://api.rubyonrails.org/v3.2.15/classes/ActiveModel/MassAssignmentSecurity.html Rails 3 mass-assignment security
+    #
     module MassAssignment
-
       extend ActiveSupport::Concern
 
       included do
@@ -20,12 +26,10 @@ module Cequel
         end
       end
 
+      # @private
       def attributes=(attributes)
         super(sanitize_for_mass_assignment(attributes))
       end
-
     end
-
   end
-
 end
