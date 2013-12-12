@@ -36,7 +36,11 @@ module Cequel
 
         def key(name, type, options = {})
           super
-          table_schema.add_key(name, type)
+          if options[:partition]
+            table_schema.add_partition_key(name, type)
+          else
+            table_schema.add_key(name, type)
+          end
         end
 
         def column(name, type, options = {})
