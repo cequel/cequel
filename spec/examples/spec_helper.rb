@@ -18,21 +18,12 @@ RSpec.configure do |config|
   }
 
   config.before(:all) do
-    connection = CassandraCQL::Database.new(
-      Cequel::SpecSupport::Helpers.host,
-      :cql_version => '3.0.0'
-    )
-    keyspace = Cequel::SpecSupport::Helpers.keyspace_name
-    connection.execute <<-CQL
-      CREATE KEYSPACE #{keyspace}
-      WITH REPLICATION = {'class': 'SimpleStrategy', 'replication_factor': 1}
-    CQL
+    cequel.schema.create!
     Cequel::Record.connection = cequel
   end
 
   config.after(:all) do
-    keyspace = Cequel::SpecSupport::Helpers.keyspace_name
-    cequel.execute("DROP KEYSPACE #{keyspace}")
+    cequel.schema.drop!
   end
 end
 
