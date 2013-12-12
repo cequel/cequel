@@ -1,9 +1,38 @@
 module Cequel
-
   module Record
-
+    #
+    # Properties on a Cequel record acts as attributes on record instances, and
+    # are persisted as column values to Cassandra. Properties are declared
+    # explicitly on a record instance in the body.
+    #
+    # Properties can be **key columns**, **data columns**, or **collection
+    # columns**. Key columns combine to form the primary key for the record;
+    # they cannot be changed once a record has been saved. Data columns contain
+    # scalar data values like strings, integers, and timestamps. Collection
+    # columns are lists, sets, or maps that can be atomically updated.
+    #
+    # All varieties of column have a type; see {Cequel::Type} for the full
+    # list of possibilities. A collection column's type is the type of its
+    # elements (in the case of a map collection, there is both a key type and a
+    # value type).
+    #
+    # @example
+    #   class Post
+    #     key :blog_subdomain, :text
+    #     key :id, :timeuuid, auto: true
+    #
+    #     column :title, :text
+    #     column :body, :text
+    #     column :updated_at, :timestamp
+    #
+    #     list :categories, :text
+    #     set :tags, :text
+    #     map :referers, :text, :integer
+    #   end
+    #
+    # @see ClassMethods Methods for defining properties
+    #
     module Properties
-
       extend ActiveSupport::Concern
 
       included do
@@ -17,6 +46,7 @@ module Cequel
         private :collection_proxies
       end
 
+      # @private
       module ConstructorMethods
 
         def new(*args, &block)
@@ -28,10 +58,39 @@ module Cequel
 
       end
 
+      #
+      # Methods for defining columns on a record
+      #
+      # @see Properties
+      #
       module ClassMethods
 
         protected
+        # @!visibility public
 
+        #
+        # Define a key column. By default, the first key column defined for a
+        # record will be a partition key, and the following keys will be
+        # clustering columns. This behavior can be changed using the
+        # `:partition` option
+        #
+        # @param name [Symbol] the name of the key column
+        # @param type [Symbol] the type of the key column
+        # @param options [Options] options for the key column
+        # @option options [Boolean] :partition (false) make this a partition key
+        #   even if it is not the first key column
+        # @option options [Boolean] :auto (false) automatically initialize this
+        #   key with a UUID value for new records. Only valid for `uuid` and
+        #   `timeuuid` columns.
+        # @return [void]
+        #
+        # @note {Associations::ClassMethods#belongs_to belongs_to} implicitly
+        #   defines key columns.
+        #
+        # @see
+        #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/ddl_anatomy_table_c.html#concept_ds_cz4_lmy_zj
+        #   CQL documentation on compound primary keys
+        #
         def key(name, type, options = {})
           def_accessors(name)
           if options.fetch(:auto, false)
@@ -43,21 +102,70 @@ module Cequel
           set_attribute_default(name, default)
         end
 
+        #
+        # Define a data column
+        #
+        # @param name [Symbol] the name of the column
+        # @param type [Symbol] the type of the column
+        # @param options [Options] options for the column
+        # @option options [Object,Proc] :default a default value for the column,
+        #   or a proc that returns a default value for the column
+        # @return [void]
+        #
         def column(name, type, options = {})
           def_accessors(name)
           set_attribute_default(name, options[:default])
         end
 
+        #
+        # Define a list column
+        #
+        # @param name [Symbol] the name of the list
+        # @param type [Symbol] the type of the elements in the list
+        # @param options [Options] options for the list
+        # @option options [Object,Proc] :default ([]) a default value for the column,
+        #   or a proc that returns a default value for the column
+        # @return [void]
+        #
+        # @see Record::List
+        # @since 1.0.0
+        #
         def list(name, type, options = {})
           def_collection_accessors(name, List)
           set_attribute_default(name, options.fetch(:default, []))
         end
 
+        #
+        # Define a set column
+        #
+        # @param name [Symbol] the name of the set
+        # @param type [Symbol] the type of the elements in the set
+        # @param options [Options] options for the set
+        # @option options [Object,Proc] :default (Set[]) a default value for the column,
+        #   or a proc that returns a default value for the column
+        # @return [void]
+        #
+        # @see Record::Set
+        # @since 1.0.0
+        #
         def set(name, type, options = {})
           def_collection_accessors(name, Set)
           set_attribute_default(name, options.fetch(:default, ::Set[]))
         end
 
+        #
+        # Define a map column
+        #
+        # @param name [Symbol] the name of the map
+        # @param key_type [Symbol] the type of the keys in the set
+        # @param options [Options] options for the set
+        # @option options [Object,Proc] :default ({}) a default value for the column,
+        #   or a proc that returns a default value for the column
+        # @return [void]
+        #
+        # @see Record::Map
+        # @since 1.0.0
+        #
         def map(name, key_type, value_type, options = {})
           def_collection_accessors(name, Map)
           set_attribute_default(name, options.fetch(:default, {}))
@@ -190,9 +298,6 @@ module Cequel
           loaded!
           self
       end
-
     end
-
   end
-
 end
