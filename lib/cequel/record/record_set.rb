@@ -54,19 +54,103 @@ module Cequel
           inject(self) { |record_set, key_value| record_set[key_value] }
       end
 
-      def [](*new_scoped_key_values)
-        new_scoped_key_values =
-          new_scoped_key_values.map(&method(:cast_range_key))
+      #
+      # Restrict this record set to a given value for the next unscoped
+      # primary key column
+      #
+      # Record sets can be thought of like deeply-nested hashes, where each
+      # primary key column is a level of nesting. For instance, if a table
+      # consists of a single record with primary key `(blog_subdomain,
+      # permalink) = ("cassandra", "cequel")`, the record set can be thought of
+      # like so:
+      #
+      # ```ruby
+      # {
+      #   "cassandra" => {
+      #     "cequel" => #<Post blog_subdomain: "cassandra", permalink: "cequel", title: "Cequel">
+      #   }
+      # }
+      # ```
+      #
+      # If `[]` is invoked enough times to specify all primary keys, then an
+      # unloaded `Record` instance is returned; this is the same behavior you
+      # would expect from a `Hash`. If only some subset of the primary keys have
+      # been specified, the result is still a `RecordSet`.
+      #
+      # @param primary_key_value value for the first unscoped primary key
+      # @return [RecordSet] record set with primary key filter applied, if not
+      #   all primary keys are specified
+      # @return [Record] unloaded record, if all primary keys are specified
+      #
+      # @example Partially specified primary key
+      #   Post['cequel'] # returns a RecordSet
+      #
+      # @example Fully specified primary key
+      #   Post['cequel']['cassandra'] # returns an unloaded Record
+      #
+      # @note Accepting multiple values is deprecated behavior. Use {#values_at}
+      #   instead.
+      #
+      def [](*primary_key_value)
+        if primary_key_value.many?
+          warn "Calling #[] with multiple arguments is deprecated. Use #values_at"
+          return values_at(*primary_key_value)
+        end
 
-        new_scoped_key_values =
-          new_scoped_key_values.first if new_scoped_key_values.one?
+        primary_key_value = cast_range_key(primary_key_value.first)
 
         scoped { |attributes| attributes[:scoped_key_values] <<
-          new_scoped_key_values }.resolve_if_fully_specified
+          primary_key_value }.resolve_if_fully_specified
       end
 
+      #
+      # Restrict the records in this record set to those containing any of a set
+      # of values
+      #
+      # @param primary_key_values values to match in the next unscoped primary
+      #   key
+      # @return [RecordSet] record set with primary key scope applied if not all
+      #   primary key columns are specified
+      # @return [LazyRecordCollection] collection of unloaded records if all
+      #   primary key columns are specified
+      # @raise IllegalQuery if the scoped key column is neither the last
+      #   partition key column nor the last clustering column
+      #
+      # @see #[]
+      #
+      def values_at(*primary_key_values)
+        unless next_unscoped_key_column_valid_for_in_query?
+          raise IllegalQuery,
+            "Only the last partition key column and the last clustering column can match multiple values"
+        end
+
+        primary_key_values = primary_key_values.map(&method(:cast_range_key))
+
+        scoped { |attributes| attributes[:scoped_key_values] <<
+          primary_key_values }.resolve_if_fully_specified
+      end
+
+      #
+      # Return a loaded Record or collection of loaded Records with the
+      # specified primary key values
+      #
+      # @param scoped_key_values one or more values for the final primary key
+      #   column
+      # @return [Record] if a single key is specified, return the loaded
+      #   record at that key
+      # @return [LazyRecordCollection] if multiple keys are specified, return a
+      #   collection of loaded records at those keys
+      # @raise [RecordNotFound] if not all the keys correspond to records in the
+      #   table
+      # @raise [ArgumentError] if not all primary key columns have been
+      #   specified
+      #
+      # @note This should only be called when all but the last column in the
+      #   primary key is already specified in this record set
       def find(*scoped_key_values)
-        self[*scoped_key_values].load!
+        (scoped_key_values.one? ?
+          self[scoped_key_values.first] :
+          values_at(*scoped_key_values)).load!
       end
 
       def /(scoped_key_value)
@@ -267,6 +351,13 @@ module Cequel
         scoped_key_values.any? { |values| values.is_a?(Array) }
       end
 
+      def next_unscoped_key_column_valid_for_in_query?
+        next_unscoped_key_column = unscoped_key_columns.first
+
+        next_unscoped_key_column == partition_key_columns.last ||
+          next_unscoped_key_column == clustering_columns.last
+      end
+
       def resolve_if_fully_specified
         if fully_specified?
           if multiple_records_specified?
@@ -344,6 +435,10 @@ module Cequel
         else
           cast_range_key(value)
         end
+      end
+
+      def load!
+        raise ArgumentError, "Not all primary key columns have specified values"
       end
 
       def scoped(new_attributes = {}, &block)
