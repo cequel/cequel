@@ -1,5 +1,6 @@
 module Cequel
   module Record
+    # @private
     class Railtie < Rails::Railtie
       config.cequel = Record
 
