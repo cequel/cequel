@@ -9,6 +9,10 @@ module Cequel
     # query, nor can you combine more than one secondary index restrictions in
     # the same query.
     #
+    # If a column is given a secondary index, magic finder methods `find_by_*`,
+    # `find_all_by_*`, and `with_*` are added to the class singleton. See below
+    # for an example.
+    #
     # Secondary indexes are fairly expensive for Cassandra and should only be
     # defined where needed.
     #
@@ -22,6 +26,16 @@ module Cequel
     #   end
     #
     # @example Using a secondary index
+    #   # return the first record with the author_id
+    #   Post.find_by_author_id(id)
+    #
+    #   # return an Array of all records with the author_id
+    #   Post.find_all_by_author_id(id)
+    #
+    #   # return a RecordSet scoped to the author_id
+    #   Post.with_author_id(id)
+    #
+    #   # same as with_author_id
     #   Post.where(:author_id, id)
     #
     # @since 1.0.0
