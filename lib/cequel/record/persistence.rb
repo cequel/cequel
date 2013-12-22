@@ -23,7 +23,7 @@ module Cequel
         # save it.
         #
         # @param attributes [Hash] attributes to assign to the new record
-        # @yield [Record] record to make modifications before saving
+        # @yieldparam record [Record] record to make modifications before saving
         # @return [Record] self
         #
         # @example Create a new record with attribute assignment
