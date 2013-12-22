@@ -28,9 +28,50 @@ if defined? Rails
 end
 
 module Cequel
-
+  #
+  # Cequel::Record is an active record-style data modeling library and
+  # object-row mapper. Model classes inherit from Cequel::Record, define their
+  # columns in the class definition, and have access to a full and robust set of
+  # read and write functionality.
+  #
+  # Individual components are documented in their respective modules. See below
+  # for links.
+  #
+  # @example A Record class showing off many of the possibilities
+  #   class Post
+  #     include Cequel::Record
+  #
+  #     belongs_to :blog
+  #     key :id, :timeuuid, auto: true
+  #     column :title, :text
+  #     column :body, :text
+  #     column :author_id, :uuid, index: true
+  #     set :categories
+  #
+  #     has_many :comments, dependent: destroy
+  #
+  #     after_create :notify_followers
+  #
+  #     validates :title, presence: true
+  #
+  #     def self.for_author(author_id)
+  #       where(:author_id, author_id)
+  #     end
+  #   end
+  #
+  # @see Properties Defining properties
+  # @see Collection Collection columns
+  # @see SecondaryIndexes Defining secondary indexes
+  # @see Associations Defining associations between records
+  # @see Persistence Creating, updating, and destroying records
+  # @see BulkWrites Updating and destroying records in bulk
+  # @see RecordSet Loading records from the database
+  # @see MassAssignment Mass-assignment protection and strong attributes
+  # @see Callbacks Lifecycle hooks
+  # @see Validations
+  # @see Dirty Dirty attribute tracking
+  #
   module Record
-
     extend ActiveSupport::Concern
     extend Forwardable
 
@@ -60,9 +101,6 @@ module Cequel
       def establish_connection(configuration)
         self.connection = Cequel.connect(configuration)
       end
-
     end
-
   end
-
 end
