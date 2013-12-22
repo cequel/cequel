@@ -22,7 +22,7 @@ module Cequel
         # Initialize a new record instance, assign attributes, and immediately
         # save it.
         #
-        # @params attributes [Hash] attributes to assign to the new record
+        # @param attributes [Hash] attributes to assign to the new record
         # @yield [Record] record to make modifications before saving
         # @return [Record] self
         #
