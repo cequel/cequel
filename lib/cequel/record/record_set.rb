@@ -535,7 +535,7 @@ module Cequel
       #
       def find_rows_in_batches(options = {}, &block)
         return find_rows_in_single_batch(options, &block) if row_limit
-        options.assert_valid_keys!(:batch_size)
+        options.assert_valid_keys(:batch_size)
         batch_size = options.fetch(:batch_size, 1000)
         batch_record_set = base_record_set = limit(batch_size)
         more_results = true
