@@ -4,6 +4,8 @@ module Cequel
     # All of the instance methods of {RecordSet} are also available as class
     # methods on {Record} implementations.
     #
+    # @since 0.1.0
+    #
     module Scoped
       extend ActiveSupport::Concern
 

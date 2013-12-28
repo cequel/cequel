@@ -8,6 +8,8 @@ module Cequel
     #   which should yield successive fully-specified key attributes for each
     #   result row.
     #
+    # @since 1.0.0
+    #
     module BulkWrites
       #
       # Update all matched records with the given column values, without

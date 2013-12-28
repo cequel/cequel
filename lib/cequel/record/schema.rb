@@ -11,6 +11,8 @@ module Cequel
     #
     # All the interesting stuff is in the {ClassMethods}.
     #
+    # @since 1.0.0
+    #
     module Schema
       extend ActiveSupport::Concern
       extend Forwardable

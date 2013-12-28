@@ -7,6 +7,8 @@ module Cequel
     # @see http://api.rubyonrails.org/classes/ActiveModel/Dirty.html Rails
     #   documentation for ActiveModel::Dirty
     #
+    # @since 0.1.0
+    #
     module Dirty
       extend ActiveSupport::Concern
 

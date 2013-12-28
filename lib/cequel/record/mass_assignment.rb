@@ -15,6 +15,8 @@ module Cequel
     # @see https://github.com/rails/strong_parameters Rails 4 Strong Parameters
     # @see http://api.rubyonrails.org/v3.2.15/classes/ActiveModel/MassAssignmentSecurity.html Rails 3 mass-assignment security
     #
+    # @since 1.0.0
+    #
     module MassAssignment
       extend ActiveSupport::Concern
 

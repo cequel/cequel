@@ -18,6 +18,8 @@ module Cequel
     #     before_validation :set_permalink
     #   end
     #
+    # @since 0.1.0
+    #
     module Callbacks
       extend ActiveSupport::Concern
 

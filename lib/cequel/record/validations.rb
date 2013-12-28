@@ -17,6 +17,8 @@ module Cequel
     # @see http://api.rubyonrails.org/classes/ActiveModel/Validations.html
     #   ActiveModel::Validations
     #
+    # @since 0.1.0
+    #
     module Validations
       extend ActiveSupport::Concern
 
