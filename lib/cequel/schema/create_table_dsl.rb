@@ -6,6 +6,7 @@ module Cequel
     # @see Keyspace#create_table
     #
     class CreateTableDSL < BasicObject
+      extend ::Forwardable
       #
       # Evaluate `block` in the context of this DSL, and apply directives to
       # `table`
@@ -31,89 +32,46 @@ module Cequel
       end
 
       #
-      # Add a partition key to the table
+      # @!method partition_key(name, type)
+      #   (see Table#add_partition_key)
       #
-      # @param (see Table#add_partition_key)
-      # @return [void]
-      #
-      def partition_key(name, type)
-        @table.add_partition_key(name, type)
-      end
+      def_delegator :@table, :add_partition_key, :partition_key
 
       #
-      # Add a key to the table. If this is the first key in the table, it will
-      # be a partition key; otherwise, it will be a clustering column
+      # @!method key(name, type, clustering_order = nil)
+      #   (see Table#add_key)
       #
-      # @param (see Table#add_key)
-      # @return [void]
-      #
-      # @see #partition_key
-      #
-      def key(name, type, clustering_order = nil)
-        @table.add_key(name, type, clustering_order)
-      end
+      def_delegator :@table, :add_key, :key
 
       #
-      # Add a data column to the table
+      # @!method column(name, type, options = {})
+      #   (see Table#add_data_column)
       #
-      # @param name [Symbol] name of the column
-      # @param type [Type] type for the column
-      # @param options [Options] options for the column
-      # @option options [Boolean,Symbol] :index (nil) name of a secondary index
-      #   to apply to the column, or `true` to infer an index name by convention
-      # @return [void]
-      #
-      def column(name, type, options = {})
-        @table.add_data_column(name, type, options[:index])
-      end
+      def_delegator :@table, :add_data_column, :column
 
       #
-      # Add a list column to the table
+      # @!method list(name, type)
+      #   (see Table#add_list)
       #
-      # @param (see Table#add_list)
-      # @return [void]
-      #
-      # @see List
-      #
-      def list(name, type)
-        @table.add_list(name, type)
-      end
+      def_delegator :@table, :add_list, :list
 
       #
-      # Add a set column to the table
+      # @!method set(name, type)
+      #   (see Table#add_set)
       #
-      # @param (see Table#add_set)
-      # @return [void]
-      #
-      # @see Set
-      #
-      def set(name, type)
-        @table.add_set(name, type)
-      end
+      def_delegator :@table, :add_set, :set
 
       #
-      # Add a map column to the table
+      # @!method map(name, key_type, value_type)
+      #   (see Table#add_map)
       #
-      # @param (see Table#add_map)
-      # @return [void]
-      #
-      # @see Map
-      #
-      def map(name, key_type, value_type)
-        @table.add_map(name, key_type, value_type)
-      end
+      def_delegator :@table, :add_map, :map
 
       #
-      # Add a storage property to the table
+      # @!method with(name, value)
+      #   (see Table#add_property)
       #
-      # @param (see Table#add_property)
-      # @return [void]
-      #
-      # @see Map
-      #
-      def with(name, value)
-        @table.add_property(name, value)
-      end
+      def_delegator :@table, :add_property, :with
 
       #
       # Direct that this table use “compact storage”. This is primarily useful

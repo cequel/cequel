@@ -45,7 +45,19 @@ module Cequel
         end
       end
 
-      def add_data_column(name, type, index_name)
+      #
+      # Add a data column to the table
+      #
+      # @param name [Symbol] name of the column
+      # @param type [Type] type for the column
+      # @param options [Options] options for the column
+      # @option options [Boolean,Symbol] :index (nil) name of a secondary index
+      #   to apply to the column, or `true` to infer an index name by convention
+      # @return [void]
+      #
+      def add_data_column(name, type, options = {})
+        options = {:index => options} unless options.is_a?(Hash)
+        index_name = options[:index]
         index_name = :"#{@name}_#{name}_idx" if index_name == true
         DataColumn.new(name, type(type), index_name).
           tap { |column| @data_columns << add_column(column) }
