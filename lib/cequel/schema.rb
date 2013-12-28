@@ -10,6 +10,9 @@ require 'cequel/schema/table_writer'
 require 'cequel/schema/update_table_dsl'
 
 module Cequel
+  #
+  # @since 1.0.0
+  #
   module Schema
   end
 end
