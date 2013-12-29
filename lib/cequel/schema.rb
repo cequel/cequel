@@ -11,6 +11,11 @@ require 'cequel/schema/update_table_dsl'
 
 module Cequel
   #
+  # The Schema module provides full read/write access to keyspace and table
+  # schemas defined in Cassandra.
+  #
+  # @see Schema::Keyspace
+  #
   # @since 1.0.0
   #
   module Schema
