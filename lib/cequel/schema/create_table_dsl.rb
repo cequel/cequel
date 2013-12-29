@@ -33,43 +33,43 @@ module Cequel
 
       #
       # @!method partition_key(name, type)
-      #   (see Table#add_partition_key)
+      #   (see Cequel::Schema::Table#add_partition_key)
       #
       def_delegator :@table, :add_partition_key, :partition_key
 
       #
       # @!method key(name, type, clustering_order = nil)
-      #   (see Table#add_key)
+      #   (see Cequel::Schema::Table#add_key)
       #
       def_delegator :@table, :add_key, :key
 
       #
       # @!method column(name, type, options = {})
-      #   (see Table#add_data_column)
+      #   (see Cequel::Schema::Table#add_data_column)
       #
       def_delegator :@table, :add_data_column, :column
 
       #
       # @!method list(name, type)
-      #   (see Table#add_list)
+      #   (see Cequel::Schema::Table#add_list)
       #
       def_delegator :@table, :add_list, :list
 
       #
       # @!method set(name, type)
-      #   (see Table#add_set)
+      #   (see Cequel::Schema::Table#add_set)
       #
       def_delegator :@table, :add_set, :set
 
       #
       # @!method map(name, key_type, value_type)
-      #   (see Table#add_map)
+      #   (see Cequel::Schema::Table#add_map)
       #
       def_delegator :@table, :add_map, :map
 
       #
       # @!method with(name, value)
-      #   (see Table#add_property)
+      #   (see Cequel::Schema::Table#add_property)
       #
       def_delegator :@table, :add_property, :with
 
