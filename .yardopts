@@ -1,2 +1,5 @@
 -m markdown
 --no-private
+--safe
+--hide-void-return
+--files CHANGELOG.md,LICENSE
