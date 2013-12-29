@@ -1,9 +1,22 @@
 module Cequel
-
   module Schema
-
+    #
+    # Synchronize a table schema in the database with a desired table schema
+    #
+    # @see .apply
+    # @see Keyspace#synchronize_table
+    #
     class TableSynchronizer
-
+      #
+      # Takes an existing table schema read from the database, and a desired
+      # schema for that table. Modifies the table schema in the database to match
+      # the desired schema, or creates the table as specified if it does not yet
+      # exist
+      #
+      # @param (see #initialize)
+      # @return [void]
+      # @raise (see #apply)
+      #
       def self.apply(keyspace, existing, updated)
         if existing
           TableUpdater.apply(keyspace, existing.name) do |updater|
@@ -14,11 +27,27 @@ module Cequel
         end
       end
 
+      #
+      # @param keyspace [Metal::Keyspace] keyspace that contains table
+      # @param existing [Table] table schema as it is currently defined
+      # @param updated [Table] table schema as it is desired
+      # @private
+      #
       def initialize(updater, existing, updated)
         @updater, @existing, @updated = updater, existing, updated
       end
       private_class_method :new
 
+      #
+      # Apply the changes needed to synchronize the schema in the database with
+      # the desired schema
+      #
+      # @return [void]
+      # @raise [InvalidSchemaMigration] if it is impossible to modify existing
+      #   table to match desired schema
+      #
+      # @api private
+      #
       def apply
         update_keys
         update_columns
@@ -113,9 +142,6 @@ module Cequel
           end
         end
       end
-
     end
-
   end
-
 end
