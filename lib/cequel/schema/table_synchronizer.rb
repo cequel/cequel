@@ -13,7 +13,9 @@ module Cequel
       # the desired schema, or creates the table as specified if it does not yet
       # exist
       #
-      # @param (see #initialize)
+      # @param keyspace [Metal::Keyspace] keyspace that contains table
+      # @param existing [Table] table schema as it is currently defined
+      # @param updated [Table] table schema as it is desired
       # @return [void]
       # @raise (see #apply)
       #
@@ -28,9 +30,10 @@ module Cequel
       end
 
       #
-      # @param keyspace [Metal::Keyspace] keyspace that contains table
+      # @param updater [TableUpdater] table updater to hold schema modifications
       # @param existing [Table] table schema as it is currently defined
       # @param updated [Table] table schema as it is desired
+      # @return [void]
       # @private
       #
       def initialize(updater, existing, updated)

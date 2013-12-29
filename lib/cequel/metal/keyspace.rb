@@ -85,7 +85,7 @@ module Cequel
       # Execute a CQL query in this keyspace
       #
       # @param statement [String] CQL string
-      # @param *bind_vars [Object] values for bind variables
+      # @param bind_vars [Object] values for bind variables
       # @return [void]
       #
       def execute(statement, *bind_vars)

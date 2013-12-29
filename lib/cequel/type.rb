@@ -104,7 +104,7 @@ module Cequel
       end
 
       #
-      # @param the value to cast
+      # @param value the value to cast
       # @return the value cast to the correct Ruby class for this type
       #
       def cast(value)
@@ -122,7 +122,7 @@ module Cequel
     #
     # Abstract superclass for types that represent character data
     #
-    # @abstract Subclasses must implement {#encoding}, which returns the name of
+    # @abstract Subclasses must implement `#encoding`, which returns the name of
     #   the Ruby encoding corresponding to the character encoding used for
     #   values of this type
     #

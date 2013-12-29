@@ -143,8 +143,8 @@ module Cequel
       # @see #decrement
       # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/../cql_using/use_counter_t.html CQL documentation for counter columns
       #
-      def increment(data, options = {})
-        incrementer(options) { increment(data) }.execute
+      def increment(deltas, options = {})
+        incrementer(options) { increment(deltas) }.execute
       end
       alias_method :incr, :increment
 
@@ -159,8 +159,8 @@ module Cequel
       # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/../cql_using/use_counter_t.html CQL documentation for counter columns
       # @since 0.5.0
       #
-      def decrement(data, options = {})
-        incrementer(options) { decrement(data) }.execute
+      def decrement(deltas, options = {})
+        incrementer(options) { decrement(deltas) }.execute
       end
       alias_method :decr, :decrement
 
@@ -255,22 +255,23 @@ module Cequel
       end
 
       #
-      # Remove the value from a given position or positions in a list column
+      # @overload list_remove_at(column, *positions, options = {})
+      #   Remove the value from a given position or positions in a list column
       #
-      # @param column [Symbol] name of list column
-      # @param *positions [Integer] position(s) in list to remove value from
-      # @param options [Options] options for persisting the data
-      # @option (see Writer#initialize)
-      # @return [void]
+      #   @param column [Symbol] name of list column
+      #   @param positions [Integer] position(s) in list to remove value from
+      #   @param options [Options] options for persisting the data
+      #   @option (see Writer#initialize)
+      #   @return [void]
       #
-      # @example
-      #   posts.list_remove_at(:categories, 2)
+      #   @example
+      #     posts.list_remove_at(:categories, 2)
       #
-      # @note If enclosed in a Keyspace#batch block, this method will be
-      #   executed as part of the batch.
-      # @see #list_remove
-      # @see #update
-      # @since 1.0.0
+      #   @note If enclosed in a Keyspace#batch block, this method will be
+      #     executed as part of the batch.
+      #   @see #list_remove
+      #   @see #update
+      #   @since 1.0.0
       #
       def list_remove_at(column, *positions)
         options = positions.extract_options!
@@ -278,21 +279,22 @@ module Cequel
       end
 
       #
-      # Remove a given key from a map column
+      # @overload map_remove(column, *keys, options = {})
+      #   Remove a given key from a map column
       #
-      # @param column [Symbol] name of map column
-      # @param key [Object] map key to remove
-      # @param options [Options] options for persisting the data
-      # @option (see Writer#initialize)
-      # @return [void]
+      #   @param column [Symbol] name of map column
+      #   @param keys [Object] map key to remove
+      #   @param options [Options] options for persisting the data
+      #   @option (see Writer#initialize)
+      #   @return [void]
       #
-      # @example
-      #   posts.map_remove(:credits, 'editor')
+      #   @example
+      #     posts.map_remove(:credits, 'editor')
       #
-      # @note If enclosed in a Keyspace#batch block, this method will be
-      #   executed as part of the batch.
-      # @see #update
-      # @since 1.0.0
+      #   @note If enclosed in a Keyspace#batch block, this method will be
+      #     executed as part of the batch.
+      #   @see #update
+      #   @since 1.0.0
       #
       def map_remove(column, *keys)
         options = keys.extract_options!
@@ -303,7 +305,7 @@ module Cequel
       # Add one or more elements to a set column
       #
       # @param column [Symbol] name of set column
-      # @param value [Object,Set] value or values to add
+      # @param values [Object,Set] value or values to add
       # @param options [Options] options for persisting the data
       # @option (see Writer#initialize)
       # @return [void]
@@ -345,7 +347,7 @@ module Cequel
       # Update one or more keys in a map column
       #
       # @param column [Symbol] name of set column
-      # @param map [Hash] updates
+      # @param updates [Hash] map of map keys to new values
       # @param options [Options] options for persisting the data
       # @option (see Writer#initialize)
       # @return [void]
@@ -433,7 +435,7 @@ module Cequel
       #
       # Return the remaining TTL for the specified columns from this data set.
       #
-      # @param *columns [Symbol] columns to select
+      # @param columns [Symbol] columns to select
       # @return [DataSet] new data set scoped to specified columns
       #
       # @since 1.0.0
@@ -447,7 +449,7 @@ module Cequel
       #
       # Return the write time for the specified columns in the data set
       #
-      # @param *columns [Symbol] columns to select
+      # @param columns [Symbol] columns to select
       # @return [DataSet] new data set scoped to specified columns
       #
       # @since 1.0.0
@@ -461,7 +463,7 @@ module Cequel
       #
       # Select specified columns from this data set, overriding chained scope.
       #
-      # @param *columns [Symbol,Array] columns to select
+      # @param columns [Symbol,Array] columns to select
       # @return [DataSet] new data set scoped to specified columns
       #
       def select!(*columns)

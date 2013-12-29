@@ -49,7 +49,7 @@ module Cequel
       def_delegator :@updater, :add_set
 
       #
-      # @!method add_map(name, type)
+      # @!method add_map(name, key_type, value_type)
       #   (see Cequel::Schema::TableUpdater#add_map)
       #
       def_delegator :@updater, :add_map
