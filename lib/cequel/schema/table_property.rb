@@ -1,16 +1,29 @@
 module Cequel
-
   module Schema
-
+    #
+    # Encapsulates a CQL3 storage property defined on a table
+    #
     class TableProperty
+      # @return [Symbol] name of the property
+      attr_reader :name
+      # @return value of the property
+      attr_reader :value
 
-      attr_reader :name, :value
-
+      #
+      # @param name [Symbol] name of the property
+      # @param value value of the property
+      #
+      # @api private
+      #
       def initialize(name, value)
         @name = name
         set_normalized_value(value)
       end
 
+      #
+      # @return [String] CQL fragment defining this property in a `CREATE TABLE`
+      #   statement
+      #
       def to_cql
         if Hash === @value
           map_pairs = @value.each_pair.
@@ -59,9 +72,6 @@ module Cequel
           end
         end
       end
-
     end
-
   end
-
 end

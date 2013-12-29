@@ -217,7 +217,7 @@ module Cequel
 
       #
       # @param name [Symbol] name of property to look up
-      # @return value defined on table for given property
+      # @return [TableProperty] property as defined on table
       #
       def property(name)
         @properties[name].try(:value)
