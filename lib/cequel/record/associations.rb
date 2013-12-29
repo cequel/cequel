@@ -157,6 +157,9 @@ module Cequel
 
       end
 
+      #
+      # @private
+      #
       def destroy(*)
         super.tap do
           self.class.child_associations.each_value do |association|

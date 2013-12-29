@@ -89,12 +89,19 @@ module Cequel
       extend ActiveModel::Naming
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml
-
     end
 
     class <<self
+      # @return [Metal::Keyspace] the keyspace used for record persistence
       attr_accessor :connection
 
+      #
+      # Establish a connection with the given configuration
+      #
+      # @param (see Cequel.connect)
+      # @option (see Cequel.connect)
+      # @return [void]
+      #
       def establish_connection(configuration)
         self.connection = Cequel.connect(configuration)
       end

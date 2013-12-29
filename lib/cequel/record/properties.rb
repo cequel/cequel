@@ -219,28 +219,45 @@ module Cequel
 
       end
 
-      # FIXME this isn't empty anymore! Rethink.
+      # @private
       def initialize(attributes = {}, record_collection = nil)
         @attributes, @record_collection = attributes, record_collection
         @collection_proxies = {}
       end
 
+      #
+      # @return [Array<Symbol>] list of names of attributes on this record
+      #
       def attribute_names
         @attributes.keys
       end
 
+      #
+      # @return [Hash<Symbol,Object>] map of column names to values currently
+      #   set on this record
+      #
       def attributes
         attribute_names.each_with_object({}) do |name, attributes|
           attributes[name] = read_attribute(name)
         end
       end
 
+      #
+      # Set attributes on the record. Each attribute is set via the setter
+      # method; virtual (non-column) attributes are allowed.
+      #
+      # @param attributes [Hash] map of attribute names to values
+      # @return [void]
+      #
       def attributes=(attributes)
         attributes.each_pair do |attribute, value|
           __send__(:"#{attribute}=", value)
         end
       end
 
+      #
+      # @return [Boolean] true if this record has the same type and key
+      #   attributes as the other record
       def ==(other)
         if key_values.any? { |value| value.nil? }
           super
@@ -249,6 +266,9 @@ module Cequel
         end
       end
 
+      #
+      # @return [String] string representation of the record
+      #
       def inspect
         inspected_attributes = attributes.each_pair.map do |attr, value|
           inspected_value = value.is_a?(CassandraCQL::UUID) ?

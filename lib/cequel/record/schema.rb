@@ -36,28 +36,28 @@ module Cequel
 
         #
         # @!attribute [r] columns
-        #   (see Schema::Table#columns)
+        #   (see Cequel::Schema::Table#columns)
         #
         # @!attribute [r] key_columns
-        #   (see Schema::Table#key_columns)
+        #   (see Cequel::Schema::Table#key_columns)
         #
         # @!attribute [r] key_column_names
-        #   (see Schema::Table#key_column_names)
+        #   (see Cequel::Schema::Table#key_column_names)
         #
         # @!attribute [r] partition_key_columns
-        #   (see Schema::Table#partition_key_columns)
+        #   (see Cequel::Schema::Table#partition_key_columns)
         #
         # @!attribute [r] clustering_columns
-        #   (see Schema::Table#clustering_columns)
+        #   (see Cequel::Schema::Table#clustering_columns)
         #
         # @!method compact_storage?
-        #   (see Schema::Table#compact_storage?)
+        #   (see Cequel::Schema::Table#compact_storage?)
         #
         def_delegators :table_schema, :columns, :key_columns, :key_column_names,
           :partition_key_columns, :clustering_columns, :compact_storage?
         #
-        # @!method reflect_on_column(column_name)
-        #   (see Schema::Table#column)
+        # @!method reflect_on_column(name)
+        #   (see Cequel::Schema::Table#column)
         #
         def_delegator :table_schema, :column, :reflect_on_column
 
