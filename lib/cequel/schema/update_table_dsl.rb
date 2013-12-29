@@ -1,60 +1,91 @@
 module Cequel
-
   module Schema
-
+    #
+    # DSL for describing a series of schema modification statements
+    #
     class UpdateTableDSL < BasicObject
-
+      extend ::Forwardable
+      #
+      # Describe a series of schema modifications and build a {TableUpdater}
+      # to encapsulate them
+      #
+      # @param (see #initialize)
+      # @yield a block evaluated in the context of an {UpdateTableDSL} instance
+      # @return [void]
+      #
+      # @api private
+      # @see Keyspace#update_table
+      #
       def self.apply(updater, &block)
         dsl = new(updater)
         dsl.instance_eval(&block)
       end
 
+      #
+      # @param updater [TableUpdater]
+      #
+      # @api private
+      #
       def initialize(updater)
         @updater = updater
       end
 
-      def add_column(name, type)
-        @updater.add_column(name, ::Cequel::Type[type])
-      end
+      #
+      # @!method add_column(name, type)
+      #   (see Cequel::Schema::TableUpdater#add_column)
+      #
+      def_delegator :@updater, :add_column
 
-      def add_list(name, type)
-        @updater.add_list(name, ::Cequel::Type[type])
-      end
+      #
+      # @!method add_list(name, type)
+      #   (see Cequel::Schema::TableUpdater#add_list)
+      #
+      def_delegator :@updater, :add_list
 
-      def add_set(name, type)
-        @updater.add_set(name, ::Cequel::Type[type])
-      end
+      #
+      # @!method add_set(name, type)
+      #   (see Cequel::Schema::TableUpdater#add_set)
+      #
+      def_delegator :@updater, :add_set
 
-      def add_map(name, key_type, value_type)
-        @updater.add_map(name, ::Cequel::Type[key_type],
-                         ::Cequel::Type[value_type])
-      end
+      #
+      # @!method add_map(name, type)
+      #   (see Cequel::Schema::TableUpdater#add_map)
+      #
+      def_delegator :@updater, :add_map
 
-      def change_column(name, type)
-        @updater.change_column(name, ::Cequel::Type[type])
-      end
+      #
+      # @!method change_column(name, type)
+      #   (see Cequel::Schema::TableUpdater#change_column)
+      #
+      def_delegator :@updater, :change_column
 
-      def rename_column(old_name, new_name)
-        @updater.rename_column(old_name, new_name)
-      end
+      #
+      # @!method rename_column(old_name, new_name)
+      #   (see Cequel::Schema::TableUpdater#rename_column)
+      #
+      def_delegator :@updater, :rename_column
 
-      def change_properties(options)
-        @updater.change_properties(options)
-      end
+      #
+      # @!method change_properties(options)
+      #   (see Cequel::Schema::TableUpdater#change_properties)
+      #
+      def_delegator :@updater, :change_properties
       alias_method :change_options, :change_properties
 
-      def create_index(column_name, index_name = nil)
-        @updater.create_index(column_name, index_name)
-      end
+      #
+      # @!method create_index(column_name, index_name = nil)
+      #   (see Cequel::Schema::TableUpdater#create_index
+      #
+      def_delegator :@updater, :create_index
       alias_method :add_index, :create_index
 
-      def drop_index(index_name)
-        @updater.drop_index(index_name)
-      end
+      #
+      # @!method drop_index(index_name)
+      #   (see Cequel::Schema::TableUpdater#drop_index)
+      #
+      def_delegator :@updater, :drop_index
       alias_method :remove_index, :drop_index
-
     end
-
   end
-
 end
