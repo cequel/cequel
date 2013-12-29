@@ -1,9 +1,9 @@
 module Cequel
-
   module Util
-
+    #
+    # @api private
+    #
     module HashAccessors
-
       def hattr_reader(hash, *attributes)
         attributes.each do |attribute|
           module_eval <<-RUBY, __FILE__, __LINE__+1
@@ -38,9 +38,6 @@ module Cequel
         hattr_reader(hash, *attributes)
         hattr_writer(hash, *attributes)
       end
-
     end
-
   end
-  
 end
