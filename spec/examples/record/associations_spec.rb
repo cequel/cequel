@@ -27,12 +27,20 @@ describe Cequel::Record::Associations do
     belongs_to :post
     key :id, :uuid, auto: true
     column :content, :text
+
+    cattr_accessor :callback_count
+    self.callback_count = 0
+    before_destroy { self.class.callback_count += 1 }
   end
 
   model :Attachment do
     belongs_to :post
     key :id, :uuid, auto: true
     column :caption, :text
+
+    cattr_accessor :callback_count
+    self.callback_count = 0
+    before_destroy { self.class.callback_count += 1 }
   end
 
   describe '::belongs_to' do
@@ -156,10 +164,6 @@ describe Cequel::Record::Associations do
             comment.post = post_with_comments
           end.tap(&:save)
         end
-        @callback_count = 0
-        Comment.any_instance.stub(:run_callbacks).with(:destroy) do
-          @callback_count += 1
-        end
       end
 
       it "deletes all children when destroying the parent" do
@@ -171,11 +175,11 @@ describe Cequel::Record::Associations do
       it "executes :destroy callbacks on the children" do
         expect {
           post_with_comments.destroy
-        }.to change { @callback_count }.by(2)
+        }.to change { Comment.callback_count }.by(2)
       end
     end
 
-    context "with dependent => delete" do
+    context "with :dependent => :delete" do
       let(:post_with_attachments) { posts.first }
 
       before :each do
@@ -185,10 +189,6 @@ describe Cequel::Record::Associations do
             comment.post = post_with_attachments
           end.tap(&:save)
         end
-        @callback_count = 0
-        Attachment.any_instance.stub(:run_callbacks).with(:destroy) do
-          @callback_count += 1
-        end
       end
 
       it "deletes all children when destroying the parent" do
@@ -197,10 +197,10 @@ describe Cequel::Record::Associations do
         }.to change { Attachment.count }.by(-2)
       end
 
-      it "executes :destroy callbacks on the children" do
+      it "does not execute :destroy callbacks on the children" do
         expect {
           post_with_attachments.destroy
-        }.to change { @callback_count }.by(0)
+        }.not_to change { Attachment.callback_count }
       end
     end
   end

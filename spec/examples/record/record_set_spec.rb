@@ -192,30 +192,6 @@ describe Cequel::Record::RecordSet do
       end
     end
 
-    context 'multiple simple primary keys' do
-      let(:records) { blogs }
-      subject { Blog['blog-0', 'blog-1'] }
-
-      it 'should return both specified records' do
-        subject.map(&:subdomain).should =~ %w(blog-0 blog-1)
-      end
-
-      it 'should not query the database' do
-        disallow_queries!
-        subject.map(&:subdomain)
-      end
-
-      it 'should load value lazily' do
-        subject.first.name.should == 'Blog 0'
-      end
-
-      it 'should load values for all referenced records on first access' do
-        max_statements! 1
-        subject.first.name.should == 'Blog 0'
-        subject.last.name.should == 'Blog 1'
-      end
-    end
-
     context 'fully specified compound primary key' do
       let(:records) { posts }
       subject { Post['cassandra']['cequel0'] }
@@ -242,9 +218,71 @@ describe Cequel::Record::RecordSet do
       end
     end
 
+    context 'partially specified compound primary key' do
+      let(:records) { posts }
+      it 'should create partial collection if not all keys specified' do
+        Post['cassandra'].find_each(:batch_size => 2).map(&:title).
+          should == (0...5).map { |i| "Cequel #{i}" }
+      end
+    end
+  end
+
+  describe '#values_at' do
+    context 'multiple simple primary keys' do
+      let(:records) { blogs }
+      subject { Blog.values_at('blog-0', 'blog-1') }
+
+      it 'should return both specified records' do
+        subject.map(&:subdomain).should =~ %w(blog-0 blog-1)
+      end
+
+      it 'should not query the database' do
+        disallow_queries!
+        subject.map(&:subdomain)
+      end
+
+      it 'should load value lazily' do
+        subject.first.name.should == 'Blog 0'
+      end
+
+      it 'should load values for all referenced records on first access' do
+        max_statements! 1
+        subject.first.name.should == 'Blog 0'
+        subject.last.name.should == 'Blog 1'
+      end
+    end
+
+    context 'partially specified compound primary key with multiple partition keys' do
+      let(:records) { posts }
+      subject { Post.values_at('cassandra', 'postgres') }
+
+      it 'should return scope to keys' do
+        subject.map { |post| post.title }.should =~ (0...5).
+          map { |i| ["Cequel #{i}", "Sequel #{i}"] }.flatten
+      end
+    end
+
+    context 'fully specified compound primary key with multiple partition keys' do
+      let(:records) { [posts, orm_posts] }
+
+      subject { Post.values_at('cassandra', 'orms')['cequel0'] }
+
+      it 'should return collection of unloaded models' do
+        disallow_queries!
+        subject.map(&:key_values).
+          should == [['cassandra', 'cequel0'], ['orms', 'cequel0']]
+      end
+
+      it 'should lazy-load all records when properties of one accessed' do
+        max_statements! 1
+        subject.first.title.should == 'Cequel 0'
+        subject.second.title.should == 'Cequel ORM 0'
+      end
+    end
+
     context 'fully specified compound primary key with multiple clustering columns' do
       let(:records) { posts }
-      subject { Post['cassandra']['cequel0', 'cequel1'] }
+      subject { Post['cassandra'].values_at('cequel0', 'cequel1') }
 
       it 'should combine partition key with each clustering column' do
         disallow_queries!
@@ -259,44 +297,18 @@ describe Cequel::Record::RecordSet do
       end
 
       it 'should not allow collection columns to be selected' do
-        expect { Post.select(:tags)['cassandra']['cequel0', 'cequel1'] }.
+        expect { Post.select(:tags)['cassandra'].values_at('cequel0', 'cequel1') }.
           to raise_error(ArgumentError)
       end
     end
 
-    context 'partially specified compound primary key' do
-      let(:records) { posts }
-      it 'should create partial collection if not all keys specified' do
-        Post['cassandra'].find_each(:batch_size => 2).map(&:title).
-          should == (0...5).map { |i| "Cequel #{i}" }
-      end
-    end
+    context 'non-final clustering column' do
+      let(:records) { [] }
 
-    context 'partially specified compound primary key with multiple partition keys' do
-      let(:records) { posts }
-      subject { Post['cassandra', 'postgres'] }
-
-      it 'should return scope to keys' do
-        subject.map { |post| post.title }.should =~ (0...5).
-          map { |i| ["Cequel #{i}", "Sequel #{i}"] }.flatten
-      end
-    end
-
-    context 'fully specified compound primary key with multiple partition keys' do
-      let(:records) { [posts, orm_posts] }
-
-      subject { Post['cassandra', 'orms']['cequel0'] }
-
-      it 'should return collection of unloaded models' do
+      it 'should raise IllegalQuery' do
         disallow_queries!
-        subject.map(&:key_values).
-          should == [['cassandra', 'cequel0'], ['orms', 'cequel0']]
-      end
-
-      it 'should lazy-load all records when properties of one accessed' do
-        max_statements! 1
-        subject.first.title.should == 'Cequel 0'
-        subject.second.title.should == 'Cequel ORM 0'
+        expect { Comment['cassandra'].values_at('cequel0') }.
+          to raise_error(Cequel::Record::IllegalQuery)
       end
     end
   end
@@ -608,11 +620,11 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should update fully specified collection' do
-      Post['cassandra']['cequel0', 'cequel1', 'cequel2'].
+      Post['cassandra'].values_at('cequel0', 'cequel1', 'cequel2').
         update_all(title: 'Same Title')
-      Post['cassandra']['cequel0', 'cequel1', 'cequel2'].map(&:title).
+      Post['cassandra'].values_at('cequel0', 'cequel1', 'cequel2').map(&:title).
         should == Array.new(3) { 'Same Title' }
-      Post['cassandra']['cequel3', 'cequel4'].map(&:title).
+      Post['cassandra'].values_at('cequel3', 'cequel4').map(&:title).
         should == cassandra_posts.drop(3).map(&:title)
     end
   end
@@ -632,7 +644,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should be able to delete fully specified collection' do
-      Post['postgres']['sequel0', 'sequel1'].delete_all
+      Post['postgres'].values_at('sequel0', 'sequel1').delete_all
       Post['postgres'].map(&:permalink).
         should == postgres_posts.drop(2).map(&:permalink)
     end
@@ -653,7 +665,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should be able to delete fully specified collection' do
-      Post['postgres']['sequel0', 'sequel1'].destroy_all
+      Post['postgres'].values_at('sequel0', 'sequel1').destroy_all
       Post['postgres'].map(&:permalink).
         should == postgres_posts.drop(2).map(&:permalink)
     end

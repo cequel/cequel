@@ -1,19 +1,37 @@
 module Cequel
-
   module Schema
-
-
+    #
+    # Creates a new table schema in the database
+    #
     class TableWriter
-
+      #
+      # Creates a new table schema in the database given an object
+      # representation of the schema to create
+      #
+      # @param (see #initialize)
+      # @return (see #apply)
+      #
       def self.apply(keyspace, table)
         new(keyspace, table).apply
       end
 
+      #
+      # @param keyspace [Keyspace] keyspace in which to create the table
+      # @param table [Table] object representation of table schema
+      # @private
+      #
       def initialize(keyspace, table)
         @keyspace, @table = keyspace, table
       end
       private_class_method :new
 
+      #
+      # Create the table in the keyspace
+      #
+      # @return [void]
+      #
+      # @api private
+      #
       def apply
         keyspace.execute(create_statement)
         index_statements.each { |statement| keyspace.execute(statement) }
@@ -73,9 +91,6 @@ module Cequel
         end
         properties_fragments.join(' AND ') if properties_fragments.any?
       end
-
     end
-
   end
-
 end

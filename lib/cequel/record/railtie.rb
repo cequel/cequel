@@ -1,5 +1,7 @@
 module Cequel
   module Record
+    # @private
+    # @since 0.1.0
     class Railtie < Rails::Railtie
       config.cequel = Record
 
@@ -21,6 +23,15 @@ module Cequel
 
         connection.logger = Rails.logger
         Record.connection = connection
+      end
+
+      initializer "cequel.add_new_relic" do
+        begin
+          require 'new_relic/agent/method_tracer'
+        rescue LoadError => e
+        else
+          require 'cequel/metal/new_relic_instrumentation'
+        end
       end
 
       rake_tasks do

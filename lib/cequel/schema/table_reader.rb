@@ -1,9 +1,6 @@
 module Cequel
-
   module Schema
-
     class TableReader
-
       COMPOSITE_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.CompositeType\((.+)\)$/
       REVERSED_TYPE_PATTERN =
@@ -11,22 +8,40 @@ module Cequel
       COLLECTION_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.(List|Set|Map)Type\((.+)\)$/
 
-      STORAGE_PROPERTIES = %w[bloom_filter_fp_chance caching comment compaction
-        compression dclocal_read_repair_chance gc_grace_seconds
-        read_repair_chance replicate_on_write]
-
+      # @return [Table] object representation of the table defined in the
+      #   database
       attr_reader :table
 
+      #
+      # Read the schema defined in the database for a given table and return a
+      # {Table} instance
+      #
+      # @param (see #initialize)
+      # @return (see #read)
+      #
       def self.read(keyspace, table_name)
         new(keyspace, table_name).read
       end
 
+      #
+      # @param keyspace [Metal::Keyspace] keyspace to read the table from
+      # @param table_name [Symbol] name of the table to read
+      # @private
+      #
       def initialize(keyspace, table_name)
         @keyspace, @table_name = keyspace, table_name
         @table = Table.new(table_name.to_sym)
       end
       private_class_method(:new)
 
+      #
+      # Read table schema from the database
+      #
+      # @return [Table] object representation of table in the database, or `nil`
+      #   if no table by given name exists
+      #
+      # @api private
+      #
       def read
         if table_data.present?
           read_partition_keys
@@ -105,7 +120,7 @@ module Cequel
       end
 
       def read_properties
-        table_data.slice(*STORAGE_PROPERTIES).each do |name, value|
+        table_data.slice(*Table::STORAGE_PROPERTIES).each do |name, value|
           table.add_property(name, value)
         end
         compaction = JSON.parse(table_data['compaction_strategy_options']).
@@ -141,9 +156,6 @@ module Cequel
             column_query.map(&:to_hash)
           end
       end
-
     end
-
   end
-
 end

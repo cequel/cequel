@@ -1,56 +1,87 @@
 module Cequel
-
   module Schema
-
+    #
+    # Implements a DSL that can be used to define a table schema
+    #
+    # @see Keyspace#create_table
+    #
     class CreateTableDSL < BasicObject
-
+      extend ::Forwardable
+      #
+      # Evaluate `block` in the context of this DSL, and apply directives to
+      # `table`
+      #
+      # @param table [Table] a table
+      # @yield block evaluated in the context of the create table DSL
+      # @return [void]
+      #
+      # @api private
+      #
       def self.apply(table, &block)
         dsl = new(table)
         dsl.instance_eval(&block)
       end
 
+      #
+      # @param table [Table] table to apply directives to
+      #
+      # @api private
+      #
       def initialize(table)
         @table = table
       end
 
-      def partition_key(name, type)
-        @table.add_partition_key(name, type)
-      end
+      #
+      # @!method partition_key(name, type)
+      #   (see Cequel::Schema::Table#add_partition_key)
+      #
+      def_delegator :@table, :add_partition_key, :partition_key
 
-      def key(name, type, clustering_order = nil)
-        @table.add_key(name, type, clustering_order)
-      end
+      #
+      # @!method key(name, type, clustering_order = nil)
+      #   (see Cequel::Schema::Table#add_key)
+      #
+      def_delegator :@table, :add_key, :key
 
-      def column(name, type, options = {})
-        column = @table.add_data_column(name, type, options[:index])
-      end
+      #
+      # @!method column(name, type, options = {})
+      #   (see Cequel::Schema::Table#add_data_column)
+      #
+      def_delegator :@table, :add_data_column, :column
 
-      def list(name, type)
-        @table.add_list(name, type)
-      end
+      #
+      # @!method list(name, type)
+      #   (see Cequel::Schema::Table#add_list)
+      #
+      def_delegator :@table, :add_list, :list
 
-      def set(name, type)
-        @table.add_set(name, type)
-      end
+      #
+      # @!method set(name, type)
+      #   (see Cequel::Schema::Table#add_set)
+      #
+      def_delegator :@table, :add_set, :set
 
-      def map(name, key_type, value_type)
-        @table.add_map(
-          name,
-          key_type,
-          value_type
-        )
-      end
+      #
+      # @!method map(name, key_type, value_type)
+      #   (see Cequel::Schema::Table#add_map)
+      #
+      def_delegator :@table, :add_map, :map
 
-      def with(name, value)
-        @table.add_property(name, value)
-      end
+      #
+      # @!method with(name, value)
+      #   (see Cequel::Schema::Table#add_property)
+      #
+      def_delegator :@table, :add_property, :with
 
+      #
+      # Direct that this table use “compact storage”. This is primarily useful
+      # for backwards compatibility with legacy CQL2 table schemas.
+      #
+      # @return [void]
+      #
       def compact_storage
         @table.compact_storage = true
       end
-
     end
-
   end
-
 end

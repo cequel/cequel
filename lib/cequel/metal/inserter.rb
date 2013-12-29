@@ -1,20 +1,35 @@
 module Cequel
-
   module Metal
-
+    #
+    # Encapsulates an `INSERT` statement
+    #
+    # @see DataSet#insert
+    # @since 1.0.0
+    #
     class Inserter < Writer
-
+      #
+      # (see Writer#initialize)
+      #
       def initialize(data_set, options = {})
         @row = {}
         super
       end
 
+      #
+      # (see Writer#execute)
+      #
       def execute
         statement = Statement.new
         write_to_statement(statement)
         data_set.write(*statement.args)
       end
 
+      #
+      # Insert the given data into the table
+      #
+      # @param data [Hash<Symbol,Object>] map of column names to values
+      # @return [void]
+      #
       def insert(data)
         @row.merge!(data.symbolize_keys)
       end
@@ -45,9 +60,6 @@ module Cequel
           *bind_vars)
         statement.append(generate_upsert_options)
       end
-
     end
-
   end
-
 end

@@ -1,6 +1,10 @@
 module Cequel
-  Error = Class.new(StandardError)
-  EmptySubquery = Class.new(Error)
-  InvalidSchemaMigration = Class.new(Error)
-  MissingKeyError = Class.new(Error)
+  #
+  # @since 1.0.0
+  #
+  # Raised when the schema defined in Cassandra cannot be modified to match
+  # the schema defined in the application (e.g., changing the type of a primary
+  # key)
+  #
+  InvalidSchemaMigration = Class.new(StandardError)
 end

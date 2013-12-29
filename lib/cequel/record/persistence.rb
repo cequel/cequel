@@ -1,41 +1,98 @@
 module Cequel
-
   module Record
-
+    #
+    # This module provides functionality for loading and saving records to the
+    # Cassandra database.
+    #
+    # @see ClassMethods
+    #
+    # @since 0.1.0
+    #
     module Persistence
-
       extend ActiveSupport::Concern
       extend Forwardable
 
+      #
+      # Class-level functionality for loading and saving records
+      #
       module ClassMethods
-
         extend Forwardable
-        def_delegator 'Cequel::Record', :connection
 
+        #
+        # Initialize a new record instance, assign attributes, and immediately
+        # save it.
+        #
+        # @param attributes [Hash] attributes to assign to the new record
+        # @yieldparam record [Record] record to make modifications before saving
+        # @return [Record] self
+        #
+        # @example Create a new record with attribute assignment
+        #   Post.create(
+        #     blog_subdomain: 'cassandra',
+        #     permalink: 'cequel',
+        #     title: 'Cequel: The Next Generation'
+        #   )
+        #
+        # @example Create a new record with a block
+        #   Post.create do |post|
+        #     post.blog = blog
+        #     post.permalink = 'cequel'
+        #     post.title = 'Cequel: The Next Generation'
+        #   end
+        #
         def create(attributes = {}, &block)
           new(attributes, &block).tap { |record| record.save }
         end
 
+        # @private
         def table
           connection[table_name]
         end
 
+        # @private
         def hydrate(row)
           new_empty(row).__send__(:hydrated!)
         end
 
+        # @private
+        def_delegator 'Cequel::Record', :connection
       end
 
-      def_delegators 'self.class', :connection, :table
-
+      #
+      # @return [Hash] the attributes of this record that make up the primary key
+      #
+      # @example
+      #   post = Post.new
+      #   post.blog_subdomain = 'cassandra'
+      #   post.permalink = 'cequel'
+      #   post.title = 'Cequel: The Next Generation'
+      #   post.key_attributes
+      #     #=> {:blog_subdomain=>'cassandra', :permalink=>'cequel'}
+      #
+      # @since 1.0.0
+      #
       def key_attributes
         @attributes.slice(*self.class.key_column_names)
       end
 
+      #
+      # @return [Array] the values of the primary key columns for this record
+      #
+      # @see #key_attributes
+      # @since 1.0.0
+      #
       def key_values
         key_attributes.values
       end
 
+      #
+      # Check if an unloaded record exists in the database
+      #
+      # @return  `true` if the record has a corresponding row in the
+      #   database
+      #
+      # @since 1.0.0
+      #
       def exists?
         load!
         true
@@ -44,12 +101,30 @@ module Cequel
       end
       alias :exist? :exists?
 
+      #
+      # Load an unloaded record's row from the database and hydrate the record's
+      # attributes
+      #
+      # @return [Record] self
+      #
+      # @since 1.0.0
+      #
       def load
         assert_keys_present!
         record_collection.load! unless loaded?
         self
       end
 
+      #
+      # Attempt to load an unloaded record and raise an error if the record does
+      # not correspond to a row in the database
+      #
+      # @return [Record] self
+      # @raise [RecordNotFound] if row does not exist in the database
+      #
+      # @see #load
+      # @since 1.0.0
+      #
       def load!
         load.tap do
           if transient?
@@ -59,10 +134,37 @@ module Cequel
         end
       end
 
+      #
+      # @overload loaded?
+      #   @return [Boolean] true if this record's attributes have been loaded
+      #     from the database
+      #
+      # @overload loaded?(column)
+      #   @param [Symbol] column name of column to check if loaded
+      #   @return [Boolean] true if the named column is loaded in memory
+      #
+      # @return [Boolean]
+      #
+      # @since 1.0.0
+      #
       def loaded?(column = nil)
         !!@loaded && (column.nil? || @attributes.key?(column.to_sym))
       end
 
+      #
+      # Persist the record to the database. If this is a new record, it will
+      # be saved using an INSERT statement. If it is an existing record, it will
+      # be persisted using a series of `UPDATE` and `DELETE` statements which
+      # will persist all changes to the database, including atomic collection
+      # modifications.
+      #
+      # @param options [Options] options for save
+      # @option options [Boolean] :validate (true) whether to run validations
+      #   before saving
+      # @return [Boolean] true if record saved successfully, false if invalid
+      #
+      # @see Validations#save!
+      #
       def save(options = {})
         options.assert_valid_keys
         if new_record? then create
@@ -72,11 +174,26 @@ module Cequel
         true
       end
 
+      #
+      # Set attributes and save the record
+      #
+      # @param attributes [Hash] hash of attributes to update
+      # @return [Boolean] true if saved successfully
+      #
+      # @see #save
+      # @see Properties#attributes=
+      # @see Validations#update_attributes!
+      #
       def update_attributes(attributes)
         self.attributes = attributes
         save
       end
 
+      #
+      # Remove this record from the database
+      #
+      # @return [Record] self
+      #
       def destroy
         assert_keys_present!
         metal_scope.delete
@@ -84,18 +201,34 @@ module Cequel
         self
       end
 
+      #
+      # @return true if this is a new, unsaved record
+      #
+      # @since 1.0.0
+      #
       def new_record?
         !!@new_record
       end
 
+      #
+      # @return true if this record is persisted in the database
+      #
+      # @see #transient?
+      #
       def persisted?
         !!@persisted
       end
 
+      #
+      # @return true if this record is not persisted in the database
+      #
+      # @see persisted?
+      #
       def transient?
         !persisted?
       end
 
+      # @private
       def hydrate(row)
         @attributes = row
         hydrated!
@@ -139,6 +272,9 @@ module Cequel
       end
 
       private
+
+      def_delegators 'self.class', :connection, :table
+      private :connection, :table
 
       def read_attribute(attribute)
         super
@@ -210,9 +346,6 @@ module Cequel
             "Missing required key values: #{missing_keys.keys.join(', ')}"
         end
       end
-
     end
-
   end
-
 end

@@ -1,9 +1,20 @@
 module Cequel
-
   module Metal
-
-    class Row < ActiveSupport::HashWithIndifferentAccess
-
+    #
+    # A result row from a CQL query. Acts as a hash of column names to values,
+    # but also exposes TTLs and writetimes
+    #
+    # @since 1.0.0
+    #
+    class Row < DelegateClass(ActiveSupport::HashWithIndifferentAccess)
+      #
+      # Encapsulate a row from CassandraCQL
+      #
+      # @param result_row [CassandraCQL::Row] row from underlying driver
+      # @return [Row] encapsulated row
+      #
+      # @api private
+      #
       def self.from_result_row(result_row)
         if result_row
           new.tap do |row|
@@ -19,30 +30,44 @@ module Cequel
         end
       end
 
-      def initialize(*_)
-        super
+      #
+      # @api private
+      #
+      def initialize
+        super(ActiveSupport::HashWithIndifferentAccess.new)
         @ttls = ActiveSupport::HashWithIndifferentAccess.new
         @writetimes = ActiveSupport::HashWithIndifferentAccess.new
       end
 
+      #
+      # Get the TTL (time-to-live) of a column
+      #
+      # @param column [Symbol] column name
+      # @return [Integer] TTL of column in seconds
+      #
       def ttl(column)
         @ttls[column]
       end
 
+      #
+      # Get the writetime of a column
+      #
+      # @param column [Symbol] column name
+      # @return [Integer] writetime of column in nanoseconds since epoch
+      #
       def writetime(column)
         @writetimes[column]
       end
 
+      # @private
       def set_ttl(column, value)
         @ttls[column] = value
       end
 
+      # @private
       def set_writetime(column, value)
         @writetimes[column] = value
       end
-
     end
-
   end
-
 end

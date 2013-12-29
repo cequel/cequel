@@ -1,13 +1,18 @@
 module Cequel
-
   module Record
-
+    #
+    # All of the instance methods of {RecordSet} are also available as class
+    # methods on {Record} implementations.
+    #
+    # @since 0.1.0
+    #
     module Scoped
-
       extend ActiveSupport::Concern
 
+      #
+      # Scoping-related methods for {Record} classes
+      #
       module ClassMethods
-
         extend Forwardable
 
         def_delegators :current_scope,
@@ -15,10 +20,12 @@ module Cequel
             BulkWrites.public_instance_methods -
             Object.instance_methods)
 
+        # @private
         def current_scope
           delegating_scope || RecordSet.new(self)
         end
 
+        # @private
         def with_scope(record_set)
           previous_scope = delegating_scope
           self.delegating_scope = record_set
@@ -43,13 +50,12 @@ module Cequel
 
       end
 
+      private
+
       def initialize_new_record(*)
         super
         @attributes.merge!(self.class.current_scope.scoped_key_attributes)
       end
-
     end
-
   end
-
 end
