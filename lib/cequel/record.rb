@@ -75,9 +75,6 @@ module Cequel
     extend ActiveSupport::Concern
     extend Forwardable
 
-    # @!parse include Associations
-    # @!parse extend Associations::ClassMethods
-
     included do
       include Properties
       include Schema
