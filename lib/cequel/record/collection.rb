@@ -124,7 +124,7 @@ module Cequel
       end
 
       def __setobj__(obj)
-        raise "Attempted to call __setobj__ on read-only delegate!"
+        fail "Attempted to call __setobj__ on read-only delegate!"
       end
 
       private
@@ -230,7 +230,7 @@ module Cequel
           end
 
         if first < 0
-          raise ArgumentError,
+          fail ArgumentError,
             "Bad index #{position}: CQL lists do not support negative indices"
         end
 

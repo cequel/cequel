@@ -678,9 +678,14 @@ module Cequel
 
       def build_row_specifications(row_specification, bind_vars)
         case row_specification
-        when Hash then RowSpecification.build(row_specification)
-        when String then CqlRowSpecification.build(row_specification, bind_vars)
-        else raise ArgumentError, "Invalid argument #{row_specification.inspect}; expected Hash or String"
+        when Hash
+          RowSpecification.build(row_specification)
+        when String
+          CqlRowSpecification.build(row_specification, bind_vars)
+        else
+          fail ArgumentError,
+               "Invalid argument #{row_specification.inspect}; " \
+               "expected Hash or String"
         end
       end
 

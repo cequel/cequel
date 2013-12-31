@@ -95,7 +95,7 @@ module Cequel
           def_accessors(name)
           if options.fetch(:auto, false)
             unless Type[type].is_a?(Cequel::Type::Uuid)
-              raise ArgumentError, ":auto option only valid for UUID columns"
+              fail ArgumentError, ":auto option only valid for UUID columns"
             end
             default = -> { CassandraCQL::UUID.new } if options.fetch(:auto, false)
           end
@@ -285,9 +285,9 @@ module Cequel
         @attributes.fetch(name)
       rescue KeyError
         if self.class.reflect_on_column(name)
-          raise MissingAttributeError, "missing attribute: #{name}"
+          fail MissingAttributeError, "missing attribute: #{name}"
         else
-          raise UnknownAttributeError, "unknown attribute: #{name}"
+          fail UnknownAttributeError, "unknown attribute: #{name}"
         end
       end
 

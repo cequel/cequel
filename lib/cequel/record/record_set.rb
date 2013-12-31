@@ -194,14 +194,22 @@ module Cequel
       #
       def where(column_name, value)
         column = target_class.reflect_on_column(column_name)
-        raise IllegalQuery,
-          "Can't scope by more than one indexed column in the same query" if scoped_indexed_column
-        raise ArgumentError,
-          "No column #{column_name} configured for #{target_class.name}" unless column
-        raise ArgumentError,
-          "Use the `at` method to restrict scope by primary key" unless column.data_column?
-        raise ArgumentError,
-          "Can't scope by non-indexed column #{column_name}" unless column.indexed?
+        if scoped_indexed_column
+          fail IllegalQuery,
+               "Can't scope by more than one indexed column in the same query"
+        end
+        unless column
+          fail ArgumentError,
+               "No column #{column_name} configured for #{target_class.name}"
+        end
+        unless column.data_column?
+          fail ArgumentError,
+               "Use the `at` method to restrict scope by primary key"
+        end
+        unless column.indexed?
+          fail ArgumentError,
+               "Can't scope by non-indexed column #{column_name}"
+        end
         scoped(scoped_indexed_column: {column_name => column.cast(value)})
       end
 
@@ -286,8 +294,9 @@ module Cequel
       #
       def values_at(*primary_key_values)
         unless next_unscoped_key_column_valid_for_in_query?
-          raise IllegalQuery,
-            "Only the last partition key column and the last clustering column can match multiple values"
+          fail IllegalQuery,
+               "Only the last partition key column and the last clustering " \
+               "column can match multiple values"
         end
 
         primary_key_values = primary_key_values.map(&method(:cast_range_key))
@@ -378,8 +387,9 @@ module Cequel
       #
       def from(start_key)
         unless partition_specified?
-          raise IllegalQuery,
-            "Can't construct exclusive range on partition key #{range_key_name}"
+          fail IllegalQuery,
+               "Can't construct exclusive range on partition key " \
+               "#{range_key_name}"
         end
         scoped(lower_bound: bound(true, true, start_key))
       end
@@ -395,8 +405,9 @@ module Cequel
       #
       def upto(end_key)
         unless partition_specified?
-          raise IllegalQuery,
-            "Can't construct exclusive range on partition key #{range_key_name}"
+          fail IllegalQuery,
+               "Can't construct exclusive range on partition key " \
+               "#{range_key_name}"
         end
         scoped(upper_bound: bound(false, true, end_key))
       end
@@ -412,8 +423,9 @@ module Cequel
       #
       def reverse
         unless partition_specified?
-          raise IllegalQuery,
-            "Can't reverse without scoping to partition key #{range_key_name}"
+          fail IllegalQuery,
+               "Can't reverse without scoping to partition key " \
+               "#{range_key_name}"
         end
         scoped(reversed: !reversed?)
       end
@@ -606,8 +618,8 @@ module Cequel
 
       def find_rows_in_single_batch(options = {})
         if options.key?(:batch_size)
-          raise ArgumentError,
-            "Can't pass :batch_size argument with a limit in the scope"
+          fail ArgumentError,
+               "Can't pass :batch_size argument with a limit in the scope"
         else
           data_set.entries.tap do |batch|
             yield batch if batch.any? && block_given?
@@ -696,8 +708,9 @@ module Cequel
 
       def select_non_collection_columns!
         if selects_collection_columns?
-          raise ArgumentError,
-            "Can't scope by multiple keys when selecting a collection column."
+          fail ArgumentError,
+               "Can't scope by multiple keys when selecting a collection " \
+               "column."
         end
         if select_columns.empty?
           non_collection_columns = target_class.columns.
@@ -750,7 +763,7 @@ module Cequel
       end
 
       def load!
-        raise ArgumentError, "Not all primary key columns have specified values"
+        fail ArgumentError, "Not all primary key columns have specified values"
       end
 
       def scoped(new_attributes = {}, &block)

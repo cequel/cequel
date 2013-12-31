@@ -36,9 +36,9 @@ module Cequel
         when :destroy, :delete, nil
           @dependent = options[:dependent]
         else
-          raise ArgumentError,
-            "Invalid :dependent option #{options[:dependent].inspect}." +
-              "Valid values are :destroy, :delete"
+          fail ArgumentError,
+               "Invalid :dependent option #{options[:dependent].inspect}. " \
+               "Valid values are :destroy, :delete"
         end
       end
 

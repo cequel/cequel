@@ -88,11 +88,11 @@ module Cequel
         #
         def belongs_to(name, options = {})
           if parent_association
-            raise InvalidRecordConfiguration,
+            fail InvalidRecordConfiguration,
               "Can't declare more than one belongs_to association"
           end
           if table_schema.key_columns.any?
-            raise InvalidRecordConfiguration,
+            fail InvalidRecordConfiguration,
               "belongs_to association must be declared before declaring key(s)"
           end
 
@@ -193,7 +193,7 @@ module Cequel
 
       def write_parent_association(parent)
         unless parent.is_a?(parent_association.association_class)
-          raise ArgumentError,
+          fail ArgumentError,
             "Wrong class for #{parent_association.name}; expected " +
             "#{parent_association.association_class.name}, got " +
             "#{parent.class.name}"
@@ -203,7 +203,7 @@ module Cequel
         parent.key_attributes.
           zip(key_column_names) do |(parent_column_name, value), column_name|
             if value.nil?
-              raise ArgumentError,
+              fail ArgumentError,
                 "Can't set parent association #{parent_association.name.inspect} " +
                 "without value in key #{parent_column_name.inspect}"
             end

@@ -61,7 +61,7 @@ module Cequel
         if @delete_row
           statement.append("DELETE FROM #{table_name}")
         elsif statements.empty?
-          raise ArgumentError, "No targets given for deletion!"
+          fail ArgumentError, "No targets given for deletion!"
         else
           statement.append("DELETE ").
             append(statements.join(','), *bind_vars).

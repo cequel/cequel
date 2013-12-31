@@ -65,8 +65,9 @@ module Cequel
       def update_keys
         each_key_pair do |old_key, new_key|
           if old_key.type != new_key.type
-            raise InvalidSchemaMigration,
-              "Can't change type of key column #{old_key.name} from #{old_key.type} to #{new_key.type}"
+            fail InvalidSchemaMigration,
+                 "Can't change type of key column #{old_key.name} from " \
+                 "#{old_key.type} to #{new_key.type}"
           end
           if old_key.name != new_key.name
             updater.rename_column(old_key.name || :column1, new_key.name)
@@ -80,8 +81,10 @@ module Cequel
             add_column(new_column)
           elsif new_column
             if old_column.class != new_column.class
-              raise InvalidSchemaMigration,
-                "Can't change #{old_column.name} from #{old_column.class.name.demodulize} to #{new_column.class.name.demodulize}"
+              fail InvalidSchemaMigration,
+                   "Can't change #{old_column.name} from " \
+                   "#{old_column.class.name.demodulize} to " \
+                   "#{new_column.class.name.demodulize}"
             end
             update_column(old_column, new_column)
           end
@@ -121,15 +124,26 @@ module Cequel
       end
 
       def each_key_pair(&block)
-        if existing.partition_key_columns.length != updated.partition_key_columns.length
-          raise InvalidSchemaMigration,
-            "Existing partition keys #{existing.partition_key_columns.map { |key| key.name }.join(',')} differ from specified partition keys #{updated.partition_key_columns.map { |key| key.name }.join(',')}"
+        if existing.partition_key_column_count !=
+            updated.partition_key_column_count
+
+          fail InvalidSchemaMigration,
+               "Existing partition keys " \
+               "#{existing.partition_key_column_names.join(',')} " \
+               "differ from specified partition keys " \
+               "#{updated.partition_key_column_names.join(',')}"
         end
-        if existing.clustering_columns.length != updated.clustering_columns.length
-          raise InvalidSchemaMigration,
-            "Existing clustering keys #{existing.clustering_columns.map { |key| key.name }.join(',')} differ from specified clustering keys #{updated.clustering_columns.map { |key| key.name }.join(',')}"
+
+        if existing.clustering_column_count != updated.clustering_column_count
+          fail InvalidSchemaMigration,
+               "Existing clustering columns " \
+               "#{existing.clustering_column_names.join(',')} " \
+               "differ from specified clustering keys " \
+               "#{updated.clustering_column_names.join(',')}"
         end
-        existing.partition_key_columns.zip(updated.partition_key_columns, &block)
+
+        existing.partition_key_columns
+          .zip(updated.partition_key_columns, &block)
         existing.clustering_columns.zip(updated.clustering_columns, &block)
       end
 

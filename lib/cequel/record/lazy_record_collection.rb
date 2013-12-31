@@ -26,7 +26,7 @@ module Cequel
       # @api private
       #
       def initialize(record_set)
-        raise ArgumentError if record_set.nil?
+        fail ArgumentError if record_set.nil?
 
         exploded_key_attributes = [{}].tap do |all_key_attributes|
           record_set.key_columns.zip(record_set.scoped_key_attributes.values) do |column, values|
@@ -60,8 +60,8 @@ module Cequel
 
         loaded_count = count { |record| record.loaded? }
         if loaded_count < count
-          raise Cequel::Record::RecordNotFound,
-            "Expected #{count} results; got #{loaded_count}"
+          fail Cequel::Record::RecordNotFound,
+               "Expected #{count} results; got #{loaded_count}"
         end
 
         self

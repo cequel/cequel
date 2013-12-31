@@ -128,8 +128,9 @@ module Cequel
       def load!
         load.tap do
           if transient?
-            raise RecordNotFound,
-              "Couldn't find #{self.class.name} with #{key_attributes.inspect}"
+            fail RecordNotFound,
+                 "Couldn't find #{self.class.name} with " \
+                 "#{key_attributes.inspect}"
           end
         end
       end
@@ -285,13 +286,14 @@ module Cequel
 
       def write_attribute(name, value)
         column = self.class.reflect_on_column(name)
-        raise UnknownAttributeError, "unknown attribute: #{name}" unless column
+        fail UnknownAttributeError, "unknown attribute: #{name}" unless column
         value = column.cast(value) unless value.nil?
 
         super.tap do
           unless new_record?
             if key_attributes.keys.include?(name)
-              raise ArgumentError, "Can't update key #{name} on persisted record"
+              fail ArgumentError,
+                   "Can't update key #{name} on persisted record"
             end
 
             if value.nil?
@@ -342,8 +344,8 @@ module Cequel
       def assert_keys_present!
         missing_keys = key_attributes.select { |k, v| v.nil? }
         if missing_keys.any?
-          raise MissingKeyError,
-            "Missing required key values: #{missing_keys.keys.join(', ')}"
+          fail MissingKeyError,
+                "Missing required key values: #{missing_keys.keys.join(', ')}"
         end
       end
     end

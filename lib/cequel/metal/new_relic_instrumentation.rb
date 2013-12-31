@@ -1,7 +1,7 @@
 begin
   require 'new_relic/agent/method_tracer'
 rescue LoadError => e
-  raise LoadError, "Can't use NewRelic instrumentation without NewRelic gem"
+  fail LoadError, "Can't use NewRelic instrumentation without NewRelic gem"
 end
 
 module Cequel

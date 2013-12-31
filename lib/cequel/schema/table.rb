@@ -57,8 +57,8 @@ module Cequel
       def add_key(name, type, clustering_order = nil)
         if @partition_key_columns.empty?
           unless clustering_order.nil?
-            raise ArgumentError,
-              "Can't set clustering order for partition key #{name}"
+            fail ArgumentError,
+                 "Can't set clustering order for partition key #{name}"
           end
           add_partition_key(name, type)
         else
@@ -192,6 +192,41 @@ module Cequel
       #
       def key_column_names
         key_columns.map { |key| key.name }
+      end
+
+      #
+      # @return [Integer] total number of key columns
+      #
+      def key_column_count
+        key_columns.length
+      end
+
+      #
+      # @return [Array<Symbol>] names of partition key columns
+      #
+      def partition_key_column_names
+        partition_key_columns.map { |key| key.name }
+      end
+
+      #
+      # @return [Integer] number of partition key columns
+      #
+      def partition_key_column_count
+        partition_key_columns.length
+      end
+
+      #
+      # @return [Array<Symbol>] names of clustering columns
+      #
+      def clustering_column_names
+        clustering_columns.map { |key| key.name }
+      end
+
+      #
+      # @return [Integer] number of clustering columns
+      #
+      def clustering_column_count
+        clustering_columns.length
       end
 
       #

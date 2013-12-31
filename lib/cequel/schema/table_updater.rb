@@ -122,8 +122,8 @@ module Cequel
       # @see Table#add_property
       #
       def change_properties(options)
-        properties = options.
-          map { |name, value| TableProperty.new(name, value).to_cql }
+        properties = options
+          .map { |name, value| TableProperty.new(name, value).to_cql }
         alter_table("WITH #{properties.join(' AND ')}")
       end
 
@@ -157,6 +157,7 @@ module Cequel
       end
 
       protected
+
       attr_reader :keyspace, :table_name, :statements
 
       private
