@@ -64,6 +64,13 @@ module Cequel
       end
 
       #
+      # @return [Boolean] true if this is a collection column
+      #
+      def collection_column?
+        false
+      end
+
+      #
       # @param type_in [Type] type to check against
       # @return [Boolean] true if this column has the type given by `type_in`
       #
@@ -193,6 +200,11 @@ module Cequel
     # @abstract
     #
     class CollectionColumn < Column
+      # (see Column#collection_column?)
+      def collection_column?
+        true
+      end
+
       # (see DataColumn#indexed?)
       def indexed?
         false

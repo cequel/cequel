@@ -492,8 +492,8 @@ module Cequel
       #
       def where(row_specification, *bind_vars)
         clone.tap do |data_set|
-          data_set.row_specifications.
-            concat(build_row_specifications(row_specification, bind_vars))
+          data_set.row_specifications
+            .concat(build_row_specifications(row_specification, bind_vars))
         end
       end
 
@@ -505,8 +505,8 @@ module Cequel
       #
       def where!(row_specification, *bind_vars)
         clone.tap do |data_set|
-          data_set.row_specifications.
-            replace(build_row_specifications(row_specification, bind_vars))
+          data_set.row_specifications
+            .replace(build_row_specifications(row_specification, bind_vars))
         end
       end
 
@@ -572,23 +572,23 @@ module Cequel
       # @return [String] CQL `SELECT` statement encoding this data set's scope.
       #
       def cql
-        statement = Statement.new.
-          append(select_cql).
-          append(" FROM #{table_name}").
-          append(*row_specifications_cql).
-          append(sort_order_cql).
-          append(limit_cql).
-          args
+        statement = Statement.new
+          .append(select_cql)
+          .append(" FROM #{table_name}")
+          .append(*row_specifications_cql)
+          .append(sort_order_cql)
+          .append(limit_cql)
+          .args
       end
 
       #
       # @return [String] CQL statement to get count of rows in this data set
       #
       def count_cql
-        Statement.new.
-          append("SELECT COUNT(*) FROM #{table_name}").
-          append(*row_specifications_cql).
-          append(limit_cql).args
+        Statement.new
+          .append("SELECT COUNT(*) FROM #{table_name}")
+          .append(*row_specifications_cql)
+          .append(limit_cql).args
       end
 
       #
@@ -669,9 +669,9 @@ module Cequel
 
       def sort_order_cql
         if sort_order.any?
-          order = sort_order.
-            map { |column, direction| "#{column} #{direction.to_s.upcase}" }.
-            join(', ')
+          order = sort_order
+            .map { |column, direction| "#{column} #{direction.to_s.upcase}" }
+            .join(', ')
           " ORDER BY #{order}"
         end
       end

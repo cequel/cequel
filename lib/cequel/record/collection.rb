@@ -180,8 +180,8 @@ module Cequel
         :sort_by!,
         :uniq!
       ]
-      NON_ATOMIC_MUTATORS.
-        each { |method| undef_method(method) if method_defined? method }
+      NON_ATOMIC_MUTATORS
+        .each { |method| undef_method(method) if method_defined? method }
 
       #
       # @return [Array] an empty array
@@ -363,8 +363,8 @@ module Cequel
         :reject!,
         :select!
       ]
-      NON_ATOMIC_MUTATORS.
-        each { |method| undef_method(method) if method_defined? method }
+      NON_ATOMIC_MUTATORS
+        .each { |method| undef_method(method) if method_defined? method }
 
       #
       # Add an element to the set
@@ -450,8 +450,8 @@ module Cequel
         :to_options!,
         :transform_keys!
       ]
-      NON_ATOMIC_MUTATORS.
-        each { |method| undef_method(method) if method_defined? method }
+      NON_ATOMIC_MUTATORS
+        .each { |method| undef_method(method) if method_defined? method }
 
       #
       # Set the value of a given key

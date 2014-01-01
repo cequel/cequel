@@ -307,8 +307,8 @@ module Cequel
 
       def record_collection
         @record_collection ||=
-          LazyRecordCollection.new(self.class.at(*key_values)).
-          tap { |set| set.__setobj__([self]) }
+          LazyRecordCollection.new(self.class.at(*key_values))
+          .tap { |set| set.__setobj__([self]) }
       end
 
       def hydrated!

@@ -63,9 +63,9 @@ module Cequel
         elsif statements.empty?
           fail ArgumentError, "No targets given for deletion!"
         else
-          statement.append("DELETE ").
-            append(statements.join(','), *bind_vars).
-            append(" FROM #{table_name}")
+          statement.append("DELETE ")
+            .append(statements.join(','), *bind_vars)
+            .append(" FROM #{table_name}")
         end
         statement.append(generate_upsert_options)
       end

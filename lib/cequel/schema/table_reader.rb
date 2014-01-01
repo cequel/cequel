@@ -128,8 +128,8 @@ module Cequel
         table_data.slice(*Table::STORAGE_PROPERTIES).each do |name, value|
           table.add_property(name, value)
         end
-        compaction = JSON.parse(table_data['compaction_strategy_options']).
-          symbolize_keys
+        compaction = JSON.parse(table_data['compaction_strategy_options'])
+          .symbolize_keys
         compaction[:class] = table_data['compaction_strategy_class']
         table.add_property(:compaction, compaction)
         compression = JSON.parse(table_data['compression_parameters'])

@@ -13,8 +13,8 @@ module Cequel
         config_path = Rails.root.join('config/cequel.yml').to_s
 
         if File.exist?(config_path)
-          config = YAML.load(ERB.new(IO.read(config_path)).result)[Rails.env].
-            deep_symbolize_keys
+          config = YAML.load(ERB.new(IO.read(config_path)).result)[Rails.env]
+            .deep_symbolize_keys
         else
           config = {host: '127.0.0.1:9160'}
         end

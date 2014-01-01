@@ -613,9 +613,9 @@ module Cequel
 
       def find_nested_batches_from(row, options, &block)
         if next_range_key_column
-          at(row[range_key_name]).
-            next_batch_from(row).
-            find_rows_in_batches(options, &block)
+          at(row[range_key_name])
+            .next_batch_from(row)
+            .find_rows_in_batches(options, &block)
         end
       end
 
@@ -704,7 +704,7 @@ module Cequel
 
       def selects_collection_columns?
         select_columns.any? do |column_name|
-          target_class.reflect_on_column(column_name).
+          target_class.reflect_on_column(column_name).collection_column?
             is_a?(Cequel::Schema::CollectionColumn)
         end
       end
@@ -716,9 +716,9 @@ module Cequel
                "column."
         end
         if select_columns.empty?
-          non_collection_columns = target_class.columns.
-            reject { |column| column.is_a?(Cequel::Schema::CollectionColumn) }.
-            map { |column| column.name }
+          non_collection_columns = target_class.columns
+            .reject { |column| column.collection_column? }
+            .map { |column| column.name }
           select(*non_collection_columns)
         else
           self

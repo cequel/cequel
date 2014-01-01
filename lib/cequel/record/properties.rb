@@ -307,16 +307,17 @@ module Cequel
       end
 
       def initialize_new_record(attributes = {})
-        dynamic_defaults = default_attributes.
-          select { |name, value| value.is_a?(Proc) }
+        dynamic_defaults = default_attributes
+          .select { |name, value| value.is_a?(Proc) }
         @attributes = Marshal.load(Marshal.dump(
           default_attributes.except(*dynamic_defaults.keys)))
-          dynamic_defaults.each { |name, p| @attributes[name] = p.() }
-          @new_record = true
-          yield self if block_given?
-          self.attributes = attributes
-          loaded!
-          self
+        dynamic_defaults.each { |name, p| @attributes[name] = p.() }
+
+        @new_record = true
+        yield self if block_given?
+        self.attributes = attributes
+        loaded!
+        self
       end
     end
   end

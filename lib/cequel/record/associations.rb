@@ -186,8 +186,8 @@ module Cequel
         if instance_variable_defined?(ivar_name)
           return instance_variable_get(ivar_name)
         end
-        parent_key_values = key_values.
-          first(parent_association.association_key_columns.length)
+        parent_key_values = key_values
+          .first(parent_association.association_key_columns.length)
         if parent_key_values.none? { |value| value.nil? }
           clazz = parent_association.association_class
           parent = parent_key_values.reduce(clazz) do |record_set, key_value|
@@ -206,8 +206,8 @@ module Cequel
         end
         instance_variable_set "@#{parent_association.name}", parent
         key_column_names = self.class.key_column_names
-        parent.key_attributes.
-          zip(key_column_names) do |(parent_column_name, value), column_name|
+        parent.key_attributes
+          .zip(key_column_names) do |(parent_column_name, value), column_name|
             if value.nil?
               fail ArgumentError,
                    "Can't set parent association " \

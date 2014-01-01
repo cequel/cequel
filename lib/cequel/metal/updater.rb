@@ -130,10 +130,10 @@ module Cequel
       private
 
       def write_to_statement(statement)
-        statement.append("UPDATE #{table_name}").
-          append(generate_upsert_options).
-          append(" SET ").
-          append(statements.join(', '), *bind_vars)
+        statement.append("UPDATE #{table_name}")
+          .append(generate_upsert_options)
+          .append(" SET ")
+          .append(statements.join(', '), *bind_vars)
       end
     end
   end
