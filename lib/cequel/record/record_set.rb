@@ -19,7 +19,7 @@ module Cequel
     # Certain methods have behavior that is dependent on which primary keys have
     # been specified using {#[]}. In many methods, such as {#[]}, {#values_at},
     # {#before}, {#after}, {#from}, {#upto}, and {#in}, the *first unscoped
-    # primary key column* serves as implicit context for the method – the value
+    # primary key column* serves as implicit context for the method: the value
     # passed to those methods is an exact or bounding value for that column.
     #
     # CQL does not allow ordering by arbitrary columns; the ordering of a table
@@ -223,8 +223,8 @@ module Cequel
       #
       def at(*scoped_key_values)
         warn "`at` is deprecated. Use `[]` instead"
-        scoped_key_values.
-          inject(self) { |record_set, key_value| record_set[key_value] }
+        scoped_key_values
+          .reduce(self) { |record_set, key_value| record_set[key_value] }
       end
 
       #
@@ -272,8 +272,9 @@ module Cequel
 
         primary_key_value = cast_range_key(primary_key_value.first)
 
-        scoped { |attributes| attributes[:scoped_key_values] <<
-          primary_key_value }.resolve_if_fully_specified
+        scope_and_resolve do |attributes|
+          attributes[:scoped_key_values] << primary_key_value
+        end
       end
       alias_method :/, :[]
 
@@ -301,8 +302,9 @@ module Cequel
 
         primary_key_values = primary_key_values.map(&method(:cast_range_key))
 
-        scoped { |attributes| attributes[:scoped_key_values] <<
-          primary_key_values }.resolve_if_fully_specified
+        scope_and_resolve do |attributes|
+          attributes[:scoped_key_values] << primary_key_values
+        end
       end
 
       #
@@ -596,11 +598,12 @@ module Cequel
       end
 
       protected
+
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
-        :lower_bound, :upper_bound, :scoped_indexed_column
+                   :lower_bound, :upper_bound, :scoped_indexed_column
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-        :upper_bound, :scoped_indexed_column
+                :upper_bound, :scoped_indexed_column
       hattr_inquirer :attributes, :reversed
       protected :reversed?
 
@@ -771,6 +774,10 @@ module Cequel
         attributes_copy.merge!(new_attributes)
         attributes_copy.tap(&block) if block
         RecordSet.new(target_class, attributes_copy)
+      end
+
+      def scope_and_resolve(&block)
+        scoped(&block).resolve_if_fully_specified
       end
 
       def key_attributes_for_each_row

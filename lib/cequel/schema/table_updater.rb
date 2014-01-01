@@ -123,7 +123,7 @@ module Cequel
       #
       def change_properties(options)
         properties = options
-          .map { |name, value| TableProperty.new(name, value).to_cql }
+          .map { |name, value| TableProperty.build(name, value).to_cql }
         alter_table("WITH #{properties.join(' AND ')}")
       end
 

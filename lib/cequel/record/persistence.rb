@@ -99,7 +99,7 @@ module Cequel
       rescue RecordNotFound
         false
       end
-      alias :exist? :exists?
+      alias_method :exist?, :exists?
 
       #
       # Load an unloaded record's row from the database and hydrate the record's
@@ -345,7 +345,7 @@ module Cequel
         missing_keys = key_attributes.select { |k, v| v.nil? }
         if missing_keys.any?
           fail MissingKeyError,
-                "Missing required key values: #{missing_keys.keys.join(', ')}"
+               "Missing required key values: #{missing_keys.keys.join(', ')}"
         end
       end
     end

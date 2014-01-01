@@ -18,7 +18,7 @@ module Cequel
       attr_accessor :slowlog
       # @return [Integer] threshold in ms for statements to appear in the
       #   slowlog
-      attr_accessor :slowlog_threshold
+      attr_writer :slowlog_threshold
 
       #
       # @!method write(statement, *bind_vars)
@@ -119,19 +119,19 @@ module Cequel
       def batch(options = {})
         new_batch = Batch.new(self, options)
 
-        if get_batch
-          if get_batch.unlogged? && new_batch.logged?
+        if current_batch
+          if current_batch.unlogged? && new_batch.logged?
             fail ArgumentError,
-              "Already in an unlogged batch; can't start a logged batch."
+                 "Already in an unlogged batch; can't start a logged batch."
           end
           return yield
         end
 
         begin
-          set_batch(new_batch)
+          self.current_batch = new_batch
           yield.tap { new_batch.apply }
         ensure
-          set_batch(nil)
+          self.current_batch = nil
         end
       end
 
@@ -170,14 +170,14 @@ module Cequel
       end
 
       def write_target
-        get_batch || self
+        current_batch || self
       end
 
-      def get_batch
+      def current_batch
         ::Thread.current[batch_key]
       end
 
-      def set_batch(batch)
+      def current_batch=(batch)
         ::Thread.current[batch_key] = batch
       end
 
@@ -186,36 +186,48 @@ module Cequel
       end
 
       def log(label, statement, *bind_vars)
-        return yield unless logger || slowlog
         response = nil
         begin
           time = Benchmark.ms { response = yield }
         rescue Exception => e
-          generate_message = proc do
-            sprintf(
-              '%s (ERROR) %s', label,
-              CassandraCQL::Statement.sanitize(statement, bind_vars)
-            )
-          end
-          logger.debug(&generate_message) if self.logger
+          log_statement(:logger => logger, :severity => :error,
+                        :label => label, :statement => statement,
+                        :bind_vars => bind_vars)
           raise
         end
-        generate_message = proc do
-          sprintf(
-            '%s (%dms) %s', label, time.to_i,
-            CassandraCQL::Statement.sanitize(statement, bind_vars)
-          )
-        end
-        logger.debug(&generate_message) if self.logger
-        threshold = self.slowlog_threshold || 2000
-        if slowlog && time >= threshold
-          slowlog.warn(&generate_message)
+        log_statement(:logger => logger, :severity => :debug, :label => label,
+                      :statement => statement, :bind_vars => bind_vars, 
+                      :timing => time.to_i)
+        if time >= slowlog_threshold
+          log_statement(:logger => slowlog, :severity => :warn,
+                        :label => label, :statement => statement,
+                        :bind_vars => bind_vars, :timing => time.to_i)
         end
         response
       end
 
+      def slowlog_threshold
+        @slowlog_threshold || 2000
+      end
+
+      private
+
+      def log_statement(args)
+        logger, severity, label, statement, bind_vars =
+          args.fetch(:logger), args.fetch(:severity),
+          args.fetch(:label), args.fetch(:statement), args.fetch(:bind_vars)
+        timing = args[:timing]
+
+        if logger
+          logger.add(severity) do
+            pattern = timing ? '%s (%dms) %s' : '%s (ERROR) %s'
+            sprintf(
+              pattern, label, timing,
+              CassandraCQL::Statement.sanitize(statement, bind_vars)
+            )
+          end
+        end
+      end
     end
-
   end
-
 end

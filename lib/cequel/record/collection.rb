@@ -27,7 +27,7 @@ module Cequel
     #     list :categories, :text
     #   end
     #
-    #   # Get an unloaded Blog instance – no data read
+    #   # Get an unloaded Blog instance; no data read
     #   blog = Blog['cassandra']
     #
     #   # Stage modification to collection, still no data read
@@ -71,10 +71,10 @@ module Cequel
       def_delegators :__getobj__, :clone, :dup
 
       included do
-        private
         define_method(
           :method_missing,
           BasicObject.instance_method(:method_missing))
+        private :method_missing
       end
 
       #
@@ -220,8 +220,10 @@ module Cequel
       #   @param elements [Array] new elements to replace in this range
       #
       def []=(position, *args)
-        if Range === position then first, count = position.first, position.count
-        else first, count = position, args[-2]
+        if position.is_a?(Range)
+          first, count = position.first, position.count
+        else
+          first, count = position, args[-2]
         end
 
         element = args[-1] =
@@ -231,7 +233,8 @@ module Cequel
 
         if first < 0
           fail ArgumentError,
-            "Bad index #{position}: CQL lists do not support negative indices"
+               "Bad index #{position}: CQL lists do not support negative " \
+               "indices"
         end
 
         if count.nil?

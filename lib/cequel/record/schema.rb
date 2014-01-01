@@ -54,7 +54,8 @@ module Cequel
         #   (see Cequel::Schema::Table#compact_storage?)
         #
         def_delegators :table_schema, :columns, :key_columns, :key_column_names,
-          :partition_key_columns, :clustering_columns, :compact_storage?
+                       :partition_key_columns, :clustering_columns,
+                       :compact_storage?
         #
         # @!method reflect_on_column(name)
         #   (see Cequel::Schema::Table#column)

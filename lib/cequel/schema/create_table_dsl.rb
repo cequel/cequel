@@ -74,7 +74,7 @@ module Cequel
       def_delegator :@table, :add_property, :with
 
       #
-      # Direct that this table use “compact storage”. This is primarily useful
+      # Direct that this table use "compact storage". This is primarily useful
       # for backwards compatibility with legacy CQL2 table schemas.
       #
       # @return [void]

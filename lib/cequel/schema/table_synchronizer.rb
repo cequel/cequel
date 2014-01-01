@@ -9,9 +9,9 @@ module Cequel
     class TableSynchronizer
       #
       # Takes an existing table schema read from the database, and a desired
-      # schema for that table. Modifies the table schema in the database to match
-      # the desired schema, or creates the table as specified if it does not yet
-      # exist
+      # schema for that table. Modifies the table schema in the database to
+      # match the desired schema, or creates the table as specified if it does
+      # not yet exist
       #
       # @param keyspace [Metal::Keyspace] keyspace that contains table
       # @param existing [Table] table schema as it is currently defined
@@ -30,7 +30,8 @@ module Cequel
       end
 
       #
-      # @param updater [TableUpdater] table updater to hold schema modifications
+      # @param updater [TableUpdater] table updater to hold schema
+      #   modifications
       # @param existing [Table] table schema as it is currently defined
       # @param updated [Table] table schema as it is desired
       # @return [void]
@@ -58,6 +59,7 @@ module Cequel
       end
 
       protected
+
       attr_reader :updater, :existing, :updated
 
       private
@@ -80,22 +82,16 @@ module Cequel
           if old_column.nil?
             add_column(new_column)
           elsif new_column
-            if old_column.class != new_column.class
-              fail InvalidSchemaMigration,
-                   "Can't change #{old_column.name} from " \
-                   "#{old_column.class.name.demodulize} to " \
-                   "#{new_column.class.name.demodulize}"
-            end
+            assert_same_column_type!(old_column, new_column)
             update_column(old_column, new_column)
+            update_index(old_column, new_column)
           end
         end
       end
 
       def add_column(column)
         updater.add_data_column(column)
-        if column.indexed?
-          updater.create_index(column.name, column.index_name)
-        end
+        updater.create_index(column.name, column.index_name) if column.indexed?
       end
 
       def update_column(old_column, new_column)
@@ -105,6 +101,9 @@ module Cequel
         if old_column.type != new_column.type
           updater.change_column(new_column.name, new_column.type)
         end
+      end
+
+      def update_index(old_column, new_column)
         if !old_column.indexed? && new_column.indexed?
           updater.create_index(new_column.name, new_column.index_name)
         elsif old_column.indexed? && !new_column.indexed?
@@ -124,27 +123,8 @@ module Cequel
       end
 
       def each_key_pair(&block)
-        if existing.partition_key_column_count !=
-            updated.partition_key_column_count
-
-          fail InvalidSchemaMigration,
-               "Existing partition keys " \
-               "#{existing.partition_key_column_names.join(',')} " \
-               "differ from specified partition keys " \
-               "#{updated.partition_key_column_names.join(',')}"
-        end
-
-        if existing.clustering_column_count != updated.clustering_column_count
-          fail InvalidSchemaMigration,
-               "Existing clustering columns " \
-               "#{existing.clustering_column_names.join(',')} " \
-               "differ from specified clustering keys " \
-               "#{updated.clustering_column_names.join(',')}"
-        end
-
-        existing.partition_key_columns
-          .zip(updated.partition_key_columns, &block)
-        existing.clustering_columns.zip(updated.clustering_columns, &block)
+        assert_keys_match!
+        existing.key_columns.zip(updated.key_columns, &block)
       end
 
       def each_column_pair(&block)
@@ -157,6 +137,44 @@ module Cequel
           all_column_names.each do |name|
             yield old_columns[name], new_columns[name]
           end
+        end
+      end
+
+      private
+
+      def assert_keys_match!
+        assert_partition_keys_match!
+        assert_clustering_columns_match!
+      end
+
+      def assert_partition_keys_match!
+        if existing.partition_key_column_count !=
+            updated.partition_key_column_count
+
+          fail InvalidSchemaMigration,
+               "Existing partition keys " \
+               "#{existing.partition_key_column_names.join(',')} " \
+               "differ from specified partition keys " \
+               "#{updated.partition_key_column_names.join(',')}"
+        end
+      end
+
+      def assert_clustering_columns_match!
+        if existing.clustering_column_count != updated.clustering_column_count
+          fail InvalidSchemaMigration,
+               "Existing clustering columns " \
+               "#{existing.clustering_column_names.join(',')} " \
+               "differ from specified clustering keys " \
+               "#{updated.clustering_column_names.join(',')}"
+        end
+      end
+
+      def assert_same_column_type!(old_column, new_column)
+        if old_column.class != new_column.class
+          fail InvalidSchemaMigration,
+               "Can't change #{old_column.name} from " \
+               "#{old_column.class.name.demodulize} to " \
+               "#{new_column.class.name.demodulize}"
         end
       end
     end

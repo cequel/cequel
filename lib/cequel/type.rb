@@ -54,7 +54,7 @@ module Cequel
     def self.lookup_cql(cql_name)
       BY_CQL_NAME.fetch(cql_name.to_sym)
     rescue KeyError
-      fail UnknownType, "Unrecognized CQL type #{cql_name.inspect}"
+      raise UnknownType, "Unrecognized CQL type #{cql_name.inspect}"
     end
 
     #
@@ -67,7 +67,7 @@ module Cequel
     def self.lookup_internal(internal_name)
       BY_INTERNAL_NAME.fetch(internal_name)
     rescue KeyError
-      fail UnknownType, "Unrecognized internal type #{internal_name.inspect}"
+      raise UnknownType, "Unrecognized internal type #{internal_name.inspect}"
     end
 
     #

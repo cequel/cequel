@@ -89,11 +89,12 @@ module Cequel
         def belongs_to(name, options = {})
           if parent_association
             fail InvalidRecordConfiguration,
-              "Can't declare more than one belongs_to association"
+                 "Can't declare more than one belongs_to association"
           end
           if table_schema.key_columns.any?
             fail InvalidRecordConfiguration,
-              "belongs_to association must be declared before declaring key(s)"
+                 "belongs_to association must be declared before declaring " \
+                 "key(s)"
           end
 
           self.parent_association =
@@ -139,12 +140,12 @@ module Cequel
 
         def def_parent_association_reader
           def_delegator 'self', :read_parent_association,
-            parent_association.name
+                        parent_association.name
         end
 
         def def_parent_association_writer
           def_delegator 'self', :write_parent_association,
-            "#{parent_association.name}="
+                        "#{parent_association.name}="
         end
 
         def def_child_association_reader(association)
@@ -184,7 +185,7 @@ module Cequel
           first(parent_association.association_key_columns.length)
         if parent_key_values.none? { |value| value.nil? }
           clazz = parent_association.association_class
-          parent = parent_key_values.inject(clazz) do |record_set, key_value|
+          parent = parent_key_values.reduce(clazz) do |record_set, key_value|
             record_set[key_value]
           end
           instance_variable_set(ivar_name, parent)
@@ -194,9 +195,9 @@ module Cequel
       def write_parent_association(parent)
         unless parent.is_a?(parent_association.association_class)
           fail ArgumentError,
-            "Wrong class for #{parent_association.name}; expected " +
-            "#{parent_association.association_class.name}, got " +
-            "#{parent.class.name}"
+               "Wrong class for #{parent_association.name}; expected " \
+               "#{parent_association.association_class.name}, got " \
+               "#{parent.class.name}"
         end
         instance_variable_set "@#{parent_association.name}", parent
         key_column_names = self.class.key_column_names
@@ -204,8 +205,9 @@ module Cequel
           zip(key_column_names) do |(parent_column_name, value), column_name|
             if value.nil?
               fail ArgumentError,
-                "Can't set parent association #{parent_association.name.inspect} " +
-                "without value in key #{parent_column_name.inspect}"
+                   "Can't set parent association " \
+                   "#{parent_association.name.inspect} " \
+                   "without value in key #{parent_column_name.inspect}"
             end
             write_attribute(column_name, value)
           end
@@ -217,9 +219,13 @@ module Cequel
         if !reload && instance_variable_defined?(ivar)
           return instance_variable_get(ivar)
         end
-        association_record_set = key_values.inject(association.association_class) do |record_set, key_value|
-          record_set[key_value]
-        end
+
+        base_scope = association.association_class
+        association_record_set =
+          key_values.reduce(base_scope) do |record_set, key_value|
+            record_set[key_value]
+          end
+
         instance_variable_set(
           ivar, AssociationCollection.new(association_record_set))
       end
