@@ -87,6 +87,9 @@ module Cequel
       end
     end
 
+    #
+    # A property comprising key-value pairs of compaction settings
+    #
     class CompactionProperty < MapProperty
       private
 
@@ -102,6 +105,9 @@ module Cequel
       end
     end
 
+    #
+    # A property comprising key-value pairs of compression settings
+    #
     class CompressionProperty < MapProperty
       private
 

@@ -1,5 +1,10 @@
 module Cequel
   module Schema
+    #
+    # A TableReader will query Cassandra's internal representation of a table's
+    # schema, and build a {Table} instance exposing an object representation of
+    # that schema
+    #
     class TableReader
       COMPOSITE_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.CompositeType\((.+)\)$/

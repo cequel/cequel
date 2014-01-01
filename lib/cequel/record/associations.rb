@@ -57,6 +57,11 @@ module Cequel
         self.child_associations = {}
       end
 
+      #
+      # Class macros for declaring associations
+      #
+      # @see Associations
+      #
       module ClassMethods
         include Forwardable
 
