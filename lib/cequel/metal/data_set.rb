@@ -630,6 +630,7 @@ module Cequel
       end
 
       protected
+
       attr_writer :row_limit
 
       private
@@ -688,9 +689,6 @@ module Cequel
                "expected Hash or String"
         end
       end
-
     end
-
   end
-
 end

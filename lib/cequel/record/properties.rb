@@ -48,14 +48,12 @@ module Cequel
 
       # @private
       module ConstructorMethods
-
         def new(*args, &block)
           new_empty.tap do |record|
             record.__send__(:initialize_new_record, *args)
             yield record if block_given?
           end
         end
-
       end
 
       #
@@ -64,8 +62,8 @@ module Cequel
       # @see Properties
       #
       module ClassMethods
-
         protected
+
         # @!visibility public
 
         #
@@ -216,7 +214,6 @@ module Cequel
         def set_attribute_default(name, default)
           default_attributes[name.to_sym] = default
         end
-
       end
 
       # @private

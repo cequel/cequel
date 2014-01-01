@@ -161,6 +161,7 @@ module Cequel
       alias_method :synchronize_table, :sync_table
 
       protected
+
       attr_reader :keyspace
     end
   end

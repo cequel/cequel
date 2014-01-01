@@ -68,6 +68,7 @@ module Cequel
       end
 
       private
+
       attr_reader :record_set
 
       def key_attributes_for_each_row

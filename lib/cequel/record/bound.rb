@@ -53,7 +53,6 @@ module Cequel
         [to_cql, bind_value]
       end
 
-
       #
       # @return [Boolean] `true` if this is a lower bound
       #
@@ -95,7 +94,6 @@ module Cequel
       def base_operator
         lt? ? '<' : '>'
       end
-
     end
 
     #

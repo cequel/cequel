@@ -38,6 +38,7 @@ module Cequel
       end
 
       private
+
       attr_reader :data_set, :options, :statements, :bind_vars
       def_delegator :data_set, :table_name
       def_delegator :statements, :empty?
@@ -74,9 +75,6 @@ module Cequel
           end.join(' AND ')
         end
       end
-
     end
-
   end
-
 end

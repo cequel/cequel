@@ -145,6 +145,7 @@ module Cequel
       end
 
       private
+
       def_delegator :connection_pool, :with, :with_connection
       private :with_connection
 

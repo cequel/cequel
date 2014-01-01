@@ -133,10 +133,10 @@ module Cequel
         def compact_storage
           table_schema.compact_storage = true
         end
-
       end
 
       protected
+
       def_delegator 'self.class', :table_schema
       protected :table_schema
     end

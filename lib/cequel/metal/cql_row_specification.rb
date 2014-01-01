@@ -1,7 +1,5 @@
 module Cequel
-
   module Metal
-
     #
     # Encapsulates a row specification (`WHERE` clause) specified by a CQL
     # string
@@ -9,7 +7,6 @@ module Cequel
     # @api private
     #
     class CqlRowSpecification
-
       #
       # Build a new row specification
       #
@@ -37,9 +34,6 @@ module Cequel
       def cql
         [@condition, *@bind_vars]
       end
-
     end
-
   end
-
 end

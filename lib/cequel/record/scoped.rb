@@ -47,7 +47,6 @@ module Cequel
         def delegating_scope_key
           @delegating_scope_key ||= :"#{name}::delegating_scope"
         end
-
       end
 
       private

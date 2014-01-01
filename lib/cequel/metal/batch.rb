@@ -1,9 +1,7 @@
 require 'stringio'
 
 module Cequel
-
   module Metal
-
     #
     # Encapsulates a batch operation
     #
@@ -11,7 +9,6 @@ module Cequel
     # @api private
     #
     class Batch
-
       #
       # @param keyspace [Keyspace] the keyspace that this batch will be executed on
       # @param options [Hash]
@@ -84,9 +81,6 @@ module Cequel
       def begin_statement
         "BEGIN #{"UNLOGGED " if unlogged?}BATCH\n"
       end
-
     end
-
   end
-
 end

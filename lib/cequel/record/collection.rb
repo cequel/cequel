@@ -128,6 +128,7 @@ module Cequel
       end
 
       private
+
       attr_reader :model, :column
       def_delegator :column, :cast, :cast_collection
       def_delegator 'column.type', :cast, :cast_element
@@ -145,7 +146,6 @@ module Cequel
       def modifications
         @modifications ||= []
       end
-
     end
 
     #
@@ -336,7 +336,6 @@ module Cequel
         to_modify { super }
       end
       alias_method :prepend, :unshift
-
     end
 
     #
@@ -413,7 +412,6 @@ module Cequel
         updater.set(column_name => set)
         to_modify { super }
       end
-
     end
 
     #
@@ -516,6 +514,7 @@ module Cequel
       end
 
       private
+
       def_delegator 'column.key_type', :cast, :cast_key
       private :cast_key
     end

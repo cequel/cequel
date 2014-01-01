@@ -73,7 +73,6 @@ module Cequel
       def empty?
         super && !@delete_row
       end
-
     end
   end
 end

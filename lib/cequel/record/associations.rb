@@ -133,7 +133,6 @@ module Cequel
           self.child_associations =
             child_associations.merge(name => association)
           def_child_association_reader(association)
-
         end
 
         private
@@ -160,7 +159,6 @@ module Cequel
             end
           RUBY
         end
-
       end
 
       #

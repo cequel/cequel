@@ -273,6 +273,7 @@ module Cequel
       end
 
       protected
+
       attr_reader :columns_by_name
 
       private

@@ -58,6 +58,7 @@ module Cequel
       end
 
       protected
+
       attr_reader :keyspace, :table_name, :table
 
       private
