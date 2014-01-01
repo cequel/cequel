@@ -735,22 +735,7 @@ module Cequel
       end
 
       def construct_data_set
-        data_set = connection[target_class.table_name]
-        data_set = data_set.limit(row_limit) if row_limit
-        data_set = data_set.select(*select_columns) if select_columns
-        if scoped_key_values
-          key_conditions = Hash[scoped_key_names.zip(scoped_key_values)]
-          data_set = data_set.where(key_conditions)
-        end
-        if lower_bound
-          data_set = data_set.where(*lower_bound.to_cql_with_bind_variables)
-        end
-        if upper_bound
-          data_set = data_set.where(*upper_bound.to_cql_with_bind_variables)
-        end
-        data_set = data_set.order(order_by_column => :desc) if reversed?
-        data_set = data_set.where(scoped_indexed_column) if scoped_indexed_column
-        data_set
+        DataSetBuilder.build_for(self)
       end
 
       def bound(gt, inclusive, value)
