@@ -308,7 +308,7 @@ module Cequel
           .select { |name, value| value.is_a?(Proc) }
         @attributes = Marshal.load(Marshal.dump(
           default_attributes.except(*dynamic_defaults.keys)))
-        dynamic_defaults.each { |name, p| @attributes[name] = p.() }
+        dynamic_defaults.each { |name, p| @attributes[name] = p.call() }
 
         @new_record = true
         yield self if block_given?

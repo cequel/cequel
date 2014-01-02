@@ -101,7 +101,7 @@ module Cequel
       # @api private
       #
       def loaded!
-        modifications.each { |modification| modification.() }.clear
+        modifications.each { |modification| modification.call() }.clear
       end
 
       #
@@ -137,7 +137,7 @@ module Cequel
       def to_modify(&block)
         if loaded?
           model.__send__("#{column_name}_will_change!")
-          block.()
+          block.call()
         else modifications << block
         end
         self
