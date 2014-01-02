@@ -36,7 +36,7 @@ module Cequel
       extend ActiveSupport::Concern
 
       included do
-        class_attribute :default_attributes, :instance_writer => false
+        class_attribute :default_attributes, instance_writer: false
         self.default_attributes = {}
 
         class <<self; alias_method :new_empty, :new; end

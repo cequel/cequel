@@ -150,7 +150,7 @@ module Cequel
       private :with_connection
 
       def build_connection
-        options = {:cql_version => '3.0.0'}
+        options = {cql_version: '3.0.0'}
         options[:keyspace] = name if name
         CassandraCQL::Database.new(
           @hosts,
@@ -162,8 +162,8 @@ module Cequel
       def connection_pool
         return @connection_pool if defined? @connection_pool
         options = {
-          :size => @configuration.fetch(:pool, 1),
-          :timeout => @configuration.fetch(:pool_timeout, 0)
+          size: @configuration.fetch(:pool, 1),
+          timeout: @configuration.fetch(:pool_timeout, 0)
         }
         @connection_pool = ConnectionPool.new(options) do
           build_connection
@@ -191,18 +191,17 @@ module Cequel
         begin
           time = Benchmark.ms { response = yield }
         rescue Exception => e
-          log_statement(:logger => logger, :severity => :error,
-                        :label => label, :statement => statement,
-                        :bind_vars => bind_vars)
+          log_statement(logger: logger, severity: :error, label: label,
+                        statement: statement, bind_vars: bind_vars)
           raise
         end
-        log_statement(:logger => logger, :severity => :debug, :label => label,
-                      :statement => statement, :bind_vars => bind_vars, 
-                      :timing => time.to_i)
+        log_statement(logger: logger, severity: :debug, label: label,
+                      statement: statement, bind_vars: bind_vars, 
+                      timing: time.to_i)
         if time >= slowlog_threshold
-          log_statement(:logger => slowlog, :severity => :warn,
-                        :label => label, :statement => statement,
-                        :bind_vars => bind_vars, :timing => time.to_i)
+          log_statement(logger: slowlog, severity: :warn,
+                        label: label, statement: statement,
+                        bind_vars: bind_vars, timing: time.to_i)
         end
         response
       end

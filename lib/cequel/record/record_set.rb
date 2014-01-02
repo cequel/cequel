@@ -105,7 +105,7 @@ module Cequel
 
       # @private
       def self.default_attributes
-        {:scoped_key_values => [], :select_columns => []}
+        {scoped_key_values: [], select_columns: []}
       end
 
       # @return [Class] the Record class that this collection yields instances
@@ -172,7 +172,7 @@ module Cequel
       #   CQL SELECT documentation
       #
       def limit(count)
-        scoped(:row_limit => count)
+        scoped(row_limit: count)
       end
 
       #
