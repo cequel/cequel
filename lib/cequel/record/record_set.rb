@@ -705,7 +705,6 @@ module Cequel
       def selects_collection_columns?
         select_columns.any? do |column_name|
           target_class.reflect_on_column(column_name).collection_column?
-            is_a?(Cequel::Schema::CollectionColumn)
         end
       end
 

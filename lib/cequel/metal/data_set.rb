@@ -657,11 +657,11 @@ module Cequel
           ttl_columns.map { |column| "TTL(#{column})" } +
           writetime_columns.map { |column| "WRITETIME(#{column})" }
 
-          if all_columns.any?
-            "SELECT #{all_columns.join(',')}"
-          else
-            'SELECT *'
-          end
+        if all_columns.any?
+          "SELECT #{all_columns.join(',')}"
+        else
+          'SELECT *'
+        end
       end
 
       def limit_cql
