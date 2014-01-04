@@ -16,11 +16,12 @@ module Cequel
     # depending on whether multiple values were specified for one of the key
     # columns. In either case, the record instances will be unloaded.
     #
-    # Certain methods have behavior that is dependent on which primary keys have
-    # been specified using {#[]}. In many methods, such as {#[]}, {#values_at},
-    # {#before}, {#after}, {#from}, {#upto}, and {#in}, the *first unscoped
-    # primary key column* serves as implicit context for the method: the value
-    # passed to those methods is an exact or bounding value for that column.
+    # Certain methods have behavior that is dependent on which primary keys
+    # have been specified using {#[]}. In many methods, such as {#[]},
+    # {#values_at}, {#before}, {#after}, {#from}, {#upto}, and {#in}, the
+    # *first unscoped primary key column* serves as implicit context for the
+    # method: the value passed to those methods is an exact or bounding value
+    # for that column.
     #
     # CQL does not allow ordering by arbitrary columns; the ordering of a table
     # is determined by its clustering column(s). You read records in reverse
@@ -89,8 +90,8 @@ module Cequel
     #   Post['cassandra'].reverse.after(1.week.ago)
     #
     # @example 10 posts by a given author
-    #   # Scoped to 10 posts where author_id=author.id. Results will not be in a
-    #   # defined order because the partition key is not specified
+    #   # Scoped to 10 posts where author_id=author.id. Results will not be in
+    #   # a defined order because the partition key is not specified
     #   Post.for_author(author).limit(10)
     #
     # @see Scoped
@@ -113,8 +114,8 @@ module Cequel
       attr_reader :target_class
 
       #
-      # @param target_class [Class] the Record class that this collection yields
-      #   instances of
+      # @param target_class [Class] the Record class that this collection
+      #   yields instances of
       # @param attributes [Hash] initial scoping attributes
       #
       # @api private
@@ -182,8 +183,8 @@ module Cequel
       # @param column_name [Symbol] column for filter
       # @param value value to match in given column
       # @return [RecordSet] record set with filter applied
-      # @raise [IllegalQuery] if this record set is already filtered by an indexed
-      #   column
+      # @raise [IllegalQuery] if this record set is already filtered by an
+      #   indexed column
       # @raise [ArgumentError] if the specified column is not an data column
       #   with a secondary index
       #
@@ -240,15 +241,16 @@ module Cequel
       # ```ruby
       # {
       #   "cassandra" => {
-      #     "cequel" => #<Post blog_subdomain: "cassandra", permalink: "cequel", title: "Cequel">
+      #     "cequel" => #<Post blog_subdomain: "cassandra",
+      #                        permalink: "cequel", title: "Cequel">
       #   }
       # }
       # ```
       #
       # If `[]` is invoked enough times to specify all primary keys, then an
       # unloaded `Record` instance is returned; this is the same behavior you
-      # would expect from a `Hash`. If only some subset of the primary keys have
-      # been specified, the result is still a `RecordSet`.
+      # would expect from a `Hash`. If only some subset of the primary keys
+      # have been specified, the result is still a `RecordSet`.
       #
       # @param primary_key_value value for the first unscoped primary key
       # @return [RecordSet] record set with primary key filter applied, if not
@@ -261,12 +263,13 @@ module Cequel
       # @example Fully specified primary key
       #   Post['cequel']['cassandra'] # returns an unloaded Record
       #
-      # @note Accepting multiple values is deprecated behavior. Use {#values_at}
-      #   instead.
+      # @note Accepting multiple arguments is deprecated behavior. Use
+      #   {#values_at} instead.
       #
       def [](*primary_key_value)
         if primary_key_value.many?
-          warn "Calling #[] with multiple arguments is deprecated. Use #values_at"
+          warn "Calling #[] with multiple arguments is deprecated. Use " \
+               "#values_at"
           return values_at(*primary_key_value)
         end
 
@@ -279,13 +282,13 @@ module Cequel
       alias_method :/, :[]
 
       #
-      # Restrict the records in this record set to those containing any of a set
-      # of values
+      # Restrict the records in this record set to those containing any of a
+      # set of values
       #
       # @param primary_key_values values to match in the next unscoped primary
       #   key
-      # @return [RecordSet] record set with primary key scope applied if not all
-      #   primary key columns are specified
+      # @return [RecordSet] record set with primary key scope applied if not
+      #   all primary key columns are specified
       # @return [LazyRecordCollection] collection of unloaded records if all
       #   primary key columns are specified
       # @raise IllegalQuery if the scoped key column is neither the last
@@ -317,8 +320,8 @@ module Cequel
       #   record at that key
       # @return [LazyRecordCollection] if multiple keys are specified, return a
       #   collection of loaded records at those keys
-      # @raise [RecordNotFound] if not all the keys correspond to records in the
-      #   table
+      # @raise [RecordNotFound] if not all the keys correspond to records in
+      #   the table
       # @raise [ArgumentError] if not all primary key columns have been
       #   specified
       #
@@ -358,9 +361,9 @@ module Cequel
 
       #
       # Restrict records to those whose value in the first unscoped primary key
-      # column are in the given range. Will accept both inclusive ranges (`1..5`)
-      # and end-exclusive ranges (`1...5`). If you need a range with an
-      # exclusive start value, use {#after}, which can be combined with
+      # column are in the given range. Will accept both inclusive ranges
+      # (`1..5`) and end-exclusive ranges (`1...5`). If you need a range with
+      # an exclusive start value, use {#after}, which can be combined with
       # {#before} or {#from} to create a range.
       #
       # @param range [Range] range of values for the key column
@@ -484,8 +487,8 @@ module Cequel
       end
 
       #
-      # Enumerate over the records in this record set, with control over how the
-      # database is queried
+      # Enumerate over the records in this record set, with control over how
+      # the database is queried
       #
       # @param (see #find_rows_in_batches)
       # @yieldparam (see #each)
@@ -519,8 +522,8 @@ module Cequel
 
       #
       # Enumerate over the row data for each record in this record set, without
-      # hydrating an actual {Record} instance. Useful for operations where speed
-      # is at a premium.
+      # hydrating an actual {Record} instance. Useful for operations where
+      # speed is at a premium.
       #
       # @param (see #find_rows_in_batches)
       # @option (see #find_rows_in_batches)
@@ -567,7 +570,8 @@ module Cequel
       end
 
       #
-      # @return [Cequel::Metal::DataSet] the data set underlying this record set
+      # @return [Cequel::Metal::DataSet] the data set underlying this record
+      #   set
       #
       def data_set
         @data_set ||= construct_data_set
@@ -600,8 +604,9 @@ module Cequel
       protected
 
       attr_reader :attributes
-      hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
-                   :lower_bound, :upper_bound, :scoped_indexed_column
+      hattr_reader :attributes, :select_columns, :scoped_key_values,
+                   :row_limit, :lower_bound, :upper_bound,
+                   :scoped_indexed_column
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
                 :upper_bound, :scoped_indexed_column
       hattr_inquirer :attributes, :reversed
@@ -697,9 +702,10 @@ module Cequel
         end
       end
 
-      # Try to order results by the first clustering column. Fall back to partition key if none exist.
       def order_by_column
-        target_class.clustering_columns.first.name if target_class.clustering_columns.any?
+        if target_class.clustering_columns.any?
+          target_class.clustering_columns.first.name
+        end
       end
 
       def selects_collection_columns?
@@ -743,7 +749,9 @@ module Cequel
       end
 
       def cast_range_key_for_bound(value)
-        if range_key_column.type?(Type::Timeuuid) && !value.is_a?(CassandraCQL::UUID)
+        if range_key_column.type?(Type::Timeuuid) &&
+           !value.is_a?(CassandraCQL::UUID)
+
           Type::Timestamp.instance.cast(value)
         else
           cast_range_key(value)

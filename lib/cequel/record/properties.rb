@@ -75,8 +75,8 @@ module Cequel
         # @param name [Symbol] the name of the key column
         # @param type [Symbol] the type of the key column
         # @param options [Options] options for the key column
-        # @option options [Boolean] :partition (false) make this a partition key
-        #   even if it is not the first key column
+        # @option options [Boolean] :partition (false) make this a partition
+        #   key even if it is not the first key column
         # @option options [Boolean] :auto (false) automatically initialize this
         #   key with a UUID value for new records. Only valid for `uuid` and
         #   `timeuuid` columns.
@@ -95,7 +95,7 @@ module Cequel
             unless Type[type].is_a?(Cequel::Type::Uuid)
               fail ArgumentError, ":auto option only valid for UUID columns"
             end
-            default = -> { CassandraCQL::UUID.new } if options.fetch(:auto, false)
+            default = -> { CassandraCQL::UUID.new } if options[:auto]
           end
           set_attribute_default(name, default)
         end
@@ -106,8 +106,8 @@ module Cequel
         # @param name [Symbol] the name of the column
         # @param type [Symbol] the type of the column
         # @param options [Options] options for the column
-        # @option options [Object,Proc] :default a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default a default value for the
+        #   column, or a proc that returns a default value for the column
         # @return [void]
         #
         def column(name, type, options = {})
@@ -121,8 +121,8 @@ module Cequel
         # @param name [Symbol] the name of the list
         # @param type [Symbol] the type of the elements in the list
         # @param options [Options] options for the list
-        # @option options [Object,Proc] :default ([]) a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default ([]) a default value for the
+        #   column, or a proc that returns a default value for the column
         # @return [void]
         #
         # @see Record::List
@@ -139,8 +139,8 @@ module Cequel
         # @param name [Symbol] the name of the set
         # @param type [Symbol] the type of the elements in the set
         # @param options [Options] options for the set
-        # @option options [Object,Proc] :default (Set[]) a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default (Set[]) a default value for
+        #   the column, or a proc that returns a default value for the column
         # @return [void]
         #
         # @see Record::Set
@@ -157,8 +157,8 @@ module Cequel
         # @param name [Symbol] the name of the map
         # @param key_type [Symbol] the type of the keys in the set
         # @param options [Options] options for the set
-        # @option options [Object,Proc] :default ({}) a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default ({}) a default value for the
+        #   column, or a proc that returns a default value for the column
         # @return [void]
         #
         # @see Record::Map

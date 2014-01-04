@@ -36,8 +36,8 @@ module Cequel
       class << self; protected :new; end
 
       #
-      # @return [String] CQL fragment defining this property in a `CREATE TABLE`
-      #   statement
+      # @return [String] CQL fragment defining this property in a `CREATE
+      #   TABLE` statement
       #
       def to_cql
         "#{@name} = #{value_cql}"

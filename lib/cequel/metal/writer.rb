@@ -15,8 +15,10 @@ module Cequel
       #
       # @param data_set [DataSet] data set to write to
       # @param options [Options] options
-      # @option options [Integer] :ttl time-to-live in seconds for the written data
-      # @option options [Time,Integer] :timestamp the timestamp associated with the column values
+      # @option options [Integer] :ttl time-to-live in seconds for the written
+      #   data
+      # @option options [Time,Integer] :timestamp the timestamp associated with
+      #   the column values
       #
       def initialize(data_set, options = {}, &block)
         @data_set, @options, @block = data_set, options, block

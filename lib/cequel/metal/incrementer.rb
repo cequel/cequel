@@ -1,8 +1,8 @@
 module Cequel
   module Metal
     #
-    # Encapsulates a counter `UPDATE` operation comprising multiple increment or
-    # decrement operations
+    # Encapsulates a counter `UPDATE` operation comprising multiple increment
+    # or decrement operations
     #
     # @see DataSet#increment
     # @since 1.0.0

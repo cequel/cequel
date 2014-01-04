@@ -18,13 +18,14 @@ module Cequel
       attr_reader :name
       # @return [Array<Column>] all columns defined on the table
       attr_reader :columns
-      # @return [Array<PartitionKey>] partition key columns defined on the table
+      # @return [Array<PartitionKey>] partition key columns defined on the
+      #   table
       attr_reader :partition_key_columns
       # @return [Array<ClusteringColumn>] clustering columns defined on the
       #   table
       attr_reader :clustering_columns
-      # @return [Array<DataColumn,CollectionColumn>] data columns and collection
-      #   columns defined on the table
+      # @return [Array<DataColumn,CollectionColumn>] data columns and
+      #   collection columns defined on the table
       attr_reader :data_columns
       # @return [Hash] storage properties defined on the table
       attr_reader :properties
@@ -44,14 +45,14 @@ module Cequel
       end
 
       #
-      # Define a key column. If this is the first key column defined, it will be
-      # a partition key; otherwise, it will be a clustering column.
+      # Define a key column. If this is the first key column defined, it will
+      # be a partition key; otherwise, it will be a clustering column.
       #
       # @param name [Symbol] the name of the column
       # @param type [Symbol,Type] the type for the column
-      # @param clustering_order [:asc,:desc] whether rows should be in ascending
-      #   or descending order by this column. Only meaningful for clustering
-      #   columns.
+      # @param clustering_order [:asc,:desc] whether rows should be in
+      #   ascending or descending order by this column. Only meaningful for
+      #   clustering columns.
       # @return [void]
       #
       # @see #add_partition_key
@@ -88,9 +89,8 @@ module Cequel
       # @return [void]
       #
       def add_clustering_column(name, type, clustering_order = nil)
-        ClusteringColumn.new(name, type(type), clustering_order).tap do |column|
-          @clustering_columns << add_column(column)
-        end
+        ClusteringColumn.new(name, type(type), clustering_order)
+          .tap { |column| @clustering_columns << add_column(column) }
       end
 
       #
@@ -100,7 +100,8 @@ module Cequel
       # @param type [Type] type for the column
       # @param options [Options] options for the column
       # @option options [Boolean,Symbol] :index (nil) name of a secondary index
-      #   to apply to the column, or `true` to infer an index name by convention
+      #   to apply to the column, or `true` to infer an index name by
+      #   convention
       # @return [void]
       #
       def add_data_column(name, type, options = {})

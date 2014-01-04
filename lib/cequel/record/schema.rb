@@ -53,9 +53,9 @@ module Cequel
         # @!method compact_storage?
         #   (see Cequel::Schema::Table#compact_storage?)
         #
-        def_delegators :table_schema, :columns, :key_columns, :key_column_names,
-                       :partition_key_columns, :clustering_columns,
-                       :compact_storage?
+        def_delegators :table_schema, :columns, :key_columns,
+                       :key_column_names, :partition_key_columns,
+                       :clustering_columns, :compact_storage?
         #
         # @!method reflect_on_column(name)
         #   (see Cequel::Schema::Table#column)
@@ -65,8 +65,8 @@ module Cequel
         #
         # Read the current schema assigned to this record's table from
         # Cassandra, and make any necessary modifications (including creating
-        # the table for the first time) so that it matches the schema defined in
-        # the record definition
+        # the table for the first time) so that it matches the schema defined
+        # in the record definition
         #
         # @raise (see Schema::TableSynchronizer.apply)
         # @return [void]
@@ -88,8 +88,8 @@ module Cequel
         end
 
         #
-        # @return [Schema::Table] the schema as defined by the columns specified
-        #   in the class definition
+        # @return [Schema::Table] the schema as defined by the columns
+        #   specified in the class definition
         #
         def table_schema
           @table_schema ||= Cequel::Schema::Table.new(table_name)

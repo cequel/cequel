@@ -32,8 +32,8 @@ module Cequel
   #
   # Cequel::Record is an active record-style data modeling library and
   # object-row mapper. Model classes inherit from Cequel::Record, define their
-  # columns in the class definition, and have access to a full and robust set of
-  # read and write functionality.
+  # columns in the class definition, and have access to a full and robust set
+  # of read and write functionality.
   #
   # Individual components are documented in their respective modules. See below
   # for links.

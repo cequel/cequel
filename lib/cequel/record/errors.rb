@@ -20,7 +20,8 @@ module Cequel
     #
     RecordNotFound = Class.new(StandardError)
     #
-    # Raised when attempting to configure a record in a way that is not possible
+    # Raised when attempting to configure a record in a way that is not
+    # possible
     #
     # @since 1.0.0
     #

@@ -10,7 +10,8 @@ module Cequel
     # In the below example, the `blogs` table has a one-column primary key
     # `(subdomain)`, and the `posts` table has a two-column primary key
     # `(blog_subdomain, permalink)`. All posts that belong to the blog with
-    # subdomain `"cassandra"` will have `"cassandra"` as their `blog_subdomain`.
+    # subdomain `"cassandra"` will have `"cassandra"` as their
+    # `blog_subdomain`.
     #
     # @example Blogs and Posts
     #
@@ -66,7 +67,8 @@ module Cequel
         include Forwardable
 
         # @!attribute parent_association
-        #   @return [BelongsToAssociation] association declared by {#belongs_to}
+        #   @return [BelongsToAssociation] association declared by
+        #     {#belongs_to}
         # @!attribute child_associations
         #   @return [Hash<Symbol,HasManyAssociation>] associations declared by
         #     {#has_many}
@@ -114,8 +116,8 @@ module Cequel
         #
         # Declare a child association. The child association should have a
         # `belongs_to` referencing this class or, at a minimum, must have a
-        # primary key whose first N columns have the same types as the N columns
-        # in this class's primary key.
+        # primary key whose first N columns have the same types as the N
+        # columns in this class's primary key.
         #
         # `has_many` associations are read-only, so `has_many :posts` will
         # define a `posts` reader but not a `posts=` writer; and the collection

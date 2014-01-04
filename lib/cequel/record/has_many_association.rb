@@ -31,7 +31,8 @@ module Cequel
         options.assert_valid_keys(:class_name, :dependent)
 
         @owner_class, @name = owner_class, name
-        @association_class_name = options.fetch(:class_name, name.to_s.classify)
+        @association_class_name =
+          options.fetch(:class_name, name.to_s.classify)
         case options[:dependent]
         when :destroy, :delete, nil
           @dependent = options[:dependent]

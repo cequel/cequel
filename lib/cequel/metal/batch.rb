@@ -10,7 +10,8 @@ module Cequel
     #
     class Batch
       #
-      # @param keyspace [Keyspace] the keyspace that this batch will be executed on
+      # @param keyspace [Keyspace] the keyspace that this batch will be
+      #   executed on
       # @param options [Hash]
       # @option options [Integer] :auto_apply If specified, flush the batch
       #   after this many statements have been added.

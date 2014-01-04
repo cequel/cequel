@@ -42,8 +42,8 @@ module Cequel
       #
       # Read table schema from the database
       #
-      # @return [Table] object representation of table in the database, or `nil`
-      #   if no table by given name exists
+      # @return [Table] object representation of table in the database, or
+      #   `nil` if no table by given name exists
       #
       # @api private
       #
@@ -121,7 +121,8 @@ module Cequel
       end
 
       def read_collection_column(name, collection_type, *internal_types)
-        types = internal_types.map { |internal| Type.lookup_internal(internal) }
+        types = internal_types
+          .map { |internal| Type.lookup_internal(internal) }
         table.__send__("add_#{collection_type}", name.to_sym, *types)
       end
 

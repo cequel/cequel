@@ -18,7 +18,8 @@ module Cequel
       def self.from_result_row(result_row)
         if result_row
           new.tap do |row|
-            result_row.column_names.zip(result_row.column_values) do |name, value|
+            names, values = result_row.column_names, result_row.column_values
+            names.zip(values) do |name, value|
               if name =~ /^(ttl|writetime)\((.+)\)$/
                 if $1 == 'ttl' then row.set_ttl($2, value)
                 else row.set_writetime($2, value)

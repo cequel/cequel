@@ -47,8 +47,8 @@ module Cequel
       # @param configuration [Options] configuration options
       # @option configuration [String] :host ('127.0.0.1:9160') host/port of
       #   single Cassandra instance to connect to
-      # @option configuration [Array<String>] :hosts list of Cassandra instances
-      #   to connect to
+      # @option configuration [Array<String>] :hosts list of Cassandra
+      #   instances to connect to
       # @option configuration [Hash] :thrift Thrift options to be passed
       #   directly to Thrift client
       # @option configuration [String] :keyspace name of keyspace to connect to
@@ -59,7 +59,8 @@ module Cequel
       #
       def configure(configuration = {})
         @configuration = configuration
-        @hosts = configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1:9160'))
+        @hosts = configuration.fetch(
+          :host, configuration.fetch(:hosts, '127.0.0.1:9160'))
         @thrift_options = configuration[:thrift].try(:symbolize_keys) || {}
         @name = configuration[:keyspace]
         # reset the connections
@@ -98,7 +99,8 @@ module Cequel
 
       #
       # Execute write operations in a batch. Any inserts, updates, and deletes
-      # inside this method's block will be executed inside a CQL BATCH operation.
+      # inside this method's block will be executed inside a CQL BATCH
+      # operation.
       #
       # @param options [Hash]
       # @option (see Batch#initialize)
@@ -136,12 +138,14 @@ module Cequel
       end
 
       #
-      # Clears all active connections, either single connection or connection pool
+      # Clears all active connections
       #
       # @return [void]
       #
       def clear_active_connections!
-        remove_instance_variable(:@connection_pool) if defined? @connection_pool
+        if defined? @connection_pool
+          remove_instance_variable(:@connection_pool)
+        end
       end
 
       private

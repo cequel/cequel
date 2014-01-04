@@ -71,11 +71,11 @@ module Cequel
       end
 
       #
-      # @param type_in [Type] type to check against
+      # @param type_in [Symbol,Type] type to check against
       # @return [Boolean] true if this column has the type given by `type_in`
       #
       def type?(type_in)
-        type.is_a?(type_in)
+        type == Type[type_in]
       end
 
       #
@@ -100,8 +100,8 @@ module Cequel
 
       #
       # @param other [Column] a column object
-      # @return [Boolean] true if this column has the same CQL representation as
-      #   `other` column
+      # @return [Boolean] true if this column has the same CQL representation
+      #   as `other` column
       #
       def ==(other)
         to_cql == other.to_cql
@@ -139,8 +139,8 @@ module Cequel
     #
     class ClusteringColumn < Column
       #
-      # @return [:asc,:desc] whether rows are ordered by ascending or descending
-      #   values in this column
+      # @return [:asc,:desc] whether rows are ordered by ascending or
+      #   descending values in this column
       #
       attr_reader :clustering_order
 
@@ -281,7 +281,8 @@ module Cequel
 
       #
       # @param (see Column#cast)
-      # @return [Hash] hash with keys and values cast to correct type for column
+      # @return [Hash] hash with keys and values cast to correct type for
+      #   column
       #
       def cast(value)
         value.each_with_object({}) do |(key, element), hash|

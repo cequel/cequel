@@ -6,7 +6,9 @@ module Cequel
     #
     # @see DataSet#update
     # @see Deleter
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/update_r.html CQL UPDATE documentation
+    # @see
+    #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/update_r.html
+    #   CQL UPDATE documentation
     # @since 1.0.0
     #
     class Updater < Writer

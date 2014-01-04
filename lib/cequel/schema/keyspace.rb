@@ -24,8 +24,8 @@ module Cequel
       # @param options [Options] persistence options for this keyspace.
       # @option options [String] :class ("SimpleStrategy") the replication
       #   strategy to use for this keyspace
-      # @option options [Integer] :replication_factor (1) the number of replicas
-      #   that should exist for each piece of data
+      # @option options [Integer] :replication_factor (1) the number of
+      #   replicas that should exist for each piece of data
       # @return [void]
       #
       # @see TK CQL3 CREATE KEYSPACE documentation
@@ -36,7 +36,9 @@ module Cequel
 
         options = options.symbolize_keys
         options[:class] ||= 'SimpleStrategy'
-        options[:replication_factor] ||= 1 if options[:class] == 'SimpleStrategy'
+        if options[:class] == 'SimpleStrategy'
+          options[:replication_factor] ||= 1
+        end
         options_strs = options.map do |name, value|
           "'#{name}': #{CassandraCQL::Statement.quote(value)}"
         end
@@ -142,8 +144,8 @@ module Cequel
       #
       # Create or update a table to match a given schema structure. The desired
       # schema structure is defined by the directives given in the block; this
-      # is then compared to the existing table in the database (if it is defined
-      # at all), and then the table is created or altered accordingly.
+      # is then compared to the existing table in the database (if it is
+      # defined at all), and then the table is created or altered accordingly.
       #
       # @param name [Symbol] name of the table to synchronize
       # @yield (see #create_table)

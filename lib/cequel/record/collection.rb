@@ -33,8 +33,8 @@ module Cequel
     #   # Stage modification to collection, still no data read
     #   blog.categories << 'Big Data'
     #
-    #   # Issue an UPDATE statement which pushes "Big Data" onto the collection.
-    #   # Still no data read
+    #   # Issue an UPDATE statement which pushes "Big Data" onto the
+    #   # collection. Still no data read
     #   blog.save!
     #
     #   # Stage another modification to the collection
@@ -192,8 +192,8 @@ module Cequel
 
       #
       # Set the value at a position or range of positions. This modification
-      # will be staged and persisted as an atomic list update when the record is
-      # saved. If the collection data is loaded in memory, it will also be
+      # will be staged and persisted as an atomic list update when the record
+      # is saved. If the collection data is loaded in memory, it will also be
       # modified accordingly.
       #
       # @return [void]
