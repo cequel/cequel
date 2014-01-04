@@ -7,6 +7,12 @@ module Cequel
     # @see Keyspace#synchronize_table
     #
     class TableSynchronizer
+      # @return [Table] table as it is currently defined
+      # @api private
+      attr_reader :existing
+      # @return [Table] table schema as it is desired
+      # @api private
+      attr_reader :updated
       #
       # Takes an existing table schema read from the database, and a desired
       # schema for that table. Modifies the table schema in the database to
@@ -47,30 +53,60 @@ module Cequel
       # the desired schema
       #
       # @return [void]
-      # @raise [InvalidSchemaMigration] if it is impossible to modify existing
-      #   table to match desired schema
+      # @raise (see MigrationValidator#validate!)
       #
       # @api private
       #
       def apply
+        validate!
         update_keys
         update_columns
         update_properties
       end
 
+      #
+      # Iterate over pairs of (old_key, new_key)
+      #
+      # @yieldparam old_key [Column] key in existing schema
+      # @yieldparam new_key [Column] corresponding key in updated schema
+      # @return [void]
+      #
+      # @api private
+      #
+      def each_key_pair(&block)
+        existing.key_columns.zip(updated.key_columns, &block)
+      end
+
+      #
+      # Iterate over pairs of (old_column, new_column)
+      #
+      # @yieldparam old_column [Column] column in existing schema
+      # @yieldparam new_column [Column] corresponding column in updated schema
+      # @return [void]
+      #
+      # @api private
+      #
+      def each_data_column_pair(&block)
+        if existing.compact_storage? && existing.clustering_columns.any?
+          yield existing.data_columns.first, updated.data_columns.first
+        else
+          old_columns = existing.data_columns.index_by { |col| col.name }
+          new_columns = updated.data_columns.index_by { |col| col.name }
+          all_column_names = (old_columns.keys + new_columns.keys).tap(&:uniq!)
+          all_column_names.each do |name|
+            yield old_columns[name], new_columns[name]
+          end
+        end
+      end
+
       protected
 
-      attr_reader :updater, :existing, :updated
+      attr_reader :updater
 
       private
 
       def update_keys
         each_key_pair do |old_key, new_key|
-          if old_key.type != new_key.type
-            fail InvalidSchemaMigration,
-                 "Can't change type of key column #{old_key.name} from " \
-                 "#{old_key.type} to #{new_key.type}"
-          end
           if old_key.name != new_key.name
             updater.rename_column(old_key.name || :column1, new_key.name)
           end
@@ -78,11 +114,10 @@ module Cequel
       end
 
       def update_columns
-        each_column_pair do |old_column, new_column|
+        each_data_column_pair do |old_column, new_column|
           if old_column.nil?
             add_column(new_column)
           elsif new_column
-            assert_same_column_type!(old_column, new_column)
             update_column(old_column, new_column)
             update_index(old_column, new_column)
           end
@@ -122,60 +157,8 @@ module Cequel
         updater.change_properties(changes) if changes.any?
       end
 
-      def each_key_pair(&block)
-        assert_keys_match!
-        existing.key_columns.zip(updated.key_columns, &block)
-      end
-
-      def each_column_pair(&block)
-        if existing.compact_storage? && existing.clustering_columns.any?
-          yield existing.data_columns.first, updated.data_columns.first
-        else
-          old_columns = existing.data_columns.index_by { |col| col.name }
-          new_columns = updated.data_columns.index_by { |col| col.name }
-          all_column_names = (old_columns.keys + new_columns.keys).tap(&:uniq!)
-          all_column_names.each do |name|
-            yield old_columns[name], new_columns[name]
-          end
-        end
-      end
-
-      private
-
-      def assert_keys_match!
-        assert_partition_keys_match!
-        assert_clustering_columns_match!
-      end
-
-      def assert_partition_keys_match!
-        if existing.partition_key_column_count !=
-            updated.partition_key_column_count
-
-          fail InvalidSchemaMigration,
-               "Existing partition keys " \
-               "#{existing.partition_key_column_names.join(',')} " \
-               "differ from specified partition keys " \
-               "#{updated.partition_key_column_names.join(',')}"
-        end
-      end
-
-      def assert_clustering_columns_match!
-        if existing.clustering_column_count != updated.clustering_column_count
-          fail InvalidSchemaMigration,
-               "Existing clustering columns " \
-               "#{existing.clustering_column_names.join(',')} " \
-               "differ from specified clustering keys " \
-               "#{updated.clustering_column_names.join(',')}"
-        end
-      end
-
-      def assert_same_column_type!(old_column, new_column)
-        if old_column.class != new_column.class
-          fail InvalidSchemaMigration,
-               "Can't change #{old_column.name} from " \
-               "#{old_column.class.name.demodulize} to " \
-               "#{new_column.class.name.demodulize}"
-        end
+      def validate!
+        MigrationValidator.validate!(self)
       end
     end
   end

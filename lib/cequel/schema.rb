@@ -1,6 +1,7 @@
 require 'cequel/schema/column'
 require 'cequel/schema/create_table_dsl'
 require 'cequel/schema/keyspace'
+require 'cequel/schema/migration_validator'
 require 'cequel/schema/table'
 require 'cequel/schema/table_property'
 require 'cequel/schema/table_reader'
