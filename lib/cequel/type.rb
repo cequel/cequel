@@ -264,16 +264,16 @@ module Cequel
     register Float.instance
 
     #
-    # `long` columns store 64-bit integer values
+    # `bigint` columns store 64-bit integer values
     #
-    # @see TK CQL3 documentation for long columns
+    # @see TK CQL3 documentation for bigint columns
     #
-    class Long < Int
+    class Bigint < Int
       def internal_name
         'org.apache.cassandra.db.marshal.LongType'
       end
     end
-    register Long.instance
+    register Bigint.instance
 
     #
     # `text` columns store UTF-8 character data. They are also known as
