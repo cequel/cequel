@@ -76,8 +76,8 @@ module Cequel
     # The base class for all type objects. Types are singletons.
     #
     # @abstract Subclasses should implement {#cast}, and may implement
-    #   {#internal_names} if it cannot be inferred from the class name. The name
-    #   of the type class should be the camel-cased CQL name of the type
+    #   {#internal_names} if it cannot be inferred from the class name. The
+    #   name of the type class should be the camel-cased CQL name of the type
     #
     class Base
       include Singleton

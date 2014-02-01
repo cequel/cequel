@@ -63,7 +63,7 @@ module Cequel
 
       private
 
-      # XXX This gets a lot easier in Cassandra 2.0 – all logical columns
+      # XXX This gets a lot easier in Cassandra 2.0: all logical columns
       # (including keys) are returned from the `schema_columns` query, so
       # there's no need to jump through all these hoops to figure out what the
       # key columns look like.
