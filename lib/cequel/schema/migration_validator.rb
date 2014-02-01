@@ -41,7 +41,8 @@ module Cequel
 
       attr_reader :synchronizer
       def_delegators :synchronizer, :each_key_pair,
-        :each_clustering_column_pair, :each_data_column_pair, :existing, :updated
+                     :each_clustering_column_pair, :each_data_column_pair,
+                     :existing, :updated
 
       def assert_keys_match!
         assert_partition_keys_match!
@@ -64,8 +65,8 @@ module Cequel
         each_clustering_column_pair do |old_key, new_key|
           if old_key.clustering_order != new_key.clustering_order
             fail InvalidSchemaMigration,
-              "Can't change the clustering order of #{old_key.name} from " \
-              "#{old_key.clustering_order} to #{new_key.clustering_order}"
+                 "Can't change the clustering order of #{old_key.name} from " \
+                 "#{old_key.clustering_order} to #{new_key.clustering_order}"
           end
         end
       end
@@ -106,9 +107,10 @@ module Cequel
           valid_new_types = old_column.type.compatible_types
           unless valid_new_types.include?(new_column.type)
             fail InvalidSchemaMigration,
-              "Can't change #{old_column.name} from " \
-              "#{old_column.type} to #{new_column.type}. #{old_column.type} " \
-              "columns may only be altered to #{valid_new_types.to_sentence}."
+                 "Can't change #{old_column.name} from " \
+                 "#{old_column.type} to #{new_column.type}. " \
+                 "#{old_column.type} columns may only be altered to " \
+                 "#{valid_new_types.to_sentence}."
           end
         end
       end

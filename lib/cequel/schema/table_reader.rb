@@ -63,6 +63,14 @@ module Cequel
 
       private
 
+      # XXX This gets a lot easier in Cassandra 2.0: all logical columns
+      # (including keys) are returned from the `schema_columns` query, so
+      # there's no need to jump through all these hoops to figure out what the
+      # key columns look like.
+      #
+      # However, this approach works for both 1.2 and 2.0, so better to keep it
+      # for now. It will be worth refactoring this code to take advantage of
+      # 2.0's better interface in a future version of Cequel that targets 2.0+.
       def read_partition_keys
         validator = table_data['key_validator']
         types = parse_composite_types(validator) || [validator]
@@ -72,6 +80,7 @@ module Cequel
         end
       end
 
+      # XXX See comment on {read_partition_keys}
       def read_clustering_columns
         column_aliases = JSON.parse(table_data['column_aliases'])
         comparators = parse_composite_types(table_data['comparator'])
@@ -160,7 +169,9 @@ module Cequel
               SELECT * FROM system.schema_columns
               WHERE keyspace_name = ? AND columnfamily_name = ?
             CQL
-            column_query.map(&:to_hash)
+            column_query.map(&:to_hash).select do |column|
+              !column.key?('type') || column['type'] == 'regular'
+            end
           end
       end
     end
