@@ -56,9 +56,9 @@ port `9160`, which is the default port that Cequel will look for.
 
 Cequel is tested against a large range of Ruby, Rails, and Cassandra versions;
 for most patches, you can just run the tests using the latest version of all of
-them. If you're messing with the `Cequel::Schema` module, you'll want to test
-at least against an early 1.2 release (1.2.4 is good), a later 1.2 release
-(1.2.13), and the latest 2.0 release.
+them. If you're messing with the `Cequel::Schema` or `Cequel::Type` modules,
+you'll want to test at least against an early 1.2 release (1.2.4 is good), a
+later 1.2 release (1.2.13), and the latest 2.0 release.
 
 ## And finally
 

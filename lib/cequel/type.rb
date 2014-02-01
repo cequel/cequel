@@ -31,7 +31,9 @@ module Cequel
     def self.register(type)
       BY_CQL_NAME[type.cql_name] = type
       type.cql_aliases.each { |aliaz| BY_CQL_NAME[aliaz] = type }
-      BY_INTERNAL_NAME[type.internal_name] = type
+      type.internal_names.each do |internal_name|
+        BY_INTERNAL_NAME[internal_name] = type
+      end
     end
 
     #
@@ -74,7 +76,7 @@ module Cequel
     # The base class for all type objects. Types are singletons.
     #
     # @abstract Subclasses should implement {#cast}, and may implement
-    #   {#internal_name} if it cannot be inferred from the class name. The name
+    #   {#internal_names} if it cannot be inferred from the class name. The name
     #   of the type class should be the camel-cased CQL name of the type
     #
     class Base
@@ -96,11 +98,22 @@ module Cequel
       end
 
       #
-      # @return [String] full class name of this type used in Cassandra's
-      #   underlying representation
+      # @return [Array<String>] full class name of this type used in
+      #   Cassandra's underlying representation
+      #
+      # @deprecated use {internal_names}
       #
       def internal_name
-        "org.apache.cassandra.db.marshal.#{self.class.name.demodulize}Type"
+        internal_names.first
+      end
+
+      #
+      # @return [Array<String>] full class name(s) of this type used in
+      #   Cassandra's underlying representation (allows for multiple values for
+      #   types that have different names between different versions)
+      #
+      def internal_names
+        ["org.apache.cassandra.db.marshal.#{self.class.name.demodulize}Type"]
       end
 
       #
@@ -109,6 +122,17 @@ module Cequel
       #
       def cast(value)
         value
+      end
+
+      #
+      # CQL only allows changing column types when the old type's binary
+      # representation is compatible with the new type.
+      #
+      # @return [Array<Type>] new types that columns of this type may be
+      #   altered to
+      #
+      def compatible_types
+        [Type[:blob]]
       end
 
       #
@@ -139,6 +163,10 @@ module Cequel
     # @see TK CQL3 documentation for ascii type
     #
     class Ascii < String
+      def compatible_types
+        super + [Type[:text]]
+      end
+
       private
 
       def encoding
@@ -154,8 +182,8 @@ module Cequel
     # @see TK CQL3 documentation for blob type
     #
     class Blob < String
-      def internal_name
-        'org.apache.cassandra.db.marshal.BytesType'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.BytesType']
       end
 
       def cast(value)
@@ -193,8 +221,12 @@ module Cequel
     # @see TK CQL3 documentation for counter columns
     #
     class Counter < Base
-      def internal_name
-        'org.apache.cassandra.db.marshal.CounterColumnType'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.CounterColumnType']
+      end
+
+      def compatible_types
+        []
       end
 
       def cast(value)
@@ -233,8 +265,8 @@ module Cequel
     # @see TK CQL3 documentation for inet columns
     #
     class Inet < Base
-      def internal_name
-        'org.apache.cassandra.db.marshal.InetAddressType'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.InetAddressType']
       end
     end
     register Inet.instance
@@ -245,8 +277,8 @@ module Cequel
     # @see TK CQL3 documentation for int columns
     #
     class Int < Base
-      def internal_name
-        'org.apache.cassandra.db.marshal.Int32Type'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.Int32Type']
       end
 
       def cast(value)
@@ -264,16 +296,16 @@ module Cequel
     register Float.instance
 
     #
-    # `long` columns store 64-bit integer values
+    # `bigint` columns store 64-bit integer values
     #
-    # @see TK CQL3 documentation for long columns
+    # @see TK CQL3 documentation for bigint columns
     #
-    class Long < Int
-      def internal_name
-        'org.apache.cassandra.db.marshal.LongType'
+    class Bigint < Int
+      def internal_names
+        ['org.apache.cassandra.db.marshal.LongType']
       end
     end
-    register Long.instance
+    register Bigint.instance
 
     #
     # `text` columns store UTF-8 character data. They are also known as
@@ -283,8 +315,8 @@ module Cequel
     # @see TK CQL3 documentation for text columns
     #
     class Text < String
-      def internal_name
-        'org.apache.cassandra.db.marshal.UTF8Type'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.UTF8Type']
       end
 
       def cql_aliases
@@ -304,8 +336,9 @@ module Cequel
     # data, and all input times are cast to UTC before being stored.
     #
     class Timestamp < Base
-      def internal_name
-        'org.apache.cassandra.db.marshal.DateType'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.DateType',
+         'org.apache.cassandra.db.marshal.TimestampType']
       end
 
       def cast(value)
@@ -325,8 +358,8 @@ module Cequel
     # supported as inputs.
     #
     class Uuid < Base
-      def internal_name
-        'org.apache.cassandra.db.marshal.UUIDType'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.UUIDType']
       end
 
       def cast(value)
@@ -347,8 +380,8 @@ module Cequel
     # timestamp of their creation.
     #
     class Timeuuid < Uuid
-      def internal_name
-        'org.apache.cassandra.db.marshal.TimeUUIDType'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.TimeUUIDType']
       end
     end
     register Timeuuid.instance

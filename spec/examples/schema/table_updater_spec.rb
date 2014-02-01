@@ -5,7 +5,7 @@ describe Cequel::Schema::TableUpdater do
     cequel.schema.create_table(:posts) do
       key :blog_subdomain, :text
       key :permalink, :text
-      column :title, :text
+      column :title, :ascii
       column :body, :text
     end
   end
@@ -83,12 +83,12 @@ describe Cequel::Schema::TableUpdater do
   describe '#change_column' do
     before do
       cequel.schema.alter_table(:posts) do
-        change_column :title, :ascii
+        change_column :title, :text
       end
     end
 
     it 'should change the type' do
-      table.data_column(:title).type.should == Cequel::Type[:ascii]
+      table.data_column(:title).type.should == Cequel::Type[:text]
     end
   end
 

@@ -40,13 +40,14 @@ module Cequel
       private
 
       attr_reader :synchronizer
-      def_delegators :synchronizer, :each_key_pair, :each_data_column_pair,
-                     :existing, :updated
+      def_delegators :synchronizer, :each_key_pair,
+        :each_clustering_column_pair, :each_data_column_pair, :existing, :updated
 
       def assert_keys_match!
         assert_partition_keys_match!
         assert_clustering_columns_match!
         assert_same_key_types!
+        assert_same_clustering_order!
       end
 
       def assert_same_key_types!
@@ -55,6 +56,16 @@ module Cequel
             fail InvalidSchemaMigration,
                  "Can't change type of key column #{old_key.name} from " \
                  "#{old_key.type} to #{new_key.type}"
+          end
+        end
+      end
+
+      def assert_same_clustering_order!
+        each_clustering_column_pair do |old_key, new_key|
+          if old_key.clustering_order != new_key.clustering_order
+            fail InvalidSchemaMigration,
+              "Can't change the clustering order of #{old_key.name} from " \
+              "#{old_key.clustering_order} to #{new_key.clustering_order}"
           end
         end
       end
@@ -84,12 +95,25 @@ module Cequel
       def assert_data_columns_match!
         each_data_column_pair do |old_column, new_column|
           if old_column && new_column
-            assert_same_column_type!(old_column, new_column)
+            assert_valid_type_transition!(old_column, new_column)
+            assert_same_column_structure!(old_column, new_column)
           end
         end
       end
 
-      def assert_same_column_type!(old_column, new_column)
+      def assert_valid_type_transition!(old_column, new_column)
+        if old_column.type != new_column.type
+          valid_new_types = old_column.type.compatible_types
+          unless valid_new_types.include?(new_column.type)
+            fail InvalidSchemaMigration,
+              "Can't change #{old_column.name} from " \
+              "#{old_column.type} to #{new_column.type}. #{old_column.type} " \
+              "columns may only be altered to #{valid_new_types.to_sentence}."
+          end
+        end
+      end
+
+      def assert_same_column_structure!(old_column, new_column)
         if old_column.class != new_column.class
           fail InvalidSchemaMigration,
                "Can't change #{old_column.name} from " \

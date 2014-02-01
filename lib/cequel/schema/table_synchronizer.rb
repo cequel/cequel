@@ -99,6 +99,20 @@ module Cequel
         end
       end
 
+      #
+      # Iterate over pairs of (old_clustering_column, new_clustering_column)
+      #
+      # @yieldparam old_clustering_column [Column] key in existing schema
+      # @yieldparam new_clustering_column [Column] corresponding key in updated
+      #   schema
+      # @return [void]
+      #
+      # @api private
+      #
+      def each_clustering_column_pair(&block)
+        existing.clustering_columns.zip(updated.clustering_columns, &block)
+      end
+
       protected
 
       attr_reader :updater
