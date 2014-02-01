@@ -118,9 +118,9 @@ describe Cequel::Type do
     end
   end
 
-  describe 'long' do
-    subject { Cequel::Type[:long] }
-    its(:cql_name) { should == :long }
+  describe 'bigint' do
+    subject { Cequel::Type[:bigint] }
+    its(:cql_name) { should == :bigint }
     its(:internal_name) {
       should == 'org.apache.cassandra.db.marshal.LongType' }
 
