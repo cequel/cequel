@@ -15,8 +15,10 @@ module Cequel
       #
       # @param data_set [DataSet] data set to write to
       # @param options [Options] options
-      # @option options [Integer] :ttl time-to-live in seconds for the written data
-      # @option options [Time,Integer] :timestamp the timestamp associated with the column values
+      # @option options [Integer] :ttl time-to-live in seconds for the written
+      #   data
+      # @option options [Time,Integer] :timestamp the timestamp associated with
+      #   the column values
       #
       def initialize(data_set, options = {}, &block)
         @data_set, @options, @block = data_set, options, block
@@ -38,6 +40,7 @@ module Cequel
       end
 
       private
+
       attr_reader :data_set, :options, :statements, :bind_vars
       def_delegator :data_set, :table_name
       def_delegator :statements, :empty?
@@ -74,9 +77,6 @@ module Cequel
           end.join(' AND ')
         end
       end
-
     end
-
   end
-
 end

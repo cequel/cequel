@@ -36,7 +36,7 @@ module Cequel
       extend ActiveSupport::Concern
 
       included do
-        class_attribute :default_attributes, :instance_writer => false
+        class_attribute :default_attributes, instance_writer: false
         self.default_attributes = {}
 
         class <<self; alias_method :new_empty, :new; end
@@ -48,14 +48,12 @@ module Cequel
 
       # @private
       module ConstructorMethods
-
         def new(*args, &block)
           new_empty.tap do |record|
             record.__send__(:initialize_new_record, *args)
             yield record if block_given?
           end
         end
-
       end
 
       #
@@ -64,8 +62,8 @@ module Cequel
       # @see Properties
       #
       module ClassMethods
-
         protected
+
         # @!visibility public
 
         #
@@ -77,8 +75,8 @@ module Cequel
         # @param name [Symbol] the name of the key column
         # @param type [Symbol] the type of the key column
         # @param options [Options] options for the key column
-        # @option options [Boolean] :partition (false) make this a partition key
-        #   even if it is not the first key column
+        # @option options [Boolean] :partition (false) make this a partition
+        #   key even if it is not the first key column
         # @option options [Boolean] :auto (false) automatically initialize this
         #   key with a UUID value for new records. Only valid for `uuid` and
         #   `timeuuid` columns.
@@ -95,9 +93,9 @@ module Cequel
           def_accessors(name)
           if options.fetch(:auto, false)
             unless Type[type].is_a?(Cequel::Type::Uuid)
-              raise ArgumentError, ":auto option only valid for UUID columns"
+              fail ArgumentError, ":auto option only valid for UUID columns"
             end
-            default = -> { CassandraCQL::UUID.new } if options.fetch(:auto, false)
+            default = -> { CassandraCQL::UUID.new } if options[:auto]
           end
           set_attribute_default(name, default)
         end
@@ -108,8 +106,8 @@ module Cequel
         # @param name [Symbol] the name of the column
         # @param type [Symbol] the type of the column
         # @param options [Options] options for the column
-        # @option options [Object,Proc] :default a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default a default value for the
+        #   column, or a proc that returns a default value for the column
         # @return [void]
         #
         def column(name, type, options = {})
@@ -123,8 +121,8 @@ module Cequel
         # @param name [Symbol] the name of the list
         # @param type [Symbol] the type of the elements in the list
         # @param options [Options] options for the list
-        # @option options [Object,Proc] :default ([]) a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default ([]) a default value for the
+        #   column, or a proc that returns a default value for the column
         # @return [void]
         #
         # @see Record::List
@@ -141,8 +139,8 @@ module Cequel
         # @param name [Symbol] the name of the set
         # @param type [Symbol] the type of the elements in the set
         # @param options [Options] options for the set
-        # @option options [Object,Proc] :default (Set[]) a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default (Set[]) a default value for
+        #   the column, or a proc that returns a default value for the column
         # @return [void]
         #
         # @see Record::Set
@@ -159,8 +157,8 @@ module Cequel
         # @param name [Symbol] the name of the map
         # @param key_type [Symbol] the type of the keys in the set
         # @param options [Options] options for the set
-        # @option options [Object,Proc] :default ({}) a default value for the column,
-        #   or a proc that returns a default value for the column
+        # @option options [Object,Proc] :default ({}) a default value for the
+        #   column, or a proc that returns a default value for the column
         # @return [void]
         #
         # @see Record::Map
@@ -216,7 +214,6 @@ module Cequel
         def set_attribute_default(name, default)
           default_attributes[name.to_sym] = default
         end
-
       end
 
       # @private
@@ -285,9 +282,9 @@ module Cequel
         @attributes.fetch(name)
       rescue KeyError
         if self.class.reflect_on_column(name)
-          raise MissingAttributeError, "missing attribute: #{name}"
+          fail MissingAttributeError, "missing attribute: #{name}"
         else
-          raise UnknownAttributeError, "unknown attribute: #{name}"
+          fail UnknownAttributeError, "unknown attribute: #{name}"
         end
       end
 
@@ -307,16 +304,17 @@ module Cequel
       end
 
       def initialize_new_record(attributes = {})
-        dynamic_defaults = default_attributes.
-          select { |name, value| value.is_a?(Proc) }
+        dynamic_defaults = default_attributes
+          .select { |name, value| value.is_a?(Proc) }
         @attributes = Marshal.load(Marshal.dump(
           default_attributes.except(*dynamic_defaults.keys)))
-          dynamic_defaults.each { |name, p| @attributes[name] = p.() }
-          @new_record = true
-          yield self if block_given?
-          self.attributes = attributes
-          loaded!
-          self
+        dynamic_defaults.each { |name, p| @attributes[name] = p.call() }
+
+        @new_record = true
+        yield self if block_given?
+        self.attributes = attributes
+        loaded!
+        self
       end
     end
   end

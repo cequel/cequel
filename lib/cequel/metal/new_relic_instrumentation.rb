@@ -1,7 +1,7 @@
 begin
   require 'new_relic/agent/method_tracer'
 rescue LoadError => e
-  raise LoadError, "Can't use NewRelic instrumentation without NewRelic gem"
+  fail LoadError, "Can't use NewRelic instrumentation without NewRelic gem"
 end
 
 module Cequel
@@ -15,7 +15,9 @@ module Cequel
       included do
         include NewRelic::Agent::MethodTracer
 
-        add_method_tracer :execute, 'Database/Cassandra/#{args[0][/^[A-Z ]*[A-Z]/].sub(/ FROM$/, \'\')}'
+        add_method_tracer :execute,
+                          'Database/Cassandra/#{args[0][/^[A-Z ]*[A-Z]/]' \
+                          '.sub(/ FROM$/, \'\')}'
       end
     end
   end

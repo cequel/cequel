@@ -484,6 +484,11 @@ For questions or feedback, hit up our mailing list at
 [cequel@groups.google.com](http://groups.google.com/group/cequel)
 or find outoftime in the #cassandra IRC channel on Freenode.
 
+## Contributing ##
+
+See
+[CONTRIBUTING.md](https://github.com/cequel/cequel/blob/master/CONTRIBUTING.md)
+
 ## Credits ##
 
 Cequel was written by:

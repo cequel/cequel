@@ -7,18 +7,12 @@ module Cequel
     #
     class Keyspace
       extend Forwardable
+      include Logging
 
       # @return [Hash] configuration options for this keyspace
       attr_reader :configuration
       # @return [String] name of the keyspace
       attr_reader :name
-      # @return [Logger] logger to be used for CQL statements
-      attr_accessor :logger
-      # @return [Logger] logger to be used for slow CQL statements
-      attr_accessor :slowlog
-      # @return [Integer] threshold in ms for statements to appear in the
-      #   slowlog
-      attr_accessor :slowlog_threshold
 
       #
       # @!method write(statement, *bind_vars)
@@ -30,6 +24,12 @@ module Cequel
       # @return [void]
       #
       def_delegator :write_target, :execute, :write
+
+      #
+      # @!method batch
+      #   (see Cequel::Metal::BatchManager#batch)
+      #
+      def_delegator :batch_manager, :batch
 
       #
       # @api private
@@ -47,8 +47,8 @@ module Cequel
       # @param configuration [Options] configuration options
       # @option configuration [String] :host ('127.0.0.1:9160') host/port of
       #   single Cassandra instance to connect to
-      # @option configuration [Array<String>] :hosts list of Cassandra instances
-      #   to connect to
+      # @option configuration [Array<String>] :hosts list of Cassandra
+      #   instances to connect to
       # @option configuration [Hash] :thrift Thrift options to be passed
       #   directly to Thrift client
       # @option configuration [String] :keyspace name of keyspace to connect to
@@ -59,7 +59,8 @@ module Cequel
       #
       def configure(configuration = {})
         @configuration = configuration
-        @hosts = configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1:9160'))
+        @hosts = configuration.fetch(
+          :host, configuration.fetch(:hosts, '127.0.0.1:9160'))
         @thrift_options = configuration[:thrift].try(:symbolize_keys) || {}
         @name = configuration[:keyspace]
         # reset the connections
@@ -97,59 +98,26 @@ module Cequel
       end
 
       #
-      # Execute write operations in a batch. Any inserts, updates, and deletes
-      # inside this method's block will be executed inside a CQL BATCH operation.
-      #
-      # @param options [Hash]
-      # @option (see Batch#initialize)
-      # @yield context within which all write operations will be batched
-      # @return return value of block
-      # @raise [ArgumentError] if attempting to start a logged batch while
-      #   already in an unlogged batch, or vice versa.
-      #
-      # @example Perform inserts in a batch
-      #   DB.batch do
-      #     DB[:posts].insert(:id => 1, :title => 'One')
-      #     DB[:posts].insert(:id => 2, :title => 'Two')
-      #   end
-      #
-      # @note If this method is created while already in a batch of the same
-      #   type (logged or unlogged), this method is a no-op.
-      #
-      def batch(options = {})
-        new_batch = Batch.new(self, options)
-
-        if get_batch
-          if get_batch.unlogged? && new_batch.logged?
-            raise ArgumentError,
-              "Already in an unlogged batch; can't start a logged batch."
-          end
-          return yield
-        end
-
-        begin
-          set_batch(new_batch)
-          yield.tap { new_batch.apply }
-        ensure
-          set_batch(nil)
-        end
-      end
-
-      #
-      # Clears all active connections, either single connection or connection pool
+      # Clears all active connections
       #
       # @return [void]
       #
       def clear_active_connections!
-        remove_instance_variable(:@connection_pool) if defined? @connection_pool
+        if defined? @connection_pool
+          remove_instance_variable(:@connection_pool)
+        end
       end
 
       private
+
       def_delegator :connection_pool, :with, :with_connection
       private :with_connection
 
+      def_delegator :batch_manager, :current_batch
+      private :current_batch
+
       def build_connection
-        options = {:cql_version => '3.0.0'}
+        options = {cql_version: '3.0.0'}
         options[:keyspace] = name if name
         CassandraCQL::Database.new(
           @hosts,
@@ -161,61 +129,21 @@ module Cequel
       def connection_pool
         return @connection_pool if defined? @connection_pool
         options = {
-          :size => @configuration.fetch(:pool, 1),
-          :timeout => @configuration.fetch(:pool_timeout, 0)
+          size: @configuration.fetch(:pool, 1),
+          timeout: @configuration.fetch(:pool_timeout, 0)
         }
         @connection_pool = ConnectionPool.new(options) do
           build_connection
         end
       end
 
+      def batch_manager
+        @batch_manager ||= BatchManager.new(self)
+      end
+
       def write_target
-        get_batch || self
+        current_batch || self
       end
-
-      def get_batch
-        ::Thread.current[batch_key]
-      end
-
-      def set_batch(batch)
-        ::Thread.current[batch_key] = batch
-      end
-
-      def batch_key
-        :"cequel-batch-#{object_id}"
-      end
-
-      def log(label, statement, *bind_vars)
-        return yield unless logger || slowlog
-        response = nil
-        begin
-          time = Benchmark.ms { response = yield }
-        rescue Exception => e
-          generate_message = proc do
-            sprintf(
-              '%s (ERROR) %s', label,
-              CassandraCQL::Statement.sanitize(statement, bind_vars)
-            )
-          end
-          logger.debug(&generate_message) if self.logger
-          raise
-        end
-        generate_message = proc do
-          sprintf(
-            '%s (%dms) %s', label, time.to_i,
-            CassandraCQL::Statement.sanitize(statement, bind_vars)
-          )
-        end
-        logger.debug(&generate_message) if self.logger
-        threshold = self.slowlog_threshold || 2000
-        if slowlog && time >= threshold
-          slowlog.warn(&generate_message)
-        end
-        response
-      end
-
     end
-
   end
-
 end

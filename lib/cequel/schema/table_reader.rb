@@ -1,5 +1,10 @@
 module Cequel
   module Schema
+    #
+    # A TableReader will query Cassandra's internal representation of a table's
+    # schema, and build a {Table} instance exposing an object representation of
+    # that schema
+    #
     class TableReader
       COMPOSITE_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.CompositeType\((.+)\)$/
@@ -37,8 +42,8 @@ module Cequel
       #
       # Read table schema from the database
       #
-      # @return [Table] object representation of table in the database, or `nil`
-      #   if no table by given name exists
+      # @return [Table] object representation of table in the database, or
+      #   `nil` if no table by given name exists
       #
       # @api private
       #
@@ -53,6 +58,7 @@ module Cequel
       end
 
       protected
+
       attr_reader :keyspace, :table_name, :table
 
       private
@@ -115,7 +121,8 @@ module Cequel
       end
 
       def read_collection_column(name, collection_type, *internal_types)
-        types = internal_types.map { |internal| Type.lookup_internal(internal) }
+        types = internal_types
+          .map { |internal| Type.lookup_internal(internal) }
         table.__send__("add_#{collection_type}", name.to_sym, *types)
       end
 
@@ -123,8 +130,8 @@ module Cequel
         table_data.slice(*Table::STORAGE_PROPERTIES).each do |name, value|
           table.add_property(name, value)
         end
-        compaction = JSON.parse(table_data['compaction_strategy_options']).
-          symbolize_keys
+        compaction = JSON.parse(table_data['compaction_strategy_options'])
+          .symbolize_keys
         compaction[:class] = table_data['compaction_strategy_class']
         table.add_property(:compaction, compaction)
         compression = JSON.parse(table_data['compression_parameters'])

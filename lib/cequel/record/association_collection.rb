@@ -1,10 +1,10 @@
 module Cequel
   module Record
     #
-    # Collection of records from a {Associations::ClassMethods#has_many has_many}
-    # associaiton. Encapsulates and behaves like a {RecordSet}, but unlike a
-    # normal RecordSet the loaded records are held in memory after they are
-    # loaded.
+    # Collection of records from a
+    # {Associations::ClassMethods#has_many has_many} associaiton. Encapsulates
+    # and behaves like a {RecordSet}, but unlike a normal RecordSet the loaded
+    # records are held in memory after they are loaded.
     #
     # @see Associations::ClassMethods#has_many
     # @since 1.0.0

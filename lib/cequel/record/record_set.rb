@@ -16,11 +16,12 @@ module Cequel
     # depending on whether multiple values were specified for one of the key
     # columns. In either case, the record instances will be unloaded.
     #
-    # Certain methods have behavior that is dependent on which primary keys have
-    # been specified using {#[]}. In many methods, such as {#[]}, {#values_at},
-    # {#before}, {#after}, {#from}, {#upto}, and {#in}, the *first unscoped
-    # primary key column* serves as implicit context for the method – the value
-    # passed to those methods is an exact or bounding value for that column.
+    # Certain methods have behavior that is dependent on which primary keys
+    # have been specified using {#[]}. In many methods, such as {#[]},
+    # {#values_at}, {#before}, {#after}, {#from}, {#upto}, and {#in}, the
+    # *first unscoped primary key column* serves as implicit context for the
+    # method: the value passed to those methods is an exact or bounding value
+    # for that column.
     #
     # CQL does not allow ordering by arbitrary columns; the ordering of a table
     # is determined by its clustering column(s). You read records in reverse
@@ -89,8 +90,8 @@ module Cequel
     #   Post['cassandra'].reverse.after(1.week.ago)
     #
     # @example 10 posts by a given author
-    #   # Scoped to 10 posts where author_id=author.id. Results will not be in a
-    #   # defined order because the partition key is not specified
+    #   # Scoped to 10 posts where author_id=author.id. Results will not be in
+    #   # a defined order because the partition key is not specified
     #   Post.for_author(author).limit(10)
     #
     # @see Scoped
@@ -105,7 +106,7 @@ module Cequel
 
       # @private
       def self.default_attributes
-        {:scoped_key_values => [], :select_columns => []}
+        {scoped_key_values: [], select_columns: []}
       end
 
       # @return [Class] the Record class that this collection yields instances
@@ -113,8 +114,8 @@ module Cequel
       attr_reader :target_class
 
       #
-      # @param target_class [Class] the Record class that this collection yields
-      #   instances of
+      # @param target_class [Class] the Record class that this collection
+      #   yields instances of
       # @param attributes [Hash] initial scoping attributes
       #
       # @api private
@@ -172,7 +173,7 @@ module Cequel
       #   CQL SELECT documentation
       #
       def limit(count)
-        scoped(:row_limit => count)
+        scoped(row_limit: count)
       end
 
       #
@@ -182,8 +183,8 @@ module Cequel
       # @param column_name [Symbol] column for filter
       # @param value value to match in given column
       # @return [RecordSet] record set with filter applied
-      # @raise [IllegalQuery] if this record set is already filtered by an indexed
-      #   column
+      # @raise [IllegalQuery] if this record set is already filtered by an
+      #   indexed column
       # @raise [ArgumentError] if the specified column is not an data column
       #   with a secondary index
       #
@@ -194,14 +195,22 @@ module Cequel
       #
       def where(column_name, value)
         column = target_class.reflect_on_column(column_name)
-        raise IllegalQuery,
-          "Can't scope by more than one indexed column in the same query" if scoped_indexed_column
-        raise ArgumentError,
-          "No column #{column_name} configured for #{target_class.name}" unless column
-        raise ArgumentError,
-          "Use the `at` method to restrict scope by primary key" unless column.data_column?
-        raise ArgumentError,
-          "Can't scope by non-indexed column #{column_name}" unless column.indexed?
+        if scoped_indexed_column
+          fail IllegalQuery,
+               "Can't scope by more than one indexed column in the same query"
+        end
+        unless column
+          fail ArgumentError,
+               "No column #{column_name} configured for #{target_class.name}"
+        end
+        unless column.data_column?
+          fail ArgumentError,
+               "Use the `at` method to restrict scope by primary key"
+        end
+        unless column.indexed?
+          fail ArgumentError,
+               "Can't scope by non-indexed column #{column_name}"
+        end
         scoped(scoped_indexed_column: {column_name => column.cast(value)})
       end
 
@@ -215,8 +224,8 @@ module Cequel
       #
       def at(*scoped_key_values)
         warn "`at` is deprecated. Use `[]` instead"
-        scoped_key_values.
-          inject(self) { |record_set, key_value| record_set[key_value] }
+        scoped_key_values
+          .reduce(self) { |record_set, key_value| record_set[key_value] }
       end
 
       #
@@ -232,15 +241,16 @@ module Cequel
       # ```ruby
       # {
       #   "cassandra" => {
-      #     "cequel" => #<Post blog_subdomain: "cassandra", permalink: "cequel", title: "Cequel">
+      #     "cequel" => #<Post blog_subdomain: "cassandra",
+      #                        permalink: "cequel", title: "Cequel">
       #   }
       # }
       # ```
       #
       # If `[]` is invoked enough times to specify all primary keys, then an
       # unloaded `Record` instance is returned; this is the same behavior you
-      # would expect from a `Hash`. If only some subset of the primary keys have
-      # been specified, the result is still a `RecordSet`.
+      # would expect from a `Hash`. If only some subset of the primary keys
+      # have been specified, the result is still a `RecordSet`.
       #
       # @param primary_key_value value for the first unscoped primary key
       # @return [RecordSet] record set with primary key filter applied, if not
@@ -253,30 +263,32 @@ module Cequel
       # @example Fully specified primary key
       #   Post['cequel']['cassandra'] # returns an unloaded Record
       #
-      # @note Accepting multiple values is deprecated behavior. Use {#values_at}
-      #   instead.
+      # @note Accepting multiple arguments is deprecated behavior. Use
+      #   {#values_at} instead.
       #
       def [](*primary_key_value)
         if primary_key_value.many?
-          warn "Calling #[] with multiple arguments is deprecated. Use #values_at"
+          warn "Calling #[] with multiple arguments is deprecated. Use " \
+               "#values_at"
           return values_at(*primary_key_value)
         end
 
         primary_key_value = cast_range_key(primary_key_value.first)
 
-        scoped { |attributes| attributes[:scoped_key_values] <<
-          primary_key_value }.resolve_if_fully_specified
+        scope_and_resolve do |attributes|
+          attributes[:scoped_key_values] << primary_key_value
+        end
       end
       alias_method :/, :[]
 
       #
-      # Restrict the records in this record set to those containing any of a set
-      # of values
+      # Restrict the records in this record set to those containing any of a
+      # set of values
       #
       # @param primary_key_values values to match in the next unscoped primary
       #   key
-      # @return [RecordSet] record set with primary key scope applied if not all
-      #   primary key columns are specified
+      # @return [RecordSet] record set with primary key scope applied if not
+      #   all primary key columns are specified
       # @return [LazyRecordCollection] collection of unloaded records if all
       #   primary key columns are specified
       # @raise IllegalQuery if the scoped key column is neither the last
@@ -286,14 +298,16 @@ module Cequel
       #
       def values_at(*primary_key_values)
         unless next_unscoped_key_column_valid_for_in_query?
-          raise IllegalQuery,
-            "Only the last partition key column and the last clustering column can match multiple values"
+          fail IllegalQuery,
+               "Only the last partition key column and the last clustering " \
+               "column can match multiple values"
         end
 
         primary_key_values = primary_key_values.map(&method(:cast_range_key))
 
-        scoped { |attributes| attributes[:scoped_key_values] <<
-          primary_key_values }.resolve_if_fully_specified
+        scope_and_resolve do |attributes|
+          attributes[:scoped_key_values] << primary_key_values
+        end
       end
 
       #
@@ -306,8 +320,8 @@ module Cequel
       #   record at that key
       # @return [LazyRecordCollection] if multiple keys are specified, return a
       #   collection of loaded records at those keys
-      # @raise [RecordNotFound] if not all the keys correspond to records in the
-      #   table
+      # @raise [RecordNotFound] if not all the keys correspond to records in
+      #   the table
       # @raise [ArgumentError] if not all primary key columns have been
       #   specified
       #
@@ -347,9 +361,9 @@ module Cequel
 
       #
       # Restrict records to those whose value in the first unscoped primary key
-      # column are in the given range. Will accept both inclusive ranges (`1..5`)
-      # and end-exclusive ranges (`1...5`). If you need a range with an
-      # exclusive start value, use {#after}, which can be combined with
+      # column are in the given range. Will accept both inclusive ranges
+      # (`1..5`) and end-exclusive ranges (`1...5`). If you need a range with
+      # an exclusive start value, use {#after}, which can be combined with
       # {#before} or {#from} to create a range.
       #
       # @param range [Range] range of values for the key column
@@ -378,8 +392,9 @@ module Cequel
       #
       def from(start_key)
         unless partition_specified?
-          raise IllegalQuery,
-            "Can't construct exclusive range on partition key #{range_key_name}"
+          fail IllegalQuery,
+               "Can't construct exclusive range on partition key " \
+               "#{range_key_name}"
         end
         scoped(lower_bound: bound(true, true, start_key))
       end
@@ -395,8 +410,9 @@ module Cequel
       #
       def upto(end_key)
         unless partition_specified?
-          raise IllegalQuery,
-            "Can't construct exclusive range on partition key #{range_key_name}"
+          fail IllegalQuery,
+               "Can't construct exclusive range on partition key " \
+               "#{range_key_name}"
         end
         scoped(upper_bound: bound(false, true, end_key))
       end
@@ -412,8 +428,9 @@ module Cequel
       #
       def reverse
         unless partition_specified?
-          raise IllegalQuery,
-            "Can't reverse without scoping to partition key #{range_key_name}"
+          fail IllegalQuery,
+               "Can't reverse without scoping to partition key " \
+               "#{range_key_name}"
         end
         scoped(reversed: !reversed?)
       end
@@ -470,8 +487,8 @@ module Cequel
       end
 
       #
-      # Enumerate over the records in this record set, with control over how the
-      # database is queried
+      # Enumerate over the records in this record set, with control over how
+      # the database is queried
       #
       # @param (see #find_rows_in_batches)
       # @yieldparam (see #each)
@@ -505,8 +522,8 @@ module Cequel
 
       #
       # Enumerate over the row data for each record in this record set, without
-      # hydrating an actual {Record} instance. Useful for operations where speed
-      # is at a premium.
+      # hydrating an actual {Record} instance. Useful for operations where
+      # speed is at a premium.
       #
       # @param (see #find_rows_in_batches)
       # @option (see #find_rows_in_batches)
@@ -553,7 +570,8 @@ module Cequel
       end
 
       #
-      # @return [Cequel::Metal::DataSet] the data set underlying this record set
+      # @return [Cequel::Metal::DataSet] the data set underlying this record
+      #   set
       #
       def data_set
         @data_set ||= construct_data_set
@@ -584,11 +602,13 @@ module Cequel
       end
 
       protected
+
       attr_reader :attributes
-      hattr_reader :attributes, :select_columns, :scoped_key_values, :row_limit,
-        :lower_bound, :upper_bound, :scoped_indexed_column
+      hattr_reader :attributes, :select_columns, :scoped_key_values,
+                   :row_limit, :lower_bound, :upper_bound,
+                   :scoped_indexed_column
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-        :upper_bound, :scoped_indexed_column
+                :upper_bound, :scoped_indexed_column
       hattr_inquirer :attributes, :reversed
       protected :reversed?
 
@@ -598,16 +618,16 @@ module Cequel
 
       def find_nested_batches_from(row, options, &block)
         if next_range_key_column
-          at(row[range_key_name]).
-            next_batch_from(row).
-            find_rows_in_batches(options, &block)
+          at(row[range_key_name])
+            .next_batch_from(row)
+            .find_rows_in_batches(options, &block)
         end
       end
 
       def find_rows_in_single_batch(options = {})
         if options.key?(:batch_size)
-          raise ArgumentError,
-            "Can't pass :batch_size argument with a limit in the scope"
+          fail ArgumentError,
+               "Can't pass :batch_size argument with a limit in the scope"
         else
           data_set.entries.tap do |batch|
             yield batch if batch.any? && block_given?
@@ -682,27 +702,28 @@ module Cequel
         end
       end
 
-      # Try to order results by the first clustering column. Fall back to partition key if none exist.
       def order_by_column
-        target_class.clustering_columns.first.name if target_class.clustering_columns.any?
+        if target_class.clustering_columns.any?
+          target_class.clustering_columns.first.name
+        end
       end
 
       def selects_collection_columns?
         select_columns.any? do |column_name|
-          target_class.reflect_on_column(column_name).
-            is_a?(Cequel::Schema::CollectionColumn)
+          target_class.reflect_on_column(column_name).collection_column?
         end
       end
 
       def select_non_collection_columns!
         if selects_collection_columns?
-          raise ArgumentError,
-            "Can't scope by multiple keys when selecting a collection column."
+          fail ArgumentError,
+               "Can't scope by multiple keys when selecting a collection " \
+               "column."
         end
         if select_columns.empty?
-          non_collection_columns = target_class.columns.
-            reject { |column| column.is_a?(Cequel::Schema::CollectionColumn) }.
-            map { |column| column.name }
+          non_collection_columns = target_class.columns
+            .reject { |column| column.collection_column? }
+            .map { |column| column.name }
           select(*non_collection_columns)
         else
           self
@@ -710,6 +731,7 @@ module Cequel
       end
 
       private
+
       def_delegators :target_class, :connection
       def_delegator :range_key_column, :cast, :cast_range_key
       private :connection, :cast_range_key
@@ -719,22 +741,7 @@ module Cequel
       end
 
       def construct_data_set
-        data_set = connection[target_class.table_name]
-        data_set = data_set.limit(row_limit) if row_limit
-        data_set = data_set.select(*select_columns) if select_columns
-        if scoped_key_values
-          key_conditions = Hash[scoped_key_names.zip(scoped_key_values)]
-          data_set = data_set.where(key_conditions)
-        end
-        if lower_bound
-          data_set = data_set.where(*lower_bound.to_cql_with_bind_variables)
-        end
-        if upper_bound
-          data_set = data_set.where(*upper_bound.to_cql_with_bind_variables)
-        end
-        data_set = data_set.order(order_by_column => :desc) if reversed?
-        data_set = data_set.where(scoped_indexed_column) if scoped_indexed_column
-        data_set
+        DataSetBuilder.build_for(self)
       end
 
       def bound(gt, inclusive, value)
@@ -742,7 +749,9 @@ module Cequel
       end
 
       def cast_range_key_for_bound(value)
-        if range_key_column.type?(Type::Timeuuid) && !value.is_a?(CassandraCQL::UUID)
+        if range_key_column.type?(Type::Timeuuid) &&
+           !value.is_a?(CassandraCQL::UUID)
+
           Type::Timestamp.instance.cast(value)
         else
           cast_range_key(value)
@@ -750,7 +759,7 @@ module Cequel
       end
 
       def load!
-        raise ArgumentError, "Not all primary key columns have specified values"
+        fail ArgumentError, "Not all primary key columns have specified values"
       end
 
       def scoped(new_attributes = {}, &block)
@@ -758,6 +767,10 @@ module Cequel
         attributes_copy.merge!(new_attributes)
         attributes_copy.tap(&block) if block
         RecordSet.new(target_class, attributes_copy)
+      end
+
+      def scope_and_resolve(&block)
+        scoped(&block).resolve_if_fully_specified
       end
 
       def key_attributes_for_each_row

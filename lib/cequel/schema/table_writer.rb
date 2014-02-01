@@ -38,6 +38,7 @@ module Cequel
       end
 
       protected
+
       attr_reader :keyspace, :table
 
       private
@@ -54,7 +55,8 @@ module Cequel
           table.data_columns.each do |column|
             if column.indexed?
               statements <<
-                "CREATE INDEX #{column.index_name} ON #{table.name} (#{column.name})"
+                "CREATE INDEX #{column.index_name} " \
+                "ON #{table.name} (#{column.name})"
             end
           end
         end
@@ -69,8 +71,8 @@ module Cequel
       end
 
       def keys_cql
-        partition_cql = table.partition_key_columns.
-          map { |key| key.name }.join(', ')
+        partition_cql = table.partition_key_columns
+          .map { |key| key.name }.join(', ')
         if table.clustering_columns.any?
           nonpartition_cql =
             table.clustering_columns.map { |key| key.name }.join(', ')
@@ -81,13 +83,14 @@ module Cequel
       end
 
       def properties_cql
-        properties_fragments = table.properties.
-          map { |_, property| property.to_cql }
+        properties_fragments = table.properties
+          .map { |_, property| property.to_cql }
         properties_fragments << 'COMPACT STORAGE' if table.compact_storage?
         if table.clustering_columns.any?
           clustering_fragment =
             table.clustering_columns.map(&:clustering_order_cql).join(',')
-          properties_fragments << "CLUSTERING ORDER BY (#{clustering_fragment})"
+          properties_fragments <<
+            "CLUSTERING ORDER BY (#{clustering_fragment})"
         end
         properties_fragments.join(' AND ') if properties_fragments.any?
       end

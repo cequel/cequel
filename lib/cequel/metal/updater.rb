@@ -6,7 +6,9 @@ module Cequel
     #
     # @see DataSet#update
     # @see Deleter
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/update_r.html CQL UPDATE documentation
+    # @see
+    #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/update_r.html
+    #   CQL UPDATE documentation
     # @since 1.0.0
     #
     class Updater < Writer
@@ -130,10 +132,10 @@ module Cequel
       private
 
       def write_to_statement(statement)
-        statement.append("UPDATE #{table_name}").
-          append(generate_upsert_options).
-          append(" SET ").
-          append(statements.join(', '), *bind_vars)
+        statement.append("UPDATE #{table_name}")
+          .append(generate_upsert_options)
+          .append(" SET ")
+          .append(statements.join(', '), *bind_vars)
       end
     end
   end

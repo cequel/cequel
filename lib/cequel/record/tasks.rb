@@ -13,7 +13,8 @@ namespace :cequel do
     end
   end
 
-  desc "Synchronize all models defined in `app/models' with Cassandra database schema"
+  desc "Synchronize all models defined in `app/models' with Cassandra " \
+       "database schema"
   task :migrate => :environment do
     watch_stack = ActiveSupport::Dependencies::WatchStack.new
 

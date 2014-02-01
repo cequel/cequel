@@ -10,7 +10,8 @@ module Cequel
     # In the below example, the `blogs` table has a one-column primary key
     # `(subdomain)`, and the `posts` table has a two-column primary key
     # `(blog_subdomain, permalink)`. All posts that belong to the blog with
-    # subdomain `"cassandra"` will have `"cassandra"` as their `blog_subdomain`.
+    # subdomain `"cassandra"` will have `"cassandra"` as their
+    # `blog_subdomain`.
     #
     # @example Blogs and Posts
     #
@@ -57,11 +58,17 @@ module Cequel
         self.child_associations = {}
       end
 
+      #
+      # Class macros for declaring associations
+      #
+      # @see Associations
+      #
       module ClassMethods
         include Forwardable
 
         # @!attribute parent_association
-        #   @return [BelongsToAssociation] association declared by {#belongs_to}
+        #   @return [BelongsToAssociation] association declared by
+        #     {#belongs_to}
         # @!attribute child_associations
         #   @return [Hash<Symbol,HasManyAssociation>] associations declared by
         #     {#has_many}
@@ -88,12 +95,13 @@ module Cequel
         #
         def belongs_to(name, options = {})
           if parent_association
-            raise InvalidRecordConfiguration,
-              "Can't declare more than one belongs_to association"
+            fail InvalidRecordConfiguration,
+                 "Can't declare more than one belongs_to association"
           end
           if table_schema.key_columns.any?
-            raise InvalidRecordConfiguration,
-              "belongs_to association must be declared before declaring key(s)"
+            fail InvalidRecordConfiguration,
+                 "belongs_to association must be declared before declaring " \
+                 "key(s)"
           end
 
           self.parent_association =
@@ -108,8 +116,8 @@ module Cequel
         #
         # Declare a child association. The child association should have a
         # `belongs_to` referencing this class or, at a minimum, must have a
-        # primary key whose first N columns have the same types as the N columns
-        # in this class's primary key.
+        # primary key whose first N columns have the same types as the N
+        # columns in this class's primary key.
         #
         # `has_many` associations are read-only, so `has_many :posts` will
         # define a `posts` reader but not a `posts=` writer; and the collection
@@ -127,7 +135,6 @@ module Cequel
           self.child_associations =
             child_associations.merge(name => association)
           def_child_association_reader(association)
-
         end
 
         private
@@ -139,12 +146,12 @@ module Cequel
 
         def def_parent_association_reader
           def_delegator 'self', :read_parent_association,
-            parent_association.name
+                        parent_association.name
         end
 
         def def_parent_association_writer
           def_delegator 'self', :write_parent_association,
-            "#{parent_association.name}="
+                        "#{parent_association.name}="
         end
 
         def def_child_association_reader(association)
@@ -154,7 +161,6 @@ module Cequel
             end
           RUBY
         end
-
       end
 
       #
@@ -180,11 +186,11 @@ module Cequel
         if instance_variable_defined?(ivar_name)
           return instance_variable_get(ivar_name)
         end
-        parent_key_values = key_values.
-          first(parent_association.association_key_columns.length)
+        parent_key_values = key_values
+          .first(parent_association.association_key_columns.length)
         if parent_key_values.none? { |value| value.nil? }
           clazz = parent_association.association_class
-          parent = parent_key_values.inject(clazz) do |record_set, key_value|
+          parent = parent_key_values.reduce(clazz) do |record_set, key_value|
             record_set[key_value]
           end
           instance_variable_set(ivar_name, parent)
@@ -193,19 +199,20 @@ module Cequel
 
       def write_parent_association(parent)
         unless parent.is_a?(parent_association.association_class)
-          raise ArgumentError,
-            "Wrong class for #{parent_association.name}; expected " +
-            "#{parent_association.association_class.name}, got " +
-            "#{parent.class.name}"
+          fail ArgumentError,
+               "Wrong class for #{parent_association.name}; expected " \
+               "#{parent_association.association_class.name}, got " \
+               "#{parent.class.name}"
         end
         instance_variable_set "@#{parent_association.name}", parent
         key_column_names = self.class.key_column_names
-        parent.key_attributes.
-          zip(key_column_names) do |(parent_column_name, value), column_name|
+        parent.key_attributes
+          .zip(key_column_names) do |(parent_column_name, value), column_name|
             if value.nil?
-              raise ArgumentError,
-                "Can't set parent association #{parent_association.name.inspect} " +
-                "without value in key #{parent_column_name.inspect}"
+              fail ArgumentError,
+                   "Can't set parent association " \
+                   "#{parent_association.name.inspect} " \
+                   "without value in key #{parent_column_name.inspect}"
             end
             write_attribute(column_name, value)
           end
@@ -217,9 +224,13 @@ module Cequel
         if !reload && instance_variable_defined?(ivar)
           return instance_variable_get(ivar)
         end
-        association_record_set = key_values.inject(association.association_class) do |record_set, key_value|
-          record_set[key_value]
-        end
+
+        base_scope = association.association_class
+        association_record_set =
+          key_values.reduce(base_scope) do |record_set, key_value|
+            record_set[key_value]
+          end
+
         instance_variable_set(
           ivar, AssociationCollection.new(association_record_set))
       end

@@ -23,7 +23,8 @@ module Cequel
         # save it.
         #
         # @param attributes [Hash] attributes to assign to the new record
-        # @yieldparam record [Record] record to make modifications before saving
+        # @yieldparam record [Record] record to make modifications before
+        #   saving
         # @return [Record] self
         #
         # @example Create a new record with attribute assignment
@@ -59,7 +60,8 @@ module Cequel
       end
 
       #
-      # @return [Hash] the attributes of this record that make up the primary key
+      # @return [Hash] the attributes of this record that make up the primary
+      #   key
       #
       # @example
       #   post = Post.new
@@ -99,11 +101,11 @@ module Cequel
       rescue RecordNotFound
         false
       end
-      alias :exist? :exists?
+      alias_method :exist?, :exists?
 
       #
-      # Load an unloaded record's row from the database and hydrate the record's
-      # attributes
+      # Load an unloaded record's row from the database and hydrate the
+      # record's attributes
       #
       # @return [Record] self
       #
@@ -116,8 +118,8 @@ module Cequel
       end
 
       #
-      # Attempt to load an unloaded record and raise an error if the record does
-      # not correspond to a row in the database
+      # Attempt to load an unloaded record and raise an error if the record
+      # does not correspond to a row in the database
       #
       # @return [Record] self
       # @raise [RecordNotFound] if row does not exist in the database
@@ -128,8 +130,9 @@ module Cequel
       def load!
         load.tap do
           if transient?
-            raise RecordNotFound,
-              "Couldn't find #{self.class.name} with #{key_attributes.inspect}"
+            fail RecordNotFound,
+                 "Couldn't find #{self.class.name} with " \
+                 "#{key_attributes.inspect}"
           end
         end
       end
@@ -153,10 +156,10 @@ module Cequel
 
       #
       # Persist the record to the database. If this is a new record, it will
-      # be saved using an INSERT statement. If it is an existing record, it will
-      # be persisted using a series of `UPDATE` and `DELETE` statements which
-      # will persist all changes to the database, including atomic collection
-      # modifications.
+      # be saved using an INSERT statement. If it is an existing record, it
+      # will be persisted using a series of `UPDATE` and `DELETE` statements
+      # which will persist all changes to the database, including atomic
+      # collection modifications.
       #
       # @param options [Options] options for save
       # @option options [Boolean] :validate (true) whether to run validations
@@ -285,13 +288,14 @@ module Cequel
 
       def write_attribute(name, value)
         column = self.class.reflect_on_column(name)
-        raise UnknownAttributeError, "unknown attribute: #{name}" unless column
+        fail UnknownAttributeError, "unknown attribute: #{name}" unless column
         value = column.cast(value) unless value.nil?
 
         super.tap do
           unless new_record?
             if key_attributes.keys.include?(name)
-              raise ArgumentError, "Can't update key #{name} on persisted record"
+              fail ArgumentError,
+                   "Can't update key #{name} on persisted record"
             end
 
             if value.nil?
@@ -305,8 +309,8 @@ module Cequel
 
       def record_collection
         @record_collection ||=
-          LazyRecordCollection.new(self.class.at(*key_values)).
-          tap { |set| set.__setobj__([self]) }
+          LazyRecordCollection.new(self.class.at(*key_values))
+          .tap { |set| set.__setobj__([self]) }
       end
 
       def hydrated!
@@ -342,8 +346,8 @@ module Cequel
       def assert_keys_present!
         missing_keys = key_attributes.select { |k, v| v.nil? }
         if missing_keys.any?
-          raise MissingKeyError,
-            "Missing required key values: #{missing_keys.keys.join(', ')}"
+          fail MissingKeyError,
+               "Missing required key values: #{missing_keys.keys.join(', ')}"
         end
       end
     end

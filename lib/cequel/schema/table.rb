@@ -8,21 +8,24 @@ module Cequel
     # @see Keyspace#read_table
     #
     class Table
-      STORAGE_PROPERTIES = %w[bloom_filter_fp_chance caching comment compaction
-        compression dclocal_read_repair_chance gc_grace_seconds
-        read_repair_chance replicate_on_write]
+      STORAGE_PROPERTIES = %w[
+        bloom_filter_fp_chance caching comment compaction compression
+        dclocal_read_repair_chance gc_grace_seconds read_repair_chance
+        replicate_on_write
+      ]
 
       # @return [Symbol] the name of the table
       attr_reader :name
       # @return [Array<Column>] all columns defined on the table
       attr_reader :columns
-      # @return [Array<PartitionKey>] partition key columns defined on the table
+      # @return [Array<PartitionKey>] partition key columns defined on the
+      #   table
       attr_reader :partition_key_columns
       # @return [Array<ClusteringColumn>] clustering columns defined on the
       #   table
       attr_reader :clustering_columns
-      # @return [Array<DataColumn,CollectionColumn>] data columns and collection
-      #   columns defined on the table
+      # @return [Array<DataColumn,CollectionColumn>] data columns and
+      #   collection columns defined on the table
       attr_reader :data_columns
       # @return [Hash] storage properties defined on the table
       attr_reader :properties
@@ -42,14 +45,14 @@ module Cequel
       end
 
       #
-      # Define a key column. If this is the first key column defined, it will be
-      # a partition key; otherwise, it will be a clustering column.
+      # Define a key column. If this is the first key column defined, it will
+      # be a partition key; otherwise, it will be a clustering column.
       #
       # @param name [Symbol] the name of the column
       # @param type [Symbol,Type] the type for the column
-      # @param clustering_order [:asc,:desc] whether rows should be in ascending
-      #   or descending order by this column. Only meaningful for clustering
-      #   columns.
+      # @param clustering_order [:asc,:desc] whether rows should be in
+      #   ascending or descending order by this column. Only meaningful for
+      #   clustering columns.
       # @return [void]
       #
       # @see #add_partition_key
@@ -57,8 +60,8 @@ module Cequel
       def add_key(name, type, clustering_order = nil)
         if @partition_key_columns.empty?
           unless clustering_order.nil?
-            raise ArgumentError,
-              "Can't set clustering order for partition key #{name}"
+            fail ArgumentError,
+                 "Can't set clustering order for partition key #{name}"
           end
           add_partition_key(name, type)
         else
@@ -86,9 +89,8 @@ module Cequel
       # @return [void]
       #
       def add_clustering_column(name, type, clustering_order = nil)
-        ClusteringColumn.new(name, type(type), clustering_order).tap do |column|
-          @clustering_columns << add_column(column)
-        end
+        ClusteringColumn.new(name, type(type), clustering_order)
+          .tap { |column| @clustering_columns << add_column(column) }
       end
 
       #
@@ -98,15 +100,16 @@ module Cequel
       # @param type [Type] type for the column
       # @param options [Options] options for the column
       # @option options [Boolean,Symbol] :index (nil) name of a secondary index
-      #   to apply to the column, or `true` to infer an index name by convention
+      #   to apply to the column, or `true` to infer an index name by
+      #   convention
       # @return [void]
       #
       def add_data_column(name, type, options = {})
-        options = {:index => options} unless options.is_a?(Hash)
+        options = {index: options} unless options.is_a?(Hash)
         index_name = options[:index]
         index_name = :"#{@name}_#{name}_idx" if index_name == true
-        DataColumn.new(name, type(type), index_name).
-          tap { |column| @data_columns << add_column(column) }
+        DataColumn.new(name, type(type), index_name)
+          .tap { |column| @data_columns << add_column(column) }
       end
 
       #
@@ -166,7 +169,7 @@ module Cequel
       # @see TK list of CQL3 table storage properties
       #
       def add_property(name, value)
-        TableProperty.new(name, value).tap do |property|
+        TableProperty.build(name, value).tap do |property|
           @properties[name] = property
         end
       end
@@ -192,6 +195,41 @@ module Cequel
       #
       def key_column_names
         key_columns.map { |key| key.name }
+      end
+
+      #
+      # @return [Integer] total number of key columns
+      #
+      def key_column_count
+        key_columns.length
+      end
+
+      #
+      # @return [Array<Symbol>] names of partition key columns
+      #
+      def partition_key_column_names
+        partition_key_columns.map { |key| key.name }
+      end
+
+      #
+      # @return [Integer] number of partition key columns
+      #
+      def partition_key_column_count
+        partition_key_columns.length
+      end
+
+      #
+      # @return [Array<Symbol>] names of clustering columns
+      #
+      def clustering_column_names
+        clustering_columns.map { |key| key.name }
+      end
+
+      #
+      # @return [Integer] number of clustering columns
+      #
+      def clustering_column_count
+        clustering_columns.length
       end
 
       #
@@ -236,6 +274,7 @@ module Cequel
       end
 
       protected
+
       attr_reader :columns_by_name
 
       private

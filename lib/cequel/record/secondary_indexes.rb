@@ -4,10 +4,10 @@ module Cequel
     # Data columns may be given secondary indexes. This allows you to query the
     # table for records where the indexed column contains a single value.
     # Secondary indexes are not nearly as flexible as primary keys: you cannot
-    # query for multiple values or for ranges of values. You also cannot combine
-    # a secondary index restriction with a primary key restriction in the same
-    # query, nor can you combine more than one secondary index restrictions in
-    # the same query.
+    # query for multiple values or for ranges of values. You also cannot
+    # combine a secondary index restriction with a primary key restriction in
+    # the same query, nor can you combine more than one secondary index
+    # restrictions in the same query.
     #
     # If a column is given a secondary index, magic finder methods `find_by_*`,
     # `find_all_by_*`, and `with_*` are added to the class singleton. See below
@@ -22,7 +22,8 @@ module Cequel
     #     key :id, :timeuuid, auto: true
     #     column :title, :text
     #     column :body, :text
-    #     column :author_id, :uuid, index: true # this column has a secondary index
+    #     column :author_id, :uuid, index: true # this column has a secondary
+    #                                           # index
     #   end
     #
     # @example Using a secondary index

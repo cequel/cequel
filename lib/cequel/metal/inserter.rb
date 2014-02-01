@@ -35,6 +35,7 @@ module Cequel
       end
 
       private
+
       attr_reader :row
 
       def column_names

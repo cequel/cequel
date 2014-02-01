@@ -26,8 +26,8 @@ module Cequel
       # @return [Symbol] name of the table that this data set retrieves data
       #   from
       attr_reader :table_name
-      # @return [Array<Symbol>] columns that this data set restricts result rows
-      #   to; empty if none
+      # @return [Array<Symbol>] columns that this data set restricts result
+      #   rows to; empty if none
       attr_reader :select_columns
       # @return [Array<Symbol>] columns that this data set will select the TTLs
       #   of
@@ -35,8 +35,8 @@ module Cequel
       # @return [Array<Symbol>] columns that this data set will select the
       #   writetimes of
       attr_reader :writetime_columns
-      # @return [Array<RowSpecification>] row specifications limiting the result
-      #   rows returned by this data set
+      # @return [Array<RowSpecification>] row specifications limiting the
+      #   result rows returned by this data set
       attr_reader :row_specifications
       # @return [Hash<Symbol,Symbol>] map of column names to sort directions
       attr_reader :sort_order
@@ -71,7 +71,8 @@ module Cequel
       # @note `INSERT` statements will succeed even if a row at the specified
       #   primary key already exists. In this case, column values specified in
       #   the insert will overwrite the existing row.
-      # @note If a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
+      # @note If a enclosed in a Keyspace#batch block, this method will be
+      #   executed as part of the batch.
       # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/insert_r.html CQL documentation for INSERT
       #
       def insert(data, options = {})
@@ -103,18 +104,19 @@ module Cequel
       #   @since 1.0.0
       #
       #   @example
-      #     posts.where(blog_subdomain: 'cassandra', permalink: 'cequel').update do
+      #     posts.where(blog_subdomain: 'bigdata', permalink: 'cql').update do
       #       set(title: 'Announcing Cequel 1.0')
       #       list_append(categories: 'ORMs')
       #     end
       #
       # @return [void]
       #
-      # @note `UPDATE` statements will succeed even if targeting a row that does
-      #   not exist. In this case a new row will be created.
+      # @note `UPDATE` statements will succeed even if targeting a row that
+      #   does not exist. In this case a new row will be created.
       # @note This statement will fail unless one or more rows are fully
       #   specified by primary key using `where`
-      # @note If a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
+      # @note If a enclosed in a Keyspace#batch block, this method will be
+      #   executed as part of the batch.
       # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/update_r.html CQL documentation for UPDATE
       #
       def update(*args, &block)
@@ -224,7 +226,8 @@ module Cequel
       # @example
       #   posts.list_replace(:categories, 2, 'Object-Relational Mapper')
       #
-      # @note if a enclosed in a Keyspace#batch block, this method will be executed as part of the batch.
+      # @note if a enclosed in a Keyspace#batch block, this method will be
+      #   executed as part of the batch.
       # @see #update
       # @since 1.0.0
       #
@@ -396,7 +399,7 @@ module Cequel
       #   @yield DSL context for construction delete statement
       #
       #   @example
-      #     posts.where(blog_subdomain: 'cassandra', permalink: 'cequel').delete do
+      #     posts.where(blog_subdomain: 'bigdata', permalink: 'cql').delete do
       #       delete_columns :body
       #       list_remove_at :categories, 2
       #     end
@@ -492,8 +495,8 @@ module Cequel
       #
       def where(row_specification, *bind_vars)
         clone.tap do |data_set|
-          data_set.row_specifications.
-            concat(build_row_specifications(row_specification, bind_vars))
+          data_set.row_specifications
+            .concat(build_row_specifications(row_specification, bind_vars))
         end
       end
 
@@ -505,8 +508,8 @@ module Cequel
       #
       def where!(row_specification, *bind_vars)
         clone.tap do |data_set|
-          data_set.row_specifications.
-            replace(build_row_specifications(row_specification, bind_vars))
+          data_set.row_specifications
+            .replace(build_row_specifications(row_specification, bind_vars))
         end
       end
 
@@ -572,30 +575,31 @@ module Cequel
       # @return [String] CQL `SELECT` statement encoding this data set's scope.
       #
       def cql
-        statement = Statement.new.
-          append(select_cql).
-          append(" FROM #{table_name}").
-          append(*row_specifications_cql).
-          append(sort_order_cql).
-          append(limit_cql).
-          args
+        statement = Statement.new
+          .append(select_cql)
+          .append(" FROM #{table_name}")
+          .append(*row_specifications_cql)
+          .append(sort_order_cql)
+          .append(limit_cql)
+          .args
       end
 
       #
       # @return [String] CQL statement to get count of rows in this data set
       #
       def count_cql
-        Statement.new.
-          append("SELECT COUNT(*) FROM #{table_name}").
-          append(*row_specifications_cql).
-          append(limit_cql).args
+        Statement.new
+          .append("SELECT COUNT(*) FROM #{table_name}")
+          .append(*row_specifications_cql)
+          .append(limit_cql).args
       end
 
       #
       # @return [String]
       #
       def inspect
-        "#<#{self.class.name}: #{CassandraCQL::Statement.sanitize(cql.first, cql[1..-1])}>"
+        "#<#{self.class.name}: " \
+          "#{CassandraCQL::Statement.sanitize(cql.first, cql[1..-1])}>"
       end
 
       #
@@ -630,6 +634,7 @@ module Cequel
       end
 
       protected
+
       attr_writer :row_limit
 
       private
@@ -656,11 +661,11 @@ module Cequel
           ttl_columns.map { |column| "TTL(#{column})" } +
           writetime_columns.map { |column| "WRITETIME(#{column})" }
 
-          if all_columns.any?
-            "SELECT #{all_columns.join(',')}"
-          else
-            'SELECT *'
-          end
+        if all_columns.any?
+          "SELECT #{all_columns.join(',')}"
+        else
+          'SELECT *'
+        end
       end
 
       def limit_cql
@@ -669,23 +674,25 @@ module Cequel
 
       def sort_order_cql
         if sort_order.any?
-          order = sort_order.
-            map { |column, direction| "#{column} #{direction.to_s.upcase}" }.
-            join(', ')
+          order = sort_order
+            .map { |column, direction| "#{column} #{direction.to_s.upcase}" }
+            .join(', ')
           " ORDER BY #{order}"
         end
       end
 
       def build_row_specifications(row_specification, bind_vars)
         case row_specification
-        when Hash then RowSpecification.build(row_specification)
-        when String then CqlRowSpecification.build(row_specification, bind_vars)
-        else raise ArgumentError, "Invalid argument #{row_specification.inspect}; expected Hash or String"
+        when Hash
+          RowSpecification.build(row_specification)
+        when String
+          CqlRowSpecification.build(row_specification, bind_vars)
+        else
+          fail ArgumentError,
+               "Invalid argument #{row_specification.inspect}; " \
+               "expected Hash or String"
         end
       end
-
     end
-
   end
-
 end

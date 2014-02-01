@@ -122,8 +122,8 @@ module Cequel
     #
     # Abstract superclass for types that represent character data
     #
-    # @abstract Subclasses must implement `#encoding`, which returns the name of
-    #   the Ruby encoding corresponding to the character encoding used for
+    # @abstract Subclasses must implement `#encoding`, which returns the name
+    #   of the Ruby encoding corresponding to the character encoding used for
     #   values of this type
     #
     class String < Base
@@ -159,7 +159,7 @@ module Cequel
       end
 
       def cast(value)
-        value = value.to_s(16) if Integer === value
+        value = value.to_s(16) if value.is_a?(Integer)
         super
       end
 
@@ -186,9 +186,9 @@ module Cequel
     #
     # Counter columns are a special type of column in Cassandra that can be
     # incremented and decremented atomically. Counter columns cannot comingle
-    # with regular data columns in the same table. Unlike other columns, counter
-    # columns cannot be updated without Cassandra internally reading the
-    # existing state of the column
+    # with regular data columns in the same table. Unlike other columns,
+    # counter columns cannot be updated without Cassandra internally reading
+    # the existing state of the column
     #
     # @see TK CQL3 documentation for counter columns
     #
@@ -210,7 +210,7 @@ module Cequel
     #
     class Decimal < Base
       def cast(value)
-        BigDecimal === value ? value : BigDecimal.new(value, 0)
+        value.is_a?(BigDecimal) ? value : BigDecimal.new(value, 0)
       end
     end
     register Decimal.instance
@@ -309,9 +309,9 @@ module Cequel
       end
 
       def cast(value)
-        if ::String === value then Time.parse(value)
+        if value.is_a?(::String) then Time.parse(value)
         elsif value.respond_to?(:to_time) then value.to_time
-        elsif Numeric === value then Time.at(value)
+        elsif value.is_a?(Numeric) then Time.at(value)
         else Time.parse(value.to_s)
         end.utc
       end
@@ -343,8 +343,8 @@ module Cequel
     # `timeuuid` columns are a special type of UUID column that support
     # time-based queries. For instance, a `timeuuid` clustering column can be
     # filtered by ranges of times into which the UUIDs must fall. This
-    # functionality presumes the use of type 1 UUIDs, which encode the timestamp
-    # of their creation.
+    # functionality presumes the use of type 1 UUIDs, which encode the
+    # timestamp of their creation.
     #
     class Timeuuid < Uuid
       def internal_name

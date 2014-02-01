@@ -4,9 +4,9 @@ module Cequel
     # Encapsulates a collection of unloaded {Record} instances. In the case
     # where a record set is scoped to fully specify the keys of multiple
     # records, those records will be returned unloaded in a
-    # LazyRecordCollection. When an attribute is read from any of the records in
-    # a LazyRecordCollection, it will eagerly load all of the records' rows from
-    # the database.
+    # LazyRecordCollection. When an attribute is read from any of the records
+    # in a LazyRecordCollection, it will eagerly load all of the records' rows
+    # from the database.
     #
     # @since 1.0.0
     #
@@ -26,10 +26,11 @@ module Cequel
       # @api private
       #
       def initialize(record_set)
-        raise ArgumentError if record_set.nil?
+        fail ArgumentError if record_set.nil?
+        @record_set = record_set
 
         exploded_key_attributes = [{}].tap do |all_key_attributes|
-          record_set.key_columns.zip(record_set.scoped_key_attributes.values) do |column, values|
+          key_columns.zip(scoped_key_values) do |column, values|
             all_key_attributes.replace(Array(values).flat_map do |value|
               all_key_attributes.map do |key_attributes|
                 key_attributes.merge(column.name => value)
@@ -43,7 +44,6 @@ module Cequel
         end
 
         super(unloaded_records)
-        @record_set = record_set
       end
 
       #
@@ -60,15 +60,19 @@ module Cequel
 
         loaded_count = count { |record| record.loaded? }
         if loaded_count < count
-          raise Cequel::Record::RecordNotFound,
-            "Expected #{count} results; got #{loaded_count}"
+          fail Cequel::Record::RecordNotFound,
+               "Expected #{count} results; got #{loaded_count}"
         end
 
         self
       end
 
       private
+
       attr_reader :record_set
+
+      def_delegators :record_set, :key_columns, :scoped_key_values
+      private :key_columns, :scoped_key_values
 
       def key_attributes_for_each_row
         map { |record| record.key_attributes }

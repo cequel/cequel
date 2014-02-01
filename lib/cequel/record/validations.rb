@@ -63,7 +63,7 @@ module Cequel
       def save!(attributes = {})
         tap do
           unless save(attributes)
-            raise RecordInvalid, errors.full_messages.join("; ")
+            fail RecordInvalid, errors.full_messages.join("; ")
           end
         end
       end

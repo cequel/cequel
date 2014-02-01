@@ -2,13 +2,15 @@ module Cequel
   module Metal
     #
     # DSL for the construction of a DELETE statement comprising multiple
-    # operations (e.g. deleting a column value, deleting an element from a list,
-    # etc.)
+    # operations (e.g. deleting a column value, deleting an element from a
+    # list, etc.)
     #
     #
     # @note This class should not be instantiated directly
     # @see DataSet#delete
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/delete_r.html CQL documentation for DELETE
+    # @see
+    #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/delete_r.html
+    #   CQL documentation for DELETE
     # @since 1.0.0
     #
     class Deleter < Writer
@@ -40,7 +42,8 @@ module Cequel
       # @return [void]
       #
       def list_remove_at(column, *positions)
-        statements.concat(positions.map { |position| "#{column}[#{position}]" })
+        statements
+          .concat(positions.map { |position| "#{column}[#{position}]" })
       end
 
       #
@@ -61,11 +64,11 @@ module Cequel
         if @delete_row
           statement.append("DELETE FROM #{table_name}")
         elsif statements.empty?
-          raise ArgumentError, "No targets given for deletion!"
+          fail ArgumentError, "No targets given for deletion!"
         else
-          statement.append("DELETE ").
-            append(statements.join(','), *bind_vars).
-            append(" FROM #{table_name}")
+          statement.append("DELETE ")
+            .append(statements.join(','), *bind_vars)
+            .append(" FROM #{table_name}")
         end
         statement.append(generate_upsert_options)
       end
@@ -73,7 +76,6 @@ module Cequel
       def empty?
         super && !@delete_row
       end
-
     end
   end
 end

@@ -27,7 +27,7 @@ module Cequel
         implementation =
           if column.partition_key?
             PartitionKeyBound
-          elsif column.type?(Type::Timeuuid) && !value.is_a?(CassandraCQL::UUID)
+          elsif column.type?(:timeuuid) && !value.is_a?(CassandraCQL::UUID)
             TimeuuidBound
           else
             ClusteringColumnBound
@@ -52,7 +52,6 @@ module Cequel
       def to_cql_with_bind_variables
         [to_cql, bind_value]
       end
-
 
       #
       # @return [Boolean] `true` if this is a lower bound
@@ -95,7 +94,6 @@ module Cequel
       def base_operator
         lt? ? '<' : '>'
       end
-
     end
 
     #

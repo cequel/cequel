@@ -1,8 +1,8 @@
 module Cequel
   module Metal
     #
-    # Encapsulates a counter `UPDATE` operation comprising multiple increment or
-    # decrement operations
+    # Encapsulates a counter `UPDATE` operation comprising multiple increment
+    # or decrement operations
     #
     # @see DataSet#increment
     # @since 1.0.0
@@ -35,10 +35,10 @@ module Cequel
       private
 
       def write_to_statement(statement)
-        statement.
-          append("UPDATE #{table_name}").
-          append(generate_upsert_options).
-          append(
+        statement
+          .append("UPDATE #{table_name}")
+          .append(generate_upsert_options)
+          .append(
             " SET " << statements.join(', '),
             *bind_vars
         )

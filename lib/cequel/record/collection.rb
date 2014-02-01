@@ -27,14 +27,14 @@ module Cequel
     #     list :categories, :text
     #   end
     #
-    #   # Get an unloaded Blog instance – no data read
+    #   # Get an unloaded Blog instance; no data read
     #   blog = Blog['cassandra']
     #
     #   # Stage modification to collection, still no data read
     #   blog.categories << 'Big Data'
     #
-    #   # Issue an UPDATE statement which pushes "Big Data" onto the collection.
-    #   # Still no data read
+    #   # Issue an UPDATE statement which pushes "Big Data" onto the
+    #   # collection. Still no data read
     #   blog.save!
     #
     #   # Stage another modification to the collection
@@ -71,10 +71,10 @@ module Cequel
       def_delegators :__getobj__, :clone, :dup
 
       included do
-        private
         define_method(
           :method_missing,
           BasicObject.instance_method(:method_missing))
+        private :method_missing
       end
 
       #
@@ -101,7 +101,7 @@ module Cequel
       # @api private
       #
       def loaded!
-        modifications.each { |modification| modification.() }.clear
+        modifications.each { |modification| modification.call() }.clear
       end
 
       #
@@ -124,10 +124,11 @@ module Cequel
       end
 
       def __setobj__(obj)
-        raise "Attempted to call __setobj__ on read-only delegate!"
+        fail "Attempted to call __setobj__ on read-only delegate!"
       end
 
       private
+
       attr_reader :model, :column
       def_delegator :column, :cast, :cast_collection
       def_delegator 'column.type', :cast, :cast_element
@@ -136,7 +137,7 @@ module Cequel
       def to_modify(&block)
         if loaded?
           model.__send__("#{column_name}_will_change!")
-          block.()
+          block.call()
         else modifications << block
         end
         self
@@ -145,7 +146,6 @@ module Cequel
       def modifications
         @modifications ||= []
       end
-
     end
 
     #
@@ -180,8 +180,8 @@ module Cequel
         :sort_by!,
         :uniq!
       ]
-      NON_ATOMIC_MUTATORS.
-        each { |method| undef_method(method) if method_defined? method }
+      NON_ATOMIC_MUTATORS
+        .each { |method| undef_method(method) if method_defined? method }
 
       #
       # @return [Array] an empty array
@@ -192,8 +192,8 @@ module Cequel
 
       #
       # Set the value at a position or range of positions. This modification
-      # will be staged and persisted as an atomic list update when the record is
-      # saved. If the collection data is loaded in memory, it will also be
+      # will be staged and persisted as an atomic list update when the record
+      # is saved. If the collection data is loaded in memory, it will also be
       # modified accordingly.
       #
       # @return [void]
@@ -220,8 +220,10 @@ module Cequel
       #   @param elements [Array] new elements to replace in this range
       #
       def []=(position, *args)
-        if Range === position then first, count = position.first, position.count
-        else first, count = position, args[-2]
+        if position.is_a?(Range)
+          first, count = position.first, position.count
+        else
+          first, count = position, args[-2]
         end
 
         element = args[-1] =
@@ -230,8 +232,9 @@ module Cequel
           end
 
         if first < 0
-          raise ArgumentError,
-            "Bad index #{position}: CQL lists do not support negative indices"
+          fail ArgumentError,
+               "Bad index #{position}: CQL lists do not support negative " \
+               "indices"
         end
 
         if count.nil?
@@ -333,7 +336,6 @@ module Cequel
         to_modify { super }
       end
       alias_method :prepend, :unshift
-
     end
 
     #
@@ -360,8 +362,8 @@ module Cequel
         :reject!,
         :select!
       ]
-      NON_ATOMIC_MUTATORS.
-        each { |method| undef_method(method) if method_defined? method }
+      NON_ATOMIC_MUTATORS
+        .each { |method| undef_method(method) if method_defined? method }
 
       #
       # Add an element to the set
@@ -410,7 +412,6 @@ module Cequel
         updater.set(column_name => set)
         to_modify { super }
       end
-
     end
 
     #
@@ -447,8 +448,8 @@ module Cequel
         :to_options!,
         :transform_keys!
       ]
-      NON_ATOMIC_MUTATORS.
-        each { |method| undef_method(method) if method_defined? method }
+      NON_ATOMIC_MUTATORS
+        .each { |method| undef_method(method) if method_defined? method }
 
       #
       # Set the value of a given key
@@ -513,6 +514,7 @@ module Cequel
       end
 
       private
+
       def_delegator 'column.key_type', :cast, :cast_key
       private :cast_key
     end
