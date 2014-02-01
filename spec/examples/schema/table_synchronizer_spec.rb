@@ -29,7 +29,7 @@ describe Cequel::Schema::TableSynchronizer do
       cequel.schema.create_table :posts do
         key :blog_subdomain, :text
         key :permalink, :text
-        column :title, :text, :index => true
+        column :title, :ascii, :index => true
         column :body, :ascii
         column :created_at, :timestamp
         set :author_names, :text
@@ -45,7 +45,7 @@ describe Cequel::Schema::TableSynchronizer do
         cequel.schema.sync_table :posts do
           key :blog_subdomain, :text
           key :post_permalink, :text
-          column :title, :text
+          column :title, :ascii
           column :body, :text
           column :primary_author_id, :uuid, :index => true
           column :created_at, :timestamp, :index => true
@@ -97,7 +97,7 @@ describe Cequel::Schema::TableSynchronizer do
           cequel.schema.sync_table :posts do
             key :blog_subdomain, :text
             key :permalink, :ascii
-            column :title, :text
+            column :title, :ascii
             column :body, :text
             column :created_at, :timestamp
             set :author_names, :text
@@ -112,7 +112,7 @@ describe Cequel::Schema::TableSynchronizer do
             key :blog_subdomain, :text
             key :permalink, :text
             key :year, :int
-            column :title, :text
+            column :title, :ascii
             column :body, :text
             column :created_at, :timestamp
             set :author_names, :text
@@ -125,7 +125,7 @@ describe Cequel::Schema::TableSynchronizer do
         expect {
           cequel.schema.sync_table :posts do
             key :blog_subdomain, :text
-            column :title, :text
+            column :title, :ascii
             column :body, :text
             column :created_at, :timestamp
             set :author_names, :text
@@ -139,7 +139,7 @@ describe Cequel::Schema::TableSynchronizer do
           cequel.schema.sync_table :posts do
             key :blog_subdomain, :text
             partition_key :permalink, :text
-            column :title, :text
+            column :title, :ascii
             column :body, :text
             column :created_at, :timestamp
             set :author_names, :text
@@ -153,7 +153,7 @@ describe Cequel::Schema::TableSynchronizer do
           cequel.schema.sync_table :posts do
             key :blog_subdomain, :text
             key :permalink, :text
-            column :title, :text
+            column :title, :ascii
             column :body, :text
             column :created_at, :timestamp
             list :author_names, :text
@@ -167,7 +167,7 @@ describe Cequel::Schema::TableSynchronizer do
           cequel.schema.sync_table :posts do
             key :blog_subdomain, :text
             key :permalink, :text
-            column :title, :text, :index => true
+            column :title, :ascii, :index => true
             column :body, :int
             column :created_at, :timestamp
             set :author_names, :text
@@ -176,7 +176,19 @@ describe Cequel::Schema::TableSynchronizer do
         }.to raise_error(Cequel::InvalidSchemaMigration)
       end
 
-      it 'should not allow type change of an indexed column'
+      it 'should not allow changing clustering order' do
+        expect {
+          cequel.schema.sync_table :posts do
+            key :blog_subdomain, :text
+            key :permalink, :text, :desc
+            column :title, :ascii, :index => true
+            column :body, :ascii
+            column :created_at, :timestamp
+            set :author_names, :text
+            with :comment, 'Test Table'
+          end
+        }.to raise_error(Cequel::InvalidSchemaMigration)
+      end
 
     end
 
