@@ -1,10 +1,20 @@
 require 'bundler/setup'
 require 'rspec/core/rake_task'
+require 'rubocop/rake_task'
 require 'appraisal'
 require File.expand_path('../lib/cequel/version', __FILE__)
 
 task :default => :release
-task :release => [:verify_changelog, :"test:all", :build, :tag, :update_stable, :push, :cleanup]
+task :release => [
+  :verify_changelog,
+  :rubocop,
+  :"test:all",
+  :build,
+  :tag,
+  :update_stable,
+  :push,
+  :cleanup
+]
 
 desc 'Build gem'
 task :build do
@@ -61,6 +71,13 @@ namespace :bundle do
     abort unless all_rubies('bundle')
     abort unless all_rubies('rake', 'appraisal:install')
   end
+end
+
+desc 'Check style with Rubocop'
+Rubocop::RakeTask.new(:rubocop) do |task|
+  task.patterns = ['lib/**/*.rb']
+  task.formatters = ['files']
+  task.fail_on_error = true
 end
 
 namespace :test do
