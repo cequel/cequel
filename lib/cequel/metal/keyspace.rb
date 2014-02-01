@@ -7,18 +7,12 @@ module Cequel
     #
     class Keyspace
       extend Forwardable
+      include Logging
 
       # @return [Hash] configuration options for this keyspace
       attr_reader :configuration
       # @return [String] name of the keyspace
       attr_reader :name
-      # @return [Logger] logger to be used for CQL statements
-      attr_accessor :logger
-      # @return [Logger] logger to be used for slow CQL statements
-      attr_accessor :slowlog
-      # @return [Integer] threshold in ms for statements to appear in the
-      #   slowlog
-      attr_writer :slowlog_threshold
 
       #
       # @!method write(statement, *bind_vars)
@@ -30,6 +24,12 @@ module Cequel
       # @return [void]
       #
       def_delegator :write_target, :execute, :write
+
+      #
+      # @!method batch
+      #   (see Cequel::Metal::BatchManager#batch)
+      #
+      def_delegator :batch_manager, :batch
 
       #
       # @api private
@@ -98,46 +98,6 @@ module Cequel
       end
 
       #
-      # Execute write operations in a batch. Any inserts, updates, and deletes
-      # inside this method's block will be executed inside a CQL BATCH
-      # operation.
-      #
-      # @param options [Hash]
-      # @option (see Batch#initialize)
-      # @yield context within which all write operations will be batched
-      # @return return value of block
-      # @raise [ArgumentError] if attempting to start a logged batch while
-      #   already in an unlogged batch, or vice versa.
-      #
-      # @example Perform inserts in a batch
-      #   DB.batch do
-      #     DB[:posts].insert(:id => 1, :title => 'One')
-      #     DB[:posts].insert(:id => 2, :title => 'Two')
-      #   end
-      #
-      # @note If this method is created while already in a batch of the same
-      #   type (logged or unlogged), this method is a no-op.
-      #
-      def batch(options = {})
-        new_batch = Batch.new(self, options)
-
-        if current_batch
-          if current_batch.unlogged? && new_batch.logged?
-            fail ArgumentError,
-                 "Already in an unlogged batch; can't start a logged batch."
-          end
-          return yield
-        end
-
-        begin
-          self.current_batch = new_batch
-          yield.tap { new_batch.apply }
-        ensure
-          self.current_batch = nil
-        end
-      end
-
-      #
       # Clears all active connections
       #
       # @return [void]
@@ -152,6 +112,9 @@ module Cequel
 
       def_delegator :connection_pool, :with, :with_connection
       private :with_connection
+
+      def_delegator :batch_manager, :current_batch
+      private :current_batch
 
       def build_connection
         options = {cql_version: '3.0.0'}
@@ -174,63 +137,12 @@ module Cequel
         end
       end
 
+      def batch_manager
+        @batch_manager ||= BatchManager.new(self)
+      end
+
       def write_target
         current_batch || self
-      end
-
-      def current_batch
-        ::Thread.current[batch_key]
-      end
-
-      def current_batch=(batch)
-        ::Thread.current[batch_key] = batch
-      end
-
-      def batch_key
-        :"cequel-batch-#{object_id}"
-      end
-
-      def log(label, statement, *bind_vars)
-        response = nil
-        begin
-          time = Benchmark.ms { response = yield }
-        rescue Exception => e
-          log_statement(logger: logger, severity: :error, label: label,
-                        statement: statement, bind_vars: bind_vars)
-          raise
-        end
-        log_statement(logger: logger, severity: :debug, label: label,
-                      statement: statement, bind_vars: bind_vars, 
-                      timing: time.to_i)
-        if time >= slowlog_threshold
-          log_statement(logger: slowlog, severity: :warn,
-                        label: label, statement: statement,
-                        bind_vars: bind_vars, timing: time.to_i)
-        end
-        response
-      end
-
-      def slowlog_threshold
-        @slowlog_threshold || 2000
-      end
-
-      private
-
-      def log_statement(args)
-        logger, severity, label, statement, bind_vars =
-          args.fetch(:logger), args.fetch(:severity),
-          args.fetch(:label), args.fetch(:statement), args.fetch(:bind_vars)
-        timing = args[:timing]
-
-        if logger
-          logger.add(severity) do
-            pattern = timing ? '%s (%dms) %s' : '%s (ERROR) %s'
-            sprintf(
-              pattern, label, timing,
-              CassandraCQL::Statement.sanitize(statement, bind_vars)
-            )
-          end
-        end
       end
     end
   end

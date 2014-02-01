@@ -53,8 +53,8 @@ module Cequel
         each_key_pair do |old_key, new_key|
           if old_key.type != new_key.type
             fail InvalidSchemaMigration,
-              "Can't change type of key column #{old_key.name} from " \
-              "#{old_key.type} to #{new_key.type}"
+                 "Can't change type of key column #{old_key.name} from " \
+                 "#{old_key.type} to #{new_key.type}"
           end
         end
       end
