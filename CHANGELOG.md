@@ -1,3 +1,14 @@
+## 1.0.0.rc2
+
+* Add RecordSet#values_at method for IN queries
+* Add `:partition` option to Record::Schema#key
+* Fix regression in `List#<<`
+* Raise RecordNotFound if multi-record load doesn't find all records
+* Compatibility with Cassandra 2.0 and recent Cassandra 1.2 patchlevels
+* Fail when a schema migration would change the clustering order
+* Fail fast when attempting to change a column's type in an incompatible way
+* YARD documentation for all public interfaces
+
 ## 1.0.0.rc1
 
 * Rails integration: Add rake tasks for creating keyspace, migrations; generator
