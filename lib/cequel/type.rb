@@ -125,6 +125,17 @@ module Cequel
       end
 
       #
+      # CQL only allows changing column types when the old type's binary
+      # representation is compatible with the new type.
+      #
+      # @return [Array<Type>] new types that columns of this type may be
+      #   altered to
+      #
+      def compatible_types
+        [Type[:blob]]
+      end
+
+      #
       # A string representation of this type
       #
       def to_s
@@ -152,6 +163,10 @@ module Cequel
     # @see TK CQL3 documentation for ascii type
     #
     class Ascii < String
+      def compatible_types
+        super + [Type[:text]]
+      end
+
       private
 
       def encoding
@@ -208,6 +223,10 @@ module Cequel
     class Counter < Base
       def internal_names
         ['org.apache.cassandra.db.marshal.CounterColumnType']
+      end
+
+      def compatible_types
+        []
       end
 
       def cast(value)
