@@ -1,3 +1,9 @@
+## 1.0.0.rc3
+
+* Better interface for `::find`
+* Better interface for `HasManyAssociation`
+* Support `ActiveModel::Conversion`
+
 ## 1.0.0.rc2
 
 * Add RecordSet#values_at method for IN queries
