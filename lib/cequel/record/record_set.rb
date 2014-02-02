@@ -224,8 +224,7 @@ module Cequel
       #
       def at(*scoped_key_values)
         warn "`at` is deprecated. Use `[]` instead"
-        scoped_key_values
-          .reduce(self) { |record_set, key_value| record_set[key_value] }
+        traverse(*scoped_key_values)
       end
 
       #
@@ -314,6 +313,9 @@ module Cequel
       # Return a loaded Record or collection of loaded Records with the
       # specified primary key values
       #
+      # Multiple arguments are mapped onto unscoped key columns. To specify
+      # multiple values for a given key column, use an array.
+      #
       # @param scoped_key_values one or more values for the final primary key
       #   column
       # @return [Record] if a single key is specified, return the loaded
@@ -322,15 +324,30 @@ module Cequel
       #   collection of loaded records at those keys
       # @raise [RecordNotFound] if not all the keys correspond to records in
       #   the table
-      # @raise [ArgumentError] if not all primary key columns have been
-      #   specified
       #
-      # @note This should only be called when all but the last column in the
-      #   primary key is already specified in this record set
-      def find(*scoped_key_values)
-        (scoped_key_values.one? ?
-          self[scoped_key_values.first] :
-          values_at(*scoped_key_values)).load!
+      # @example One record with one-column primary key
+      #   # find the blog with subdomain 'cassandra'
+      #   Blog.find('cassandra')
+      #
+      # @example Multiple records with one-column primary key
+      #   # find the blogs with subdomain 'cassandra' and 'postgres'
+      #   Blog.find(['cassandra', 'postgres'])
+      #
+      # @example One record with two-column primary key
+      #   # find the post instance with blog subdomain 'cassandra' and
+      #   # permalink 'my-post'
+      #   Post.find('cassandra', 'my-post')
+      #
+      # @example Multiple records with two-column primary key
+      #   # find the post instances with blog subdomain cassandra and
+      #   # permalinks 'my-post' and 'my-new-post'
+      #   Post.find('cassandra', ['my-post', 'my-new-post']
+      #
+      def find(*keys)
+        keys = [keys] if almost_fully_specified? && keys.many?
+        records = traverse(*keys).assert_fully_specified!.load!
+        force_array = keys.any? { |value| value.is_a?(Array) }
+        force_array ? Array.wrap(records) : records
       end
 
       #
@@ -594,6 +611,13 @@ module Cequel
         end
       end
 
+      # @private
+      def assert_fully_specified!
+        raise ArgumentError,
+              "Missing key component(s) " \
+              "#{unscoped_key_names.join(', ')}"
+      end
+
       def_delegators :entries, :inspect
 
       # @private
@@ -635,6 +659,16 @@ module Cequel
         end
       end
 
+      def traverse(*keys)
+        keys.reduce(self) do |record_set, key_value|
+          if key_value.is_a?(Array)
+            record_set.values_at(*key_value)
+          else
+            record_set[key_value]
+          end
+        end
+      end
+
       def scoped_key_names
         scoped_key_columns.map { |column| column.name }
       end
@@ -669,6 +703,10 @@ module Cequel
 
       def fully_specified?
         scoped_key_values.length == target_class.key_columns.length
+      end
+
+      def almost_fully_specified?
+        scoped_key_values.length == target_class.key_columns.length - 1
       end
 
       def partition_specified?

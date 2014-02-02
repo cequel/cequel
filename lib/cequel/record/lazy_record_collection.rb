@@ -67,6 +67,11 @@ module Cequel
         self
       end
 
+      # @private
+      def assert_fully_specified!
+        self
+      end
+
       private
 
       attr_reader :record_set

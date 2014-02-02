@@ -27,6 +27,11 @@ describe Cequel::Record::Persistence do
       end.tap(&:save)
     end
 
+    describe 'new record' do
+      specify { Blog.new.should_not be_persisted }
+      specify { Blog.new.should be_transient }
+    end
+
     describe '#save' do
       context 'on create' do
         it 'should save row to database' do

@@ -129,11 +129,21 @@ describe Cequel::Record::RecordSet do
 
       it { should be_persisted }
       it { should_not be_transient }
-      specify { Blog.new.should_not be_persisted }
-      specify { Blog.new.should be_transient }
 
       it 'should cast argument to correct type' do
-        Blog.find('blog-0'.force_encoding('ASCII-8BIT')).should be
+        Blog.find('blog-0'.force_encoding('ASCII-8BIT')).should == blogs.first
+      end
+
+      it 'should return multiple results as an array from vararg keys' do
+        Blog.find('blog-0', 'blog-1').should == blogs.first(2)
+      end
+
+      it 'should return multiple results as an array from array of keys' do
+        Blog.find(['blog-0', 'blog-1']).should == blogs.first(2)
+      end
+
+      it 'should return result in an array from one-element array of keys' do
+        Blog.find(['blog-1']).should == [blogs[1]]
       end
 
       it 'should raise RecordNotFound if bad argument passed' do
@@ -163,6 +173,18 @@ describe Cequel::Record::RecordSet do
       it 'should raise RecordNotFound if bad argument passed' do
         expect { Post['cequel'].find('bogus')}.
           to raise_error(Cequel::Record::RecordNotFound)
+      end
+
+      it 'should take vararg of values for single key' do
+        Post.find('cassandra', 'cequel0').should == posts.first
+      end
+
+      it 'should take multiple values for key' do
+        Post.find('cassandra', ['cequel0', 'cequel1']).should == posts.first(2)
+      end
+
+      it 'should raise error if not enough key values specified' do
+        expect { Post.find('cassandra') }.to raise_error(ArgumentError)
       end
     end
   end
@@ -333,6 +355,9 @@ describe Cequel::Record::RecordSet do
       Post.find_each(:batch_size => 2).map(&:title).should =~
         (0...5).flat_map { |i| ["Cequel #{i}", "Sequel #{i}", "Mongoid #{i}"] }
     end
+  end
+
+  describe '#find' do
   end
 
   describe '#[]' do

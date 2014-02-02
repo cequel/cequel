@@ -49,6 +49,11 @@ module Cequel
         end
       end
 
+      # @private
+      def assert_fully_specified!
+        self
+      end
+
       private
 
       def initialize_new_record(*)
