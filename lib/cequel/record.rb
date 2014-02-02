@@ -21,6 +21,7 @@ require 'cequel/record/mass_assignment'
 require 'cequel/record/callbacks'
 require 'cequel/record/validations'
 require 'cequel/record/dirty'
+require 'cequel/record/conversion'
 
 require 'cequel/record'
 
@@ -88,7 +89,7 @@ module Cequel
       include Validations
       include Dirty
       extend ActiveModel::Naming
-      include ActiveModel::Conversion
+      include Conversion
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml
     end
