@@ -109,9 +109,6 @@ module Cequel
       def disallow_queries!
         cequel.should_not_receive(:execute)
       end
-
     end
-
   end
-
 end
