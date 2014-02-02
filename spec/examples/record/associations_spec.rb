@@ -138,6 +138,57 @@ describe Cequel::Record::Associations do
       blog.posts(true).map(&:title).should == ['Post 1', 'Post 2']
     end
 
+    it 'should support #find with key' do
+      blog.posts.find(posts.first.id).should == posts.first
+    end
+
+    it 'should support #find with block' do
+      blog.posts.find { |post| post.title.include?('1') }.should == posts[1]
+    end
+
+    it 'should support #select with block' do
+      blog.posts.select { |post| !post.title.include?('2') }
+        .should == posts.first(2)
+    end
+
+    it 'should support #select with arguments' do
+      expect { blog.posts.select(:title).first.id }
+        .to raise_error(Cequel::Record::MissingAttributeError)
+    end
+
+    it 'should load #first directly from the database if unloaded' do
+      blog.posts.first.title
+      blog.posts.should_not be_loaded
+    end
+
+    it 'should read #first from loaded collection' do
+      blog.posts.entries
+      disallow_queries!
+      blog.posts.first.title.should == 'Post 0'
+    end
+
+    it 'should always query the database for #count' do
+      blog.posts.entries
+      posts.first.destroy
+      blog.posts.count.should == 2
+    end
+
+    it 'should always load the records for #length' do
+      blog.posts.length.should == 3
+      blog.posts.should be_loaded
+    end
+
+    it 'should count from database for #size if unloaded' do
+      blog.posts.size.should == 3
+      blog.posts.should_not be_loaded
+    end
+
+    it 'should count records in memory for #size if loaded' do
+      blog.posts.entries
+      disallow_queries!
+      blog.posts.size.should == 3
+    end
+
     it "does not allow invalid :dependent options" do
       expect {
         Post.class_eval do

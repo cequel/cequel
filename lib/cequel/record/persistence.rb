@@ -86,6 +86,7 @@ module Cequel
       def key_values
         key_attributes.values
       end
+      alias_method :to_key, :key_values
 
       #
       # Check if an unloaded record exists in the database
