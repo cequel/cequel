@@ -490,6 +490,8 @@ module Cequel
       def count
         data_set.count
       end
+      alias_method :length, :count
+      alias_method :size, :count
 
       #
       # Enumerate over the records in this record set
