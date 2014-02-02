@@ -1,3 +1,7 @@
+## 1.0.0.rc4
+
+* Add Cequel::Record::ClassMethods
+
 ## 1.0.0.rc3
 
 * Better interface for `::find`
