@@ -94,6 +94,7 @@ module Cequel
       end
 
       private
+
       alias_method :record_set, :__getobj__
 
       def target
