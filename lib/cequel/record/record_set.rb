@@ -344,6 +344,7 @@ module Cequel
       #   Post.find('cassandra', ['my-post', 'my-new-post']
       #
       def find(*keys)
+        return super if block_given?
         keys = [keys] if almost_fully_specified? && keys.many?
         records = traverse(*keys).assert_fully_specified!.load!
         force_array = keys.any? { |value| value.is_a?(Array) }

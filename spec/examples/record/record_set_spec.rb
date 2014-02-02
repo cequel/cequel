@@ -183,6 +183,11 @@ describe Cequel::Record::RecordSet do
         Post.find('cassandra', ['cequel0', 'cequel1']).should == posts.first(2)
       end
 
+      it 'should use Enumerable#find if block given' do
+        Post['cassandra'].find { |post| post.title.include?('1') }
+          .should == posts[1]
+      end
+
       it 'should raise error if not enough key values specified' do
         expect { Post.find('cassandra') }.to raise_error(ArgumentError)
       end
