@@ -39,11 +39,6 @@ task :push do
   system "gem push cequel-#{Cequel::VERSION}.gem"
 end
 
-task 'Push gem to geminabox'
-task :inabox do
-  system "gem inabox cequel-#{Cequel::VERSION}.gem"
-end
-
 task 'Remove packaged gems'
 task :cleanup do
   system "rm -v *.gem"
