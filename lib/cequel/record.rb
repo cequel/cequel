@@ -88,6 +88,7 @@ module Cequel
       include Validations
       include Dirty
       extend ActiveModel::Naming
+      include ActiveModel::Conversion
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml
     end
