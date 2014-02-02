@@ -2,7 +2,7 @@ module Cequel
   module Record
     #
     # Collection of records from a
-    # {Associations::ClassMethods#has_many has_many} associaiton. Encapsulates
+    # {Associations::ClassMethods#has_many has_many} association. Encapsulates
     # and behaves like a {RecordSet}, but unlike a normal RecordSet the loaded
     # records are held in memory after they are loaded.
     #
