@@ -94,6 +94,12 @@ module Cequel
       include ActiveModel::Serializers::Xml
     end
 
+    #
+    # Empty, but third-party libraries can add class-level functionality here
+    #
+    module ClassMethods
+    end
+
     class <<self
       # @return [Metal::Keyspace] the keyspace used for record persistence
       attr_accessor :connection
