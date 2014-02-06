@@ -4,6 +4,7 @@ module Cequel
     # @since 0.1.0
     class Railtie < Rails::Railtie
       config.cequel = Record
+      config.app_generators.orm :cequel
 
       def self.app_name
         Rails.application.railtie_name.sub(/_application$/, '')
@@ -41,7 +42,8 @@ module Cequel
       end
 
       generators do
-        require 'cequel/record/configuration_generator.rb'
+        require 'cequel/record/configuration_generator'
+        require 'cequel/record/record_generator'
       end
     end
   end
