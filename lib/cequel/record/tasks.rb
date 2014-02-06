@@ -23,11 +23,20 @@ namespace :cequel do
 
       require_dependency(file)
 
-      watch_stack.new_constants.each do |class_name|
-        clazz = class_name.constantize
-        if clazz.ancestors.include?(Cequel::Record)
-          clazz.synchronize_schema
-          puts "Synchronized schema for #{class_name}"
+      new_constants = watch_stack.new_constants
+      if new_constants.empty?
+        new_constants << File.basename(file, '.rb').classify
+      end
+
+      new_constants.each do |class_name|
+        begin
+          clazz = class_name.constantize
+        rescue NameError
+        else
+          if clazz.ancestors.include?(Cequel::Record)
+            clazz.synchronize_schema
+            puts "Synchronized schema for #{class_name}"
+          end
         end
       end
     end
