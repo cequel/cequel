@@ -253,6 +253,30 @@ module Cequel
       end
 
       #
+      # Read an attribute
+      #
+      # @param column_name [Symbol] the name of the column
+      # @return the value of that column
+      # @raise [MissingAttributeError] if the attribute has not been loaded
+      # @raise [UnknownAttributeError] if the attribute does not exist
+      #
+      def [](column_name)
+        read_attribute(column_name)
+      end
+
+      #
+      # Write an attribute
+      #
+      # @param column_name [Symbol] name of the column to write
+      # @param value the value to write to the column
+      # @return [void]
+      # @raise [UnknownAttributeError] if the attribute does not exist
+      #
+      def []=(column_name, value)
+        write_attribute(column_name, value)
+      end
+
+      #
       # @return [Boolean] true if this record has the same type and key
       #   attributes as the other record
       def ==(other)
@@ -289,6 +313,9 @@ module Cequel
       end
 
       def write_attribute(name, value)
+        unless self.class.reflect_on_column(name)
+          fail UnknownAttributeError, "unknown attribute: #{name}"
+        end
         @attributes[name] = value
       end
 
