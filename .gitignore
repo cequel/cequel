@@ -3,3 +3,5 @@ doc
 *.gem
 tags
 .vagrant
+Gemfile.lock
+gemfiles/*.gemfile.lock
