@@ -13,6 +13,14 @@ module Cequel
     #
     class Updater < Writer
       #
+      # @see Writer#initialize
+      #
+      def initialize(*)
+        @column_updates = {}
+        super
+      end
+
+      #
       # Directly set column values
       #
       # @param data [Hash] map of column names to values
@@ -22,10 +30,7 @@ module Cequel
       #
       def set(data)
         data.each_pair do |column, value|
-          prepare_upsert_value(value) do |binding, *values|
-            statements << "#{column} = #{binding}"
-            bind_vars.concat(values)
-          end
+          column_updates[column.to_sym] = value
         end
       end
 
@@ -130,12 +135,27 @@ module Cequel
       end
 
       private
+      attr_reader :column_updates
+
+      def empty?
+        super && column_updates.empty?
+      end
 
       def write_to_statement(statement)
+        prepare_column_updates
         statement.append("UPDATE #{table_name}")
           .append(generate_upsert_options)
           .append(" SET ")
           .append(statements.join(', '), *bind_vars)
+      end
+
+      def prepare_column_updates
+        column_updates.each_pair do |column, value|
+          prepare_upsert_value(value) do |binding, *values|
+            statements << "#{column} = #{binding}"
+            bind_vars.concat(values)
+          end
+        end
       end
     end
   end

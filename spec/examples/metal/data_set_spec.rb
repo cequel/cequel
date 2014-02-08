@@ -152,6 +152,18 @@ describe Cequel::Metal::DataSet do
       cequel[:posts].where(row_keys).first[:categories].
         should == %w(Scalability Fault-Tolerance)
     end
+
+    it 'should use the last value set for a given column' do
+      cequel[:posts].insert(
+        row_keys.merge(title: 'Big Data',
+                       body: 'Cassandra',
+                       categories: ['Scalability']))
+      cequel[:posts].where(row_keys).update do
+        set(title: 'Bigger Data')
+        set(title: 'Even Bigger Data')
+      end
+      cequel[:posts].where(row_keys).first[:title].should == 'Even Bigger Data'
+    end
   end
 
   describe '#list_prepend' do
