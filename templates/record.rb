@@ -3,6 +3,6 @@ class <%= class_name %>
 
   key :id, :uuid, auto: true
   <%- attributes.each do |attribute| -%>
-  column <%= attribute.name.to_sym.inspect %>, <%= attribute.type.to_sym.inspect %>
+  column <%= attribute.name.to_sym.inspect %>, <%= attribute.type.to_sym.inspect %><% if attribute.has_index? %>, index: true<% end %>
   <%- end -%>
 end
