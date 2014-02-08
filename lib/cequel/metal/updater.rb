@@ -135,6 +135,7 @@ module Cequel
       end
 
       private
+
       attr_reader :column_updates
 
       def empty?
