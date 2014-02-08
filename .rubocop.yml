@@ -12,15 +12,3 @@ HashSyntax:
 
 IfUnlessModifier:
   Enabled: false
-
-LineLength:
-  Exclude:
-    - "lib/cequel/schema/column.rb"
-    - "lib/cequel/record/record_set.rb"
-    - "lib/cequel/record/properties.rb"
-    - "lib/cequel/record/mass_assignment.rb"
-    - "lib/cequel/record/collection.rb"
-    - "lib/cequel/metal/updater.rb"
-    - "lib/cequel/metal/deleter.rb"
-    - "lib/cequel/metal/data_set.rb"
-    - "lib/cequel/metal/batch.rb"

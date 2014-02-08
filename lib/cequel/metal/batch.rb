@@ -16,7 +16,8 @@ module Cequel
       # @option options [Integer] :auto_apply If specified, flush the batch
       #   after this many statements have been added.
       # @option options [Boolean] :unlogged (false) Whether to use an [unlogged
-      #   batch](http://www.datastax.com/documentation/cql/3.0/webhelp/cql/cql_reference/batch_r.html).
+      #   batch](
+      #   http://www.datastax.com/dev/blog/atomic-batches-in-cassandra-1-2).
       #   Logged batches guarantee atomicity (but not isolation) at the
       #   cost of a performance penalty; unlogged batches are useful for bulk
       #   write operations but behave the same as discrete writes.

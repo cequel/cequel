@@ -160,7 +160,8 @@ module Cequel
     #
     # `ascii` columns store 7-bit ASCII character data
     #
-    # @see TK CQL3 documentation for ascii type
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Ascii < String
       def compatible_types
@@ -179,7 +180,8 @@ module Cequel
     # `blob` columns store arbitrary bytes of data, represented as 8-bit ASCII
     # strings of hex digits
     #
-    # @see TK CQL3 documentation for blob type
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Blob < String
       def internal_names
@@ -202,7 +204,8 @@ module Cequel
     #
     # `boolean` types store boolean values
     #
-    # @see TK CQL3 documentation for boolean type
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Boolean < Base
       def cast(value)
@@ -218,7 +221,8 @@ module Cequel
     # counter columns cannot be updated without Cassandra internally reading
     # the existing state of the column
     #
-    # @see TK CQL3 documentation for counter columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Counter < Base
       def internal_names
@@ -238,7 +242,8 @@ module Cequel
     #
     # `decimal` columns store decimal numeric values
     #
-    # @see TK CQL3 documentation for decimal columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Decimal < Base
       def cast(value)
@@ -250,7 +255,8 @@ module Cequel
     #
     # `double` columns store 64-bit floating-point numeric values
     #
-    # @see TK CQL3 documentation for double columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Double < Base
       def cast(value)
@@ -260,9 +266,10 @@ module Cequel
     register Double.instance
 
     #
-    # TK
+    # `inet` columns store IP addresses
     #
-    # @see TK CQL3 documentation for inet columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Inet < Base
       def internal_names
@@ -274,7 +281,8 @@ module Cequel
     #
     # `int` columns store 32-bit integer values
     #
-    # @see TK CQL3 documentation for int columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Int < Base
       def internal_names
@@ -290,7 +298,8 @@ module Cequel
     #
     # `float` columns store 32-bit floating-point numeric values
     #
-    # @see TK CQL3 documentation for float columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Float < Double; end
     register Float.instance
@@ -298,7 +307,8 @@ module Cequel
     #
     # `bigint` columns store 64-bit integer values
     #
-    # @see TK CQL3 documentation for bigint columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Bigint < Int
       def internal_names
@@ -312,7 +322,8 @@ module Cequel
     # `varchar` columns; the names can be used interchangeably. Text columns do
     # not have a length limit
     #
-    # @see TK CQL3 documentation for text columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Text < String
       def internal_names
@@ -334,6 +345,9 @@ module Cequel
     #
     # `timestamp` columns store timestamps. Timestamps do not include time zone
     # data, and all input times are cast to UTC before being stored.
+    #
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#usingdates
+    #   CQL3 documentation for date columns
     #
     class Timestamp < Base
       def internal_names
@@ -357,6 +371,9 @@ module Cequel
     # the underlying `cassandra-cql` library expects. Other UUID formats are
     # supported as inputs.
     #
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
+    #
     class Uuid < Base
       def internal_names
         ['org.apache.cassandra.db.marshal.UUIDType']
@@ -379,6 +396,9 @@ module Cequel
     # functionality presumes the use of type 1 UUIDs, which encode the
     # timestamp of their creation.
     #
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
+    #
     class Timeuuid < Uuid
       def internal_names
         ['org.apache.cassandra.db.marshal.TimeUUIDType']
@@ -388,6 +408,9 @@ module Cequel
 
     #
     # `varint` columns store arbitrary-length integer data
+    #
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    #   CQL3 data type documentation
     #
     class Varint < Int
       def internal_name

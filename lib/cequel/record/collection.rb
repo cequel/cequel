@@ -152,7 +152,8 @@ module Cequel
     # The value of a list column in a {Record} instance. List collections
     # encapsulate and behave like the built-in `Array` type.
     #
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_using/use_collections_c.html#task_ds_lqp_krj_zj CQL documentation for the list type
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#list
+    #   CQL documentation for the list type
     # @since 1.0.0
     #
     class List < DelegateClass(Array)
@@ -343,7 +344,8 @@ module Cequel
     # unique set of elements. Encapsulates and behaves like the `Set` type from
     # the standard library.
     #
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_using/use_collections_c.html#task_ds_agt_3kj_zj CQL documentation for set columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#set
+    #   CQL documentation for set columns
     # @since 1.0.0
     #
     class Set < DelegateClass(::Set)
@@ -418,7 +420,8 @@ module Cequel
     # The value of a `map` column in a {Record} instance. Encapsulates and
     # behaves like a built-in `Hash`.
     #
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_using/use_collections_c.html#task_ds_cvq_kcl_zj CQL documentation for map columns
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#map
+    #   CQL documentation for map columns
     # @since 1.0.0
     #
     class Map < DelegateClass(::Hash)

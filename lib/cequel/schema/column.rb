@@ -19,12 +19,14 @@ module Cequel
         @name, @type = name, type
       end
 
+      # rubocop:disable LineLength
+
       #
       # @return [Boolean] true if this is a key column
       #
       # @see
-      #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html
-      #   The CQL3 glossary
+      #   http://cassandra.apache.org/doc/cql3/CQL.html#createTablepartitionClustering
+      #   CQL3 key documentation
       #
       def key?
         partition_key? || clustering_column?
@@ -34,8 +36,8 @@ module Cequel
       # @return [Boolean] true if this is a partition key column
       #
       # @see
-      #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html
-      #   The CQL3 glossary
+      #   http://cassandra.apache.org/doc/cql3/CQL.html#createTablepartitionClustering
+      #   CQL3 key documentation
       #
       def partition_key?
         false
@@ -45,19 +47,17 @@ module Cequel
       # @return [Boolean] true if this is a clustering column
       #
       # @see
-      #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html
-      #   The CQL3 glossary
+      #   http://cassandra.apache.org/doc/cql3/CQL.html#createTablepartitionClustering
+      #   CQL3 key documentation
       #
       def clustering_column?
         false
       end
 
+      # rubocop:enable LineLength
+
       #
       # @return [Boolean] true if this is a data column
-      #
-      # @see
-      #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html
-      #   The CQL3 glossary
       #
       def data_column?
         !key?
@@ -214,7 +214,8 @@ module Cequel
     #
     # A List column
     #
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_using/use_collections_c.html#task_ds_lqp_krj_zj CQL documentation for the list type
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#list
+    #   CQL documentation for the list type
     #
     class List < CollectionColumn
       # (see Column#to_cql)
@@ -233,8 +234,7 @@ module Cequel
     #
     # A Set column
     #
-    # @see
-    #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_using/use_collections_c.html#task_ds_agt_3kj_zj
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#set
     #   CQL documentation for set columns
     #
     class Set < CollectionColumn
@@ -256,7 +256,7 @@ module Cequel
     # A Map column
     #
     # @see
-    #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_using/use_collections_c.html#task_ds_cvq_kcl_zj
+    #   http://cassandra.apache.org/doc/cql3/CQL.html#map
     #   CQL documentation for map columns
     #
     class Map < CollectionColumn

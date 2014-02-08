@@ -64,6 +64,8 @@ module Cequel
       module ClassMethods
         protected
 
+        # rubocop:disable LineLength
+
         # @!visibility public
 
         #
@@ -86,7 +88,7 @@ module Cequel
         #   defines key columns.
         #
         # @see
-        #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/ddl_anatomy_table_c.html#concept_ds_cz4_lmy_zj
+        #   http://cassandra.apache.org/doc/cql3/CQL.html#createTablepartitionClustering
         #   CQL documentation on compound primary keys
         #
         def key(name, type, options = {})
@@ -99,6 +101,8 @@ module Cequel
           end
           set_attribute_default(name, default)
         end
+
+        # rubocop:enable LineLength
 
         #
         # Define a data column

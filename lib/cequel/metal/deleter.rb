@@ -9,7 +9,7 @@ module Cequel
     # @note This class should not be instantiated directly
     # @see DataSet#delete
     # @see
-    #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/delete_r.html
+    #   http://cassandra.apache.org/doc/cql3/CQL.html#deleteStmt
     #   CQL documentation for DELETE
     # @since 1.0.0
     #

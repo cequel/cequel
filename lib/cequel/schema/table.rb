@@ -166,7 +166,8 @@ module Cequel
       # @return [void]
       #
       # @see STORAGE_PROPERTIES List of storage property names
-      # @see TK list of CQL3 table storage properties
+      # @see http://cassandra.apache.org/doc/cql3/CQL.html#createTableOptions
+      #   list of CQL3 table storage properties
       #
       def add_property(name, value)
         TableProperty.build(name, value).tap do |property|

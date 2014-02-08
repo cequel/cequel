@@ -28,7 +28,9 @@ module Cequel
       #   replicas that should exist for each piece of data
       # @return [void]
       #
-      # @see TK CQL3 CREATE KEYSPACE documentation
+      # @see
+      #   http://cassandra.apache.org/doc/cql3/CQL.html#createKeyspaceStmt
+      #   CQL3 CREATE KEYSPACE documentation
       #
       def create!(options = {})
         bare_connection =
@@ -54,7 +56,8 @@ module Cequel
       #
       # @return [void]
       #
-      # @see TK CQL3 DROP KEYSPACE documentation
+      # @see http://cassandra.apache.org/doc/cql3/CQL.html#dropKeyspaceStmt
+      #   CQL3 DROP KEYSPACE documentation
       #
       def drop!
         keyspace.execute("DROP KEYSPACE #{keyspace.name}")

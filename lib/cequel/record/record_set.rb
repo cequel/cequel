@@ -152,7 +152,7 @@ module Cequel
       #     applied
       #
       #   @see
-      #     http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/select_r.html
+      #     http://cassandra.apache.org/doc/cql3/CQL.html#selectStmt
       #     CQL SELECT documentation
       #
       # @return [Array,RecordSet]
@@ -169,7 +169,7 @@ module Cequel
       # @return [RecordSet] record set with limit applied
       #
       # @see
-      #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/select_r.html
+      #   http://cassandra.apache.org/doc/cql3/CQL.html#selectStmt
       #   CQL SELECT documentation
       #
       def limit(count)

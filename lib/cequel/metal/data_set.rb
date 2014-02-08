@@ -15,7 +15,8 @@ module Cequel
     # @example Data set targeting only one partition
     #   data_set = database[:posts].where(blog_subdomain: 'cassandra')
     #
-    # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/select_r.html CQL documentation for SELECT
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#selectStmt
+    #   CQL documentation for SELECT
     #
     class DataSet
       include Enumerable
@@ -73,7 +74,8 @@ module Cequel
       #   the insert will overwrite the existing row.
       # @note If a enclosed in a Keyspace#batch block, this method will be
       #   executed as part of the batch.
-      # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/insert_r.html CQL documentation for INSERT
+      # @see http://cassandra.apache.org/doc/cql3/CQL.html#insertStmt
+      #   CQL documentation for INSERT
       #
       def insert(data, options = {})
         inserter(options) { insert(data) }.execute
@@ -117,7 +119,8 @@ module Cequel
       #   specified by primary key using `where`
       # @note If a enclosed in a Keyspace#batch block, this method will be
       #   executed as part of the batch.
-      # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/update_r.html CQL documentation for UPDATE
+      # @see http://cassandra.apache.org/doc/cql3/CQL.html#updateStmt
+      #   CQL documentation for UPDATE
       #
       def update(*args, &block)
         if block
@@ -143,7 +146,8 @@ module Cequel
       # @note This can only be used on counter tables
       # @since 0.5.0
       # @see #decrement
-      # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/../cql_using/use_counter_t.html CQL documentation for counter columns
+      # @see http://cassandra.apache.org/doc/cql3/CQL.html#counters
+      #   CQL documentation for counter columns
       #
       def increment(deltas, options = {})
         incrementer(options) { increment(deltas) }.execute
@@ -158,7 +162,8 @@ module Cequel
       # @return [void]
       #
       # @see #increment
-      # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/../cql_using/use_counter_t.html CQL documentation for counter columns
+      # @see http://cassandra.apache.org/doc/cql3/CQL.html#counters
+      #   CQL documentation for counter columns
       # @since 0.5.0
       #
       def decrement(deltas, options = {})
@@ -410,7 +415,8 @@ module Cequel
       #
       # @note If enclosed in a Keyspace#batch block, this method will be
       #   executed as part of the batch.
-      # @see http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/delete_r.html CQL documentation for DELETE
+      # @see http://cassandra.apache.org/doc/cql3/CQL.html#deleteStmt
+      #   CQL documentation for DELETE
       #
       def delete(*columns, &block)
         options = columns.extract_options!

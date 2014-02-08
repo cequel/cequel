@@ -7,7 +7,7 @@ module Cequel
     # @see DataSet#update
     # @see Deleter
     # @see
-    #   http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/update_r.html
+    #   http://cassandra.apache.org/doc/cql3/CQL.html#updateStmt
     #   CQL UPDATE documentation
     # @since 1.0.0
     #
