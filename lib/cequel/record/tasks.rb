@@ -31,7 +31,7 @@ namespace :cequel do
       new_constants.each do |class_name|
         begin
           clazz = class_name.constantize
-        rescue NameError
+        rescue NameError # rubocop:disable HandleExceptions
         else
           if clazz.ancestors.include?(Cequel::Record)
             clazz.synchronize_schema
