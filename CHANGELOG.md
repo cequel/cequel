@@ -1,3 +1,8 @@
+## 1.0.1
+
+* Don't set the same column multiple times in an UPDATE
+* Allow clustering order in record key declarations
+
 ## 1.0.0
 
 * Add `[]` and `[]=` method for property access
