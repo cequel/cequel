@@ -1,3 +1,9 @@
+## 1.0.0
+
+* Add `[]` and `[]=` method for property access
+* Add Rails generator for records
+* Fallback to filename when inferring model class for migrations
+
 ## 1.0.0.rc4
 
 * Add Cequel::Record::ClassMethods
