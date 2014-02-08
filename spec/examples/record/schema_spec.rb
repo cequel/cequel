@@ -45,6 +45,28 @@ describe Cequel::Record::Schema do
     end
   end
 
+  context 'CQL3 table with reversed clustering column' do
+
+    let(:model) do
+      Class.new do
+        include Cequel::Record
+        self.table_name = 'posts'
+
+        key :blog_id, :uuid
+        key :id, :timeuuid, order: :desc
+        column :title, :text
+      end
+    end
+
+    before { model.synchronize_schema }
+    after { cequel.schema.drop_table(:posts) }
+    subject { cequel.schema.read_table(:posts) }
+
+    it 'should order clustering column descending' do
+      subject.clustering_columns.first.clustering_order.should == :desc
+    end
+  end
+
   context 'wide-row legacy table' do
     let(:legacy_model) do
       Class.new do

@@ -102,7 +102,7 @@ module Cequel
           if options[:partition]
             table_schema.add_partition_key(name, type)
           else
-            table_schema.add_key(name, type)
+            table_schema.add_key(name, type, options[:order])
           end
         end
 

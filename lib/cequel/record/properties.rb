@@ -82,6 +82,9 @@ module Cequel
         # @option options [Boolean] :auto (false) automatically initialize this
         #   key with a UUID value for new records. Only valid for `uuid` and
         #   `timeuuid` columns.
+        # @option options [:asc,:desc] :order whether rows should be ordered
+        #   ascending or descending by this column. Only valid for clustering
+        #   columns
         # @return [void]
         #
         # @note {Associations::ClassMethods#belongs_to belongs_to} implicitly
