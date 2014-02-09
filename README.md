@@ -3,6 +3,8 @@
 Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
 [CQL3](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html).
 
+[![Gem
+Version](https://badge.fury.io/rb/cequel.png)](http://badge.fury.io/rb/cequel)
 <!--[![Build Status](https://secure.travis-ci.org/outoftime/cequel.png)](http://travis-ci.org/outoftime/cequel) -->
 [![Code
 Climate](https://codeclimate.com/github/cequel/cequel.png)](https://codeclimate.com/github/cequel/cequel)
