@@ -5,7 +5,6 @@ Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
 
 [![Gem
 Version](https://badge.fury.io/rb/cequel.png)](http://badge.fury.io/rb/cequel)
-<!--[![Build Status](https://secure.travis-ci.org/outoftime/cequel.png)](http://travis-ci.org/outoftime/cequel) -->
 [![Dependency
 Status](https://gemnasium.com/cequel/cequel.png)](https://gemnasium.com/cequel/cequel)
 [![Code
