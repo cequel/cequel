@@ -74,11 +74,38 @@ module Cequel
     end
 
     #
+    # Quote an arbitrary value for use in a CQL statement by inferring the
+    # equivalent CQL type to the value's Ruby type
+    #
+    # @return [String] quoted value
+    #
+    def self.quote(value)
+      if value.is_a?(Array)
+        return value.map { |element| quote(element) }.join(',')
+      end
+      case value
+      when ::String
+        if value.encoding == Encoding::ASCII_8BIT
+          "0x#{value}"
+        else
+          "'#{value.gsub("'", "''")}'"
+        end
+      when Date, Time, ActiveSupport::TimeWithZone
+        quote(value.to_i * 1000 + value.usec / 1000)
+      when Numeric, true, false, Cql::Uuid
+        value.to_s
+      else
+        quote(value.to_s)
+      end
+    end
+
+    #
     # The base class for all type objects. Types are singletons.
     #
     # @abstract Subclasses should implement {#cast}, and may implement
-    #   {#internal_names} if it cannot be inferred from the class name. The
-    #   name of the type class should be the camel-cased CQL name of the type
+    #   {#internal_names} if it cannot be inferred from the class name.
+    #   The name of the type class should be the camel-cased CQL name of the
+    #   type
     #
     class Base
       include Singleton
@@ -367,10 +394,9 @@ module Cequel
     register Timestamp.instance
 
     #
-    # `uuid` columns store type 1 and type 4 UUIDs. Cequel uses the
-    # `CassandraCQL::UUID` type to represent UUIDs in Ruby, since this is what
-    # the underlying `cassandra-cql` library expects. Other UUID formats are
-    # supported as inputs.
+    # `uuid` columns store type 1 and type 4 UUIDs. New UUID instances can be
+    # created using the {Cequel.uuid} method, and a value can be checked to see
+    # if it is a UUID recognized by Cequel using the {Cequel.uuid?} method.
     #
     # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
     #   CQL3 data type documentation
@@ -382,9 +408,8 @@ module Cequel
 
       def cast(value)
         case value
-        when CassandraCQL::UUID then value
-        when SimpleUUID::UUID then CassandraCQL::UUID.new(value.to_s)
-        else CassandraCQL::UUID.new(value)
+        when Cql::Uuid then value
+        else Cql::Uuid.new(value)
         end
       end
     end

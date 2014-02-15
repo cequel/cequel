@@ -147,7 +147,7 @@ describe Cequel::Record::Properties do
     end
 
     it 'should auto-generate UUID key' do
-      Post.new.id.should be_a(CassandraCQL::UUID)
+      Cequel.uuid?(Post.new.id).should be_true
     end
 
     it 'should raise ArgumentError if auto specified for non-UUID' do

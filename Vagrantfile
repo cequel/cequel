@@ -130,6 +130,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 stop on runlevel [06]
 exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
     sed -i -e 's/rpc_address:.*/rpc_address: 0.0.0.0/' /opt/apache-cassandra-$1/conf/cassandra.yaml
+    sed -i -e 's/start_native_transport:.*/start_native_transport: true/' /opt/apache-cassandra-$1/conf/cassandra.yaml
+    sed -i -e 's/start_rpc:.*/start_rpc: true/' /opt/apache-cassandra-$1/conf/cassandra.yaml
     service cassandra start
   SH
 
@@ -139,6 +141,8 @@ exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
     config.vm.define version do |machine|
       machine.vm.provision :shell, inline: provision,
         args: [version, java_version]
+      machine.vm.network :forwarded_port, guest: 9042, host: 9042,
+        auto_correct: true
       machine.vm.network :forwarded_port, guest: 9160, host: 9160,
         auto_correct: true
     end

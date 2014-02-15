@@ -790,16 +790,6 @@ module Cequel
         Bound.create(range_key_column, gt, inclusive, value)
       end
 
-      def cast_range_key_for_bound(value)
-        if range_key_column.type?(Type::Timeuuid) &&
-           !value.is_a?(CassandraCQL::UUID)
-
-          Type::Timestamp.instance.cast(value)
-        else
-          cast_range_key(value)
-        end
-      end
-
       def load!
         fail ArgumentError, "Not all primary key columns have specified values"
       end

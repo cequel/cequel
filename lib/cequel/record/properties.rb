@@ -101,7 +101,7 @@ module Cequel
             unless Type[type].is_a?(Cequel::Type::Uuid)
               fail ArgumentError, ":auto option only valid for UUID columns"
             end
-            default = -> { CassandraCQL::UUID.new } if options[:auto]
+            default = -> { Cequel.uuid } if options[:auto]
           end
           set_attribute_default(name, default)
         end
@@ -300,8 +300,8 @@ module Cequel
       #
       def inspect
         inspected_attributes = attributes.each_pair.map do |attr, value|
-          inspected_value = value.is_a?(CassandraCQL::UUID) ?
-            value.to_guid :
+          inspected_value = Cequel.uuid?(value) ?
+            value.to_s :
             value.inspect
           "#{attr}: #{inspected_value}"
         end

@@ -18,7 +18,7 @@ module Cequel
           config = YAML.load(ERB.new(IO.read(config_path)).result)[Rails.env]
             .deep_symbolize_keys
         else
-          config = {host: '127.0.0.1:9160'}
+          config = {host: '127.0.0.1:9042'}
         end
         config.reverse_merge!(keyspace: "#{Railtie.app_name}_#{Rails.env}")
         connection = Cequel.connect(config)

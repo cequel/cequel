@@ -178,12 +178,10 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.UUIDType' }
 
     describe '#cast' do
-      let(:uuid) { CassandraCQL::UUID.new }
+      let(:uuid) { Cequel.uuid }
       specify { subject.cast(uuid).should == uuid }
-      specify { subject.cast(SimpleUUID::UUID.new(uuid)).
-        should be_a(CassandraCQL::UUID) }
-      specify { subject.cast(uuid.to_guid).should == uuid }
-      specify { subject.cast(uuid.to_i).should == uuid }
+      specify { subject.cast(uuid.to_s).should == uuid }
+      specify { subject.cast(uuid.value).should == uuid }
     end
   end
 
