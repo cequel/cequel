@@ -1,17 +1,17 @@
 language: ruby
 rvm:
+  - "2.1"
+  - "2.0"
   - "1.9.3"
-  - "2.0.0"
-  - "rbx-19mode"
+  - "rbx-2.2"
 gemfile:
   - "gemfiles/rails_3.1.gemfile"
   - "gemfiles/rails_3.2.gemfile"
   - "gemfiles/rails_4.0.gemfile"
-script: bundle exec rspec spec/examples
-bundler_args: --without=debug
+script: 'bundle exec rake rubocop appraisal test'
 before_install:
   - sudo sh -c "echo 'JVM_OPTS=\"\${JVM_OPTS} -Djava.net.preferIPv4Stack=false\"' >> /usr/local/cassandra/conf/cassandra-env.sh"
   - sudo service cassandra start
-after_failure: 'ls /var/log/cassandra; tail -n 100 /var/log/cassandra/system.log'
+install: 'bundle install --without=debug && bundle exec rake appraisal:install'
 services:
   - cassandra
