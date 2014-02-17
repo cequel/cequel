@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 begin
   require 'active_model/forbidden_attributes_protection'
 rescue LoadError

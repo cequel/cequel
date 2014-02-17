@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 module Cequel
   #
   # @since 1.0.0

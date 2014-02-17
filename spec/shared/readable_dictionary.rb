@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 shared_examples 'readable dictionary' do
   let(:uuid1) { uuid }
   let(:uuid2) { uuid }

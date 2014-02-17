@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require 'cequel/schema/column'
 require 'cequel/schema/create_table_dsl'
 require 'cequel/schema/keyspace'

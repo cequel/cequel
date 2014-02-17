@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 namespace :cequel do
   namespace :keyspace do
     desc 'Initialize Cassandra keyspace'

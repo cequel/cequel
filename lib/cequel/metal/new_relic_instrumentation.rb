@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 begin
   require 'new_relic/agent/method_tracer'
 rescue LoadError => e

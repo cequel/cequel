@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require File.expand_path('../../environment', __FILE__)
 require 'cequel'
 

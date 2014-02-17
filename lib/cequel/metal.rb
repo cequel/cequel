@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 require 'cequel/metal/batch'
 require 'cequel/metal/batch_manager'
 require 'cequel/metal/cql_row_specification'
