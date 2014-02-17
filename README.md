@@ -469,9 +469,9 @@ the columns that are given.
 
 ### Ruby ###
 
-* 2.0
-* 1.9.3
-* Rubinius 1.0 in 1.9 mode
+* Ruby 2.1, 2.0, 1.9.3
+* JRuby 1.7
+* Rubinius 2.2
 
 ### Cassandra ###
 
