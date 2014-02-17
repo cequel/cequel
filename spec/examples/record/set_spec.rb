@@ -49,12 +49,12 @@ describe Cequel::Record::Set do
         post.tags.add('four')
         post.save
         subject[:tags].should == Set['one', 'two', 'three', 'four']
-        post.tags.should == Set['one', 'two', 'four']
+        expect(post.tags).to eq(Set['one', 'two', 'four'])
       end
 
       it 'should cast before adding' do
         post.tags.add(4)
-        post.tags.should == Set['one', 'two', '4']
+        expect(post.tags).to eq(Set['one', 'two', '4'])
       end
 
       it 'should add without reading' do
@@ -66,7 +66,7 @@ describe Cequel::Record::Set do
 
       it 'should apply add post-hoc' do
         unloaded_post.tags.add('four')
-        unloaded_post.tags.should == Set['one', 'two', 'three', 'four']
+        expect(unloaded_post.tags).to eq(Set['one', 'two', 'three', 'four'])
       end
     end
 
@@ -75,7 +75,7 @@ describe Cequel::Record::Set do
         post.tags.clear
         post.save
         subject[:tags].should be_blank
-        post.tags.should == Set[]
+        expect(post.tags).to eq(Set[])
       end
 
       it 'should clear without reading' do
@@ -87,7 +87,7 @@ describe Cequel::Record::Set do
 
       it 'should apply clear post-hoc' do
         unloaded_post.tags.clear
-        unloaded_post.tags.should == Set[]
+        expect(unloaded_post.tags).to eq(Set[])
       end
     end
 
@@ -96,12 +96,12 @@ describe Cequel::Record::Set do
         post.tags.delete('two')
         post.save
         subject[:tags].should == Set['one', 'three']
-        post.tags.should == Set['one']
+        expect(post.tags).to eq(Set['one'])
       end
 
       it 'should cast before deleting' do
         post.tags.delete(:two)
-        post.tags.should == Set['one']
+        expect(post.tags).to eq(Set['one'])
       end
 
       it 'should delete without reading' do
@@ -113,7 +113,7 @@ describe Cequel::Record::Set do
 
       it 'should apply delete post-hoc' do
         unloaded_post.tags.delete('two')
-        unloaded_post.tags.should == Set['one', 'three']
+        expect(unloaded_post.tags).to eq(Set['one', 'three'])
       end
     end
 
@@ -122,12 +122,12 @@ describe Cequel::Record::Set do
         post.tags.replace(Set['a', 'b'])
         post.save
         subject[:tags].should == Set['a', 'b']
-        post.tags.should == Set['a', 'b']
+        expect(post.tags).to eq(Set['a', 'b'])
       end
 
       it 'should cast before replacing' do
         post.tags.replace(Set[1, 2, :three])
-        post.tags.should == Set['1', '2', 'three']
+        expect(post.tags).to eq(Set['1', '2', 'three'])
       end
 
       it 'should replace without reading' do
@@ -139,7 +139,7 @@ describe Cequel::Record::Set do
 
       it 'should apply delete post-hoc' do
         unloaded_post.tags.replace(Set['a', 'b'])
-        unloaded_post.tags.should == Set['a', 'b']
+        expect(unloaded_post.tags).to eq(Set['a', 'b'])
       end
     end
 

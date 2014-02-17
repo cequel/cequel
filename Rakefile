@@ -1,8 +1,11 @@
+require 'yaml'
 require 'bundler/setup'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
 require 'appraisal'
 require File.expand_path('../lib/cequel/version', __FILE__)
+
+RUBY_VERSIONS = YAML.load_file(File.expand_path('../.travis.yml', __FILE__))['rvm']
 
 task :default => :release
 task :release => [
@@ -114,8 +117,7 @@ task :verify_changelog do
 end
 
 def all_rubies(*command)
-  ruby_versions = %w(2.0 1.9)
-  !ruby_versions.find do |version|
+  !RUBY_VERSIONS.find do |version|
     !system('rvm', version, 'do', *command)
   end
 end

@@ -5,3 +5,4 @@ tags
 .vagrant
 Gemfile.lock
 gemfiles/*.gemfile.lock
+.bundle

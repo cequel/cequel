@@ -50,17 +50,17 @@ describe Cequel::Record::Map do
         post.save
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
-        post.likes.should == {'alice' => 1, 'bob' => 2, 'david' => 4}
+        expect(post.likes).to eq({'alice' => 1, 'bob' => 2, 'david' => 4})
       end
 
       it 'should cast keys when updating' do
         post.likes[:david] = 4
-        post.likes.should == {'alice' => 1, 'bob' => 2, 'david' => 4}
+        expect(post.likes).to eq({'alice' => 1, 'bob' => 2, 'david' => 4})
       end
 
       it 'should cast values when updating' do
         post.likes['david'] = 4.0
-        post.likes.should == {'alice' => 1, 'bob' => 2, 'david' => 4}
+        expect(post.likes).to eq({'alice' => 1, 'bob' => 2, 'david' => 4})
       end
 
       it 'should write without reading' do
@@ -73,8 +73,8 @@ describe Cequel::Record::Map do
 
       it 'should set key value post-hoc' do
         unloaded_post.likes['david'] = 4
-        unloaded_post.likes.should ==
-          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
+        expect(unloaded_post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4})
       end
     end
 
@@ -83,7 +83,7 @@ describe Cequel::Record::Map do
         post.likes.clear
         post.save
         subject[:likes].should be_blank
-        post.likes.should == {}
+        expect(post.likes).to eq({})
       end
 
       it 'should clear without reading' do
@@ -104,12 +104,12 @@ describe Cequel::Record::Map do
         post.likes.delete('bob')
         post.save
         subject[:likes].should == {'alice' => 1, 'charles' => 3}
-        post.likes.should == {'alice' => 1}
+        expect(post.likes).to eq({'alice' => 1})
       end
 
       it 'should cast key before deleting' do
         post.likes.delete(:bob)
-        post.likes.should == {'alice' => 1}
+        expect(post.likes).to eq({'alice' => 1})
       end
 
       it 'should delete without reading' do
@@ -121,7 +121,7 @@ describe Cequel::Record::Map do
 
       it 'should delete post-hoc' do
         unloaded_post.likes.delete('bob')
-        unloaded_post.likes.should == {'alice' => 1, 'charles' => 3}
+        expect(unloaded_post.likes).to eq({'alice' => 1, 'charles' => 3})
       end
     end
 
@@ -131,15 +131,15 @@ describe Cequel::Record::Map do
         post.save
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
-        post.likes.should ==
-          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5}
+        expect(post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5})
       end
 
       it 'should cast keys before updating' do
         post.likes.merge!(david: 4, emily: 5)
         post.save
-        post.likes.should ==
-          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5}
+        expect(post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5})
       end
 
       it 'should cast values before updating' do
@@ -147,8 +147,8 @@ describe Cequel::Record::Map do
         post.save
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
-        post.likes.should ==
-          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5}
+        expect(post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5})
       end
 
       it 'should write without reading' do
@@ -161,8 +161,8 @@ describe Cequel::Record::Map do
 
       it 'should merge post-hoc' do
         unloaded_post.likes.merge!('david' => 4, 'emily' => 5)
-        unloaded_post.likes.should ==
-          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
+        expect(unloaded_post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5})
       end
     end
 
@@ -171,19 +171,19 @@ describe Cequel::Record::Map do
         post.likes.replace('david' => 4, 'emily' => 5)
         post.save
         subject[:likes].should == {'david' => 4, 'emily' => 5}
-        post.likes.should == {'david' => 4, 'emily' => 5}
+        expect(post.likes).to eq({'david' => 4, 'emily' => 5})
       end
 
       it 'should cast keys before overwriting' do
         post.likes.replace(david: 4, emily: 5)
-        post.likes.should == {'david' => 4, 'emily' => 5}
+        expect(post.likes).to eq({'david' => 4, 'emily' => 5})
       end
 
       it 'should cast values before overwriting' do
         post.likes.replace('david' => '4', 'emily' => 5.0)
         post.save
         subject[:likes].should == {'david' => 4, 'emily' => 5}
-        post.likes.should == {'david' => 4, 'emily' => 5}
+        expect(post.likes).to eq({'david' => 4, 'emily' => 5})
       end
 
       it 'should overwrite without reading' do
@@ -195,7 +195,7 @@ describe Cequel::Record::Map do
 
       it 'should replace post-hoc' do
         unloaded_post.likes.replace('david' => 4, 'emily' => 5)
-        unloaded_post.likes.should == {'david' => 4, 'emily' => 5}
+        expect(unloaded_post.likes).to eq({'david' => 4, 'emily' => 5})
       end
     end
 
@@ -205,7 +205,7 @@ describe Cequel::Record::Map do
         post.save
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
-        post.likes.should == {'alice' => 1, 'bob' => 2, 'david' => 4}
+        expect(post.likes).to eq({'alice' => 1, 'bob' => 2, 'david' => 4})
       end
 
       it 'should write without reading' do
@@ -218,8 +218,8 @@ describe Cequel::Record::Map do
 
       it 'should store post-hoc' do
         unloaded_post.likes.store('david', 4)
-        unloaded_post.likes.should == 
-          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
+        expect(unloaded_post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4})
       end
     end
 
@@ -229,8 +229,8 @@ describe Cequel::Record::Map do
         post.save
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
-        post.likes.should ==
-          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5}
+        expect(post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'david' => 4, 'emily' => 5})
       end
 
       it 'should write without reading' do
@@ -243,8 +243,8 @@ describe Cequel::Record::Map do
 
       it 'should update post-hoc' do
         unloaded_post.likes.update('david' => 4, 'emily' => 5)
-        unloaded_post.likes.should == 
-          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
+        expect(unloaded_post.likes).to eq(
+          {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5})
       end
     end
 

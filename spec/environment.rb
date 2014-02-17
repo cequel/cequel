@@ -1,7 +1,7 @@
 require 'bundler'
 
 if ENV['CI']
-  Bundler.require(:default, :test)
+  Bundler.require(:default, :development)
 else
-  Bundler.require(:default, :test, :debug)
+  Bundler.require(:default, :development, :debug)
 end
