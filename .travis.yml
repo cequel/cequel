@@ -13,6 +13,6 @@ script: 'bundle exec rake rubocop test'
 before_install:
   - sudo sh -c "echo 'JVM_OPTS=\"\${JVM_OPTS} -Djava.net.preferIPv4Stack=false\"' >> /usr/local/cassandra/conf/cassandra-env.sh"
   - sudo service cassandra start
-install: 'bundle install --without=debug && bundle exec rake appraisal:install'
+bundler_args: '--without=debug'
 services:
   - cassandra
