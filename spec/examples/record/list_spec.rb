@@ -66,12 +66,12 @@ describe Cequel::Record::List do
 
     it 'should add new items in memory when loaded' do
       unloaded_post.tags << 'four' << 'five'
-      unloaded_post.tags.should == %w(one two four five)
+      expect(unloaded_post.tags).to eq(%w(one two four five))
     end
 
     it 'should cast to defined value' do
       post.contributor_ids << '3' << 4.0
-      post.contributor_ids.should == [1, 2, 3, 4]
+      expect(post.contributor_ids).to eq([1, 2, 3, 4])
     end
   end
 
@@ -82,12 +82,12 @@ describe Cequel::Record::List do
       post.tags[1] = 'TWO'
       post.save
       subject[:tags].should == %w(one TWO three)
-      post.tags.should == %w(one TWO)
+      expect(post.tags).to eq(%w(one TWO))
     end
 
     it 'should cast element before replacing' do
       post.contributor_ids[1] = '5'
-      post.contributor_ids.should == [1, 5]
+      expect(post.contributor_ids).to eq([1, 5])
     end
 
     it 'should replace an element without reading' do
@@ -103,19 +103,19 @@ describe Cequel::Record::List do
 
     it 'should apply local modifications when loaded later' do
       unloaded_post.tags[1] = 'TWO'
-      unloaded_post.tags.should == %w(one TWO three)
+      expect(unloaded_post.tags).to eq(%w(one TWO three))
     end
 
     it 'should atomically replace a given number of arguments' do
       post.tags[0, 2] = 'One', 'Two'
       post.save
       subject[:tags].should == %w(One Two three)
-      post.tags.should == %w(One Two)
+      expect(post.tags).to eq(%w(One Two))
     end
 
     it 'should cast multiple elements before replacing them' do
       post.contributor_ids[0, 2] = %w(4 5)
-      post.contributor_ids.should == [4, 5]
+      expect(post.contributor_ids).to eq([4, 5])
     end
 
     it 'should remove elements beyond positional arguments' do
@@ -123,14 +123,14 @@ describe Cequel::Record::List do
       post.tags[0, 3] = 'ONE'
       post.save
       subject[:tags].should == %w(ONE four)
-      post.tags.should == %w(ONE)
+      expect(post.tags).to eq(%w(ONE))
     end
 
     it 'should atomically replace a given range of elements' do
       post.tags[0..1] = ['One', 'Two']
       post.save
       subject[:tags].should == %w(One Two three)
-      post.tags.should == %w(One Two)
+      expect(post.tags).to eq(%w(One Two))
     end
 
     it 'should remove elements beyond positional arguments' do
@@ -138,7 +138,7 @@ describe Cequel::Record::List do
       post.tags[0..2] = 'ONE'
       post.save
       subject[:tags].should == %w(ONE four)
-      post.tags.should == %w(ONE)
+      expect(post.tags).to eq(%w(ONE))
     end
   end
 
@@ -147,7 +147,7 @@ describe Cequel::Record::List do
       post.tags.clear
       post.save
       subject[:tags].should be_blank
-      post.tags.should == []
+      expect(post.tags).to eq([])
     end
 
     it 'should clear elements without loading' do
@@ -163,7 +163,7 @@ describe Cequel::Record::List do
 
     it 'should apply local modifications post-hoc' do
       unloaded_post.tags.clear
-      unloaded_post.tags.should == []
+      expect(unloaded_post.tags).to eq([])
     end
   end
 
@@ -179,12 +179,12 @@ describe Cequel::Record::List do
       post.tags.concat(['four', 'five'])
       post.save
       subject[:tags].should == %w(one two three four five)
-      post.tags.should == %w(one two four five)
+      expect(post.tags).to eq(%w(one two four five))
     end
 
     it 'should cast elements before concatentating' do
       post.contributor_ids.concat(%w(3 4))
-      post.contributor_ids.should == [1, 2, 3, 4]
+      expect(post.contributor_ids).to eq([1, 2, 3, 4])
     end
 
     it 'should concat elements without loading' do
@@ -200,7 +200,7 @@ describe Cequel::Record::List do
 
     it 'should apply local modifications when loaded later' do
       unloaded_post.tags.concat(['four', 'five'])
-      unloaded_post.tags.should == %w(one two four five)
+      expect(unloaded_post.tags).to eq(%w(one two four five))
     end
   end
 
@@ -211,12 +211,12 @@ describe Cequel::Record::List do
       post.tags.delete('two')
       post.save
       subject[:tags].should == %w(one three)
-      post.tags.should == %w(one)
+      expect(post.tags).to eq(%w(one))
     end
 
     it 'should cast argument' do
       post.contributor_ids.delete('2')
-      post.contributor_ids.should == [1]
+      expect(post.contributor_ids).to eq([1])
     end
 
     it 'should delete without loading' do
@@ -232,7 +232,7 @@ describe Cequel::Record::List do
 
     it 'should modify local copy after the fact' do
       unloaded_post.tags.delete('two')
-      unloaded_post.tags.should == %w(one)
+      expect(unloaded_post.tags).to eq(%w(one))
     end
   end
 
@@ -242,7 +242,7 @@ describe Cequel::Record::List do
       post.tags.delete_at(1)
       post.save
       subject[:tags].should == %w(one three four)
-      post.tags.should == %w(one)
+      expect(post.tags).to eq(%w(one))
     end
 
     it 'should delete from a given index without reading' do
@@ -258,7 +258,7 @@ describe Cequel::Record::List do
 
     it 'should apply deletion after the fact' do
       unloaded_post.tags.delete_at(1)
-      unloaded_post.tags.should == %w(one)
+      expect(unloaded_post.tags).to eq(%w(one))
     end
   end
 
@@ -313,7 +313,7 @@ describe Cequel::Record::List do
       post.tags.push('four').push('five')
       post.save
       subject[:tags].should == %w(one two three four five)
-      post.tags.should == %w(one two four five)
+      expect(post.tags).to eq(%w(one two four five))
     end
   end
 
@@ -330,12 +330,12 @@ describe Cequel::Record::List do
       post.tags.replace(%w(four five))
       post.save
       subject[:tags].should == %w(four five)
-      post.tags.should == %w(four five)
+      expect(post.tags).to eq(%w(four five))
     end
 
     it 'should cast before overwriting' do
       post.contributor_ids.replace(%w(3 4 5))
-      post.contributor_ids.should == [3, 4, 5]
+      expect(post.contributor_ids).to eq([3, 4, 5])
     end
 
     it 'should overwrite without reading' do
@@ -351,7 +351,7 @@ describe Cequel::Record::List do
 
     it 'should apply replace post-hoc' do
       unloaded_post.tags.replace(%w(four five))
-      unloaded_post.tags.should == %w(four five)
+      expect(unloaded_post.tags).to eq(%w(four five))
     end
   end
 
@@ -417,12 +417,12 @@ describe Cequel::Record::List do
       post.tags.unshift('minustwo', 'minusone')
       post.save
       subject[:tags].should == %w(minustwo minusone zero one two)
-      post.tags.should == %w(minustwo minusone one two)
+      expect(post.tags).to eq(%w(minustwo minusone one two))
     end
 
     it 'should cast element before unshifting' do
       post.contributor_ids.unshift('0')
-      post.contributor_ids.should == [0, 1, 2]
+      expect(post.contributor_ids).to eq([0, 1, 2])
     end
 
     it 'should unshift without reading' do
@@ -438,7 +438,7 @@ describe Cequel::Record::List do
 
     it 'should apply unshift after the fact' do
       unloaded_post.tags.unshift('minustwo', 'minusone')
-      unloaded_post.tags.should == %w(minustwo minusone one two)
+      expect(unloaded_post.tags).to eq(%w(minustwo minusone one two))
     end
   end
 end

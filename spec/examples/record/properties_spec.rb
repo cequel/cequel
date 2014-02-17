@@ -57,59 +57,59 @@ describe Cequel::Record::Properties do
     end
 
     it 'should provide accessor for list column' do
-      Post.new { |post| post.tags = %w(one two three) }.tags.
-        should == %w(one two three)
+      expect(Post.new { |post| post.tags = %w(one two three) }.tags).to eq(
+        %w(one two three))
     end
 
     it 'should cast collection in list column to list' do
-      Post.new { |post| post.tags = Set['1', '2', '3'] }.tags.
-        should == %w(1 2 3)
+      expect(Post.new { |post| post.tags = Set['1', '2', '3'] }.tags)
+        .to eq(%w(1 2 3))
     end
 
     it 'should cast elements in list' do
-      Post.new { |post| post.tags = [1, 2, 3] }.tags.should == %w(1 2 3)
+      expect(Post.new { |post| post.tags = [1, 2, 3] }.tags).to eq(%w(1 2 3))
     end
 
     it 'should have empty list column value if unset' do
-      Post.new.tags.should == []
+      expect(Post.new.tags).to eq([])
     end
 
     it 'should provide accessor for set column' do
-      Post.new { |post| post.categories = Set['Big Data', 'Cassandra'] }.
-        categories.should == Set['Big Data', 'Cassandra']
+      expect(Post.new { |post| post.categories = Set['Big Data', 'Cassandra'] }
+        .categories).to eq(Set['Big Data', 'Cassandra'])
     end
 
     it 'should cast values in set column to correct type' do
-      Post.new { |post| post.categories = Set[1, 2, 3] }.categories.
-        should == Set['1', '2', '3']
+      expect(Post.new { |post| post.categories = Set[1, 2, 3] }.categories)
+        .to eq(Set['1', '2', '3'])
     end
 
     it 'should cast collection to set in set column' do
-      Post.new { |post| post.categories = ['1', '2', '3'] }.categories.
-        should == Set['1', '2', '3']
+      expect(Post.new { |post| post.categories = ['1', '2', '3'] }.categories)
+        .to eq(Set['1', '2', '3'])
     end
 
     it 'should have empty set column value if present' do
-      Post.new.categories.should == Set[]
+      expect(Post.new.categories).to eq(Set[])
     end
 
     it 'should provide accessor for map column' do
-      Post.new { |post| post.shares = {'facebook' => 1, 'twitter' => 2}}.
-        shares.should == {'facebook' => 1, 'twitter' => 2}
+      expect(Post.new { |post| post.shares = {'facebook' => 1, 'twitter' => 2}}
+        .shares).to eq({'facebook' => 1, 'twitter' => 2})
     end
 
     it 'should cast values for map column' do
-      Post.new { |post| post.shares = {facebook: '1', twitter: '2'} }.
-        shares.should == {'facebook' => 1, 'twitter' => 2}
+      expect(Post.new { |post| post.shares = {facebook: '1', twitter: '2'} }
+        .shares).to eq({'facebook' => 1, 'twitter' => 2})
     end
 
     it 'should cast collection passed to map column to map' do
-      Post.new { |post| post.shares = [['facebook', 1], ['twitter', 2]] }.
-        shares.should == {'facebook' => 1, 'twitter' => 2}
+      expect(Post.new { |post| post.shares = [['facebook', 1], ['twitter', 2]] }
+        .shares).to eq({'facebook' => 1, 'twitter' => 2})
     end
 
     it 'should set map column to empty hash by default' do
-      Post.new.shares.should == {}
+      expect(Post.new.shares).to eq({})
     end
   end
 
@@ -127,15 +127,15 @@ describe Cequel::Record::Properties do
     end
 
     it 'should respect default for list column' do
-      Post.new.tags.should == ['new']
+      expect(Post.new.tags).to eq(['new'])
     end
 
     it 'should respect default for set column' do
-      Post.new.categories.should == Set['Big Data']
+      expect(Post.new.categories).to eq(Set['Big Data'])
     end
 
     it 'should respect default for map column' do
-      Post.new.shares.should == {'facebook' => 0}
+      expect(Post.new.shares).to eq({'facebook' => 0})
     end
   end
 
