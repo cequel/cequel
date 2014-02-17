@@ -1,3 +1,8 @@
+## 1.0.2
+
+* Fix for identifying varint columns when introspecting schema
+* Add testing on Rubinius 2.2 and JRuby 1.7
+
 ## 1.0.1
 
 * Don't set the same column multiple times in an UPDATE
