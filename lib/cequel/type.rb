@@ -413,8 +413,8 @@ module Cequel
     #   CQL3 data type documentation
     #
     class Varint < Int
-      def internal_name
-        'org.apache.cassandra.db.marshal.IntegerType'
+      def internal_names
+        ['org.apache.cassandra.db.marshal.IntegerType']
       end
     end
     register Varint.instance
