@@ -95,10 +95,12 @@ describe Cequel::Record::Schema do
 
     context 'existing model' do
       before do
-        legacy_connection.execute(<<-CQL2)
-          CREATE COLUMNFAMILY legacy_posts (blog_subdomain text PRIMARY KEY)
-          WITH comparator=uuid AND default_validation=text
-        CQL2
+        with_legacy_connection do |legacy_connection|
+          legacy_connection.execute(<<-CQL2)
+            CREATE COLUMNFAMILY legacy_posts (blog_subdomain text PRIMARY KEY)
+            WITH comparator=uuid AND default_validation=text
+          CQL2
+        end
         legacy_model.synchronize_schema
       end
 

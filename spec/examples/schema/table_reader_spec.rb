@@ -354,9 +354,11 @@ describe Cequel::Schema::TableReader do
 
   describe 'skinny-row legacy table' do
     before do
-      legacy_connection.execute <<-CQL
-        CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
-      CQL
+      with_legacy_connection do |legacy_connection|
+        legacy_connection.execute <<-CQL
+          CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
+        CQL
+      end
     end
     subject { table }
 
@@ -371,10 +373,12 @@ describe Cequel::Schema::TableReader do
 
   describe 'wide-row legacy table' do
     before do
-      legacy_connection.execute(<<-CQL2)
-        CREATE COLUMNFAMILY posts (blog_subdomain text PRIMARY KEY)
-        WITH comparator=uuid AND default_validation=text
-      CQL2
+      with_legacy_connection do |legacy_connection|
+        legacy_connection.execute(<<-CQL2)
+          CREATE COLUMNFAMILY posts (blog_subdomain text PRIMARY KEY)
+          WITH comparator=uuid AND default_validation=text
+        CQL2
+      end
     end
     subject { table }
 
