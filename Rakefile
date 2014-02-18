@@ -50,8 +50,7 @@ end
 desc 'Run the specs'
 RSpec::Core::RakeTask.new(:test) do |t|
   t.pattern = './spec/examples/**/*_spec.rb'
-  t.rspec_opts = '--fail-fast'
-  t.fail_on_error = true
+  t.rspec_opts = '-b'
 end
 
 namespace :bundle do
