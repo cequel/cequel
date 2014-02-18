@@ -22,7 +22,7 @@ DESC
   s.required_ruby_version = '>= 1.9'
   s.add_runtime_dependency 'activemodel', '>= 3.1'
   s.add_runtime_dependency 'cql-rb'
-  s.add_development_dependency 'appraisal'
+  s.add_development_dependency 'appraisal', '~> 0.5'
   s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.6'
   s.add_development_dependency 'rake'

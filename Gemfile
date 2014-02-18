@@ -7,8 +7,6 @@ group :debug do
   gem 'byebug', :platforms => :mri_20
 end
 
-platform :rbx do
-  gem 'racc'
-  gem 'rubysl', '~> 2.0'
-  gem 'psych'
-end
+gem 'racc', :platforms => :rbx
+gem 'rubysl', '~> 2.0', :platforms => :rbx
+gem 'psych', :platforms => :rbx
