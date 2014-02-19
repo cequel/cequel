@@ -38,7 +38,7 @@ describe Cequel::Record::RecordSet do
   end
 
   let(:subdomains) { blogs.map(&:subdomain) }
-  let(:uuids) { Array.new(2) { CassandraCQL::UUID.new }}
+  let(:uuids) { Array.new(2) { Cequel.uuid }}
   let(:now) { Time.at(Time.now.to_i) }
 
   let(:blogs) do
@@ -110,7 +110,7 @@ describe Cequel::Record::RecordSet do
       Comment.new(
         :blog_subdomain => 'cassandra',
         :permalink => 'cequel0',
-        :id => CassandraCQL::UUID.new(Time.now - 5 + i),
+        :id => Cequel.uuid(Time.now - 5 + i),
         :body => "Comment #{i}"
       )
     end

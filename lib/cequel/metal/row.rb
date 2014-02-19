@@ -9,9 +9,9 @@ module Cequel
     #
     class Row < DelegateClass(ActiveSupport::HashWithIndifferentAccess)
       #
-      # Encapsulate a row from CassandraCQL
+      # Encapsulate a result row from the driver
       #
-      # @param result_row [CassandraCQL::Row] row from underlying driver
+      # @param result_row [Hash] row from underlying driver
       # @return [Row] encapsulated row
       #
       # @api private
@@ -19,8 +19,7 @@ module Cequel
       def self.from_result_row(result_row)
         if result_row
           new.tap do |row|
-            names, values = result_row.column_names, result_row.column_values
-            names.zip(values) do |name, value|
+            result_row.each_pair do |name, value|
               if name =~ /^(ttl|writetime)\((.+)\)$/
                 if $1 == 'ttl' then row.set_ttl($2, value)
                 else row.set_writetime($2, value)

@@ -47,7 +47,7 @@ module Cequel
 
       private
 
-      def_delegator 'CassandraCQL::Statement', :sanitize
+      def_delegator 'Cequel::Metal::Keyspace', :sanitize
     end
 
     #

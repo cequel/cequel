@@ -1,4 +1,6 @@
 # -*- encoding : utf-8 -*-
+require 'set'
+
 module Cequel
   module Metal
     #
@@ -9,11 +11,16 @@ module Cequel
     class Keyspace
       extend Forwardable
       include Logging
+      include MonitorMixin
 
       # @return [Hash] configuration options for this keyspace
       attr_reader :configuration
       # @return [String] name of the keyspace
       attr_reader :name
+      # @return [Array<String>] list of hosts to connect to
+      attr_reader :hosts
+      # @return Integer port to connect to Cassandra nodes on
+      attr_reader :port
 
       #
       # @!method write(statement, *bind_vars)
@@ -33,6 +40,29 @@ module Cequel
       def_delegator :batch_manager, :batch
 
       #
+      # Combine a statement with bind vars into a fully-fledged CQL query. This
+      # will no longer be needed once the CQL driver supports bound values
+      # natively.
+      #
+      # @param statement [String] CQL statement with ? placeholders for bind
+      #   vars
+      # @param bind_vars [Array] bind variables corresponding to ? in the
+      #   statement
+      # @return [String] CQL statement with quoted values in place of bind
+      #   variables
+      #
+      def self.sanitize(statement, bind_vars)
+        each_bind_var = bind_vars.each
+        statement.gsub('?') { Type.quote(each_bind_var.next) }
+      end
+
+      #
+      # @!method sanitize
+      #   (see Cequel::Metal::Keyspace.sanitize)
+      #
+      def_delegator 'self.class', :sanitize
+
+      #
       # @api private
       # @param configuration [Options]
       # @option (see #configure)
@@ -40,13 +70,14 @@ module Cequel
       #
       def initialize(configuration={})
         configure(configuration)
+        @lock = Monitor.new
       end
 
       #
       # Configure this keyspace from a hash of options
       #
       # @param configuration [Options] configuration options
-      # @option configuration [String] :host ('127.0.0.1:9160') host/port of
+      # @option configuration [String] :host ('127.0.0.1:9042') host/port of
       #   single Cassandra instance to connect to
       # @option configuration [Array<String>] :hosts list of Cassandra
       #   instances to connect to
@@ -59,10 +90,14 @@ module Cequel
       # @return [void]
       #
       def configure(configuration = {})
+        if configuration.key?(:thrift)
+          warn "Cequel no longer uses the Thrift transport to communicate " \
+               "with Cassandra. The :thrift option is deprecated and ignored."
+        end
         @configuration = configuration
-        @hosts = configuration.fetch(
-          :host, configuration.fetch(:hosts, '127.0.0.1:9160'))
-        @thrift_options = configuration[:thrift].try(:symbolize_keys) || {}
+
+        @hosts, @port = extract_hosts_and_port(configuration)
+
         @name = configuration[:keyspace]
         # reset the connections
         clear_active_connections!
@@ -92,9 +127,7 @@ module Cequel
       #
       def execute(statement, *bind_vars)
         log('CQL', statement, *bind_vars) do
-          with_connection do |conn|
-            conn.execute(statement, *bind_vars)
-          end
+          client.execute(sanitize(statement, bind_vars))
         end
       end
 
@@ -104,46 +137,61 @@ module Cequel
       # @return [void]
       #
       def clear_active_connections!
-        if defined? @connection_pool
-          remove_instance_variable(:@connection_pool)
+        if defined? @client
+          remove_instance_variable(:@client)
         end
       end
 
       private
 
-      def_delegator :connection_pool, :with, :with_connection
-      private :with_connection
+      attr_reader :lock
 
       def_delegator :batch_manager, :current_batch
       private :current_batch
 
-      def build_connection
-        options = {cql_version: '3.0.0'}
-        options[:keyspace] = name if name
-        CassandraCQL::Database.new(
-          @hosts,
-          options,
-          @thrift_options
-        )
-      end
+      def_delegator :lock, :synchronize
+      private :lock
 
-      def connection_pool
-        return @connection_pool if defined? @connection_pool
-        options = {
-          size: @configuration.fetch(:pool, 1),
-          timeout: @configuration.fetch(:pool_timeout, 0)
-        }
-        @connection_pool = ConnectionPool.new(options) do
-          build_connection
+      def build_client
+        Cql::Client.connect(hosts: hosts, port: port).tap do |client|
+          client.use(name) if name
         end
       end
 
+      def client
+        synchronize { @client ||= build_client }
+      end
+
       def batch_manager
-        @batch_manager ||= BatchManager.new(self)
+        synchronize { @batch_manager ||= BatchManager.new(self) }
       end
 
       def write_target
         current_batch || self
+      end
+
+      def extract_hosts_and_port(configuration)
+        hosts, ports = [], Set[]
+        ports << configuration[:port] if configuration.key?(:port)
+        Array.wrap(configuration.fetch(
+          :host, configuration.fetch(:hosts, '127.0.0.1'))).each do |host_port|
+
+          host, port = host_port.split(':')
+          hosts << host
+          if port
+            warn "Specifying a hostname as host:port is deprecated. Specify " \
+                 "only the host IP or hostname in :hosts, and specify a " \
+                 "port for all nodes using the :port option."
+            ports << port.to_i
+          end
+        end
+
+        if ports.size > 1
+          fail ArgumentError, "All Cassandra nodes must listen on the same " \
+               "port; specified multiple ports #{ports.join(', ')}"
+        end
+
+        [hosts, ports.first || 9042]
       end
     end
   end

@@ -28,7 +28,7 @@ module Cequel
         implementation =
           if column.partition_key?
             PartitionKeyBound
-          elsif column.type?(:timeuuid) && !value.is_a?(CassandraCQL::UUID)
+          elsif column.type?(:timeuuid) && !Cequel.uuid?(value)
             TimeuuidBound
           else
             ClusteringColumnBound

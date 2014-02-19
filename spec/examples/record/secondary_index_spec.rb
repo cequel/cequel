@@ -9,7 +9,7 @@ describe Cequel::Record::SecondaryIndexes do
     column :author_id, :uuid, :index => true
   end
 
-  let(:uuids) { Array.new(2) { CassandraCQL::UUID.new }}
+  let(:uuids) { Array.new(2) { Cequel.uuid }}
 
   let!(:posts) do
     3.times.map do |i|

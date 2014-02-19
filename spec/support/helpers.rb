@@ -45,7 +45,7 @@ module Cequel
       end
 
       def uuid(name)
-        let(name) { CassandraCQL::UUID.new }
+        let(name) { Cequel.uuid }
       end
     end
 
@@ -54,15 +54,22 @@ module Cequel
       def self.cequel
         @cequel ||= Cequel.connect(
           host: host,
-          keyspace: keyspace_name,
-          thrift: {retries: 5, cached_connections: true}
+          keyspace: keyspace_name
         ).tap do |cequel|
-          cequel.logger = Logger.new(STDOUT) if ENV['CEQUEL_LOG_QUERIES']
+          if ENV['CEQUEL_LOG_QUERIES']
+            cequel.logger = Logger.new(STDOUT)
+          else
+            cequel.logger = Logger.new(File.open('/dev/null', 'a'))
+          end
         end
       end
 
       def self.host
-        ENV['CEQUEL_TEST_HOST'] || '127.0.0.1:9160'
+        ENV['CEQUEL_TEST_HOST'] || '127.0.0.1:9042'
+      end
+
+      def self.legacy_host
+        ENV['CEQUEL_TEST_LEGACY_HOST'] || '127.0.0.1:9160'
       end
 
       def self.keyspace_name
@@ -70,37 +77,35 @@ module Cequel
       end
 
       def self.legacy_connection
+        require 'cassandra-cql'
         @legacy_connection ||= CassandraCQL::Database.new(
-          Cequel::SpecSupport::Helpers.host,
-          :keyspace => Cequel::SpecSupport::Helpers.keyspace_name,
+          legacy_host,
+          :keyspace => keyspace_name,
           :cql_version => '2.0.0'
         )
       end
 
       def min_uuid(time = Time.now)
-        CassandraCQL::UUID.new(time, :randomize => false)
+        Cql::TimeUuid::Generator.new(0, 0).from_time(time, 0)
       end
 
       def max_uuid(time = Time.now)
-        time = time.stamp * 10 + SimpleUUID::UUID::GREGORIAN_EPOCH_OFFSET
-        # See http://github.com/spectra/ruby-uuid/
-        byte_array = [
-          time & 0xFFFF_FFFF,
-          time >> 32,
-          ((time >> 48) & 0x0FFF) | 0x1000,
-          (2**13 - 1) | SimpleUUID::UUID::VARIANT,
-          2**16 - 1,
-          2**32 - 1
-        ]
-        CassandraCQL::UUID.new(byte_array.pack("NnnnnN"))
+        Cql::TimeUuid::Generator.new(0x3fff, 0xffffffffffff).
+          from_time(time, 999)
       end
 
       def cequel
         Helpers.cequel
       end
 
-      def legacy_connection
-        Helpers.legacy_connection
+      def with_legacy_connection
+        yield Helpers.legacy_connection
+      rescue CassandraCQL::Thrift::Client::TransportException
+        if ENV['CI']
+          pending 'Skipping legacy tests due to Thrift instability on Travis'
+        else
+          raise
+        end
       end
 
       def max_statements!(number)

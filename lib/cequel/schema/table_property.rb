@@ -57,7 +57,7 @@ module Cequel
       end
 
       def quote(value)
-        CassandraCQL::Statement.quote(value)
+        Cequel::Type.quote(value)
       end
     end
 

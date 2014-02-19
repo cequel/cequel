@@ -52,7 +52,7 @@ install [VirtualBox](https://www.virtualbox.org/) and
 Cequel's Vagrantfile can generate a virtual machine for any Cassandra version
 that Cequel supports (i.e., 1.2.x and 2.0.x). You can run multiple VMs at the
 same time; the first machine you boot will expose its Cassandra instance on
-port `9160`, which is the default port that Cequel will look for.
+port `9042`, which is the default port that Cequel will look for.
 
 Cequel is tested against a large range of Ruby, Rails, and Cassandra versions;
 for most patches, you can just run the tests using the latest version of all of

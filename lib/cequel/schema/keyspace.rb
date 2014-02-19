@@ -43,7 +43,7 @@ module Cequel
           options[:replication_factor] ||= 1
         end
         options_strs = options.map do |name, value|
-          "'#{name}': #{CassandraCQL::Statement.quote(value)}"
+          "'#{name}': #{Cequel::Type.quote(value)}"
         end
 
         bare_connection.execute(<<-CQL)

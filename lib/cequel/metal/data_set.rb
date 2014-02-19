@@ -560,14 +560,15 @@ module Cequel
       #
       def each
         return enum_for(:each) unless block_given?
-        execute_cql(*cql).fetch { |row| yield Row.from_result_row(row) }
+        result = execute_cql(*cql)
+        result.each { |row| yield Row.from_result_row(row) }
       end
 
       #
       # @return [Hash] the first row in this data set
       #
       def first
-        row = execute_cql(*limit(1).cql).fetch_row
+        row = execute_cql(*limit(1).cql).first
         Row.from_result_row(row)
       end
 
@@ -575,7 +576,7 @@ module Cequel
       # @return [Fixnum] the number of rows in this data set
       #
       def count
-        execute_cql(*count_cql).fetch_row['count']
+        execute_cql(*count_cql).first['count']
       end
 
       #
@@ -606,7 +607,7 @@ module Cequel
       #
       def inspect
         "#<#{self.class.name}: " \
-          "#{CassandraCQL::Statement.sanitize(cql.first, cql[1..-1])}>"
+          "#{Keyspace.sanitize(cql.first, cql.drop(1))}>"
       end
 
       #
