@@ -9,6 +9,7 @@ Version](https://badge.fury.io/rb/cequel.png)](http://badge.fury.io/rb/cequel)
 Status](https://gemnasium.com/cequel/cequel.png)](https://gemnasium.com/cequel/cequel)
 [![Code
 Climate](https://codeclimate.com/github/cequel/cequel.png)](https://codeclimate.com/github/cequel/cequel)
+[![Inline docs](http://inch-pages.github.io/github/cequel/cequel.png)](http://inch-pages.github.io/github/cequel/cequel)
 
 `Cequel::Record` is an ActiveRecord-like domain model layer that exposes
 the robust data modeling capabilities of CQL3, including parent-child
