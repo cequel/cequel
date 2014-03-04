@@ -411,6 +411,8 @@ class BlogPost
   key :id, :uuid
   column :data, :text
 
+  compact_storage
+
   def data
     JSON.parse(read_attribute(:data))
   end
@@ -420,6 +422,11 @@ class BlogPost
   end
 end
 ```
+
+`Cequel::Model::Dictionary` did not infer a pluralized table name, as
+`Cequel::Model` did and `Cequel::Record` does. If your legacy `Dictionary`
+table has a singlar table name, add a `self.table_name = :blog_post` in the
+model definition.
 
 Note that you will want to run `::synchronize_schema` on your models when
 upgrading; this will not change the underlying data structure, but will add some
