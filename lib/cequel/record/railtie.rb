@@ -1,4 +1,6 @@
 # -*- encoding : utf-8 -*-
+require 'i18n/core_ext/hash'
+
 module Cequel
   module Record
     # @private
