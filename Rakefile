@@ -27,7 +27,7 @@ end
 desc 'Create git release tag'
 task :tag do
   system "git tag -a -m 'Version #{Cequel::VERSION}' #{Cequel::VERSION}"
-  system "git push origin #{Cequel::VERSION}:#{Cequel::VERSION}"
+  system "git push git@github.com:cequel/cequel.git #{Cequel::VERSION}:#{Cequel::VERSION}"
 end
 
 desc 'Update stable branch on GitHub'
