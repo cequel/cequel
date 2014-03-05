@@ -15,7 +15,7 @@ relationships via compound primary keys and in-memory atomic manipulation of
 collection columns.
 DESC
 
-  s.files = Dir['lib/**/*.rb', 'templates/**/*.rb', 'spec/**/*.rb', '[A-Z]*']
+  s.files = Dir['lib/**/*.rb', 'templates/**/*', 'spec/**/*.rb', '[A-Z]*']
   s.test_files = Dir['spec/examples/**/*.rb']
   s.has_rdoc = true
   s.extra_rdoc_files = 'README.md'
