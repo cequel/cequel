@@ -118,7 +118,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   provision =  <<-SH
     set -e
     apt-get update
-    apt-get upgrade -y
+    env DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
+    apt-get install python-software-properties curl -y
     apt-get autoremove -y
     add-apt-repository -y ppa:webupd8team/java
     apt-get update
