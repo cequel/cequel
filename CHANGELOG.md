@@ -1,3 +1,9 @@
+## 1.0.3
+
+* Put missing .yml template file in gem – fix `cequel:configuration` generator
+* Explicitly require I18n's hash extensions – fix config loading bug in Rails 3
+* Add magic encoding comments for Ruby 1.9
+
 ## 1.0.2
 
 * Fix for identifying varint columns when introspecting schema
