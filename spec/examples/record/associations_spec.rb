@@ -25,7 +25,7 @@ describe Cequel::Record::Associations do
   end
 
   model :Comment do
-    belongs_to :post
+    belongs_to :post, partition: true
     key :id, :uuid, auto: true
     column :content, :text
 
@@ -50,6 +50,26 @@ describe Cequel::Record::Associations do
 
     it 'should add parent key as first key' do
       Post.key_column_names.first.should == :blog_subdomain
+    end
+
+    it 'should add parent key as the partition key' do
+      Post.partition_key_column_names.should == [:blog_subdomain]
+    end
+
+    it "should add parent's keys as first keys when partition: true option is set" do
+      Comment.key_column_names.first(2).should == [:post_blog_subdomain, :post_id]
+    end
+
+    it "should add parent's keys as partition keys when partition: true option is set" do
+      Comment.partition_key_column_names.should == [:post_blog_subdomain, :post_id]
+    end
+
+    it "should add parent's keys as first keys" do
+      Attachment.key_column_names.first(2).should == [:post_blog_subdomain, :post_id]
+    end
+
+    it "should add parent's first key as partition key" do
+      Attachment.partition_key_column_names.should == [:post_blog_subdomain]
     end
 
     it 'should provide accessors for association object' do
