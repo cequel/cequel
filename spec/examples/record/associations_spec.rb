@@ -44,12 +44,30 @@ describe Cequel::Record::Associations do
     before_destroy { self.class.callback_count += 1 }
   end
 
+  model :Photo do
+    belongs_to :post, partition: true
+    key :id, :uuid, auto: true
+    column :caption, :text
+  end
+
   describe '::belongs_to' do
     let(:blog) { Blog.new { |blog| blog.subdomain = 'big-data' }}
     let(:post) { Post.new }
 
     it 'should add parent key as first key' do
       Post.key_column_names.first.should == :blog_subdomain
+    end
+
+    it 'should add parent key as the partition key' do
+      Post.partition_key_column_names.should == [:blog_subdomain]
+    end
+
+    it "should add parent's keys as first keys" do
+      Comment.key_column_names.first(2).should == [:post_blog_subdomain, :post_id]
+    end
+
+    it "should add parent's first key as partition key" do
+      Comment.partition_key_column_names.should == [:post_blog_subdomain]
     end
 
     it 'should provide accessors for association object' do
@@ -100,6 +118,72 @@ describe Cequel::Record::Associations do
           belongs_to :user
         end
       end.to raise_error(Cequel::Record::InvalidRecordConfiguration)
+    end
+
+    context "with partition => true" do
+      let(:post) { Post.new { |post| post.blog_subdomain = 'big-data' }}
+      let(:photo) { Photo.new }
+
+      it "should add parent's keys as first keys" do
+        Photo.key_column_names.first(2).should == [:post_blog_subdomain, :post_id]
+      end
+
+      it "should add parent's keys as partition keys" do
+        Photo.partition_key_column_names.should == [:post_blog_subdomain, :post_id]
+      end
+
+      it 'should provide accessors for association object' do
+        photo.post = post
+        photo.post.should == post
+      end
+
+      it 'should set parent key(s) when setting association object' do
+        photo.post = post
+        photo.post_blog_subdomain.should == 'big-data'
+        photo.post_id.should == post.id
+      end
+
+      it 'should raise ArgumentError when parent is set without a key' do
+        post.blog_subdomain = nil
+        expect { photo.post = post }.to raise_error(ArgumentError)
+      end
+
+      it 'should raise ArgumentError when parent is set to wrong class' do
+        expect { photo.post = photo }.to raise_error(ArgumentError)
+      end
+
+      it 'should return Photo instance when parent keys are set directly' do
+        photo.post_blog_subdomain = 'big-data'
+        photo.post_id = post.id
+        photo.post.should == post
+      end
+
+      it 'should not hydrate parent instance when creating from keys' do
+        photo.post_blog_subdomain = 'big-data'
+        photo.post_id = post.id
+        disallow_queries!
+        photo.post.should_not be_loaded
+      end
+
+      it 'should not allow declaring belongs_to after key' do
+        expect do
+          Class.new do
+            include Cequel::Record
+            key :permalink, :text
+            belongs_to :post, partition: true
+          end
+        end.to raise_error(Cequel::Record::InvalidRecordConfiguration)
+      end
+
+      it 'should not allow declaring belongs_to more than once' do
+        expect do
+          Class.new do
+            include Cequel::Record
+            belongs_to :post, partition: true
+            belongs_to :user
+          end
+        end.to raise_error(Cequel::Record::InvalidRecordConfiguration)
+      end
     end
 
   end

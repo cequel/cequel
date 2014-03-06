@@ -48,6 +48,9 @@ module Cequel
         # @!attribute [r] partition_key_columns
         #   (see Cequel::Schema::Table#partition_key_columns)
         #
+        # @!attribute [r] partition_key_column_names
+        #   (see Cequel::Schema::Table#partition_key_column_names)
+        #
         # @!attribute [r] clustering_columns
         #   (see Cequel::Schema::Table#clustering_columns)
         #
@@ -56,7 +59,8 @@ module Cequel
         #
         def_delegators :table_schema, :columns, :key_columns,
                        :key_column_names, :partition_key_columns,
-                       :clustering_columns, :compact_storage?
+                       :partition_key_column_names, :clustering_columns,
+                       :compact_storage?
         #
         # @!method reflect_on_column(name)
         #   (see Cequel::Schema::Table#column)
