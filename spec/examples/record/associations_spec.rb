@@ -224,7 +224,12 @@ describe Cequel::Record::Associations do
     end
 
     it 'should support #find with key' do
-      blog.posts.find(posts.first.id).should == posts.first
+      begin
+        blog.posts.find(posts.first.id).should == posts.first
+      rescue RangeError => e
+        raise RangeError, "Got bignum conversion error with values " \
+                          "#{posts.first.key_values.map(&:to_s).inspect}"
+      end
     end
 
     it 'should support #find with block' do
