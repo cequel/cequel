@@ -82,9 +82,9 @@ module Cequel
         # has a primary key `(subdomain)`, this will declare a key column
         # `blog_subdomain` of the same type.
         #
-        # If the parent class has multiple keys, e.g. it belongs to a parent class,
-        # defining a `partition: true` option will declare all of the parent's keys as
-        # partition key columns for this class.
+        # If the parent class has multiple keys, e.g. it belongs to a parent
+        # class, defining a `partition: true` option will declare all of the
+        # parent's keys as partition key columns for this class.
         #
         # Parent associations are read/write, so declaring `belongs_to :blog`
         # will define a `blog` getter and `blog=` setter, which will update the
