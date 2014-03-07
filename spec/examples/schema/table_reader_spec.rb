@@ -352,13 +352,11 @@ describe Cequel::Schema::TableReader do
       [Cequel::Schema::DataColumn.new(:data, :text)] }
   end
 
-  describe 'skinny-row legacy table' do
+  describe 'skinny-row legacy table', thrift: true do
     before do
-      with_legacy_connection do |legacy_connection|
-        legacy_connection.execute <<-CQL
-          CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
-        CQL
-      end
+      legacy_connection.execute <<-CQL
+        CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
+      CQL
     end
     subject { table }
 
@@ -371,14 +369,12 @@ describe Cequel::Schema::TableReader do
         Cequel::Schema::DataColumn.new(:body, :text)] }
   end
 
-  describe 'wide-row legacy table' do
+  describe 'wide-row legacy table', thrift: true do
     before do
-      with_legacy_connection do |legacy_connection|
-        legacy_connection.execute(<<-CQL2)
-          CREATE COLUMNFAMILY posts (blog_subdomain text PRIMARY KEY)
-          WITH comparator=uuid AND default_validation=text
-        CQL2
-      end
+      legacy_connection.execute(<<-CQL2)
+        CREATE COLUMNFAMILY posts (blog_subdomain text PRIMARY KEY)
+        WITH comparator=uuid AND default_validation=text
+      CQL2
     end
     subject { table }
 
@@ -390,5 +386,4 @@ describe Cequel::Schema::TableReader do
     its(:data_columns) { should ==
       [Cequel::Schema::DataColumn.new(:value, :text)] }
   end
-
 end

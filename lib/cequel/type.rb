@@ -407,9 +407,14 @@ module Cequel
       end
 
       def cast(value)
-        case value
-        when Cql::Uuid then value
-        else Cql::Uuid.new(value)
+        if value.is_a? Cql::Uuid then value
+        elsif defined?(SimpleUUID::UUID) && value.is_a?(SimpleUUID::UUID)
+          Cql::TimeUuid.new(value.to_i)
+        elsif value.is_a?(::Integer) || value.is_a?(::String)
+          Cql::Uuid.new(value)
+        else
+          fail ArgumentError,
+               "Don't know how to cast #{value.inspect} to a UUID"
         end
       end
     end

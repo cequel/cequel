@@ -5,6 +5,7 @@ gemspec
 group :debug do
   gem 'debugger', :platforms => :mri_19
   gem 'byebug', :platforms => :mri_20
+  gem 'pry'
 end
 
 gem 'racc', :platforms => :rbx

@@ -182,6 +182,10 @@ describe Cequel::Type do
       specify { subject.cast(uuid).should == uuid }
       specify { subject.cast(uuid.to_s).should == uuid }
       specify { subject.cast(uuid.value).should == uuid }
+      if defined? SimpleUUID::UUID
+        specify { subject.cast(SimpleUUID::UUID.new(uuid.value))
+                    .should == uuid }
+      end
     end
   end
 
