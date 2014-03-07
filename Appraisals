@@ -10,3 +10,6 @@ appraise "rails-3.1" do
   gem "activesupport", "~> 3.1.0"
 end
 
+appraise "thrift" do
+  gem "cassandra-cql"
+end
