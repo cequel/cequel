@@ -93,14 +93,12 @@ describe Cequel::Record::Schema do
       its(:data_columns) { should == [Cequel::Schema::Column.new(:data, :text)] }
     end
 
-    context 'existing model' do
+    context 'existing model', thrift: true do
       before do
-        with_legacy_connection do |legacy_connection|
-          legacy_connection.execute(<<-CQL2)
-            CREATE COLUMNFAMILY legacy_posts (blog_subdomain text PRIMARY KEY)
-            WITH comparator=uuid AND default_validation=text
-          CQL2
-        end
+        legacy_connection.execute(<<-CQL2)
+          CREATE COLUMNFAMILY legacy_posts (blog_subdomain text PRIMARY KEY)
+          WITH comparator=uuid AND default_validation=text
+        CQL2
         legacy_model.synchronize_schema
       end
 

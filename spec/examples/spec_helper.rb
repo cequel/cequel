@@ -18,6 +18,10 @@ RSpec.configure do |config|
       satisfied_by?(Gem::Version.new(ActiveSupport::VERSION::STRING))
   }
 
+  unless defined? CassandraCQL
+    config.filter_run_excluding thrift: true
+  end
+
   config.before(:all) do
     cequel.schema.create!
     Cequel::Record.connection = cequel

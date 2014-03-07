@@ -98,14 +98,8 @@ module Cequel
         Helpers.cequel
       end
 
-      def with_legacy_connection
-        yield Helpers.legacy_connection
-      rescue CassandraCQL::Thrift::Client::TransportException
-        if ENV['CI']
-          pending 'Skipping legacy tests due to Thrift instability on Travis'
-        else
-          raise
-        end
+      def legacy_connection
+        Helpers.legacy_connection
       end
 
       def max_statements!(number)
