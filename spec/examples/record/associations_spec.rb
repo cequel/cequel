@@ -144,7 +144,7 @@ describe Cequel::Record::Associations do
         blog.posts.find(posts.first.id).should == posts.first
       rescue RangeError => e
         raise RangeError, "Got bignum conversion error with values " \
-                          "#{posts.first.key_values.map(&:value).inspect}"
+                          "#{posts.first.key_values.map(&:to_s).inspect}"
       end
     end
 
