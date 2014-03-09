@@ -21,17 +21,31 @@ module Cequel
       attr_reader :hosts
       # @return Integer port to connect to Cassandra nodes on
       attr_reader :port
+      # @return [Symbol] the default consistency for queries in this keyspace
+      # @since 1.1.0
+      attr_writer :default_consistency
 
       #
       # @!method write(statement, *bind_vars)
       #
-      # Write data to this keyspace using a CQL query. Will be included the
-      # current batch operation if one is present.
+      #   Write data to this keyspace using a CQL query. Will be included the
+      #   current batch operation if one is present.
       #
-      # @param (see #execute)
-      # @return [void]
+      #   @param (see #execute)
+      #   @return [void]
       #
       def_delegator :write_target, :execute, :write
+
+      # @!method write_with_consistency(statement, bind_vars, consistency)
+      #
+      #   Write data to this keyspace using a CQL query at the given consistency.
+      #   Will be included the current batch operation if one is present.
+      #
+      #   @param (see #execute_with_consistency)
+      #   @return [void]
+      #
+      def_delegator :write_target, :execute_with_consistency,
+                    :write_with_consistency
 
       #
       # @!method batch
@@ -119,15 +133,41 @@ module Cequel
       end
 
       #
+      # @return [Cql::Client::Client] the low-level client provided by the
+      #   adapter
+      # @api private
+      #
+      def client
+        synchronize { @client ||= build_client }
+      end
+
+      #
       # Execute a CQL query in this keyspace
       #
       # @param statement [String] CQL string
       # @param bind_vars [Object] values for bind variables
-      # @return [void]
+      # @return [Enumerable] the results of the query
+      #
+      # @see #execute_with_consistency
       #
       def execute(statement, *bind_vars)
+        execute_with_consistency(statement, bind_vars, default_consistency)
+      end
+
+      #
+      # Execute a CQL query in this keyspace with the given consistency
+      #
+      # @param statement [String] CQL string
+      # @param bind_vars [Array] array of values for bind variables
+      # @param consistency [Symbol] consistency at which to execute query
+      # @return [Enumerable] the results of the query
+      #
+      # @since 1.1.0
+      #
+      def execute_with_consistency(statement, bind_vars, consistency)
         log('CQL', statement, *bind_vars) do
-          client.execute(sanitize(statement, bind_vars))
+          client.execute(sanitize(statement, bind_vars),
+                         consistency || default_consistency)
         end
       end
 
@@ -140,6 +180,14 @@ module Cequel
         if defined? @client
           remove_instance_variable(:@client)
         end
+      end
+
+      #
+      # @return [Symbol] the default consistency for queries in this keyspace
+      # @since 1.1.0
+      #
+      def default_consistency
+        @default_consistency || :quorum
       end
 
       private
@@ -156,10 +204,6 @@ module Cequel
         Cql::Client.connect(hosts: hosts, port: port).tap do |client|
           client.use(name) if name
         end
-      end
-
-      def client
-        synchronize { @client ||= build_client }
       end
 
       def batch_manager

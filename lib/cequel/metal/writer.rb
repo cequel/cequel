@@ -15,13 +15,8 @@ module Cequel
 
       #
       # @param data_set [DataSet] data set to write to
-      # @param options [Options] options
-      # @option options [Integer] :ttl time-to-live in seconds for the written
-      #   data
-      # @option options [Time,Integer] :timestamp the timestamp associated with
-      #   the column values
       #
-      def initialize(data_set, options = {}, &block)
+      def initialize(data_set, &block)
         @data_set, @options, @block = data_set, options, block
         @statements, @bind_vars = [], []
         SimpleDelegator.new(self).instance_eval(&block) if block
@@ -30,14 +25,24 @@ module Cequel
       #
       # Execute the statement as a write operation
       #
+      # @param options [Options] options
+      # @opiton options [Symbol] :consistency what consistency level to use for
+      #   the operation
+      # @option options [Integer] :ttl time-to-live in seconds for the written
+      #   data
+      # @option options [Time,Integer] :timestamp the timestamp associated with
+      #   the column values
       # @return [void]
       #
-      def execute
+      def execute(options = {})
+        options.assert_valid_keys(:timestamp, :ttl, :consistency)
         return if empty?
         statement = Statement.new
-        write_to_statement(statement)
+        consistency = options.fetch(:consistency, data_set.query_consistency)
+        write_to_statement(statement, options)
         statement.append(*data_set.row_specifications_cql)
-        data_set.write(*statement.args)
+        data_set.write_with_consistency(
+          statement.cql, statement.bind_vars, consistency)
       end
 
       private
@@ -63,12 +68,13 @@ module Cequel
       #
       # Generate CQL option statement for inserts and updates
       #
-      def generate_upsert_options
-        if options.empty?
+      def generate_upsert_options(options)
+        upsert_options = options.slice(:timestamp, :ttl)
+        if upsert_options.empty?
           ''
         else
           ' USING ' <<
-          options.map do |key, value|
+          upsert_options.map do |key, value|
             serialized_value =
               case key
               when :timestamp then (value.to_f * 1_000_000).to_i

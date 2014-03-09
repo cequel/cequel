@@ -44,10 +44,12 @@ module Cequel
       attr_reader :sort_order
       # @return [Integer] maximum number of rows to return, `nil` if no limit
       attr_reader :row_limit
+      # @return [Symbol] what consistency level queries from this data set will
+      #   use
+      # @since 1.1.0
+      attr_reader :query_consistency
 
-      def_delegator :keyspace, :execute, :execute_cql
-      private :execute_cql
-      def_delegator :keyspace, :write
+      def_delegator :keyspace, :write_with_consistency
 
       #
       # @param table_name [Symbol] column family for this data set
@@ -79,7 +81,7 @@ module Cequel
       #   CQL documentation for INSERT
       #
       def insert(data, options = {})
-        inserter(options) { insert(data) }.execute
+        inserter { insert(data) }.execute(options)
       end
 
       #
@@ -125,10 +127,10 @@ module Cequel
       #
       def update(*args, &block)
         if block
-          updater(args.extract_options!, &block).execute
+          updater(&block).execute(args.extract_options!)
         else
           data = args.shift
-          updater(args.extract_options!) { set(data) }.execute
+          updater { set(data) }.execute(args.extract_options!)
         end
       end
 
@@ -151,7 +153,7 @@ module Cequel
       #   CQL documentation for counter columns
       #
       def increment(deltas, options = {})
-        incrementer(options) { increment(deltas) }.execute
+        incrementer { increment(deltas) }.execute(options)
       end
       alias_method :incr, :increment
 
@@ -168,7 +170,7 @@ module Cequel
       # @since 0.5.0
       #
       def decrement(deltas, options = {})
-        incrementer(options) { decrement(deltas) }.execute
+        incrementer { decrement(deltas) }.execute(options)
       end
       alias_method :decr, :decrement
 
@@ -193,7 +195,7 @@ module Cequel
       # @see #update
       #
       def list_prepend(column, elements, options = {})
-        updater(options) { list_prepend(column, elements) }.execute
+        updater { list_prepend(column, elements) }.execute(options)
       end
 
       #
@@ -216,7 +218,7 @@ module Cequel
       # @since 1.0.0
       #
       def list_append(column, elements, options = {})
-        updater(options) { list_append(column, elements) }.execute
+        updater { list_append(column, elements) }.execute(options)
       end
 
       #
@@ -238,7 +240,7 @@ module Cequel
       # @since 1.0.0
       #
       def list_replace(column, index, value, options = {})
-        updater(options) { list_replace(column, index, value) }.execute
+        updater { list_replace(column, index, value) }.execute(options)
       end
 
       #
@@ -260,7 +262,7 @@ module Cequel
       # @since 1.0.0
       #
       def list_remove(column, value, options = {})
-        updater(options) { list_remove(column, value) }.execute
+        updater { list_remove(column, value) }.execute(options)
       end
 
       #
@@ -284,7 +286,7 @@ module Cequel
       #
       def list_remove_at(column, *positions)
         options = positions.extract_options!
-        deleter(options) { list_remove_at(column, *positions) }.execute
+        deleter { list_remove_at(column, *positions) }.execute(options)
       end
 
       #
@@ -307,7 +309,7 @@ module Cequel
       #
       def map_remove(column, *keys)
         options = keys.extract_options!
-        deleter(options) { map_remove(column, *keys) }.execute
+        deleter { map_remove(column, *keys) }.execute(options)
       end
 
       #
@@ -328,7 +330,7 @@ module Cequel
       # @since 1.0.0
       #
       def set_add(column, values, options = {})
-        updater(options) { set_add(column, values) }.execute
+        updater { set_add(column, values) }.execute(options)
       end
 
       #
@@ -349,7 +351,7 @@ module Cequel
       # @since 1.0.0
       #
       def set_remove(column, value, options = {})
-        updater(options) { set_remove(column, value) }.execute
+        updater { set_remove(column, value) }.execute(options)
       end
 
       #
@@ -370,7 +372,7 @@ module Cequel
       # @since 1.0.0
       #
       def map_update(column, updates, options = {})
-        updater(options) { map_update(column, updates) }.execute
+        updater { map_update(column, updates) }.execute(options)
       end
 
       #
@@ -422,11 +424,11 @@ module Cequel
       def delete(*columns, &block)
         options = columns.extract_options!
         if block
-          deleter(options, &block).execute
+          deleter(&block).execute(options)
         elsif columns.empty?
-          deleter(options) { delete_row }.execute
+          deleter { delete_row }.execute(options)
         else
-          deleter(options) { delete_columns(*columns) }.execute
+          deleter { delete_columns(*columns) }.execute(options)
         end
       end
 
@@ -545,6 +547,25 @@ module Cequel
         end
       end
 
+      # rubocop:disable LineLength
+
+      #
+      # Change the consistency for queries performed by this data set
+      #
+      # @param consistency [Symbol] a consistency level
+      # @return [DataSet] new data set tuned to the given consistency
+      #
+      # @see http://www.datastax.com/documentation/cassandra/2.0/cassandra/dml/dml_config_consistency_c.html
+      # @since 1.1.0
+      #
+      def consistency(consistency)
+        clone.tap do |data_set|
+          data_set.query_consistency = consistency
+        end
+      end
+
+      # rubocop:enable LineLength
+
       #
       # Enumerate over rows in this data set. Along with #each, all other
       # Enumerable methods are implemented.
@@ -632,27 +653,31 @@ module Cequel
       end
 
       # @private
-      def updater(options = {}, &block)
-        Updater.new(self, options, &block)
+      def updater(&block)
+        Updater.new(self, &block)
       end
 
       # @private
-      def deleter(options = {}, &block)
-        Deleter.new(self, options, &block)
+      def deleter(&block)
+        Deleter.new(self, &block)
       end
 
       protected
 
-      attr_writer :row_limit
+      attr_writer :row_limit, :query_consistency
 
       private
 
-      def inserter(options = {}, &block)
-        Inserter.new(self, options, &block)
+      def execute_cql(cql, *bind_vars)
+        keyspace.execute_with_consistency(cql, bind_vars, query_consistency)
       end
 
-      def incrementer(options = {}, &block)
-        Incrementer.new(self, options, &block)
+      def inserter(&block)
+        Inserter.new(self, &block)
+      end
+
+      def incrementer(&block)
+        Incrementer.new(self, &block)
       end
 
       def initialize_copy(source)

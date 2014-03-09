@@ -109,6 +109,14 @@ module Cequel
       def disallow_queries!
         cequel.should_not_receive(:execute)
       end
+
+      def expect_query_with_consistency(matcher, consistency)
+        expect(cequel.client).to receive(:execute).with(matcher, consistency)
+          .and_call_original
+        yield
+        allow(cequel.client).to receive(:execute).with(any_args)
+          .and_call_original
+      end
     end
   end
 end

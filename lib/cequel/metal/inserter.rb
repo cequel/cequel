@@ -11,7 +11,7 @@ module Cequel
       #
       # (see Writer#initialize)
       #
-      def initialize(data_set, options = {})
+      def initialize(data_set)
         @row = {}
         super
       end
@@ -19,10 +19,12 @@ module Cequel
       #
       # (see Writer#execute)
       #
-      def execute
+      def execute(options = {})
         statement = Statement.new
-        write_to_statement(statement)
-        data_set.write(*statement.args)
+        consistency = options.fetch(:consistency, data_set.query_consistency)
+        write_to_statement(statement, options)
+        data_set.write_with_consistency(
+          statement.cql, statement.bind_vars, consistency)
       end
 
       #
@@ -55,12 +57,12 @@ module Cequel
         end
       end
 
-      def write_to_statement(statement)
+      def write_to_statement(statement, options)
         statement.append("INSERT INTO #{table_name}")
         statement.append(
           " (#{column_names.join(', ')}) VALUES (#{statements.join(', ')}) ",
           *bind_vars)
-        statement.append(generate_upsert_options)
+        statement.append(generate_upsert_options(options))
       end
     end
   end
