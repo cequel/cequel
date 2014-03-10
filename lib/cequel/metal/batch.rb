@@ -25,9 +25,12 @@ module Cequel
       # @see Keyspace#batch
       #
       def initialize(keyspace, options = {})
+        options.assert_valid_keys(:auto_apply, :unlogged, :consistency)
         @keyspace = keyspace
         @auto_apply = options[:auto_apply]
         @unlogged = options.fetch(:unlogged, false)
+        @consistency = options.fetch(:consistency,
+                                     keyspace.default_consistency)
         reset
       end
 
@@ -54,7 +57,7 @@ module Cequel
           @statement.prepend(begin_statement)
           @statement.append("APPLY BATCH\n")
         end
-        @keyspace.execute(*@statement.args)
+        @keyspace.execute_with_consistency(@statement.args.first, @statement.args.drop(1), @consistency)
       end
 
       #
@@ -72,6 +75,17 @@ module Cequel
       #
       def logged?
         !unlogged?
+      end
+
+      # @private
+      def execute_with_consistency(cql, bind_vars, query_consistency)
+        if query_consistency && query_consistency != @consistency
+          raise ArgumentError,
+            "Attempting to perform query with consistency " \
+            "#{query_consistency.to_s.upcase} in batch with consistency " \
+            "#{@consistency.upcase}"
+        end
+        execute(cql, *bind_vars)
       end
 
       private

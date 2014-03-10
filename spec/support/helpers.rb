@@ -114,8 +114,7 @@ module Cequel
         expect(cequel.client).to receive(:execute).with(matcher, consistency)
           .and_call_original
         yield
-        allow(cequel.client).to receive(:execute).with(any_args)
-          .and_call_original
+        RSpec::Mocks.proxy_for(cequel.client).reset
       end
     end
   end
