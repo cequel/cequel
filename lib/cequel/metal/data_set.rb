@@ -652,16 +652,6 @@ module Cequel
         end
       end
 
-      # @private
-      def updater(&block)
-        Updater.new(self, &block)
-      end
-
-      # @private
-      def deleter(&block)
-        Deleter.new(self, &block)
-      end
-
       protected
 
       attr_writer :row_limit, :query_consistency
@@ -678,6 +668,14 @@ module Cequel
 
       def incrementer(&block)
         Incrementer.new(self, &block)
+      end
+
+      def updater(&block)
+        Updater.new(self, &block)
+      end
+
+      def deleter(&block)
+        Deleter.new(self, &block)
       end
 
       def initialize_copy(source)

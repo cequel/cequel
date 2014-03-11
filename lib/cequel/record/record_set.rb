@@ -455,6 +455,16 @@ module Cequel
       end
 
       #
+      # Set the consistency at which to read records into the record set.
+      #
+      # @param consistency [Symbol] consistency for reads
+      # @return [RecordSet] record set tuned to given consistency
+      #
+      def consistency(consistency)
+        scoped(query_consistency: consistency)
+      end
+
+      #
       # @overload first
       #   @return [Record] the first record in this record set
       #
@@ -634,9 +644,9 @@ module Cequel
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
-                   :scoped_indexed_column
+                   :scoped_indexed_column, :query_consistency
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-                :upper_bound, :scoped_indexed_column
+                :upper_bound, :scoped_indexed_column, :query_consistency
       hattr_inquirer :attributes, :reversed
       protected :reversed?
 

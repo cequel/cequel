@@ -48,6 +48,15 @@ describe Cequel::Record::Persistence do
             Blog.new.save
           }.to raise_error(Cequel::Record::MissingKeyError)
         end
+
+        it 'should save with specified consistency' do
+          expect_query_with_consistency(/INSERT/, :one) do
+            Blog.new do |blog|
+              blog.subdomain = 'cequel'
+              blog.name = 'Cequel'
+            end.save(consistency: :one)
+          end
+        end
       end
 
       context 'on update' do
@@ -77,6 +86,13 @@ describe Cequel::Record::Persistence do
             blog.subdomain = 'soup'
             blog.save
           }.to raise_error(ArgumentError)
+        end
+
+        it 'should save with specified consistency' do
+          expect_query_with_consistency(/UPDATE/, :one) do
+            blog.name = 'Cequel'
+            blog.save(consistency: :one)
+          end
         end
       end
     end
@@ -160,6 +176,13 @@ describe Cequel::Record::Persistence do
 
       it 'should mark record transient' do
         blog.should be_transient
+      end
+
+      it 'should destroy with specified consistency' do
+        blog = Blog.create(:subdomain => 'big-data', :name => 'Big Data')
+        expect_query_with_consistency(/DELETE/, :one) do
+          blog.destroy(consistency: :one)
+        end
       end
     end
   end

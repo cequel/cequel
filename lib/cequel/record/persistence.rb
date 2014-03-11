@@ -171,9 +171,9 @@ module Cequel
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys
-        if new_record? then create
-        else update
+        options.assert_valid_keys(:consistency)
+        if new_record? then create(options)
+        else update(options)
         end
         @new_record = false
         true
@@ -199,9 +199,10 @@ module Cequel
       #
       # @return [Record] self
       #
-      def destroy
+      def destroy(options = {})
+        options.assert_valid_keys(:consistency)
         assert_keys_present!
-        metal_scope.delete
+        metal_scope.delete(options)
         transient!
         self
       end
@@ -252,28 +253,28 @@ module Cequel
         self
       end
 
-      def create
+      def create(options = {})
         assert_keys_present!
-        metal_scope.insert(attributes.reject { |attr, value| value.nil? })
+        metal_scope.insert(attributes.reject { |attr, value| value.nil? }, options)
         loaded!
         persisted!
       end
 
-      def update
+      def update(options = {})
         assert_keys_present!
         connection.batch do
-          updater.execute
-          deleter.execute
+          updater.execute(options)
+          deleter.execute(options)
           @updater, @deleter = nil
         end
       end
 
       def updater
-        @updater ||= metal_scope.updater
+        @updater ||= Metal::Updater.new(metal_scope)
       end
 
       def deleter
-        @deleter ||= metal_scope.deleter
+        @deleter ||= Metal::Deleter.new(metal_scope)
       end
 
       private

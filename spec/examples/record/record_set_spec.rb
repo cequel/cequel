@@ -617,6 +617,14 @@ describe Cequel::Record::RecordSet do
     end
   end
 
+  describe '#consistency' do
+    it 'should perform query with specified consistency' do
+      expect_query_with_consistency(/SELECT/, :one) do
+        Post.consistency(:one).to_a
+      end
+    end
+  end
+
   describe '#count' do
     let(:records) { blogs }
 

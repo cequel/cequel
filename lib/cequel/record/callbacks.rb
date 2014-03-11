@@ -31,21 +31,25 @@ module Cequel
 
       # (see Persistence#save)
       def save(options = {})
-        connection.batch { run_callbacks(:save) { super } }
+        connection.batch(options.slice(:consistency)) do
+          run_callbacks(:save) { super }
+        end
       end
 
-      # (see Persistence#save)
-      def destroy
-        connection.batch { run_callbacks(:destroy) { super } }
+      # (see Persistence#destroy)
+      def destroy(options = {})
+        connection.batch(options.slice(:consistency)) do
+          run_callbacks(:destroy) { super }
+        end
       end
 
       protected
 
-      def create
+      def create(*)
         run_callbacks(:create) { super }
       end
 
-      def update
+      def update(*)
         run_callbacks(:update) { super }
       end
     end
