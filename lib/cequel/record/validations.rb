@@ -83,8 +83,8 @@ module Cequel
 
       private
 
-      def valid_with_callbacks?
-        run_callbacks(:validation) { valid_without_callbacks? }
+      def valid_with_callbacks?(context=nil)
+        run_callbacks(:validation) { valid_without_callbacks? context }
       end
     end
   end
