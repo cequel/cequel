@@ -37,6 +37,16 @@ describe Cequel::Record::Validations do
     end
   end
 
+  describe '#invalid?' do
+    it 'should be true if model is not valid' do
+      invalid_post.should be_invalid
+    end
+
+    it 'should be false if model is valid' do
+      valid_post.should_not be_invalid
+    end
+  end
+
   describe '#save' do
     it 'should return false and not persist model if invalid' do
       invalid_post.save.should be_false
