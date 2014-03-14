@@ -3,8 +3,6 @@ require_relative 'spec_helper'
 
 describe Cequel::Uuids do
   describe '#uuid' do
-    before(:all) { Time.zone = 'UTC' }
-
     specify { Cequel.uuid.is_a?(Cql::TimeUuid) }
     specify { Cequel.uuid != Cequel.uuid }
     specify { time = Time.now; Cequel.uuid(time).to_time == time }
