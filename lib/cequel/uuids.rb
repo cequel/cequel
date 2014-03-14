@@ -22,7 +22,8 @@ module Cequel
         timeuuid_generator.from_time(value)
       elsif value.is_a?(DateTime)
         timeuuid_generator.from_time(Time.at(value.to_f))
-      else Type::Timeuuid.instance.cast(value)
+      else
+        Type::Timeuuid.instance.cast(value)
       end
     end
 
