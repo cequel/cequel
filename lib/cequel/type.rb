@@ -409,7 +409,7 @@ module Cequel
       def cast(value)
         if value.is_a? Cql::Uuid then value
         elsif defined?(SimpleUUID::UUID) && value.is_a?(SimpleUUID::UUID)
-          Cql::TimeUuid.new(value.to_i)
+          Cql::Uuid.new(value.to_i)
         elsif value.is_a?(::Integer) || value.is_a?(::String)
           Cql::Uuid.new(value)
         else
@@ -431,6 +431,10 @@ module Cequel
     #   CQL3 data type documentation
     #
     class Timeuuid < Uuid
+      def cast(value)
+        Cql::TimeUuid.new(super.value)
+      end
+
       def internal_names
         ['org.apache.cassandra.db.marshal.TimeUUIDType']
       end
