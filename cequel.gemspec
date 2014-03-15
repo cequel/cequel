@@ -3,7 +3,7 @@ require File.expand_path('../lib/cequel/version', __FILE__)
 Gem::Specification.new do |s|
   s.name = 'cequel'
   s.version = Cequel::VERSION
-  s.authors = ['Mat Brown', 'Aubrey Holland', 'Keenan Brock', 'Insoo Buzz Jung', 'Louis Simoneau']
+  s.authors = ['Mat Brown', 'Aubrey Holland', 'Keenan Brock', 'Insoo Buzz Jung', 'Louis Simoneau', 'Peter Williams', 'Kenneth Hoffman']
   s.homepage = "https://github.com/cequel/cequel"
   s.email = 'mat.a.brown@gmail.com'
   s.license = 'MIT'
