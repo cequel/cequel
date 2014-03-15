@@ -31,12 +31,12 @@ module Cequel
 
       # (see Persistence#save)
       def save(options = {})
-        connection.batch { run_callbacks(:save) { super }}
+        connection.batch { run_callbacks(:save) { super } }
       end
 
       # (see Persistence#save)
       def destroy
-        connection.batch { run_callbacks(:destroy) { super }}
+        connection.batch { run_callbacks(:destroy) { super } }
       end
 
       protected

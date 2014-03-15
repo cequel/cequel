@@ -9,11 +9,11 @@ module Cequel
     # @see Keyspace#read_table
     #
     class Table
-      STORAGE_PROPERTIES = %w[
+      STORAGE_PROPERTIES = %w(
         bloom_filter_fp_chance caching comment compaction compression
         dclocal_read_repair_chance gc_grace_seconds read_repair_chance
         replicate_on_write
-      ]
+      )
 
       # @return [Symbol] the name of the table
       attr_reader :name

@@ -37,7 +37,7 @@ module Cequel
       def log(label, timing, statement, bind_vars)
         if timing >= threshold
           out.add(severity) do
-            sprintf(
+            format(
               '%s (%dms) %s',
               label, timing, sanitize(statement, bind_vars)
             )
@@ -64,7 +64,7 @@ module Cequel
       #
       def log(label, statement, bind_vars)
         out.add(severity) do
-          sprintf('%s (ERROR) %s', label, sanitize(statement, bind_vars))
+          format('%s (ERROR) %s', label, sanitize(statement, bind_vars))
         end
       end
     end
