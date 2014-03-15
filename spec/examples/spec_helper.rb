@@ -1,6 +1,7 @@
 # -*- encoding : utf-8 -*-
 require File.expand_path('../../environment', __FILE__)
 require 'cequel'
+require 'tzinfo'
 
 Dir.glob(File.expand_path('../../support/**/*.rb', __FILE__)).each do |file|
   require file
@@ -25,6 +26,7 @@ RSpec.configure do |config|
   config.before(:all) do
     cequel.schema.create!
     Cequel::Record.connection = cequel
+    Time.zone = 'UTC'
   end
 
   config.after(:all) do

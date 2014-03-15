@@ -9,6 +9,7 @@ require 'cequel/metal'
 require 'cequel/schema'
 require 'cequel/type'
 require 'cequel/util'
+require 'cequel/uuids'
 require 'cequel/record'
 
 #
@@ -21,6 +22,7 @@ require 'cequel/record'
 #   access to the database schema defined in Cassandra
 #
 module Cequel
+  extend Cequel::Uuids
   #
   # Get a handle to a keyspace
   #
@@ -30,31 +32,5 @@ module Cequel
   #
   def self.connect(configuration = nil)
     Metal::Keyspace.new(configuration || {})
-  end
-
-  #
-  # Create a UUID
-  #
-  # @param timestamp [Time] timestamp to assign to the UUID
-  # @return a UUID appropriate for use with Cequel
-  #
-  def self.uuid(timestamp = nil)
-    if timestamp then timeuuid_generator.from_time(timestamp)
-    else timeuuid_generator.next
-    end
-  end
-
-  #
-  # Determine if an object is a UUID
-  #
-  # @param object an object to check
-  # @return [Boolean] true if the object is recognized by Cequel as a UUID
-  #
-  def self.uuid?(object)
-    object.is_a?(Cql::Uuid)
-  end
-
-  def self.timeuuid_generator
-    @timeuuid_generator ||= Cql::TimeUuid::Generator.new
   end
 end
