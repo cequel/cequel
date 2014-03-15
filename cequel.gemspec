@@ -29,5 +29,6 @@ DESC
   s.add_development_dependency 'rubocop'
   s.add_development_dependency 'travis'
   s.add_development_dependency 'travis-lint'
+  s.add_development_dependency 'tzinfo'
   s.requirements << 'Cassandra >= 1.2.0'
 end
