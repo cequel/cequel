@@ -1,3 +1,7 @@
+## 1.0.4
+
+* Fix `#invalid?`
+
 ## 1.0.3
 
 * Put missing .yml template file in gem – fix `cequel:configuration` generator
