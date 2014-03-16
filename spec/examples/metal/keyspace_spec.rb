@@ -28,8 +28,8 @@ describe Cequel::Metal::Keyspace do
         cequel[:posts].where(id: 1).delete(:title)
       end
       RSpec::Mocks.proxy_for(cequel).reset
-      cequel[:posts].first.should == {id: 1, title: nil, body: 'Body'}
-        .with_indifferent_access
+      expect(cequel[:posts].first).to eq({id: 1, title: nil, body: 'Body'}
+        .with_indifferent_access)
     end
 
     it 'should auto-apply if option given' do
