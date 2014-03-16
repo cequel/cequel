@@ -1,3 +1,10 @@
+## 1.1.0
+
+* Switch to `cql-rb` (CQL native protocol) from `cassandra-cql` (Thrift
+  protocol)
+* Support for consistency tuning
+* Add `partition: true` option to `belongs_to`
+
 ## 1.0.4
 
 * Fix `#invalid?`
