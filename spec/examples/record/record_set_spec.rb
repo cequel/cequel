@@ -353,10 +353,11 @@ describe Cequel::Record::RecordSet do
     let(:records) { [posts, blogs, mongo_posts] }
 
     it 'should respect :batch_size argument' do
-      cequel.should_receive(:execute).twice.and_call_original
+      cequel.should_receive(:execute_with_consistency).twice.and_call_original
       Blog.find_each(:batch_size => 2).map(&:subdomain).
         should =~ subdomains
     end
+
     it 'should iterate over all keys' do
       Post.find_each(:batch_size => 2).map(&:title).should =~
         (0...5).flat_map { |i| ["Cequel #{i}", "Sequel #{i}", "Mongoid #{i}"] }
@@ -613,6 +614,14 @@ describe Cequel::Record::RecordSet do
       expect { Post.where(:author_id, uuids.first).
         where(:author_name, 'Mat Brown') }.
         to raise_error(Cequel::Record::IllegalQuery)
+    end
+  end
+
+  describe '#consistency' do
+    it 'should perform query with specified consistency' do
+      expect_query_with_consistency(/SELECT/, :one) do
+        Post.consistency(:one).to_a
+      end
     end
   end
 

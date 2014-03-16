@@ -84,6 +84,12 @@ describe Cequel::Metal::DataSet do
         first.writetime(:title).should == (time.to_f * 1_000_000).to_i
     end
 
+    it 'should insert row with given consistency' do
+      expect_query_with_consistency(/INSERT/, :one) do
+        cequel[:posts].insert(row, consistency: :one)
+      end
+    end
+
     it 'should include multiple arguments joined by AND' do
       cequel.schema.truncate_table(:posts)
       time = 1.day.ago
@@ -116,6 +122,13 @@ describe Cequel::Metal::DataSet do
 
       row.ttl(:title).should be_within(5).of(10.minutes)
       row.writetime(:title).should == (time.to_f * 1_000_000).to_i
+    end
+
+    it 'should send update statement with given consistency' do
+      expect_query_with_consistency(/UPDATE/, :one) do
+        cequel[:posts].where(row_keys).update(
+          {title: 'Marshmallows'}, consistency: :one)
+      end
     end
 
     it 'should overwrite list column' do
@@ -357,6 +370,12 @@ describe Cequel::Metal::DataSet do
       # This means timestamp is working, since the earlier timestamp would cause
       # Cassandra to ignore the deletion
     end
+
+    it 'should send delete with specified consistency' do
+      expect_query_with_consistency(/DELETE/, :one) do
+        cequel[:posts].where(row_keys).delete(:body, :consistency => :one)
+      end
+    end
   end
 
   describe '#list_remove_at' do
@@ -551,6 +570,80 @@ describe Cequel::Metal::DataSet do
       cequel[:posts].where(row_keys.slice(:blog_subdomain)).
         order(permalink: 'desc').map { |row| row[:title] }.
         should == ['ZZ Top', 'Marshmallows', 'Big Data']
+    end
+  end
+
+  describe '#consistency' do
+    let(:data_set) { cequel[:posts].consistency(:one) }
+
+    it 'should issue SELECT with scoped consistency' do
+      expect_query_with_consistency(/SELECT/, :one) { data_set.to_a }
+    end
+
+    it 'should issue COUNT with scoped consistency' do
+      expect_query_with_consistency(/SELECT.*COUNT/, :one) { data_set.count }
+    end
+
+    it 'should issue INSERT with scoped consistency' do
+      expect_query_with_consistency(/INSERT/, :one) do
+        data_set.insert(row_keys)
+      end
+    end
+
+    it 'should issue UPDATE with scoped consistency' do
+      expect_query_with_consistency(/UPDATE/, :one) do
+        data_set.where(row_keys).update(title: 'Marshmallows')
+      end
+    end
+
+    it 'should issue DELETE with scoped consistency' do
+      expect_query_with_consistency(/DELETE/, :one) do
+        data_set.where(row_keys).delete
+      end
+    end
+
+    it 'should issue DELETE column with scoped consistency' do
+      expect_query_with_consistency(/DELETE/, :one) do
+        data_set.where(row_keys).delete(:title)
+      end
+    end
+  end
+
+  describe 'default consistency' do
+    before(:all) { cequel.default_consistency = :all }
+    after(:all) { cequel.default_consistency = nil }
+    let(:data_set) { cequel[:posts] }
+
+    it 'should issue SELECT with default consistency' do
+      expect_query_with_consistency(/SELECT/, :all) { data_set.to_a }
+    end
+
+    it 'should issue COUNT with default consistency' do
+      expect_query_with_consistency(/SELECT.*COUNT/, :all) { data_set.count }
+    end
+
+    it 'should issue INSERT with default consistency' do
+      expect_query_with_consistency(/INSERT/, :all) do
+        data_set.insert(row_keys)
+      end
+    end
+
+    it 'should issue UPDATE with default consistency' do
+      expect_query_with_consistency(/UPDATE/, :all) do
+        data_set.where(row_keys).update(title: 'Marshmallows')
+      end
+    end
+
+    it 'should issue DELETE with default consistency' do
+      expect_query_with_consistency(/DELETE/, :all) do
+        data_set.where(row_keys).delete
+      end
+    end
+
+    it 'should issue DELETE column with default consistency' do
+      expect_query_with_consistency(/DELETE/, :all) do
+        data_set.where(row_keys).delete(:title)
+      end
     end
   end
 

@@ -27,6 +27,8 @@ RSpec.configure do |config|
     cequel.schema.create!
     Cequel::Record.connection = cequel
     Time.zone = 'UTC'
+    I18n.enforce_available_locales = false
+    SafeYAML::OPTIONS[:default_mode] = :safe
   end
 
   config.after(:all) do

@@ -61,7 +61,7 @@ module Cequel
 
       private
 
-      def write_to_statement(statement)
+      def write_to_statement(statement, options)
         if @delete_row
           statement.append("DELETE FROM #{table_name}")
         elsif statements.empty?
@@ -71,7 +71,7 @@ module Cequel
             .append(statements.join(','), *bind_vars)
             .append(" FROM #{table_name}")
         end
-        statement.append(generate_upsert_options)
+        statement.append(generate_upsert_options(options))
       end
 
       def empty?

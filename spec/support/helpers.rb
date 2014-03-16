@@ -109,6 +109,13 @@ module Cequel
       def disallow_queries!
         cequel.should_not_receive(:execute)
       end
+
+      def expect_query_with_consistency(matcher, consistency)
+        expect(cequel.client).to receive(:execute).with(matcher, consistency)
+          .and_call_original
+        yield
+        RSpec::Mocks.proxy_for(cequel.client).reset
+      end
     end
   end
 end
