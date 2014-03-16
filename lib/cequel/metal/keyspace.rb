@@ -38,8 +38,9 @@ module Cequel
 
       # @!method write_with_consistency(statement, bind_vars, consistency)
       #
-      #   Write data to this keyspace using a CQL query at the given consistency.
-      #   Will be included the current batch operation if one is present.
+      #   Write data to this keyspace using a CQL query at the given
+      #   consistency. Will be included the current batch operation if one is
+      #   present.
       #
       #   @param (see #execute_with_consistency)
       #   @return [void]

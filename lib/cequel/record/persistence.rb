@@ -255,7 +255,8 @@ module Cequel
 
       def create(options = {})
         assert_keys_present!
-        metal_scope.insert(attributes.reject { |attr, value| value.nil? }, options)
+        metal_scope
+          .insert(attributes.reject { |attr, value| value.nil? }, options)
         loaded!
         persisted!
       end

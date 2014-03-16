@@ -57,7 +57,8 @@ module Cequel
           @statement.prepend(begin_statement)
           @statement.append("APPLY BATCH\n")
         end
-        @keyspace.execute_with_consistency(@statement.args.first, @statement.args.drop(1), @consistency)
+        @keyspace.execute_with_consistency(
+          @statement.args.first, @statement.args.drop(1), @consistency)
       end
 
       #
@@ -81,9 +82,9 @@ module Cequel
       def execute_with_consistency(cql, bind_vars, query_consistency)
         if query_consistency && query_consistency != @consistency
           raise ArgumentError,
-            "Attempting to perform query with consistency " \
-            "#{query_consistency.to_s.upcase} in batch with consistency " \
-            "#{@consistency.upcase}"
+                "Attempting to perform query with consistency " \
+                "#{query_consistency.to_s.upcase} in batch with consistency " \
+                "#{@consistency.upcase}"
         end
         execute(cql, *bind_vars)
       end
