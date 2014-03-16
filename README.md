@@ -311,6 +311,21 @@ Post.where(:author_id, id)
 Note that `where` is only for secondary indexed columns; use `[]` to scope
 record sets by primary keys.
 
+### Consistency tuning ###
+
+Cassandra supports [tunable
+consistency](http://www.datastax.com/documentation/cassandra/2.0/cassandra/dml/dml_config_consistency_c.html),
+allowing you to choose the right balance between query speed and consistent
+reads and writes. Cequel supports consistency tuning for reads and writes:
+
+```ruby
+Post.new(id: 1, title: 'First post!').save!(consistency: :all)
+
+Post.consistency(:one).find_each { |post| puts post.title }
+```
+
+Both read and write consistency default to `QUORUM`.
+
 ### ActiveModel Support ###
 
 Cequel supports ActiveModel functionality, such as callbacks, validations,
