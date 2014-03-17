@@ -24,4 +24,6 @@ module Cequel
   end
 end
 
-Cequel::Metal::Keyspace.module_eval { include NewRelicInstrumentation }
+Cequel::Metal::Keyspace.module_eval do
+  include Cequel::Metal::NewRelicInstrumentation
+end
