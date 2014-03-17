@@ -1,3 +1,8 @@
+## 1.1.1
+
+* Specify NewRelicInstrumentation with full namespace
+* Update config generator template for native protocol
+
 ## 1.1.0
 
 * Switch to `cql-rb` (CQL native protocol) from `cassandra-cql` (Thrift
