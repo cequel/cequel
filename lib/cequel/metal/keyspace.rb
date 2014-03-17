@@ -24,6 +24,8 @@ module Cequel
       # @return [Symbol] the default consistency for queries in this keyspace
       # @since 1.1.0
       attr_writer :default_consistency
+      # @return [Hash] credentials for connect to cassandra
+      attr_reader :credentials
 
       #
       # @!method write(statement, *bind_vars)
@@ -112,6 +114,7 @@ module Cequel
         @configuration = configuration
 
         @hosts, @port = extract_hosts_and_port(configuration)
+        @credentials = extract_credentials(configuration)
 
         @name = configuration[:keyspace]
         # reset the connections
@@ -202,7 +205,7 @@ module Cequel
       private :lock
 
       def build_client
-        Cql::Client.connect(hosts: hosts, port: port).tap do |client|
+        Cql::Client.connect(hosts: hosts, port: port, credentials: credentials).tap do |client|
           client.use(name) if name
         end
       end
@@ -237,6 +240,14 @@ module Cequel
         end
 
         [hosts, ports.first || 9042]
+      end
+
+      def extract_credentials(configuration)
+        _credentials = { username: '', password: '' }
+        _credentials[:username] = configuration[:username] if configuration.key?(:username)
+        _credentials[:password] = configuration[:password] if configuration.key?(:password)
+
+        _credentials
       end
     end
   end
