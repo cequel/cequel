@@ -54,6 +54,7 @@ module Cequel
       def self.cequel
         @cequel ||= Cequel.connect(
           host: host,
+          port: port,
           keyspace: keyspace_name
         ).tap do |cequel|
           if ENV['CEQUEL_LOG_QUERIES']
@@ -65,7 +66,11 @@ module Cequel
       end
 
       def self.host
-        ENV['CEQUEL_TEST_HOST'] || '127.0.0.1:9042'
+        '127.0.0.1'
+      end
+
+      def self.port
+        ENV['CEQUEL_TEST_PORT'] || '9042'
       end
 
       def self.legacy_host
