@@ -136,8 +136,8 @@ exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
     service cassandra start
   SH
 
-  %w(2.0.4 2.0.3 2.0.2 2.0.1 2.0.0 1.2.13 1.2.12 1.2.11 1.2.10 1.2.9 1.2.8
-     1.2.7 1.2.6 1.2.5 1.2.4 1.2.3 1.2.2 1.2.1 1.2.0).each do |version|
+  versions = (0..6).map { |p| "2.0.#{p}" } + (0..15).map { |p| "1.2.#{p}" }
+  versions.each do |version|
     java_version = version =~ /^1/ ? '6' : '7'
     config.vm.define version do |machine|
       machine.vm.provision :shell, inline: provision,
