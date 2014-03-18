@@ -32,9 +32,14 @@ module Cequel
         response = nil
         begin
           time = Benchmark.ms { response = yield }
-          severity = time >= slowlog_threshold ? :warn : :debug
-          logger.__send__(severity) do
+          generate_message = -> do
             format_for_log(label, "#{time.round.to_i}ms", statement, bind_vars)
+          end
+
+          if time >= slowlog_threshold
+            logger.warn(&generate_message)
+          else
+            logger.debug(&generate_message)
           end
         rescue Exception => e
           logger.error { format_for_log(label, 'ERROR', statement, bind_vars) }
