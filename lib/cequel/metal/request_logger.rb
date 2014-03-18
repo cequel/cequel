@@ -32,7 +32,7 @@ module Cequel
         response = nil
         begin
           time = Benchmark.ms { response = yield }
-          generate_message = -> do
+          generate_message = lambda do
             format_for_log(label, "#{time.round.to_i}ms", statement, bind_vars)
           end
 
