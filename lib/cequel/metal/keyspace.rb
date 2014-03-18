@@ -205,7 +205,10 @@ module Cequel
       private :lock
 
       def build_client
-        Cql::Client.connect(hosts: hosts, port: port, credentials: credentials).tap do |client|
+        client_options = {hosts: hosts, port: port}.tap do |options|
+          options[:credentials] = credentials if credentials
+        end
+        Cql::Client.connect(client_options).tap do |client|
           client.use(name) if name
         end
       end
@@ -243,11 +246,7 @@ module Cequel
       end
 
       def extract_credentials(configuration)
-        _credentials = { username: '', password: '' }
-        _credentials[:username] = configuration[:username] if configuration.key?(:username)
-        _credentials[:password] = configuration[:password] if configuration.key?(:password)
-
-        _credentials
+        configuration.slice(:username, :password).presence
       end
     end
   end

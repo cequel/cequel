@@ -55,8 +55,7 @@ module Cequel
         @cequel ||= Cequel.connect(
           host: host,
           port: port,
-          keyspace: keyspace_name,
-          credentials: { username: username, password: password }
+          keyspace: keyspace_name
         ).tap do |cequel|
           if ENV['CEQUEL_LOG_QUERIES']
             cequel.logger = Logger.new(STDOUT)
@@ -80,14 +79,6 @@ module Cequel
 
       def self.keyspace_name
         ENV['CEQUEL_TEST_KEYSPACE'] || 'cequel_test'
-      end
-
-      def self.username
-        ENV['CEQUEL_TEST_USERNAME'] || ''
-      end
-
-      def self.username
-        ENV['CEQUEL_TEST_PASSWORD'] || ''
       end
 
       def self.legacy_connection
