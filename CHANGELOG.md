@@ -1,3 +1,8 @@
+## 1.1.2
+
+* Simplify logging implementation
+* Support Cassandra authentication
+
 ## 1.1.1
 
 * Specify NewRelicInstrumentation with full namespace
