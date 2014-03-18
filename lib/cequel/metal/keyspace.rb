@@ -94,16 +94,17 @@ module Cequel
       # Configure this keyspace from a hash of options
       #
       # @param configuration [Options] configuration options
-      # @option configuration [String] :host ('127.0.0.1:9042') host/port of
+      # @option configuration [String] :host ('127.0.0.1') hostname of
       #   single Cassandra instance to connect to
+      # @option configuration [Integer] :port (9042) port on which to connect
+      #   to all specified hosts
       # @option configuration [Array<String>] :hosts list of Cassandra
-      #   instances to connect to
-      # @option configuration [Hash] :thrift Thrift options to be passed
-      #   directly to Thrift client
+      #   instances to connect to (hostnames only)
+      # @option configuration [String] :username user to auth with (leave blank
+      #   for no auth)
+      # @option configuration [String] :password password to auth with (leave
+      #   blank for no auth)
       # @option configuration [String] :keyspace name of keyspace to connect to
-      # @option configuration [Integer] :pool (1) size of connection pool
-      # @option configuration [Integer] :pool_timeout (0) timeout when
-      #   attempting to check out connection from pool
       # @return [void]
       #
       def configure(configuration = {})

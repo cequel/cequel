@@ -3,15 +3,11 @@ development:
   host: '127.0.0.1'
   port: 9042
   keyspace: <%= app_name %>_development
-  username: 
-  password: 
 
 test:
   host: '127.0.0.1'
   port: 9042
   keyspace: <%= app_name %>_test
-  username: 
-  password: 
 
 production:
   hosts:
@@ -20,5 +16,5 @@ production:
     - 'cass3.<%= app_name %>.biz'
   port: 9042
   keyspace: <%= app_name %>_production
-  username: 
-  password: 
+  username: 'myappuser'
+  password: 'password1'
