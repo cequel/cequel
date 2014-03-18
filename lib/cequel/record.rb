@@ -13,6 +13,7 @@ require 'cequel/record/data_set_builder'
 require 'cequel/record/bound'
 require 'cequel/record/lazy_record_collection'
 require 'cequel/record/scoped'
+require 'cequel/record/finders'
 require 'cequel/record/secondary_indexes'
 require 'cequel/record/associations'
 require 'cequel/record/association_collection'
@@ -69,6 +70,7 @@ module Cequel
   # @see Persistence Creating, updating, and destroying records
   # @see BulkWrites Updating and destroying records in bulk
   # @see RecordSet Loading records from the database
+  # @see Finders Magic finder methods
   # @see MassAssignment Mass-assignment protection and strong attributes
   # @see Callbacks Lifecycle hooks
   # @see Validations
@@ -84,6 +86,7 @@ module Cequel
       include Persistence
       include Associations
       include Scoped
+      extend Finders
       extend SecondaryIndexes
       include MassAssignment
       include Callbacks

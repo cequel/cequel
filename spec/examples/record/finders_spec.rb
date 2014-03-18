@@ -1,0 +1,140 @@
+require_relative 'spec_helper'
+
+describe Cequel::Record::Finders do
+  model :Blog do
+    key :subdomain, :text
+    column :name, :text
+    column :description, :text
+    column :owner_id, :uuid
+  end
+
+  model :User do
+    key :login, :text
+    column :name, :text
+  end
+
+  model :Post do
+    key :blog_subdomain, :text
+    key :permalink, :text
+    column :title, :text
+    column :body, :text
+    column :author_id, :uuid
+  end
+
+  let :blogs do
+    cequel.batch do
+      5.times.map do |i|
+        Blog.create!(subdomain: "cassandra#{i}", name: 'Cassandra')
+      end
+    end
+  end
+
+  let :cassandra_posts do
+    cequel.batch do
+      5.times.map do |i|
+        Post.create!(blog_subdomain: 'cassandra', permalink: "cassandra#{i}")
+      end
+    end
+  end
+
+  let :postgres_posts do
+    cequel.batch do
+      5.times.map do |i|
+        Post.create!(blog_subdomain: 'postgres', permalink: "postgres#{i}")
+      end
+    end
+  end
+
+  let(:posts) { cassandra_posts + postgres_posts }
+
+  context 'simple primary key' do
+
+    let!(:blog) { blogs.first }
+
+    describe '#find_by_*' do
+      it 'should return matching record' do
+        expect(Blog.find_by_subdomain('cassandra0')).to eq(blog)
+      end
+
+      it 'should return nil if no record matches' do
+        expect(Blog.find_by_subdomain('bogus')).to be_nil
+      end
+
+      it 'should respond to method before it is called' do
+        expect(User).to be_respond_to(:find_by_login)
+      end
+
+      it 'should raise error on wrong name' do
+        expect { Blog.find_by_bogus('bogus') }.to raise_error(NoMethodError)
+      end
+
+      it 'should not respond to wrong name' do
+        expect(User).to_not be_respond_to(:find_by_bogus)
+      end
+    end
+
+    describe '#find_all_by_*' do
+      it 'should raise error if called' do
+        expect { Blog.find_all_by_subdomain('outoftime') }
+        .to raise_error(NoMethodError)
+      end
+
+      it 'should not respond' do
+        expect(User).not_to be_respond_to(:find_all_by_login)
+      end
+    end
+  end
+
+  context 'compound primary key' do
+
+    let!(:post) { posts.first }
+
+    describe '#find_all_by_*' do
+      it 'should return all records matching key prefix' do
+        expect(Post.find_all_by_blog_subdomain('cassandra'))
+          .to eq(cassandra_posts)
+      end
+
+      it 'should greedily load records' do
+        records = Post.find_all_by_blog_subdomain('cassandra')
+        disallow_queries!
+        expect(records).to eq(cassandra_posts)
+      end
+
+      it 'should return empty array if nothing matches' do
+        expect(Post.find_all_by_blog_subdomain('bogus')).to eq([])
+      end
+
+      it 'should not exist for all keys' do
+        expect { Post.find_all_by_blog_subdomain_and_permalink('f', 'b') }
+          .to raise_error(NoMethodError)
+      end
+    end
+
+    describe '#find_by_*' do
+      it 'should return record matching all keys' do
+        expect(Post.find_by_blog_subdomain_and_permalink('cassandra',
+                                                         'cassandra0'))
+          .to eq(cassandra_posts.first)
+      end
+
+      it 'should not exist for key prefix' do
+        expect { Post.find_by_blog_subdomain('foo') }
+          .to raise_error(NoMethodError)
+      end
+    end
+
+    describe '#with_*' do
+      it 'should return record matching all keys' do
+        expect(Post.with_blog_subdomain_and_permalink('cassandra',
+                                                      'cassandra0'))
+          .to eq(cassandra_posts.first(1))
+      end
+
+      it 'should return all records matching key prefix' do
+        expect(Post.with_blog_subdomain('cassandra'))
+          .to eq(cassandra_posts)
+      end
+    end
+  end
+end
