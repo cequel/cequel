@@ -155,6 +155,17 @@ the `[]` operator, these methods operate on the first unscoped primary key:
 Post['bigdata'].after(last_id) # scopes posts with blog_subdomain="bigdata" and id > last_id
 ```
 
+You can also use `where` to scope to primary key columns, but a primary key
+column can only be scoped if all the columns that come before it are also
+scoped:
+
+```ruby
+Post.where(blog_subdomain: 'bigdata') # this is fine
+Post.where(blog_subdomain: 'bigdata', permalink: 'cassandra') # also fine
+Post.where(blog_subdomain: 'bigdata').where(permalink: 'cassandra') # also fine
+Post.where(permalink: 'cassandra') # bad: can't use permalink without blog_subdomain
+```
+
 Note that record sets always load records in batches; Cassandra does not support
 result sets of unbounded size. This process is transparent to you but you'll see
 multiple queries in your logs if you're iterating over a huge result set.
@@ -307,9 +318,6 @@ You can also call the `where` method directly on record sets:
 ```ruby
 Post.where(:author_id, id)
 ```
-
-Note that `where` is only for secondary indexed columns; use `[]` to scope
-record sets by primary keys.
 
 ### Consistency tuning ###
 

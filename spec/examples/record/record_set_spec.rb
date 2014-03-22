@@ -585,35 +585,114 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#where' do
-    it 'should correctly query for secondary indexed columns' do
-      Post.where(:author_id, uuids.first).map(&:permalink).
-        should == %w(cequel0 cequel2 cequel4)
+    context 'simple primary key' do
+      let(:records) { blogs }
+
+      it 'should correctly query for simple primary key with two arguments' do
+        expect(Blog.where(:subdomain, 'blog-0'))
+          .to eq(blogs.first(1))
+      end
+
+      it 'should correctly query for simple primary key with hash argument' do
+        expect(Blog.where(subdomain: 'blog-0'))
+          .to eq(blogs.first(1))
+      end
     end
 
-    it 'should cast argument for column' do
-      Post.where(:author_id, uuids.first.to_s).map(&:permalink).
-        should == %w(cequel0 cequel2 cequel4)
+    context 'compound primary key' do
+      it 'should correctly query for first primary key column' do
+        expect(Post.where(blog_subdomain: 'cassandra'))
+          .to eq(cassandra_posts)
+      end
+
+      it 'should perform IN query when passed multiple values' do
+        expect(Post.where(blog_subdomain: %w(cassandra postgres)))
+          .to match_array(cassandra_posts + postgres_posts)
+      end
+
+      it 'should correctly query for both primary key columns' do
+        expect(Post.where(blog_subdomain: 'cassandra', permalink: 'cequel0'))
+          .to eq(cassandra_posts.first(1))
+      end
+
+      it 'should correctly query for both primary key columns chained' do
+        expect(Post.where(blog_subdomain: 'cassandra')
+               .where(permalink: 'cequel0'))
+          .to eq(cassandra_posts.first(1))
+      end
+
+      it 'should perform range query when passed range' do
+        expect(Post.where(blog_subdomain: %w(cassandra),
+                          permalink: 'cequel0'..'cequel2'))
+          .to eq(cassandra_posts.first(3))
+      end
+
+      it 'should raise error if lower-order primary key specified without higher' do
+        expect { Post.where(permalink: 'cequel0').first }
+          .to raise_error(Cequel::Record::IllegalQuery)
+      end
     end
 
-    it 'should raise ArgumentError if column is not recognized' do
-      expect { Post.where(:bogus, 'Business') }.
-        to raise_error(ArgumentError)
+    context 'secondary indexed column' do
+      it 'should query for secondary indexed columns with two arguments' do
+        Post.where(:author_id, uuids.first).map(&:permalink).
+          should == %w(cequel0 cequel2 cequel4)
+      end
+
+      it 'should query for secondary indexed columns with hash argument' do
+        Post.where(author_id: uuids.first).map(&:permalink).
+          should == %w(cequel0 cequel2 cequel4)
+      end
+
+      it 'should not allow multiple columns in the arguments' do
+        expect { Post.where(author_id: uuids.first, author_name: 'Mat Brown') }
+          .to raise_error(Cequel::Record::IllegalQuery)
+      end
+
+      it 'should not allow chaining of multiple columns' do
+        expect { Post.where(:author_id, uuids.first).
+          where(:author_name, 'Mat Brown') }.
+          to raise_error(Cequel::Record::IllegalQuery)
+      end
+
+      it 'should cast argument for column' do
+        Post.where(:author_id, uuids.first.to_s).map(&:permalink).
+          should == %w(cequel0 cequel2 cequel4)
+      end
     end
 
-    it 'should raise ArgumentError if column is not indexed' do
-      expect { Post.where(:title, 'Cequel 0') }.
-        to raise_error(ArgumentError)
+    context 'mixing keys and secondary-indexed columns' do
+      it 'should not allow mixture in hash argument' do
+        expect { Post.where(blog_subdomain: 'cassandra',
+                            author_id: uuids.first) }
+          .to raise_error(Cequel::Record::IllegalQuery)
+      end
+
+      it 'should not allow mixture in chain with primary first' do
+        expect { Post.where(blog_subdomain: 'cassandra')
+                  .where(author_id: uuids.first) }
+          .to raise_error(Cequel::Record::IllegalQuery)
+      end
+
+      it 'should not allow mixture in chain with secondary first' do
+        expect { Post.where(author_id: uuids.first)
+                  .where(blog_subdomain: 'cassandra') }
+          .to raise_error(Cequel::Record::IllegalQuery)
+      end
     end
 
-    it 'should raise ArgumentError if column is a key' do
-      expect { Post.where(:permalink, 'cequel0') }.
-        to raise_error(ArgumentError)
+    context 'nonexistent column' do
+      it 'should raise ArgumentError if column is not recognized' do
+        expect { Post.where(:bogus, 'Business') }.
+          to raise_error(ArgumentError)
+      end
     end
 
-    it 'should raise IllegalQuery if applied twice' do
-      expect { Post.where(:author_id, uuids.first).
-        where(:author_name, 'Mat Brown') }.
-        to raise_error(Cequel::Record::IllegalQuery)
+    context 'non-indexed column' do
+      it 'should raise ArgumentError if column is not indexed' do
+        expect { Post.where(:title, 'Cequel 0') }.
+          to raise_error(ArgumentError)
+      end
     end
   end
 

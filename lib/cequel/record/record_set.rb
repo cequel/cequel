@@ -181,38 +181,38 @@ module Cequel
       # Filter the record set to records containing a given value in an indexed
       # column
       #
-      # @param column_name [Symbol] column for filter
-      # @param value value to match in given column
-      # @return [RecordSet] record set with filter applied
-      # @raise [IllegalQuery] if this record set is already filtered by an
-      #   indexed column
-      # @raise [ArgumentError] if the specified column is not an data column
-      #   with a secondary index
+      # @overload where(column_name, value)
+      #   @param column_name [Symbol] column for filter
+      #   @param value value to match in given column
+      #   @return [RecordSet] record set with filter applied
+      #   @deprecated
       #
-      # @note This should only be used with data columns that have secondary
-      #   indexes. To filter a record set using a primary key, use {#[]}
+      # @overload where(column_values)
+      #   @param column_values [Hash] map of key column names to values
+      #   @return [RecordSet] record set with filter applied
+      #
+      # @raise [IllegalQuery] if applying filter would generate an impossible
+      #   query
+      # @raise [ArgumentError] if the specified column is not a column that
+      #   can be filtered on
+      #
+      # @note Filtering on a primary key requires also filtering on all prior
+      #   primary keys
       # @note Only one secondary index filter can be used in a given query
       # @note Secondary index filters cannot be mixed with primary key filters
       #
-      def where(column_name, value)
-        column = target_class.reflect_on_column(column_name)
-        if scoped_indexed_column
-          fail IllegalQuery,
-               "Can't scope by more than one indexed column in the same query"
-        end
-        unless column
+      def where(*args)
+        if args.length == 1
+          column_filters = args.first.symbolize_keys
+        elsif args.length == 2
+          warn "where(column_name, value) is deprecated. Use " \
+               "where(column_name => value) instead"
+          column_filters = {args.first.to_sym => args.second}
+        else
           fail ArgumentError,
-               "No column #{column_name} configured for #{target_class.name}"
+               "wrong number of arguments (#{args.length} for 1..2)"
         end
-        unless column.data_column?
-          fail ArgumentError,
-               "Use the `at` method to restrict scope by primary key"
-        end
-        unless column.indexed?
-          fail ArgumentError,
-               "Can't scope by non-indexed column #{column_name}"
-        end
-        scoped(scoped_indexed_column: {column_name => column.cast(value)})
+        filter_columns(column_filters)
       end
 
       #
@@ -639,6 +639,11 @@ module Cequel
         entries == other.to_a
       end
 
+      # @private
+      def to_ary
+        entries
+      end
+
       protected
 
       attr_reader :attributes
@@ -683,6 +688,57 @@ module Cequel
         end
       end
 
+      def filter_columns(column_values)
+        return self if column_values.empty?
+
+        if column_values.key?(next_unscoped_key_name)
+          filter_primary_key(column_values.delete(next_unscoped_key_name))
+        else
+          filter_secondary_index(*column_values.shift)
+        end.filter_columns(column_values)
+      end
+
+      def filter_primary_key(value)
+        if scoped_indexed_column
+          fail IllegalQuery,
+               "Can't filter by both primary key and secondary index"
+        end
+        if value.is_a?(Range)
+          self.in(value)
+        else
+          scoped { |attributes| attributes[:scoped_key_values] << value }
+        end
+      end
+
+      def filter_secondary_index(column_name, value)
+        column = target_class.reflect_on_column(column_name)
+        if column.nil?
+          fail ArgumentError,
+               "No column #{column_name} configured for #{target_class.name}"
+        end
+        if column.key?
+          missing_column_names = unscoped_key_names.take_while do |key_name|
+            key_name != column_name
+          end
+          fail IllegalQuery,
+               "Can't scope key column #{column_name} without also scoping " \
+               "#{missing_column_names.join(', ')}"
+        end
+        if scoped_key_values.any?
+          fail IllegalQuery,
+               "Can't filter by both primary key and secondary index"
+        end
+        if scoped_indexed_column
+          fail IllegalQuery,
+               "Can't scope by more than one indexed column in the same query"
+        end
+        unless column.indexed?
+          fail ArgumentError,
+               "Can't scope by non-indexed column #{column_name}"
+        end
+        scoped(scoped_indexed_column: {column_name => column.cast(value)})
+      end
+
       def scoped_key_names
         scoped_key_columns.map { |column| column.name }
       end
@@ -705,6 +761,14 @@ module Cequel
 
       def range_key_name
         range_key_column.name
+      end
+
+      def next_unscoped_key_column
+        unscoped_key_columns.first
+      end
+
+      def next_unscoped_key_name
+        next_unscoped_key_column.name
       end
 
       def next_range_key_column
@@ -736,8 +800,6 @@ module Cequel
       end
 
       def next_unscoped_key_column_valid_for_in_query?
-        next_unscoped_key_column = unscoped_key_columns.first
-
         next_unscoped_key_column == partition_key_columns.last ||
           next_unscoped_key_column == clustering_columns.last
       end
