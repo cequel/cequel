@@ -108,11 +108,11 @@ module Cequel
       end
 
       def max_statements!(number)
-        cequel.should_receive(:execute).at_most(number).times.and_call_original
+        cequel.client.should_receive(:execute).at_most(number).times.and_call_original
       end
 
       def disallow_queries!
-        cequel.should_not_receive(:execute)
+        cequel.client.should_not_receive(:execute)
       end
 
       def expect_query_with_consistency(matcher, consistency)
