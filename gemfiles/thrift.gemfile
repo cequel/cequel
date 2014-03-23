@@ -2,9 +2,9 @@
 
 source "https://rubygems.org"
 
-gem "racc", :platforms=>:rbx
+gem "racc", "~> 1.4", :platforms=>:rbx
 gem "rubysl", "~> 2.0", :platforms=>:rbx
-gem "psych", :platforms=>:rbx
-gem "cassandra-cql"
+gem "psych", "~> 2.0", :platforms=>:rbx
+gem "cassandra-cql", "~> 1.2"
 
 gemspec :path=>"../"
