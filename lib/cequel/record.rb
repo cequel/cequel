@@ -14,7 +14,6 @@ require 'cequel/record/bound'
 require 'cequel/record/lazy_record_collection'
 require 'cequel/record/scoped'
 require 'cequel/record/finders'
-require 'cequel/record/secondary_indexes'
 require 'cequel/record/associations'
 require 'cequel/record/association_collection'
 require 'cequel/record/belongs_to_association'
@@ -65,7 +64,6 @@ module Cequel
   #
   # @see Properties Defining properties
   # @see Collection Collection columns
-  # @see SecondaryIndexes Defining secondary indexes
   # @see Associations Defining associations between records
   # @see Persistence Creating, updating, and destroying records
   # @see BulkWrites Updating and destroying records in bulk
@@ -87,7 +85,6 @@ module Cequel
       include Associations
       include Scoped
       extend Finders
-      extend SecondaryIndexes
       include MassAssignment
       include Callbacks
       include Validations

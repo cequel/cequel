@@ -116,7 +116,15 @@ module Cequel
         # @param options [Options] options for the column
         # @option options [Object,Proc] :default a default value for the
         #   column, or a proc that returns a default value for the column
+        # @option options [Boolean,Symbol] :index create a secondary index on
+        #   this column
         # @return [void]
+        #
+        # @note Secondary indexes are not nearly as flexible as primary keys:
+        #   you cannot query for multiple values or for ranges of values. You
+        #   also cannot combine a secondary index restriction with a primary
+        #   key restriction in the same query, nor can you combine more than
+        #   one secondary index restriction in the same query.
         #
         def column(name, type, options = {})
           def_accessors(name)

@@ -18,7 +18,7 @@ describe Cequel::Record::Finders do
     key :permalink, :text
     column :title, :text
     column :body, :text
-    column :author_id, :uuid
+    column :author_id, :uuid, index: true
   end
 
   let :blogs do
@@ -29,10 +29,16 @@ describe Cequel::Record::Finders do
     end
   end
 
+  let(:author_ids) { Array.new(2) { Cequel.uuid }}
+
   let :cassandra_posts do
     cequel.batch do
       5.times.map do |i|
-        Post.create!(blog_subdomain: 'cassandra', permalink: "cassandra#{i}")
+        Post.create!(
+          blog_subdomain: 'cassandra',
+          permalink: "cassandra#{i}",
+          author_id: author_ids[i%2]
+        )
       end
     end
   end
@@ -122,6 +128,11 @@ describe Cequel::Record::Finders do
         expect { Post.find_by_blog_subdomain('foo') }
           .to raise_error(NoMethodError)
       end
+
+      it 'should allow lower-order key if chained' do
+        expect(Post.where(blog_subdomain: 'cassandra')
+                 .find_by_permalink('cassandra0')).to eq(cassandra_posts.first)
+      end
     end
 
     describe '#with_*' do
@@ -134,6 +145,32 @@ describe Cequel::Record::Finders do
       it 'should return all records matching key prefix' do
         expect(Post.with_blog_subdomain('cassandra'))
           .to eq(cassandra_posts)
+      end
+    end
+  end
+
+  context 'secondary index' do
+    before { cassandra_posts }
+
+    it 'should expose scope to query by secondary index' do
+      expect(Post.with_author_id(author_ids.first))
+        .to match_array(cassandra_posts.values_at(0, 2, 4))
+    end
+
+    it 'should expose method to retrieve first result by secondary index' do
+      expect(Post.find_by_author_id(author_ids.first))
+        .to eq(cassandra_posts.first)
+    end
+
+    it 'should expose method to eagerly retrieve all results by secondary index' do
+      posts = Post.find_all_by_author_id(author_ids.first)
+      disallow_queries!
+      expect(posts).to match_array(cassandra_posts.values_at(0, 2, 4))
+    end
+
+    it 'should not expose methods for non-indexed columns' do
+      [:find_by_title, :find_all_by_title, :with_title].each do |method|
+        expect(Post).to_not respond_to(method)
       end
     end
   end
