@@ -1,3 +1,9 @@
+## 1.2.0
+
+* `where` can now be used to scope primary keys
+* Magic finders for primary keys
+* Pessimistic versioning for all dependencies
+
 ## 1.1.2
 
 * Simplify logging implementation
