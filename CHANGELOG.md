@@ -1,3 +1,7 @@
+## 1.2.1
+
+* Remove `app_generators.orm` setting
+
 ## 1.2.0
 
 * `where` can now be used to scope primary keys
