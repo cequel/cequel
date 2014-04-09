@@ -121,7 +121,7 @@ module Cequel
 
       def __getobj__
         model.__send__(:read_attribute, column_name) ||
-          model.__send__(:write_attribute, column_name, self.class.empty)
+          model.backfill_unpopulated_collection_attribute(column_name, self.class.empty)
       end
 
       def __setobj__(obj)
@@ -368,6 +368,14 @@ module Cequel
       NON_ATOMIC_MUTATORS
         .each { |method| undef_method(method) if method_defined? method }
 
+
+      #
+      # @return [Set] an empty set
+      #
+      # @api private
+      #
+      def self.empty; ::Set[]; end
+
       #
       # Add an element to the set
       #
@@ -454,6 +462,13 @@ module Cequel
       ]
       NON_ATOMIC_MUTATORS
         .each { |method| undef_method(method) if method_defined? method }
+
+      #
+      # @return [Hash] an empty hash
+      #
+      # @api private
+      #
+      def self.empty; Hash[]; end
 
       #
       # Set the value of a given key
