@@ -19,6 +19,7 @@ namespace :cequel do
   task :migrate => :environment do
     watch_stack = ActiveSupport::Dependencies::WatchStack.new
 
+    path_length = Rails.root.join('app', 'models').to_s.size
     Dir.glob(Rails.root.join('app', 'models', '**', '*.rb')).each do |file|
       watch_stack.watch_namespaces([Object])
 
@@ -26,7 +27,8 @@ namespace :cequel do
 
       new_constants = watch_stack.new_constants
       if new_constants.empty?
-        new_constants << File.basename(file, '.rb').classify
+        base_name = file[path_length...-3]
+        new_constants << base_name.classify
       end
 
       new_constants.each do |class_name|
