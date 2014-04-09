@@ -5,7 +5,6 @@ source "https://rubygems.org"
 gem "racc", "~> 1.4", :platforms=>:rbx
 gem "rubysl", "~> 2.0", :platforms=>:rbx
 gem "psych", "~> 2.0", :platforms=>:rbx
-gem "activemodel", "~> 3.2.0"
-gem "tzinfo", "~> 0.3"
+gem "activemodel", "~> 4.1.0"
 
 gemspec :path=>"../"
