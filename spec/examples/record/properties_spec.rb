@@ -75,6 +75,13 @@ describe Cequel::Record::Properties do
       expect(Post.new.tags).to eq([])
     end
 
+    it 'should have empty list column value if unset in database' do
+      uniq_key = SecureRandom.uuid
+      Post.create! permalink: uniq_key
+      expect(Post[uniq_key].tags).to eq([])
+    end
+
+
     it 'should provide accessor for set column' do
       expect(Post.new { |post| post.categories = Set['Big Data', 'Cassandra'] }
         .categories).to eq(Set['Big Data', 'Cassandra'])
@@ -90,8 +97,14 @@ describe Cequel::Record::Properties do
         .to eq(Set['1', '2', '3'])
     end
 
-    it 'should have empty set column value if present' do
+    it 'should have empty set column value if not explicitly set' do
       expect(Post.new.categories).to eq(Set[])
+    end
+
+    it 'should handle saved records with unspecified set properties' do
+      uuid = SecureRandom.uuid
+      Post.create!(permalink: uuid)
+      expect(Post[uuid].categories).to eq(::Set[])
     end
 
     it 'should provide accessor for map column' do
@@ -112,6 +125,14 @@ describe Cequel::Record::Properties do
     it 'should set map column to empty hash by default' do
       expect(Post.new.shares).to eq({})
     end
+
+    it 'should handle saved records with unspecified map properties' do
+      uuid = SecureRandom.uuid
+      Post.create!(permalink: uuid)
+      expect(Post[uuid].shares).to eq({})
+    end
+
+
   end
 
   describe 'configured property defaults' do
