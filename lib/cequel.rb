@@ -1,6 +1,7 @@
 # -*- encoding : utf-8 -*-
 require 'delegate'
 
+require 'active_support'
 require 'active_support/core_ext'
 require 'cql'
 
