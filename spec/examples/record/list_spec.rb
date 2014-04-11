@@ -65,7 +65,7 @@ describe Cequel::Record::List do
       subject[:tags].should == %w(one two four five)
     end
 
-    it 'should add new items in memory when loaded' do
+    it 'should load itself and then add new items in memory when unloaded' do
       unloaded_post.tags << 'four' << 'five'
       expect(unloaded_post.tags).to eq(%w(one two four five))
     end

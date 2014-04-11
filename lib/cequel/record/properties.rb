@@ -316,6 +316,20 @@ module Cequel
         "#<#{self.class} #{inspected_attributes.join(", ")}>"
       end
 
+      # Populates a previously unset collection attribute with an
+      # empty instance of the appropriate raw storage class.
+      #
+      # @param name [Symbol] which attribute to backfill
+      # @param empty [Object] a raw empty collection
+      #
+      # @return [Object] empty
+      def backfill_unpopulated_collection_attribute(name, empty)
+        unless self.class.reflect_on_column(name)
+          fail UnknownAttributeError, "unknown attribute: #{name}"
+        end
+        @attributes[name.to_sym] ||= empty
+      end
+
       protected
 
       def read_attribute(name)
