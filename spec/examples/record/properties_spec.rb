@@ -116,11 +116,15 @@ describe Cequel::Record::Properties do
 
   describe 'configured property defaults' do
     model :Post do
-      key :permalink, :text
+      key :permalink, :text, :default => 'new_permalink'
       column :title, :text, :default => 'New Post'
       list :tags, :text, :default => ['new']
       set :categories, :text, :default => Set['Big Data']
       map :shares, :text, :int, :default => {'facebook' => 0}
+    end
+
+    it 'should respect default for keys' do
+      Post.new.permalink.should == 'new_permalink'
     end
 
     it 'should respect default for data column' do
@@ -143,6 +147,7 @@ describe Cequel::Record::Properties do
   describe 'dynamic property generation' do
     model :Post do
       key :id, :uuid, auto: true
+      key :subid, :text, default: -> { "subid #{1+1}" }
       column :title, :text, default: -> { "Post #{Date.today}" }
     end
 
@@ -157,6 +162,10 @@ describe Cequel::Record::Properties do
           key :subdomain, :text, auto: true
         end
       end.to raise_error(ArgumentError)
+    end
+
+    it 'should run default proc on keys' do
+      Post.new.subid.should == "subid #{1+1}" 
     end
 
     it 'should run default proc' do
