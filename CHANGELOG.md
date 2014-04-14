@@ -1,3 +1,10 @@
+## 1.2.2
+
+* Support `:default` option for key columns
+* Explicitly require `active_support` (Rails 4.1 compatibility)
+* Detect namespaced models in subdirectories when running migrations
+* Handle unset collection columns hydrated from database
+
 ## 1.2.1
 
 * Remove `app_generators.orm` setting
