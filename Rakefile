@@ -10,7 +10,7 @@ RUBY_VERSIONS = YAML.load_file(File.expand_path('../.travis.yml', __FILE__))['rv
 task :default => :release
 task :release => [
   :verify_changelog,
-  #:rubocop,
+  :rubocop,
   :"test:all",
   :build,
   :tag,

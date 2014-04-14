@@ -360,7 +360,7 @@ module Cequel
         @attributes = {}
         new_attributes.each_pair do |name, value|
           if value.nil?
-            value = empty_attributes.fetch(name.to_sym) { -> { } }.call
+            value = empty_attributes.fetch(name.to_sym) { -> {} }.call
           end
           @attributes[name.to_sym] = value
         end

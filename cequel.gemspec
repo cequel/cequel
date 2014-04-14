@@ -30,6 +30,6 @@ DESC
   s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.6'
   s.add_development_dependency 'rake', '~> 10.1'
-  s.add_development_dependency 'rubocop', '~> 0.19'
+  s.add_development_dependency 'rubocop', '~> 0.19.0'
   s.requirements << 'Cassandra >= 1.2.0'
 end
