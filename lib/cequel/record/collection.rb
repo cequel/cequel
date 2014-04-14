@@ -120,8 +120,7 @@ module Cequel
       protected
 
       def __getobj__
-        model.__send__(:read_attribute, column_name) ||
-          model.backfill_unpopulated_collection_attribute(column_name, self.class.empty)
+        model.__send__(:read_attribute, column_name)
       end
 
       def __setobj__(obj)
@@ -184,13 +183,6 @@ module Cequel
       ]
       NON_ATOMIC_MUTATORS
         .each { |method| undef_method(method) if method_defined? method }
-
-      #
-      # @return [Array] an empty array
-      #
-      # @api private
-      #
-      def self.empty; []; end
 
       #
       # Set the value at a position or range of positions. This modification
@@ -370,13 +362,6 @@ module Cequel
 
 
       #
-      # @return [Set] an empty set
-      #
-      # @api private
-      #
-      def self.empty; ::Set[]; end
-
-      #
       # Add an element to the set
       #
       # @param object element to add
@@ -462,13 +447,6 @@ module Cequel
       ]
       NON_ATOMIC_MUTATORS
         .each { |method| undef_method(method) if method_defined? method }
-
-      #
-      # @return [Hash] an empty hash
-      #
-      # @api private
-      #
-      def self.empty; Hash[]; end
 
       #
       # Set the value of a given key

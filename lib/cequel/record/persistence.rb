@@ -236,7 +236,7 @@ module Cequel
 
       # @private
       def hydrate(row)
-        @attributes = row
+        init_attributes(row)
         hydrated!
         self
       end

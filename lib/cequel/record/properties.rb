@@ -38,7 +38,8 @@ module Cequel
 
       included do
         class_attribute :default_attributes, instance_writer: false
-        self.default_attributes = {}
+        class_attribute :empty_attributes, instance_writer: false
+        self.default_attributes, self.empty_attributes = {}, {}
 
         class <<self; alias_method :new_empty, :new; end
         extend ConstructorMethods
@@ -146,7 +147,8 @@ module Cequel
         #
         def list(name, type, options = {})
           def_collection_accessors(name, List)
-          set_attribute_default(name, options.fetch(:default, []))
+          set_attribute_default(name, options[:default])
+          set_empty_attribute(name) { [] }
         end
 
         #
@@ -164,7 +166,8 @@ module Cequel
         #
         def set(name, type, options = {})
           def_collection_accessors(name, Set)
-          set_attribute_default(name, options.fetch(:default, ::Set[]))
+          set_attribute_default(name, options[:default])
+          set_empty_attribute(name) { ::Set[] }
         end
 
         #
@@ -182,7 +185,8 @@ module Cequel
         #
         def map(name, key_type, value_type, options = {})
           def_collection_accessors(name, Map)
-          set_attribute_default(name, options.fetch(:default, {}))
+          set_attribute_default(name, options[:default])
+          set_empty_attribute(name) { {} }
         end
 
         private
@@ -229,6 +233,10 @@ module Cequel
 
         def set_attribute_default(name, default)
           default_attributes[name.to_sym] = default
+        end
+
+        def set_empty_attribute(name, &block)
+          empty_attributes[name.to_sym] = block
         end
       end
 
@@ -316,20 +324,6 @@ module Cequel
         "#<#{self.class} #{inspected_attributes.join(", ")}>"
       end
 
-      # Populates a previously unset collection attribute with an
-      # empty instance of the appropriate raw storage class.
-      #
-      # @param name [Symbol] which attribute to backfill
-      # @param empty [Object] a raw empty collection
-      #
-      # @return [Object] empty
-      def backfill_unpopulated_collection_attribute(name, empty)
-        unless self.class.reflect_on_column(name)
-          fail UnknownAttributeError, "unknown attribute: #{name}"
-        end
-        @attributes[name.to_sym] ||= empty
-      end
-
       protected
 
       def read_attribute(name)
@@ -360,12 +354,24 @@ module Cequel
         collection_proxies.delete(name)
       end
 
+      def init_attributes(new_attributes)
+        @attributes = {}
+        new_attributes.each_pair do |name, value|
+          if value.nil?
+            value = empty_attributes.fetch(name.to_sym) { -> { } }.call
+          end
+          @attributes[name.to_sym] = value
+        end
+        @attributes
+      end
+
       def initialize_new_record(attributes = {})
         dynamic_defaults = default_attributes
           .select { |name, value| value.is_a?(Proc) }
-        @attributes = Marshal.load(Marshal.dump(
+        new_attributes = Marshal.load(Marshal.dump(
           default_attributes.except(*dynamic_defaults.keys)))
-        dynamic_defaults.each { |name, p| @attributes[name] = p.call() }
+        dynamic_defaults.each { |name, p| new_attributes[name] = p.call }
+        init_attributes(new_attributes)
 
         @new_record = true
         yield self if block_given?
