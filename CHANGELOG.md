@@ -1,3 +1,7 @@
+## 1.2.3
+
+* Fix intermittent load failures of activesupport 4.0.x
+
 ## 1.2.2
 
 * Support `:default` option for key columns
