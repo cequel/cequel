@@ -540,6 +540,7 @@ Cequel was written by:
 * Antti Tapio
 * Ilya Bazylchuk
 * Dan Cardamore
+* Kei Kusakari
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
 releases of Cequel.

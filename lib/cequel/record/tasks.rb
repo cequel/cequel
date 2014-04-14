@@ -19,14 +19,19 @@ namespace :cequel do
   task :migrate => :environment do
     watch_stack = ActiveSupport::Dependencies::WatchStack.new
 
+    migration_table_names = Set[]
+    models_dir_path = "#{Rails.root.join('app', 'models')}/"
     Dir.glob(Rails.root.join('app', 'models', '**', '*.rb')).each do |file|
-      watch_stack.watch_namespaces([Object])
-
+      watch_namespaces = ["Object"]
+      model_file_name = file.sub(/^#{Regexp.escape(models_dir_path)}/, "")
+      dirname = File.dirname(model_file_name)
+      watch_namespaces << dirname.classify unless dirname == "."
+      watch_stack.watch_namespaces(watch_namespaces)
       require_dependency(file)
 
       new_constants = watch_stack.new_constants
       if new_constants.empty?
-        new_constants << File.basename(file, '.rb').classify
+        new_constants << model_file_name.sub(/\.rb$/, "").classify
       end
 
       new_constants.each do |class_name|
@@ -34,8 +39,10 @@ namespace :cequel do
           clazz = class_name.constantize
         rescue NameError # rubocop:disable HandleExceptions
         else
-          if clazz.ancestors.include?(Cequel::Record)
+          if clazz.ancestors.include?(Cequel::Record) &&
+              !migration_table_names.include?(clazz.table_name.to_sym)
             clazz.synchronize_schema
+            migration_table_names << clazz.table_name.to_sym
             puts "Synchronized schema for #{class_name}"
           end
         end
