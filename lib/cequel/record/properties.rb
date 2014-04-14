@@ -103,6 +103,8 @@ module Cequel
               fail ArgumentError, ":auto option only valid for UUID columns"
             end
             default = -> { Cequel.uuid } if options[:auto]
+          elsif options[:default]
+            default = options[:default]
           end
           set_attribute_default(name, default)
         end
