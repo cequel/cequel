@@ -536,6 +536,7 @@ Cequel was written by:
 * Insoo Buzz Jung
 * Louis Simoneau
 * Randy Meech
+* Kei Kusakari
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
 releases of Cequel.
