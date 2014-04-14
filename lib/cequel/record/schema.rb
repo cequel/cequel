@@ -113,7 +113,7 @@ module Cequel
 
         def column(name, type, options = {})
           super
-          table_schema.add_data_column(name, type, options[:index])
+          table_schema.add_data_column(name, type, options)
         end
 
         def list(name, type, options = {})
