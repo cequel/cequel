@@ -19,11 +19,11 @@ namespace :cequel do
   task :migrate => :environment do
     watch_stack = ActiveSupport::Dependencies::WatchStack.new
 
-    migration_table_names = []
+    migration_table_names = Set[]
     models_dir_path = "#{Rails.root.join('app', 'models')}/"
     Dir.glob(Rails.root.join('app', 'models', '**', '*.rb')).each do |file|
       watch_namespaces = ["Object"]
-      model_file_name = file.sub(/^#{models_dir_path}/, "")
+      model_file_name = file.sub(/^#{Regexp.escape(models_dir_path)}/, "")
       dirname = File.dirname(model_file_name)
       watch_namespaces << dirname.classify unless dirname == "."
       watch_stack.watch_namespaces(watch_namespaces)
