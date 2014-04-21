@@ -362,6 +362,73 @@ describe Cequel::Record::RecordSet do
       Post.find_each(:batch_size => 2).map(&:title).should =~
         (0...5).flat_map { |i| ["Cequel #{i}", "Sequel #{i}", "Mongoid #{i}"] }
     end
+
+    describe "hydration" do
+      subject { x = nil
+        Post.find_each(:batch_size => 2){|it| x = it; break}
+        x
+      }
+
+      it 'should hydrate empty lists properly' do
+        expect(subject.tags).to eq []
+      end
+
+      it 'should hydrate empty sets properly' do
+        expect(subject.categories).to eq ::Set[]
+      end
+
+      it 'should hydrate empty maps properly' do
+        expect(subject.shares).to eq Hash.new
+      end
+    end
+  end
+
+  describe '#find_in_batches' do
+    let!(:records) { [posts, blogs, mongo_posts] }
+
+    it 'should respect :batch_size argument' do
+      cequel.should_receive(:execute_with_consistency).twice.and_call_original
+      Blog.find_in_batches(:batch_size => 2){|a_batch| next }
+    end
+
+    it 'should iterate over all keys' do
+      expected_posts = (posts + mongo_posts)
+      found_posts = []
+
+      Post.find_in_batches(:batch_size => 2) {|recs|
+        expect(recs).to be_kind_of Array
+        found_posts += recs
+      }
+      expect(found_posts).to include(*expected_posts)
+      expect(found_posts).to have(expected_posts.size).items
+    end
+
+    it 'should iterate over batches' do
+      expected_posts = (posts + mongo_posts)
+
+      expect{|blk| Post.find_in_batches(:batch_size => 2, &blk)}
+        .to yield_control.at_least(expected_posts.size / 2).times
+    end
+
+
+    describe "hydration" do
+      subject { x = nil
+        Post.find_each(:batch_size => 2){|it| x = it; break}
+        x
+      }
+
+      it 'should hydrate empty lists properly' do
+        expect(subject.tags).to eq []
+      end
+
+      it 'should hydrate empty sets properly' do
+        expect(subject.categories).to eq ::Set[]
+      end
+
+      it 'should hydrate empty maps properly' do
+        expect(subject.shares).to eq Hash.new
+      end
+    end
   end
 
   describe '#find' do

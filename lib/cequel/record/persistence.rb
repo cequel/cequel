@@ -51,9 +51,15 @@ module Cequel
           connection[table_name]
         end
 
+        # @return [Cequel::Record] a new instance of this record class
+        # populated with the attributes from `row`
+        #
+        # @param row [Hash] attributes from the database with which
+        #   the new instance should be populated.
+        #
         # @private
         def hydrate(row)
-          new_empty(row).__send__(:hydrated!)
+          new_empty.hydrate(row)
         end
 
         # @private
