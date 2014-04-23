@@ -1,3 +1,7 @@
+## 1.2.4
+
+* Apply empty attribute values when hydrating records
+
 ## 1.2.3
 
 * Fix intermittent load failures of activesupport 4.0.x
