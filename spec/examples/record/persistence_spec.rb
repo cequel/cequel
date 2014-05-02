@@ -18,7 +18,7 @@ describe Cequel::Record::Persistence do
   end
 
   context 'simple keys' do
-    subject { cequel[:blogs].where(:subdomain => 'cequel').first }
+    subject { cequel[Blog.table_name].where(:subdomain => 'cequel').first }
 
     let!(:blog) do
       Blog.new do |blog|
@@ -189,7 +189,7 @@ describe Cequel::Record::Persistence do
 
   context 'compound keys' do
     subject do
-      cequel[:posts].
+      cequel[Post.table_name].
         where(:blog_subdomain => 'cassandra', :permalink => 'cequel').first
     end
 

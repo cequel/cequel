@@ -60,7 +60,7 @@ module Cequel
 
         ObjectSpace.each_object
           .select {|an_obj| begin
-                              an_obj.kind_of?(Class) && Cequel::Record > an_obj
+                              Class === an_obj && Cequel::Record > an_obj
                             rescue TypeError=> e
                               # something was masquerading as a class but wasn't really.
                               false

@@ -18,6 +18,8 @@ describe Cequel::SpecSupport::Preparation do
     end
 
     it "allows tables to be synced" do
+      3.times do GC.start end # get rid of most of the crufty classes
+
       rec_class = Class.new do
         include Cequel::Record
         self.table_name = "model_in_nonstandard_place"
@@ -34,7 +36,7 @@ describe Cequel::SpecSupport::Preparation do
        Cequel::Record.connection.schema.drop!
     end
 
-    it "doesn't cause failure upon drop requests" do 
+    it "doesn't cause failure upon drop requests" do
       expect{ prep.drop_keyspace }.not_to raise_error
     end
 
