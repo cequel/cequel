@@ -13,6 +13,7 @@ require 'cequel/type'
 require 'cequel/util'
 require 'cequel/uuids'
 require 'cequel/record'
+require 'cequel/chainable'
 
 #
 # Cequel is a library providing robust data modeling and query building

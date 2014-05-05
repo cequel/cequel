@@ -6,15 +6,28 @@ describe Cequel::SpecSupport::Preparation do
   subject(:prep) { described_class.instance }
   let(:keyspace) { cequel }
 
+  it "returns itself from #drop_keyspace" do
+    expect(prep.drop_keyspace).to eq prep
+  end
+
+  it "returns itself from #create_keyspace" do
+    expect(prep.create_keyspace).to eq prep
+  end
+
+  it "returns itself from #sync_schema" do
+    expect(prep.sync_schema).to eq prep
+  end
+
+
   context "existing keyspace" do
     it "can be deleted" do
       prep.drop_keyspace
-      expect(keyspace).not_to exist
+      expect(keyspace.exists?).to eq false
     end
 
     it "doesn't cause failure upon creation request" do
       expect{ prep.create_keyspace }.not_to raise_error
-      expect(keyspace).to exist
+      expect(keyspace.exists?).to eq true
     end
 
     it "allows tables to be synced" do
@@ -62,23 +75,6 @@ describe Cequel::SpecSupport::Preparation do
         WHERE keyspace_name='#{keyspace.name}'
           AND columnfamily_name='#{table_name}'
       CQL
-    end
-  end
-
-  matcher :exist do
-    match do |keyspace|
-      keyspace.clear_active_connections!
-
-      begin
-        keyspace.execute "SELECT now() FROM system.local"
-        true
-      rescue Cql::QueryError => e
-        if /exist/i === e.message
-          false
-        else
-          raise # something really went wrong
-        end
-      end
     end
   end
 end

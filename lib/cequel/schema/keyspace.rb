@@ -9,6 +9,8 @@ module Cequel
     #   {Cequel::Metal::Keyspace} in a future version of Cequel
     #
     class Keyspace
+      extend Forwardable
+
       #
       # @param keyspace [Keyspace] the keyspace whose schema this object
       #   manipulates
@@ -63,6 +65,9 @@ module Cequel
       def drop!
         keyspace.execute("DROP KEYSPACE #{keyspace.name}")
       end
+
+      # @return [Boolean] true if the keyspace exists
+      def_delegator :keyspace, :exists?
 
       #
       # @param name [Symbol] name of the table to read

@@ -71,4 +71,18 @@ describe Cequel::Metal::Keyspace do
       }.to raise_error(ArgumentError)
     end
   end
+
+  describe "#exists?" do
+    it "is true for existent keyspaces" do
+      expect(cequel.exists?).to eq true
+    end
+
+    it "is false for existent keyspaces" do
+      nonexistent_keyspace = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+                           port: Cequel::SpecSupport::Helpers.port,
+                           keyspace: "totallymadeup"
+
+      expect(nonexistent_keyspace.exists?).to eq false
+    end
+  end
 end
