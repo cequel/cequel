@@ -23,6 +23,7 @@ require 'cequel/record/callbacks'
 require 'cequel/record/validations'
 require 'cequel/record/dirty'
 require 'cequel/record/conversion'
+require 'cequel/record/timestamps'
 
 require 'cequel/record'
 
@@ -93,6 +94,7 @@ module Cequel
       include Conversion
       include ActiveModel::Serializers::JSON
       include ActiveModel::Serializers::Xml
+      include Timestamps
     end
 
     #
