@@ -33,14 +33,15 @@ describe Cequel::SpecSupport::Preparation do
     it "allows tables to be synced" do
       3.times do GC.start end # get rid of most of the crufty classes
 
+      table_name = "model_in_nonstandard_place_" + SecureRandom.hex(4)
       rec_class = Class.new do
         include Cequel::Record
-        self.table_name = "model_in_nonstandard_place"
+        self.table_name = table_name
         key :sk, :uuid
       end
 
       prep.sync_schema
-      expect(keyspace).to contain_table "model_in_nonstandard_place"
+      expect(keyspace).to contain_table table_name
     end
   end
 

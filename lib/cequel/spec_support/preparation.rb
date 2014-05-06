@@ -44,7 +44,7 @@ module Cequel
         record_classes.each do |a_record_class|
           begin
             a_record_class.synchronize_schema
-          rescue MissingTableNameError
+          rescue Record::MissingTableNameError
             # It is obviously not a real record class if it doesn't have a table name.
             puts "Skipping anonymous record class w/o an explicit table name"
           end
@@ -61,9 +61,9 @@ module Cequel
       def record_classes
         load_all_models
 
-        ObjectSpace.each_object
+        ObjectSpace.each_object(Class)
           .select {|an_obj| begin
-                              Class === an_obj && Cequel::Record > an_obj
+                              Cequel::Record > an_obj
                             rescue TypeError=> e
                               # something was masquerading as a class but wasn't really.
                               false

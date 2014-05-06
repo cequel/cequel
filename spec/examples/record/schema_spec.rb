@@ -3,13 +3,16 @@ require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Record::Schema do
   context 'CQL3 table' do
-    after { cequel.schema.drop_table(:posts) }
-    subject { cequel.schema.read_table(:posts) }
+    after { cequel.schema.drop_table(table_name) }
+    subject { cequel.schema.read_table(table_name) }
+
+    let(:table_name) { 'posts_' + SecureRandom.hex(4) }
 
     let(:model) do
+      t_name = table_name
       Class.new do
         include Cequel::Record
-        self.table_name = 'posts'
+        self.table_name = t_name
 
         key :permalink, :text
         column :title, :text
@@ -47,11 +50,13 @@ describe Cequel::Record::Schema do
   end
 
   context 'CQL3 table with reversed clustering column' do
+    let(:table_name) { 'posts_' + SecureRandom.hex(4) }
 
     let(:model) do
+      t_name = table_name
       Class.new do
         include Cequel::Record
-        self.table_name = 'posts'
+        self.table_name = t_name
 
         key :blog_id, :uuid
         key :id, :timeuuid, order: :desc
@@ -60,8 +65,8 @@ describe Cequel::Record::Schema do
     end
 
     before { model.synchronize_schema }
-    after { cequel.schema.drop_table(:posts) }
-    subject { cequel.schema.read_table(:posts) }
+    after { cequel.schema.drop_table(table_name) }
+    subject { cequel.schema.read_table(table_name) }
 
     it 'should order clustering column descending' do
       subject.clustering_columns.first.clustering_order.should == :desc
@@ -69,10 +74,13 @@ describe Cequel::Record::Schema do
   end
 
   context 'wide-row legacy table' do
+    let(:table_name) { 'legacy_posts_' + SecureRandom.hex(4) }
+
     let(:legacy_model) do
+      t_name = table_name
       Class.new do
         include Cequel::Record
-        self.table_name = 'legacy_posts'
+        self.table_name = t_name
 
         key :blog_subdomain, :text
         key :id, :uuid
@@ -81,8 +89,8 @@ describe Cequel::Record::Schema do
         compact_storage
       end
     end
-    after { cequel.schema.drop_table(:legacy_posts) }
-    subject { cequel.schema.read_table(:legacy_posts) }
+    after { cequel.schema.drop_table(table_name) }
+    subject { cequel.schema.read_table(table_name) }
 
     context 'new model' do
       before { legacy_model.synchronize_schema }
@@ -96,7 +104,7 @@ describe Cequel::Record::Schema do
     context 'existing model', thrift: true do
       before do
         legacy_connection.execute(<<-CQL2)
-          CREATE COLUMNFAMILY legacy_posts (blog_subdomain text PRIMARY KEY)
+          CREATE COLUMNFAMILY #{table_name} (blog_subdomain text PRIMARY KEY)
           WITH comparator=uuid AND default_validation=text
         CQL2
         legacy_model.synchronize_schema
