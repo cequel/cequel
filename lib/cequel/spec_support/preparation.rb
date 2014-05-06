@@ -42,7 +42,12 @@ module Cequel
       # models.
       def sync_schema
         record_classes.each do |a_record_class|
-          a_record_class.synchronize_schema
+          begin
+            a_record_class.synchronize_schema
+          rescue MissingTableNameError
+            # It is obviously not a real record class if it doesn't have a table name.
+            puts "Skipping anonymous record class w/o an explicit table name"
+          end
           puts "Synchronized schema for #{a_record_class.name}"
         end
       end
