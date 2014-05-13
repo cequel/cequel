@@ -3,7 +3,7 @@ require_relative "../spec_helper"
 require "cequel/spec_support"
 
 describe Cequel::SpecSupport::Preparation do
-  subject(:prep) { described_class.instance }
+  subject(:prep) { described_class.new }
   let(:keyspace) { cequel }
 
   it "returns itself from #drop_keyspace" do
