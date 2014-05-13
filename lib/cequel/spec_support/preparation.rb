@@ -16,30 +16,48 @@ module Cequel
     #     end
     class Preparation
       include Singleton
-      extend Chainable
 
       def initialize()
         @model_dirs = []
       end
 
       # Ensure the current keyspace does not exist.
+      #
+      # @return [Preparation] self
       def drop_keyspace
         Cequel::Record.connection.schema.tap do |schema|
           schema.drop! if schema.exists?
         end
+
+        self
       end
-      chainable :drop_keyspace
 
       # Ensure that the necessary keyspace exists.
+      #
+      # @return [Preparation] self
+      def drop_keyspace
+        Cequel::Record.connection.schema.tap do |schema|
+          schema.drop! if schema.exists?
+        end
+
+        self
+      end
+
+      # Ensure that the necessary keyspace exists.
+      #
+      # @return [Preparation] self
       def create_keyspace
         Cequel::Record.connection.schema.tap do |schema|
           schema.create! unless schema.exists?
         end
+
+        self
       end
-      chainable :create_keyspace
 
       # Ensure that the necessary column families exist and match the
       # models.
+      #
+      # @return [Preparation] self
       def sync_schema
         record_classes.each do |a_record_class|
           begin
@@ -50,8 +68,9 @@ module Cequel
           end
           puts "Synchronized schema for #{a_record_class.name}"
         end
+
+        self
       end
-      chainable :sync_schema
 
       attr_reader :model_dirs
 
