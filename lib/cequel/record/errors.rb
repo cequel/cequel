@@ -58,6 +58,5 @@ module Cequel
     # Cequel::Record without a table name.
     #
     MissingTableNameError = Class.new(StandardError)
-
   end
 end
