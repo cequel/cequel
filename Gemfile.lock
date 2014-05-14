@@ -11,14 +11,14 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
-    activemodel (3.2.15)
-      activesupport (= 3.2.15)
+    activemodel (3.2.18)
+      activesupport (= 3.2.18)
       builder (~> 3.0.0)
-    activesupport (3.2.15)
+    activesupport (3.2.18)
       i18n (~> 0.6, >= 0.6.4)
       multi_json (~> 1.0)
     builder (3.0.3)
-    cassandra-cql (1.2.1)
+    cassandra-cql (1.2.2)
       simple_uuid (>= 0.2.0)
       thrift_client (>= 0.7.1, < 0.9)
     coderay (1.0.9)
@@ -29,9 +29,9 @@ GEM
       httpclient
       sinatra
     httpclient (2.2.7)
-    i18n (0.6.5)
+    i18n (0.6.9)
     method_source (0.8.2)
-    multi_json (1.8.2)
+    multi_json (1.10.0)
     pry (0.9.12.2)
       coderay (~> 1.0.5)
       method_source (~> 0.8)
