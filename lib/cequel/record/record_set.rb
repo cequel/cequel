@@ -660,10 +660,36 @@ module Cequel
       end
 
       def find_nested_batches_from(row, options, &block)
-        if next_range_key_column
-          at(row[range_key_name])
-            .next_batch_from(row)
-            .find_rows_in_batches(options, &block)
+        return unless next_range_key_column
+
+        without_bounds_on(range_key_column)
+          .at(row[range_key_name])
+          .next_batch_from(row)
+          .find_rows_in_batches(options, &block)
+      end
+
+      # @return [RecordSet] self but without any bounds conditions on
+      # the specified column.
+      #
+      # @private
+      def without_bounds_on(a_column)
+        without_lower_bound_on(a_column)
+          .without_upper_bound_on(a_column)
+      end
+
+      def without_lower_bound_on(a_column)
+        if lower_bound && lower_bound.column == a_column
+          scoped(lower_bound: nil)
+        else
+          self
+        end
+      end
+
+      def without_upper_bound_on(a_column)
+        if upper_bound && upper_bound.column == a_column
+          scoped(upper_bound: nil)
+        else
+          self
         end
       end
 

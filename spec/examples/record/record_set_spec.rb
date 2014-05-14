@@ -856,4 +856,34 @@ describe Cequel::Record::RecordSet do
         should == postgres_posts.drop(2).map(&:permalink)
     end
   end
+
+  context "table clustered on time and uuid" do
+    model(:BlogView) do
+      key :blog_subdomain, :ascii
+      key :view_time, :timestamp
+      key :sk, :uuid, auto: true
+    end
+
+    let!(:blog_1_views){
+      4.times
+        .map{|i| BlogView.create!(blog_subdomain: "blog-1",
+                                  view_time: now - i.minutes) }
+        .sort_by(&:view_time)
+    }
+
+    it "can execute multi-batch queries with range on partial cluster key" do
+      expect{|blk| BlogView['blog-1']
+          .in( blog_1_views.first.view_time .. now )
+          .find_each(batch_size: 2, &blk)}
+        .to yield_successive_args *blog_1_views
+    end
+
+    it "can execute queries with range on partial cluster key" do
+      expect{|blk| BlogView['blog-1']
+          .in( blog_1_views.first.view_time .. now )
+          .find_each(&blk)}
+        .to yield_successive_args *blog_1_views
+    end
+  end
+
 end
