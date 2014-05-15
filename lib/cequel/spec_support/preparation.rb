@@ -32,20 +32,9 @@ module Cequel
       #
       # @return [Preparation] self
       def drop_keyspace
-        Cequel::Record.connection.schema.tap do |schema|
-          schema.drop! if schema.exists?
-        end
+        keyspace = Cequel::Record.connection.schema
 
-        self
-      end
-
-      # Ensure that the necessary keyspace exists.
-      #
-      # @return [Preparation] self
-      def drop_keyspace
-        Cequel::Record.connection.schema.tap do |schema|
-          schema.drop! if schema.exists?
-        end
+        keyspace.drop! if keyspace.exists?
 
         self
       end
@@ -54,9 +43,9 @@ module Cequel
       #
       # @return [Preparation] self
       def create_keyspace
-        Cequel::Record.connection.schema.tap do |schema|
-          schema.create! unless schema.exists?
-        end
+        keyspace = Cequel::Record.connection.schema
+
+        keyspace.create! unless keyspace.exists?
 
         self
       end
