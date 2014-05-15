@@ -13,11 +13,11 @@ module Cequel
 
       # Provision and sync the database for a spec run.
       #
-      # @param [Array<String,Pathname>] module_dirs directories in
+      # @param [Array<String,Pathname>] model_dirs directories in
       #   which Cequel record classes reside. All files in these
       #   directories will be loaded before syncing the schema.
-      def self.setup_database(*module_dirs)
-        prep = new(module_dirs.flatten)
+      def self.setup_database(*model_dirs)
+        prep = new(model_dirs.flatten)
 
         prep.drop_keyspace
         prep.create_keyspace
