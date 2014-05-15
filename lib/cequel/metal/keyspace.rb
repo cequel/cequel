@@ -204,11 +204,11 @@ module Cequel
         stmt = (<<-CQL).gsub(/\s*\|/, "").strip
           | SELECT keyspace_name
           | FROM system.schema_keyspaces
-          | WHERE keyspace_name = '#{name}'
+          | WHERE keyspace_name = ?
         CQL
 
-        log('CQL', stmt) do
-          raw_client.execute(stmt).any?
+        log('CQL', stmt, [name]) do
+          raw_client.execute(sanitize(stmt, [name])).any?
         end
       end
 
