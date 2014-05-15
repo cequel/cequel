@@ -3,21 +3,42 @@ module Cequel
     # Provide database preparation behavior that is useful for
     # spec/test suites.
     #
-    # Adding the following code to the bottom of one's
+    # For Rails apps adding the following code to the bottom of one's
     # `spec_helper.rb` (below the `RSpec.configure` block) ensures a
     # clean and fully synced test db before each test run.
     #
     #     # one time database setup
-    #     Cequel::SpecSupport::Preparation.setup_database(Rails.root + "app/models")
+    #     Cequel::SpecSupport::Preparation.setup_database
+    #
+    # For non-rails apps adding the following code to the bottom of
+    # one's `spec_helper.rb` (below the `RSpec.configure` block)
+    # ensures a clean and fully synced test db before each test run.
+    #
+    #     # one time database setup
+    #     Cequel::SpecSupport::Preparation
+    #       .setup_database("/full/path/to/model_dir",
+    #                       "/full/path/to/other/model-dir")
     class Preparation
 
       # Provision and sync the database for a spec run.
       #
       # @param [Array<String,Pathname>] model_dirs directories in
       #   which Cequel record classes reside. All files in these
-      #   directories will be loaded before syncing the schema.
+      #   directories will be loaded before syncing the
+      #   schema. Default: `Rails.root + "app/model"` if `Rails` is
+      #   defined; otherwise no models will be autoloaded.
       def self.setup_database(*model_dirs)
-        prep = new(model_dirs.flatten)
+        model_dirs = if model_dirs.any?
+                       model_dirs.flatten
+
+                     elsif defined? Rails
+                       Rails.root + "app/root"
+
+                     else
+                       []
+                     end
+
+        prep = new(model_dirs)
 
         prep.drop_keyspace
         prep.create_keyspace
