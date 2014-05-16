@@ -671,21 +671,21 @@ module Cequel
       # the specified column.
       #
       # @private
-      def without_bounds_on(a_column)
-        without_lower_bound_on(a_column)
-          .without_upper_bound_on(a_column)
+      def without_bounds_on(column)
+        without_lower_bound_on(column)
+          .without_upper_bound_on(column)
       end
 
-      def without_lower_bound_on(a_column)
-        if lower_bound && lower_bound.column == a_column
+      def without_lower_bound_on(column)
+        if lower_bound && lower_bound.column == column
           scoped(lower_bound: nil)
         else
           self
         end
       end
 
-      def without_upper_bound_on(a_column)
-        if upper_bound && upper_bound.column == a_column
+      def without_upper_bound_on(column)
+        if upper_bound && upper_bound.column == column
           scoped(upper_bound: nil)
         else
           self
