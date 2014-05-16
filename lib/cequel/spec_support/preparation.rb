@@ -16,8 +16,8 @@ module Cequel
     #
     #     # one time database setup
     #     Cequel::SpecSupport::Preparation
-    #       .setup_database("/full/path/to/model_dir",
-    #                       "/full/path/to/other/model-dir")
+    #       .setup_database(App.root + "lib/models",
+    #                       App.root + "lib/other-models")
     class Preparation
 
       # Provision and sync the database for a spec run.
@@ -32,7 +32,7 @@ module Cequel
                        model_dirs.flatten
 
                      elsif defined? Rails
-                       Rails.root + "app/root"
+                       [Rails.root + "app/models"]
 
                      else
                        []
