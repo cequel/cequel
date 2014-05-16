@@ -11,4 +11,12 @@ describe Cequel::Record::Scoped do
   it 'should use current scoped key values to populate new record' do
     Post['bigdata'].new.blog_subdomain.should == 'bigdata'
   end
+
+  it "should not mess up class' #puts" do
+    StringIO.new.tap do |out|
+      out.puts Post
+      out.string.should == "Post\n"
+    end
+
+  end
 end

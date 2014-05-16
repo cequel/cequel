@@ -19,7 +19,8 @@ module Cequel
         def_delegators :current_scope,
                        *(RecordSet.public_instance_methods(false) +
                          BulkWrites.public_instance_methods -
-                         Object.instance_methods)
+                         Object.instance_methods -
+                         [:to_ary])
 
         # @private
         def current_scope
