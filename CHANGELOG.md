@@ -1,3 +1,10 @@
+## 1.2.5
+
+* Fix `puts` behavior when passed a Record instance
+* Fix batch loading of record sets with bounds on first of multiple clustering
+  columns
+* Fix load order of namespaced models for migrations
+
 ## 1.2.4
 
 * Apply empty attribute values when hydrating records
