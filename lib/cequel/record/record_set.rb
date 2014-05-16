@@ -662,8 +662,7 @@ module Cequel
       def find_nested_batches_from(row, options, &block)
         return unless next_range_key_column
 
-        without_bounds_on(range_key_column)
-          .at(row[range_key_name])
+        without_bounds_on(range_key_column)[row[range_key_name]]
           .next_batch_from(row)
           .find_rows_in_batches(options, &block)
       end
