@@ -21,7 +21,8 @@ namespace :cequel do
 
     migration_table_names = Set[]
     models_dir_path = "#{Rails.root.join('app', 'models')}/"
-    Dir.glob(Rails.root.join('app', 'models', '**', '*.rb')).sort.each do |file|
+    model_files = Dir.glob(Rails.root.join('app', 'models', '**', '*.rb'))
+    model_files.sort.each do |file|
       watch_namespaces = ["Object"]
       model_file_name = file.sub(/^#{Regexp.escape(models_dir_path)}/, "")
       dirname = File.dirname(model_file_name)
