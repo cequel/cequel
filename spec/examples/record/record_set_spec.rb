@@ -878,6 +878,20 @@ describe Cequel::Record::RecordSet do
         .to yield_successive_args *blog_1_views
     end
 
+    it "can execute multi-batch queries with range on partial key excluding beginning of partition" do
+      expect{|blk| BlogView['blog-1']
+          .in( blog_1_views.second.view_time .. now )
+          .find_each(batch_size: 2, &blk)}
+        .to yield_successive_args *blog_1_views.drop(1)
+    end
+
+    it "can execute multi-batch queries with range on partial key excluding end of partition" do
+      expect{|blk| BlogView['blog-1']
+          .in( blog_1_views.first.view_time .. blog_1_views[-2].view_time )
+          .find_each(batch_size: 2, &blk)}
+        .to yield_successive_args *blog_1_views[0..-2]
+    end
+
     it "can execute queries with range on partial cluster key" do
       expect{|blk| BlogView['blog-1']
           .in( blog_1_views.first.view_time .. now )
