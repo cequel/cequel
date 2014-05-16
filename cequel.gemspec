@@ -26,7 +26,7 @@ DESC
   s.add_runtime_dependency 'i18n'
   s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'yard', '~> 0.6'
-  s.add_development_dependency 'pry'
   s.add_development_dependency 'geminabox'
+  s.add_development_dependency 'debugger'
   s.requirements << 'Cassandra 1.0+'
 end

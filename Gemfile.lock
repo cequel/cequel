@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cequel (0.5.7)
+    cequel (0.5.6)
       activemodel (~> 3.1)
       activesupport (~> 3.1)
       cassandra-cql (~> 1.0)
@@ -21,8 +21,15 @@ GEM
     cassandra-cql (1.2.2)
       simple_uuid (>= 0.2.0)
       thrift_client (>= 0.7.1, < 0.9)
-    coderay (1.0.9)
+    columnize (0.3.6)
     connection_pool (0.9.3)
+    debugger (1.3.3)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.1.1)
+      debugger-ruby_core_source (~> 1.2.0)
+    debugger-linecache (1.1.2)
+      debugger-ruby_core_source (>= 1.1.1)
+    debugger-ruby_core_source (1.2.0)
     diff-lcs (1.1.3)
     geminabox (0.7.0)
       builder
@@ -47,12 +54,11 @@ GEM
     rspec-expectations (2.11.3)
       diff-lcs (~> 1.1.3)
     rspec-mocks (2.11.2)
-    simple_uuid (0.4.0)
+    simple_uuid (0.3.0)
     sinatra (1.3.3)
       rack (~> 1.3, >= 1.3.6)
       rack-protection (~> 1.2)
       tilt (~> 1.3, >= 1.3.3)
-    slop (3.4.6)
     thrift (0.8.0)
     thrift_client (0.8.4)
       thrift (~> 0.8.0)
@@ -64,7 +70,7 @@ PLATFORMS
 
 DEPENDENCIES
   cequel!
+  debugger
   geminabox
-  pry
   rspec (~> 2.0)
   yard (~> 0.6)

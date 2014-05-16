@@ -117,8 +117,7 @@ module Cequel
       end
 
       def each_pair(options = {}, &block)
-        return to_enum(:each_pair, options) unless block
-
+        return Enumerator.new(self, :each_pair, options) unless block
         return @row.each_pair(&block) if @loaded
         batch_size = options[:batch_size] || self.class.default_batch_size
         each_slice(batch_size) do |batch_results|
