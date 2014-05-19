@@ -26,6 +26,7 @@ namespace :cequel do
       watch_namespaces = ["Object"]
       model_file_name = file.sub(/^#{Regexp.escape(models_dir_path)}/, "")
       dirname = File.dirname(model_file_name)
+      next if dirname == 'concerns' || File.dirname(dirname) == 'concerns'
       watch_namespaces << dirname.classify unless dirname == "."
       watch_stack.watch_namespaces(watch_namespaces)
       require_dependency(file)
