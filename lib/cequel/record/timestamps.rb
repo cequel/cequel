@@ -1,10 +1,31 @@
 # -*- encoding : utf-8 -*-
 module Cequel
   module Record
+    #
+    # This module provides `created_at` and `updated_at` functionality for
+    # records. It does this in two ways:
+    #
+    # * If a record's primary key is a `timeuuid` with the `:auto` option set,
+    #   the `created_at` method will return the time extracted from the primary
+    #   key.
+    # * Calling the `timestamps` macro in the class definition will define the
+    #   `updated_at` and (if necessary) `created_at` columns, and set up
+    #   lifecycle hooks to populate them appropriately.
+    #
+    # @example Record class with timestamps
+    #   class Blog
+    #     key :subdomain, :text
+    #     column :name, :text
+    #
+    #     timestamps
+    #   end
+    #
     module Timestamps
       extend ActiveSupport::Concern
 
       module ClassMethods
+        protected
+
         def key(name, type, options = {})
           super
           if type == :timeuuid && options[:auto]
