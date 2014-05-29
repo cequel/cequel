@@ -185,6 +185,12 @@ module Cequel
       end
 
       #
+      # @return [Array<Symbol>] the names of all columns
+      def column_names
+        columns.map { |column| column.name }
+      end
+
+      #
       # @return [Array<Column>] all key columns (partition + clustering)
       #
       def key_columns

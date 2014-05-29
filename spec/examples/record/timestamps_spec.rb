@@ -1,0 +1,60 @@
+require File.expand_path('../spec_helper', __FILE__)
+
+describe Cequel::Record::Timestamps do
+  model :Blog do
+    key :subdomain, :text
+    column :name, :text
+    timestamps
+  end
+
+  model :Post do
+    key :blog_subdomain, :text
+    key :id, :timeuuid, auto: true
+    column :name, :text
+    timestamps
+  end
+
+  let!(:now) { Timecop.freeze }
+
+  context 'with simple primary key' do
+    let(:blog) { Blog.create!(subdomain: 'bigdata') }
+
+    it 'should populate created_at after create new record' do
+      expect(blog.created_at).to eq(now)
+    end
+
+    it 'should populate updated_at after create new record' do
+      expect(blog.updated_at).to eq(now)
+    end
+
+    it 'should update updated_at after record update but not created_at' do
+      future = Timecop.freeze(now + 2.minutes)
+      blog.name = 'name'
+      blog.save!
+      expect(blog.updated_at).to eq(future)
+    end
+  end
+
+  context 'with compound primary key' do
+    let(:post) { Post['bigdata'].create! }
+
+    it 'should not have created_at column' do
+      expect(Post.column_names).not_to include(:created_at)
+    end
+
+    it 'should expose created_at' do
+      expect(post.created_at).to eq(now)
+    end
+
+    it 'should populate updated_at after create new record' do
+      expect(post.updated_at).to eq(now)
+    end
+
+    it 'should update updated_at after record update but not created_at' do
+      future = Timecop.freeze(now + 2.minutes)
+      post.name = 'name'
+      post.save!
+      expect(post.updated_at).to eq(future)
+    end
+  end
+end

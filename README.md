@@ -115,6 +115,27 @@ class PostsController < ActionController::Base
 end
 ```
 
+### Timestamps ###
+
+If your final primary key column is a `timeuuid` with the `:auto` option set,
+the `created_at` method will return the time that the UUID key was generated.
+
+To add timestamp columns, simply use the `timestamps` class macro:
+
+```ruby
+class Blog
+  key :subdomain, :text
+  column :name, :text
+  timestamps
+end
+```
+
+This will automatically define `created_at` and `updated_at` columns, and
+populate them appropriately on save.
+
+If the creation time can be extracted from the primary key as outlined above,
+this method will be preferred and no `created_at` column will be defined.
+
 ### Schema synchronization ###
 
 Cequel will automatically synchronize the schema stored in Cassandra to match
