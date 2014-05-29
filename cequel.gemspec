@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
   s.authors = [
     'Mat Brown', 'Aubrey Holland', 'Keenan Brock', 'Insoo Buzz Jung',
     'Louis Simoneau', 'Peter Williams', 'Kenneth Hoffman', 'Antti Tapio',
-    'Ilya Bazylchuk', 'Dan Cardamore', 'Kei Kusakari'
+    'Ilya Bazylchuk', 'Dan Cardamore', 'Kei Kusakari', 'Oleh Novosad'
   ]
   s.homepage = "https://github.com/cequel/cequel"
   s.email = 'mat.a.brown@gmail.com'
