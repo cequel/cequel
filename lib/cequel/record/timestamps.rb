@@ -20,9 +20,14 @@ module Cequel
     #     timestamps
     #   end
     #
+    # @since 1.3.0
+    #
     module Timestamps
       extend ActiveSupport::Concern
 
+      #
+      # Provides class methods for the Timestamps module
+      #
       module ClassMethods
         protected
 
