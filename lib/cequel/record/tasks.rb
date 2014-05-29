@@ -38,7 +38,7 @@ namespace :cequel do
       new_constants.each do |class_name|
         begin
           clazz = class_name.constantize
-        rescue NameError # rubocop:disable HandleExceptions
+        rescue NameError, RuntimeError # rubocop:disable HandleExceptions
         else
           if clazz.ancestors.include?(Cequel::Record) &&
               !migration_table_names.include?(clazz.table_name.to_sym)
