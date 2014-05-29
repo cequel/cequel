@@ -85,13 +85,15 @@ module Cequel
       end
       case value
       when ::String
-        if value.encoding == Encoding::ASCII_8BIT
+        if value.encoding == Encoding::ASCII_8BIT && value =~ /^[[:xdigit:]]+$/
           "0x#{value}"
         else
           "'#{value.gsub("'", "''")}'"
         end
-      when Date, Time, ActiveSupport::TimeWithZone
-        quote(value.to_i * 1000 + value.usec / 1000)
+      when Time, ActiveSupport::TimeWithZone, DateTime
+        value.strftime('%s%L')
+      when Date
+        quote(Time.gm(value.year, value.month, value.day))
       when Numeric, true, false, Cql::Uuid
         value.to_s
       else

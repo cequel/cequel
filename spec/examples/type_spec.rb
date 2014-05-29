@@ -204,4 +204,26 @@ describe Cequel::Type do
     end
   end
 
+  describe '::quote' do
+    [
+      ["don't", "'don''t'"],
+      ["don't".force_encoding('US-ASCII'), "'don''t'"],
+      ["don't".force_encoding('ASCII-8BIT'), "'don''t'"],
+      ["3dc49a6".force_encoding('ASCII-8BIT'), "0x3dc49a6"],
+      [["one", "two"], "'one','two'"],
+      [1, '1'],
+      [1.2, '1.2'],
+      [true, 'true'],
+      [false, 'false'],
+      [Time.at(1401323181, 381000), '1401323181381'],
+      [Time.at(1401323181, 381000).in_time_zone, '1401323181381'],
+      [Date.parse('2014-05-28'), "1401235200000"],
+      [Time.at(1401323181, 381000).to_datetime, '1401323181381'],
+      [Cequel.uuid("dbf51e0e-e6c7-11e3-be60-237d76548395"),
+       "dbf51e0e-e6c7-11e3-be60-237d76548395"]
+    ].each do |input, output|
+      specify { expect(Cequel::Type.quote(input)).to eq(output) }
+    end
+  end
+
 end
