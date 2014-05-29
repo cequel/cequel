@@ -1,3 +1,7 @@
+## 1.2.6
+
+* Fixes for Type::quote
+
 ## 1.2.5
 
 * Fix `puts` behavior when passed a Record instance
