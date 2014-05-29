@@ -34,6 +34,8 @@ RSpec.configure do |config|
   config.after(:all) do
     cequel.schema.drop!
   end
+
+  config.after(:each) { Timecop.return }
 end
 
 if defined? byebug
