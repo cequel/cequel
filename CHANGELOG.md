@@ -1,3 +1,9 @@
+## 1.3.0
+
+* Add timestamps functionality (`created_at` and `updated_at`)
+* More robust error handling when loading models for migrations
+* Expose `#column_names` on Record and Schema
+
 ## 1.2.6
 
 * Fixes for Type::quote
