@@ -27,9 +27,10 @@ DESC
   s.add_runtime_dependency 'activemodel', '>= 3.1', '< 5.0'
   s.add_runtime_dependency 'cql-rb', '~> 1.2'
   s.add_development_dependency 'appraisal', '~> 0.5'
-  s.add_development_dependency 'rspec', '~> 2.0'
-  s.add_development_dependency 'yard', '~> 0.6'
   s.add_development_dependency 'rake', '~> 10.1'
+  s.add_development_dependency 'rspec', '~> 2.0'
   s.add_development_dependency 'rubocop', '~> 0.19.0'
+  s.add_development_dependency 'timecop', '~> 0.7'
+  s.add_development_dependency 'yard', '~> 0.6'
   s.requirements << 'Cassandra >= 1.2.0'
 end
