@@ -35,7 +35,7 @@ describe Cequel::Record::Timestamps do
     end
   end
 
-  context 'with compound primary key' do
+  context 'with auto-generated timeuuid primary key' do
     let(:post) { Post['bigdata'].create! }
 
     it 'should not have created_at column' do
@@ -43,7 +43,7 @@ describe Cequel::Record::Timestamps do
     end
 
     it 'should expose created_at' do
-      expect(post.created_at).to eq(now)
+      expect(post.created_at.to_i).to eq(now.to_i)
     end
 
     it 'should populate updated_at after create new record' do
