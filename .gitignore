@@ -7,4 +7,3 @@ Gemfile.lock
 gemfiles/*.gemfile.lock
 .bundle
 .ruby-version
-/.idea
