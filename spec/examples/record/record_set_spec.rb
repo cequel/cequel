@@ -729,22 +729,21 @@ describe Cequel::Record::RecordSet do
     end
 
     context 'mixing keys and secondary-indexed columns' do
-      it 'should not allow mixture in hash argument' do
-        expect { Post.where(blog_subdomain: 'cassandra',
-                            author_id: uuids.first) }
-          .to raise_error(Cequel::Record::IllegalQuery)
+      it 'should allow mixture in hash argument' do
+        Post.where(blog_subdomain: 'cassandra', author_id: uuids.first).
+          should have(3).entries
       end
 
       it 'should not allow mixture in chain with primary first' do
-        expect { Post.where(blog_subdomain: 'cassandra')
-                  .where(author_id: uuids.first) }
-          .to raise_error(Cequel::Record::IllegalQuery)
+        Post.where(blog_subdomain: 'cassandra')
+          .where(author_id: uuids.first)
+          .should have(3).entries
       end
 
       it 'should not allow mixture in chain with secondary first' do
-        expect { Post.where(author_id: uuids.first)
-                  .where(blog_subdomain: 'cassandra') }
-          .to raise_error(Cequel::Record::IllegalQuery)
+        Post.where(author_id: uuids.first)
+          .where(blog_subdomain: 'cassandra')
+        .should have(3).entries
       end
     end
 
