@@ -724,10 +724,6 @@ module Cequel
       end
 
       def filter_primary_key(value)
-        if scoped_indexed_column
-          fail IllegalQuery,
-               "Can't filter by both primary key and secondary index"
-        end
         if value.is_a?(Range)
           self.in(value)
         else
@@ -748,10 +744,6 @@ module Cequel
           fail IllegalQuery,
                "Can't scope key column #{column_name} without also scoping " \
                "#{missing_column_names.join(', ')}"
-        end
-        if scoped_key_values.any?
-          fail IllegalQuery,
-               "Can't filter by both primary key and secondary index"
         end
         if scoped_indexed_column
           fail IllegalQuery,
