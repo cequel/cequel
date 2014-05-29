@@ -85,11 +85,7 @@ module Cequel
       end
       case value
       when ::String
-        if value.encoding == Encoding::ASCII_8BIT && value =~ /^[[:xdigit:]]+$/
-          "0x#{value}"
-        else
-          "'#{value.gsub("'", "''")}'"
-        end
+        quote_string(value)
       when Time, ActiveSupport::TimeWithZone, DateTime
         value.strftime('%s%L')
       when Date
@@ -97,9 +93,18 @@ module Cequel
       when Numeric, true, false, Cql::Uuid
         value.to_s
       else
-        quote(value.to_s)
+        quote_string(value.to_s)
       end
     end
+
+    def self.quote_string(string)
+      if string.encoding == Encoding::ASCII_8BIT && string =~ /^[[:xdigit:]]+$/
+        "0x#{string}"
+      else
+        "'#{string.gsub("'", "''")}'"
+      end
+    end
+    private_class_method :quote_string
 
     #
     # The base class for all type objects. Types are singletons.
