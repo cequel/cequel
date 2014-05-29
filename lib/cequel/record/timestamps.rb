@@ -6,28 +6,25 @@ module Cequel
 
       module ClassMethods
         def timestamps
-          self.class_eval do
-            column :created_at, :timestamp
-            column :updated_at, :timestamp
+          column :created_at, :timestamp
+          column :updated_at, :timestamp
 
-            before_create :_set_created_and_updated_at
-            before_update :_set_updated_at
-          end
+          before_create :set_created_and_updated_at
+          before_update :set_updated_at
         end
       end
 
       private
 
-      def _set_created_and_updated_at
-        t = Time.now
-        self.created_at = t
-        self.updated_at = t
+      def set_created_and_updated_at
+        now = Time.now
+        self.created_at = now
+        self.updated_at = now
       end
 
-      def _set_updated_at
+      def set_updated_at
         self.updated_at = Time.now
       end
-
     end
   end
 end
