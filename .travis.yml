@@ -17,3 +17,6 @@ before_install:
 bundler_args: '--without=debug'
 services:
   - cassandra
+matrix:
+  allow_failures:
+    - rvm: "rbx-2.2"
