@@ -1,3 +1,8 @@
+## 1.3.1
+
+* Allow querying by both primary key and secondary index in `RecordSet`
+* Expand cql-rb dependency to allow 2.0
+
 ## 1.3.0
 
 * Add timestamps functionality (`created_at` and `updated_at`)
