@@ -727,7 +727,9 @@ module Cequel
         if value.is_a?(Range)
           self.in(value)
         else
-          scoped { |attributes| attributes[:scoped_key_values] << value }
+          scoped do |attributes|
+            attributes[:scoped_key_values] << cast_next_primary_key(value)
+          end
         end
       end
 
@@ -898,6 +900,14 @@ module Cequel
         return enum_for(:key_attributes_for_each_row) unless block_given?
         select(*key_column_names).find_each do |record|
           yield record.key_attributes
+        end
+      end
+
+      def cast_next_primary_key(value)
+        if value.is_a?(Array)
+          value.map { |element| next_unscoped_key_column.cast(element) }
+        else
+          next_unscoped_key_column.cast(value)
         end
       end
     end
