@@ -16,7 +16,7 @@ describe Cequel::Record::Finders do
 
   model :Post do
     key :blog_subdomain, :text
-    key :permalink, :text
+    key :id, :timeuuid, auto: true
     column :title, :text
     column :body, :text
     column :author_id, :uuid, index: true
@@ -37,7 +37,6 @@ describe Cequel::Record::Finders do
       5.times.map do |i|
         Post.create!(
           blog_subdomain: 'cassandra',
-          permalink: "cassandra#{i}",
           author_id: author_ids[i%2]
         )
       end
@@ -47,7 +46,7 @@ describe Cequel::Record::Finders do
   let :postgres_posts do
     cequel.batch do
       5.times.map do |i|
-        Post.create!(blog_subdomain: 'postgres', permalink: "postgres#{i}")
+        Post.create!(blog_subdomain: 'postgres')
       end
     end
   end
@@ -113,15 +112,20 @@ describe Cequel::Record::Finders do
       end
 
       it 'should not exist for all keys' do
-        expect { Post.find_all_by_blog_subdomain_and_permalink('f', 'b') }
+        expect { Post.find_all_by_blog_subdomain_and_id('f', Cequel.uuid) }
           .to raise_error(NoMethodError)
       end
     end
 
     describe '#find_by_*' do
       it 'should return record matching all keys' do
-        expect(Post.find_by_blog_subdomain_and_permalink('cassandra',
-                                                         'cassandra0'))
+        expect(Post.find_by_blog_subdomain_and_id(
+          'cassandra', cassandra_posts.first.id)).to eq(cassandra_posts.first)
+      end
+
+      it 'should cast arguments to correct type' do
+        expect(Post.find_by_blog_subdomain_and_id(
+          'cassandra', cassandra_posts.first.id.to_s))
           .to eq(cassandra_posts.first)
       end
 
@@ -132,14 +136,21 @@ describe Cequel::Record::Finders do
 
       it 'should allow lower-order key if chained' do
         expect(Post.where(blog_subdomain: 'cassandra')
-                 .find_by_permalink('cassandra0')).to eq(cassandra_posts.first)
+                 .find_by_id(cassandra_posts.first.id))
+                 .to eq(cassandra_posts.first)
       end
     end
 
     describe '#with_*' do
       it 'should return record matching all keys' do
-        expect(Post.with_blog_subdomain_and_permalink('cassandra',
-                                                      'cassandra0'))
+        expect(Post.with_blog_subdomain_and_id('cassandra',
+                                               cassandra_posts.first.id))
+          .to eq(cassandra_posts.first(1))
+      end
+
+      it 'should cast arguments to correct type' do
+        expect(Post.with_blog_subdomain_and_id('cassandra',
+                                               cassandra_posts.first.id.to_s))
           .to eq(cassandra_posts.first(1))
       end
 
