@@ -1,3 +1,7 @@
+## 1.3.2
+
+* Cast values passed to primary key filters in record sets
+
 ## 1.3.1
 
 * Allow querying by both primary key and secondary index in `RecordSet`
