@@ -1,3 +1,3 @@
 module Cequel
-  VERSION = '0.5.9'
+  VERSION = '1.0.0'
 end
