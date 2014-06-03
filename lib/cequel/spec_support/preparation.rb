@@ -79,11 +79,14 @@ module Cequel
         record_classes.each do |a_record_class|
           begin
             a_record_class.synchronize_schema
+            puts "Synchronized schema for #{a_record_class.name}"
+
           rescue Record::MissingTableNameError
             # It is obviously not a real record class if it doesn't have a table name.
             puts "Skipping anonymous record class w/o an explicit table name"
+          rescue WeakRef::RefError
+            # Stale ref... just skip it
           end
-          puts "Synchronized schema for #{a_record_class.name}"
         end
 
         self
@@ -96,14 +99,7 @@ module Cequel
       # @return [Array<Class>] all Cequel record classes
       def record_classes
         load_all_models
-
-        ObjectSpace.each_object(Class)
-          .select {|an_obj| begin
-                              Cequel::Record > an_obj
-                            rescue TypeError=> e
-                              # something was masquerading as a class but wasn't really.
-                              false
-                            end }
+        Cequel::Record.descendants
       end
 
       # Loads all files in the models directory under the assumption

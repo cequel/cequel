@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require 'active_model'
+require 'weakref'
 
 require 'cequel'
 require 'cequel/record/errors'
@@ -115,6 +116,18 @@ module Cequel
       def establish_connection(configuration)
         self.connection = Cequel.connect(configuration)
       end
+
+      # @return [Array<Class>] All the record classes that are
+      #   currently defined.
+      def descendants
+        (@descendants ||= []).select(&:weakref_alive?)
+      end
+
+      # Hook called when new record classes are created.
+      def included(othermod)
+        @descendants = descendants + [WeakRef.new(othermod)]
+      end
+
     end
   end
 end
