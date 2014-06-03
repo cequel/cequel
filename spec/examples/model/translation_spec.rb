@@ -4,7 +4,7 @@ describe Cequel::Model::Translation do
   before do
     I18n.backend.load_translations(
       File.expand_path('../../../support/en.yml', __FILE__))
-    I18n.locale = 'en'
+    I18n.enforce_available_locales = false
   end
 
   it 'should translate model names' do
