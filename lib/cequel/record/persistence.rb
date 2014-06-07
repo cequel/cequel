@@ -172,6 +172,12 @@ module Cequel
       # @param options [Options] options for save
       # @option options [Boolean] :validate (true) whether to run validations
       #   before saving
+      # @option options [Symbol] :consistency (:quorum) what consistency with
+      #   which to persist the changes
+      # @option options [Integer] :ttl time-to-live of the updated rows in
+      #   seconds
+      # @option options [Time] :timestamp the writetime to use for the column
+      #   updates
       # @return [Boolean] true if record saved successfully, false if invalid
       #
       # @see Validations#save!
@@ -202,6 +208,11 @@ module Cequel
 
       #
       # Remove this record from the database
+      #
+      # @param options [Options] options for deletion
+      # @option options [Symbol] :consistency (:quorum) what consistency with
+      #   which to persist the deletion
+      # @option options [Time] :timestamp the writetime to use for the deletion
       #
       # @return [Record] self
       #
