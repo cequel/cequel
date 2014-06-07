@@ -90,7 +90,8 @@ module Cequel
                "Existing clustering columns " \
                "#{existing.clustering_column_names.join(',')} " \
                "differ from specified clustering keys " \
-               "#{updated.clustering_column_names.join(',')}"
+               "#{updated.clustering_column_names.join(',')} " \
+               "for #{existing.name}"
         end
       end
 

@@ -1,6 +1,5 @@
 # -*- encoding : utf-8 -*-
 module Cequel
-
   module SpecSupport
     module Macros
       def model(class_name, options = {}, &block)
@@ -16,7 +15,7 @@ module Cequel
             metadata[:models].each do |name, (options, block)|
               clazz = Class.new do
                 include Cequel::Record
-                self.table_name = name.to_s.tableize
+                self.table_name = name.to_s.tableize + "_" + SecureRandom.hex(4)
                 class_eval(&block)
               end
               Object.module_eval { const_set(name, clazz) }

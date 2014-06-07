@@ -8,7 +8,7 @@ describe Cequel::Record::Map do
     map :likes, :text, :int
   end
 
-  let(:scope) { cequel[:posts].where(:permalink => 'cequel') }
+  let(:scope) { cequel[Post.table_name].where(:permalink => 'cequel') }
   subject { scope.first }
 
   let! :post do
