@@ -30,21 +30,23 @@ module Cequel
       # @return [void]
       #
       def self.setup_database(*model_dirs)
+        options = model_dirs.extract_options!
+
         model_dirs =
           if model_dirs.any? then model_dirs.flatten
           elsif defined? Rails then [Rails.root + "app/models"]
           else []
           end
 
-        preparation = new(model_dirs)
+        preparation = new(model_dirs, options)
 
         preparation.drop_keyspace
         preparation.create_keyspace
         preparation.sync_schema
       end
 
-      def initialize(model_dirs = [])
-        @model_dirs = model_dirs
+      def initialize(model_dirs = [], options = {})
+        @model_dirs, @options = model_dirs, options
       end
 
       #
@@ -83,13 +85,17 @@ module Cequel
         record_classes.each do |record_class|
           begin
             record_class.synchronize_schema
-            puts "Synchronized schema for #{record_class.name}"
+            unless options[:quiet]
+              puts "Synchronized schema for #{record_class.name}"
+            end
 
           rescue Record::MissingTableNameError
             # It is obviously not a real record class if it doesn't have a
             # table name.
-            puts "Skipping anonymous record class without an explicit table " \
-                 "name"
+            unless options[:quiet]
+              STDERR.puts "Skipping anonymous record class without an " \
+                          "explicit table name"
+            end
           end
         end
 
@@ -98,7 +104,7 @@ module Cequel
 
       protected
 
-      attr_reader :model_dirs
+      attr_reader :model_dirs, :options
 
       #
       # @return [Array<Class>] all Cequel record classes
