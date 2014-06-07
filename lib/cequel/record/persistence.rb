@@ -282,7 +282,7 @@ module Cequel
         assert_keys_present!
         connection.batch do
           updater.execute(options)
-          deleter.execute(options)
+          deleter.execute(options.except(:ttl))
           @updater, @deleter = nil
         end
       end
