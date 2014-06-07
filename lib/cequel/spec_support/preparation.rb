@@ -19,7 +19,7 @@ module Cequel
     #       .setup_database(App.root + "lib/models",
     #                       App.root + "lib/other-models")
     class Preparation
-
+      #
       # Provision and sync the database for a spec run.
       #
       # @param [Array<String,Pathname>] model_dirs directories in
@@ -27,6 +27,8 @@ module Cequel
       #   directories will be loaded before syncing the
       #   schema. Default: `Rails.root + "app/model"` if `Rails` is
       #   defined; otherwise no models will be autoloaded.
+      # @return [void]
+      #
       def self.setup_database(*model_dirs)
         model_dirs =
           if model_dirs.any? then model_dirs.flatten
@@ -45,9 +47,11 @@ module Cequel
         @model_dirs = model_dirs
       end
 
+      #
       # Ensure the current keyspace does not exist.
       #
       # @return [Preparation] self
+      #
       def drop_keyspace
         keyspace = Cequel::Record.connection.schema
 
@@ -56,9 +60,11 @@ module Cequel
         self
       end
 
+      #
       # Ensure that the necessary keyspace exists.
       #
       # @return [Preparation] self
+      #
       def create_keyspace
         keyspace = Cequel::Record.connection.schema
 
@@ -67,10 +73,12 @@ module Cequel
         self
       end
 
+      #
       # Ensure that the necessary column families exist and match the
       # models.
       #
       # @return [Preparation] self
+      #
       def sync_schema
         record_classes.each do |record_class|
           begin
@@ -78,8 +86,10 @@ module Cequel
             puts "Synchronized schema for #{record_class.name}"
 
           rescue Record::MissingTableNameError
-            # It is obviously not a real record class if it doesn't have a table name.
-            puts "Skipping anonymous record class without an explicit table name"
+            # It is obviously not a real record class if it doesn't have a
+            # table name.
+            puts "Skipping anonymous record class without an explicit table " \
+                 "name"
           end
         end
 
@@ -90,17 +100,21 @@ module Cequel
 
       attr_reader :model_dirs
 
+      #
       # @return [Array<Class>] all Cequel record classes
+      #
       def record_classes
         load_all_models
         Cequel::Record.descendants
       end
 
+      #
       # Loads all files in the models directory under the assumption
       # that Cequel record classes live there.
+      #
       def load_all_models
-        model_dirs.each do |a_directory|
-          Dir.glob(Pathname(a_directory).join("**", "*.rb")).each do |file_name|
+        model_dirs.each do |directory|
+          Dir.glob(Pathname(directory).join("**", "*.rb")).each do |file_name|
             require_dependency(file_name)
           end
         end
