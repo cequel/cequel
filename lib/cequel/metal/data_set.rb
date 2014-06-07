@@ -471,6 +471,7 @@ module Cequel
           data_set.writetime_columns.concat(columns.flatten)
         end
       end
+      alias_method :select_timestamp, :select_writetime
 
       #
       # Select specified columns from this data set, overriding chained scope.
