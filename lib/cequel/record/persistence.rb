@@ -177,7 +177,7 @@ module Cequel
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys(:consistency)
+        options.assert_valid_keys(:consistency, :ttl, :timestamp)
         if new_record? then create(options)
         else update(options)
         end
@@ -206,7 +206,7 @@ module Cequel
       # @return [Record] self
       #
       def destroy(options = {})
-        options.assert_valid_keys(:consistency)
+        options.assert_valid_keys(:consistency, :timestamp)
         assert_keys_present!
         metal_scope.delete(options)
         transient!
