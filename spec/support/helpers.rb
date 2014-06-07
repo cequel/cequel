@@ -1,6 +1,5 @@
 # -*- encoding : utf-8 -*-
 module Cequel
-
   module SpecSupport
     module Macros
       def model(class_name, options = {}, &block)

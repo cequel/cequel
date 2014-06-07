@@ -9,10 +9,10 @@ describe Cequel::Record::Schema do
     let(:table_name) { 'posts_' + SecureRandom.hex(4) }
 
     let(:model) do
-      t_name = table_name
+      model_table_name = table_name
       Class.new do
         include Cequel::Record
-        self.table_name = t_name
+        self.table_name = model_table_name
 
         key :permalink, :text
         column :title, :text
@@ -53,10 +53,10 @@ describe Cequel::Record::Schema do
     let(:table_name) { 'posts_' + SecureRandom.hex(4) }
 
     let(:model) do
-      t_name = table_name
+      model_table_name = table_name
       Class.new do
         include Cequel::Record
-        self.table_name = t_name
+        self.table_name = model_table_name
 
         key :blog_id, :uuid
         key :id, :timeuuid, order: :desc
@@ -77,10 +77,10 @@ describe Cequel::Record::Schema do
     let(:table_name) { 'legacy_posts_' + SecureRandom.hex(4) }
 
     let(:legacy_model) do
-      t_name = table_name
+      model_table_name = table_name
       Class.new do
         include Cequel::Record
-        self.table_name = t_name
+        self.table_name = model_table_name
 
         key :blog_subdomain, :text
         key :id, :uuid

@@ -124,10 +124,9 @@ module Cequel
       end
 
       # Hook called when new record classes are created.
-      def included(othermod)
-        @descendants = descendants + [WeakRef.new(othermod)]
+      def included(base)
+        @descendants = descendants + [WeakRef.new(base)]
       end
-
     end
   end
 end

@@ -82,7 +82,7 @@ describe Cequel::Metal::Keyspace do
                            port: Cequel::SpecSupport::Helpers.port,
                            keyspace: "totallymadeup"
 
-      expect(nonexistent_keyspace.exists?).to eq false
+      expect(nonexistent_keyspace.exists?).to be_false
     end
   end
 end

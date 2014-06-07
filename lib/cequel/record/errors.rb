@@ -1,7 +1,6 @@
 # -*- encoding : utf-8 -*-
 module Cequel
   module Record
-
     #
     # Raised when attempting to access an attribute of a record when that
     # attribute hasn't been loaded

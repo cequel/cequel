@@ -28,24 +28,20 @@ module Cequel
       #   schema. Default: `Rails.root + "app/model"` if `Rails` is
       #   defined; otherwise no models will be autoloaded.
       def self.setup_database(*model_dirs)
-        model_dirs = if model_dirs.any?
-                       model_dirs.flatten
+        model_dirs =
+          if model_dirs.any? then model_dirs.flatten
+          elsif defined? Rails then [Rails.root + "app/models"]
+          else []
+          end
 
-                     elsif defined? Rails
-                       [Rails.root + "app/models"]
+        preparation = new(model_dirs)
 
-                     else
-                       []
-                     end
-
-        prep = new(model_dirs)
-
-        prep.drop_keyspace
-        prep.create_keyspace
-        prep.sync_schema
+        preparation.drop_keyspace
+        preparation.create_keyspace
+        preparation.sync_schema
       end
 
-      def initialize(model_dirs=[])
+      def initialize(model_dirs = [])
         @model_dirs = model_dirs
       end
 
@@ -76,16 +72,14 @@ module Cequel
       #
       # @return [Preparation] self
       def sync_schema
-        record_classes.each do |a_record_class|
+        record_classes.each do |record_class|
           begin
-            a_record_class.synchronize_schema
-            puts "Synchronized schema for #{a_record_class.name}"
+            record_class.synchronize_schema
+            puts "Synchronized schema for #{record_class.name}"
 
           rescue Record::MissingTableNameError
             # It is obviously not a real record class if it doesn't have a table name.
-            puts "Skipping anonymous record class w/o an explicit table name"
-          rescue WeakRef::RefError
-            # Stale ref... just skip it
+            puts "Skipping anonymous record class without an explicit table name"
           end
         end
 

@@ -201,14 +201,14 @@ module Cequel
 
       # @return [Boolean] true if the keyspace exists
       def exists?
-        stmt = (<<-CQL).gsub(/\s*\|/, "").strip
-          | SELECT keyspace_name
-          | FROM system.schema_keyspaces
-          | WHERE keyspace_name = ?
+        statement = <<-CQL
+          SELECT keyspace_name
+          FROM system.schema_keyspaces
+          WHERE keyspace_name = ?
         CQL
 
-        log('CQL', stmt, [name]) do
-          raw_client.execute(sanitize(stmt, [name])).any?
+        log('CQL', statement, [name]) do
+          raw_client.execute(sanitize(statement, [name])).any?
         end
       end
 
