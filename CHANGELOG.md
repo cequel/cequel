@@ -1,3 +1,8 @@
+## 1.4.0
+
+* Support TTL and timestamp options to record persistence methods
+* Convenience methods for test preparation
+
 ## 1.3.2
 
 * Cast values passed to primary key filters in record sets
