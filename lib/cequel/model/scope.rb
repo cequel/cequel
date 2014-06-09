@@ -43,7 +43,11 @@ module Cequel
 
       def find_in_batches(options = {})
         unless ::Kernel.block_given?
-          return to_enum(:find_in_batches, options)
+          return ::Enumerator.new do |y|
+            self.find_in_batches(options) do |val|
+              y.yield val
+            end
+          end
         end
         find_rows_in_batches(options) do |batch|
           results = batch.map { |row| hydrate(row) }.compact
@@ -52,7 +56,13 @@ module Cequel
       end
 
       def find_rows_in_batches(options = {}, &block)
-        return to_enum(:find_rows_in_batches, options) if block.nil?
+        if block.nil?
+          return ::Enumerator.new do |y|
+            self.find_rows_in_batches(options) do |val|
+              y.yield val
+            end
+          end
+        end
         batch_size = options[:batch_size] || 1000
         apply_index_preference!
         @data_sets.each do |data_set|
@@ -68,14 +78,22 @@ module Cequel
 
       def find_each(options = {}, &block)
         unless ::Kernel.block_given?
-          return to_enum(:find_each, options)
+          return ::Enumerator.new do |y|
+            self.find_each(options) do |val|
+              y.yield val
+            end
+          end
         end
         find_in_batches(options) { |batch| batch.each(&block) }
       end
 
       def find_each_row(options = {}, &block)
         unless ::Kernel.block_given?
-          return to_enum(:find_each_row, options)
+          return ::Enumerator.new do |y|
+            self.find_each_row(options) do |val|
+              y.yield val
+            end
+          end
         end
         find_rows_in_batches(options) { |batch| batch.each(&block) }
       end
