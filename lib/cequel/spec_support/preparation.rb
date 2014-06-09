@@ -88,7 +88,6 @@ module Cequel
             unless options[:quiet]
               puts "Synchronized schema for #{record_class.name}"
             end
-
           rescue Record::MissingTableNameError
             # It is obviously not a real record class if it doesn't have a
             # table name.

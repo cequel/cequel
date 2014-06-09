@@ -122,12 +122,24 @@ module Cequel
       # @return [Array<Class>] All the record classes that are
       #   currently defined.
       def descendants
-        (@descendants ||= []).select(&:weakref_alive?)
+        weak_descendants.map do |clazz|
+          begin
+            clazz.__getobj__ if clazz.weakref_alive?
+          rescue WeakRef::RefError
+            nil
+          end
+        end.compact
       end
 
       # Hook called when new record classes are created.
       def included(base)
-        @descendants = descendants + [WeakRef.new(base)]
+        weak_descendants << WeakRef.new(base)
+      end
+
+      private
+
+      def weak_descendants
+        @weak_descendants ||= []
       end
     end
   end
