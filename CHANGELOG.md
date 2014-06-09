@@ -1,3 +1,7 @@
+## 1.4.1
+
+* Cequel::Record::descendants doesn't return weakrefs
+
 ## 1.4.0
 
 * Support TTL and timestamp options to record persistence methods
