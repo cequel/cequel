@@ -123,6 +123,7 @@ module Cequel
         @max_retries  = extract_max_retries(configuration)
 
         @name = configuration[:keyspace]
+        @default_consistency = configuration[:default_consistency].try(:to_sym)
 
         # reset the connections
         clear_active_connections!
