@@ -26,7 +26,7 @@ module Cequel
       # Execute the statement as a write operation
       #
       # @param options [Options] options
-      # @opiton options [Symbol] :consistency what consistency level to use for
+      # @option options [Symbol] :consistency what consistency level to use for
       #   the operation
       # @option options [Integer] :ttl time-to-live in seconds for the written
       #   data
