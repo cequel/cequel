@@ -734,13 +734,13 @@ describe Cequel::Record::RecordSet do
           should have(3).entries
       end
 
-      it 'should not allow mixture in chain with primary first' do
+      it 'should allow mixture in chain with primary first' do
         Post.where(blog_subdomain: 'cassandra')
           .where(author_id: uuids.first)
           .should have(3).entries
       end
 
-      it 'should not allow mixture in chain with secondary first' do
+      it 'should allow mixture in chain with secondary first' do
         Post.where(author_id: uuids.first)
           .where(blog_subdomain: 'cassandra')
         .should have(3).entries

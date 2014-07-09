@@ -563,6 +563,7 @@ Cequel was written by:
 * Dan Cardamore
 * Kei Kusakari
 * Oleh Novosad
+* John Smart
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
 releases of Cequel.

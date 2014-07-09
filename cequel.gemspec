@@ -6,7 +6,8 @@ Gem::Specification.new do |s|
   s.authors = [
     'Mat Brown', 'Aubrey Holland', 'Keenan Brock', 'Insoo Buzz Jung',
     'Louis Simoneau', 'Peter Williams', 'Kenneth Hoffman', 'Antti Tapio',
-    'Ilya Bazylchuk', 'Dan Cardamore', 'Kei Kusakari', 'Oleh Novosad'
+    'Ilya Bazylchuk', 'Dan Cardamore', 'Kei Kusakari', 'Oleh Novosad',
+    'John Smart'
   ]
   s.homepage = "https://github.com/cequel/cequel"
   s.email = 'mat.a.brown@gmail.com'
@@ -25,7 +26,7 @@ DESC
   s.extra_rdoc_files = 'README.md'
   s.required_ruby_version = '>= 1.9'
   s.add_runtime_dependency 'activemodel', '>= 3.1', '< 5.0'
-  s.add_runtime_dependency 'cql-rb', '~> 1.2'
+  s.add_runtime_dependency 'cql-rb', '>= 1.2', '< 3.0'
   s.add_development_dependency 'appraisal', '~> 0.5'
   s.add_development_dependency 'rake', '~> 10.1'
   s.add_development_dependency 'rspec', '~> 2.0'

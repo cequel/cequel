@@ -172,12 +172,18 @@ module Cequel
       # @param options [Options] options for save
       # @option options [Boolean] :validate (true) whether to run validations
       #   before saving
+      # @option options [Symbol] :consistency (:quorum) what consistency with
+      #   which to persist the changes
+      # @option options [Integer] :ttl time-to-live of the updated rows in
+      #   seconds
+      # @option options [Time] :timestamp the writetime to use for the column
+      #   updates
       # @return [Boolean] true if record saved successfully, false if invalid
       #
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys(:consistency)
+        options.assert_valid_keys(:consistency, :ttl, :timestamp)
         if new_record? then create(options)
         else update(options)
         end
@@ -203,10 +209,15 @@ module Cequel
       #
       # Remove this record from the database
       #
+      # @param options [Options] options for deletion
+      # @option options [Symbol] :consistency (:quorum) what consistency with
+      #   which to persist the deletion
+      # @option options [Time] :timestamp the writetime to use for the deletion
+      #
       # @return [Record] self
       #
       def destroy(options = {})
-        options.assert_valid_keys(:consistency)
+        options.assert_valid_keys(:consistency, :timestamp)
         assert_keys_present!
         metal_scope.delete(options)
         transient!
@@ -271,7 +282,7 @@ module Cequel
         assert_keys_present!
         connection.batch do
           updater.execute(options)
-          deleter.execute(options)
+          deleter.execute(options.except(:ttl))
           @updater, @deleter = nil
         end
       end

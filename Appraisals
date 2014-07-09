@@ -19,3 +19,11 @@ end
 appraise "thrift" do
   gem "cassandra-cql", "~> 1.2"
 end
+
+appraise "cql-rb-1" do
+  gem "cql-rb", "~> 1.2"
+end
+
+appraise "cql-rb-2" do
+  gem "cql-rb", "~> 2.0"
+end

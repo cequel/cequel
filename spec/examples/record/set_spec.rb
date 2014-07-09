@@ -8,7 +8,7 @@ describe Cequel::Record::Set do
     set :tags, :text
   end
 
-  let(:scope) { cequel[:posts].where(:permalink => 'cequel') }
+  let(:scope) { cequel[Post.table_name].where(:permalink => 'cequel') }
   subject { scope.first }
 
   let! :post do

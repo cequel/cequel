@@ -1,3 +1,21 @@
+## 1.4.1
+
+* Cequel::Record::descendants doesn't return weakrefs
+
+## 1.4.0
+
+* Support TTL and timestamp options to record persistence methods
+* Convenience methods for test preparation
+
+## 1.3.2
+
+* Cast values passed to primary key filters in record sets
+
+## 1.3.1
+
+* Allow querying by both primary key and secondary index in `RecordSet`
+* Expand cql-rb dependency to allow 2.0
+
 ## 1.3.0
 
 * Add timestamps functionality (`created_at` and `updated_at`)

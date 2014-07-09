@@ -59,6 +59,7 @@ module Cequel
       def writetime(column)
         @writetimes[column]
       end
+      alias_method :timestamp, :writetime
 
       # @private
       def set_ttl(column, value)

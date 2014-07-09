@@ -143,7 +143,11 @@ module Cequel
       # @api private
       #
       def client
-        synchronize { @client ||= build_client }
+        synchronize do
+          @client ||= raw_client.tap do |client|
+            client.use(name) if name
+          end
+        end
       end
 
       #
@@ -195,6 +199,19 @@ module Cequel
         @default_consistency || :quorum
       end
 
+      # @return [Boolean] true if the keyspace exists
+      def exists?
+        statement = <<-CQL
+          SELECT keyspace_name
+          FROM system.schema_keyspaces
+          WHERE keyspace_name = ?
+        CQL
+
+        log('CQL', statement, [name]) do
+          raw_client.execute(sanitize(statement, [name])).any?
+        end
+      end
+
       private
 
       attr_reader :lock
@@ -205,12 +222,15 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
-      def build_client
-        client_options = {hosts: hosts, port: port}.tap do |options|
-          options[:credentials] = credentials if credentials
+      def raw_client
+        synchronize do
+          @raw_client ||= Cql::Client.connect(client_options)
         end
-        Cql::Client.connect(client_options).tap do |client|
-          client.use(name) if name
+      end
+
+      def client_options
+        {hosts: hosts, port: port}.tap do |options|
+          options[:credentials] = credentials if credentials
         end
       end
 

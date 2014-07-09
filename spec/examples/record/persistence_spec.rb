@@ -18,7 +18,7 @@ describe Cequel::Record::Persistence do
   end
 
   context 'simple keys' do
-    subject { cequel[:blogs].where(:subdomain => 'cequel').first }
+    subject { cequel[Blog.table_name].where(:subdomain => 'cequel').first }
 
     let!(:blog) do
       Blog.new do |blog|
@@ -57,6 +57,21 @@ describe Cequel::Record::Persistence do
             end.save(consistency: :one)
           end
         end
+
+        it 'should save with specified TTL' do
+          Blog.new(subdomain: 'cequel', name: 'Cequel').save(ttl: 10)
+          expect(cequel[Blog.table_name].select_ttl(:name).first.ttl(:name))
+            .to be_within(0.1).of(9.9)
+        end
+
+        it 'should save with specified timestamp' do
+          timestamp = 1.minute.from_now
+          Blog.new(subdomain: 'cequel-create-ts', name: 'Cequel')
+            .save(timestamp: timestamp)
+          expect(cequel[Blog.table_name].select_timestamp(:name).first.timestamp(:name))
+            .to eq((timestamp.to_f * 1_000_000).to_i)
+          Blog.connection.schema.truncate_table(Blog.table_name)
+        end
       end
 
       context 'on update' do
@@ -93,6 +108,22 @@ describe Cequel::Record::Persistence do
             blog.name = 'Cequel'
             blog.save(consistency: :one)
           end
+        end
+
+        it 'should save with specified TTL' do
+          blog.name = 'Cequel 1.4'
+          blog.save(ttl: 10)
+          expect(cequel[Blog.table_name].select_ttl(:name).first.ttl(:name)).
+            to be_within(0.1).of(9.9)
+        end
+
+        it 'should save with specified timestamp' do
+          timestamp = 1.minute.from_now
+          blog.name = 'Cequel 1.4'
+          blog.save(timestamp: timestamp)
+          expect(cequel[Blog.table_name].select_timestamp(:name).first.timestamp(:name))
+            .to eq((timestamp.to_f * 1_000_000).to_i)
+          Blog.connection.schema.truncate_table(Blog.table_name)
         end
       end
     end
@@ -184,12 +215,18 @@ describe Cequel::Record::Persistence do
           blog.destroy(consistency: :one)
         end
       end
+
+      it 'should destroy with specified timestamp' do
+        blog = Blog.create(subdomain: 'big-data', name: 'Big Data')
+        blog.destroy(timestamp: 1.minute.ago)
+        expect(cequel[Blog.table_name].where(subdomain: 'big-data').first).to be
+      end
     end
   end
 
   context 'compound keys' do
     subject do
-      cequel[:posts].
+      cequel[Post.table_name].
         where(:blog_subdomain => 'cassandra', :permalink => 'cequel').first
     end
 
