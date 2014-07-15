@@ -160,8 +160,8 @@ module Cequel
       # Execute a CQL query in this keyspace
       #
       #   If a connection error occurs, will retry a maximum number of
-      #   time (default 10) times before re-raising the original
-      #   connection error.
+      #   time (default 10) before re-raising the original connection
+      #   error.
       #
       # @param statement [String] CQL string
       # @param bind_vars [Object] values for bind variables
