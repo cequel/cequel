@@ -85,4 +85,21 @@ describe Cequel::Metal::Keyspace do
       expect(nonexistent_keyspace.exists?).to be_false
     end
   end
+
+  describe "#execute" do
+    context "without a connection error" do
+      it "executes a CQL query"
+    end
+
+    context "with a connection error" do
+      context "that resolves with a new connection" do
+        it "executes a CQL query"
+      end
+
+      context "that never resolves with a new connection" do
+        it "attempts to reconnect to cassandra X times (based on max_retries)"
+        it "raises the original error"
+      end
+    end
+  end
 end
