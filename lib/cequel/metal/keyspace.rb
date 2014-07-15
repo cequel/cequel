@@ -153,6 +153,9 @@ module Cequel
       #
       # Execute a CQL query in this keyspace
       #
+      #   If a connection error occurs, will retry a maximum of 10
+      #   times before re-raising the original connection error.
+      #
       # @param statement [String] CQL string
       # @param bind_vars [Object] values for bind variables
       # @return [Enumerable] the results of the query
@@ -160,7 +163,16 @@ module Cequel
       # @see #execute_with_consistency
       #
       def execute(statement, *bind_vars)
-        execute_with_consistency(statement, bind_vars, default_consistency)
+        retries = 10
+
+        begin
+          execute_with_consistency(statement, bind_vars, default_consistency)
+        rescue Cql::NotConnectedError, Ione::Io::ConnectionError => e
+          @raw_client = nil
+          raise e if retries < 0
+          retries -= 1
+          retry
+        end
       end
 
       #
