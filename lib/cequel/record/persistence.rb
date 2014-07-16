@@ -62,6 +62,10 @@ module Cequel
           new_empty.hydrate(row)
         end
 
+        def truncate
+          connection.execute("TRUNCATE #{table_name}")
+        end
+
         # @private
         def_delegator 'Cequel::Record', :connection
       end
