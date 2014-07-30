@@ -96,6 +96,10 @@ describe Cequel::Metal::Keyspace do
     end
 
     context "with a connection error" do
+      after(:each) do
+        RSpec::Mocks.proxy_for(cequel).reset
+      end
+
       it "reconnects to cassandra with a new client after first failed connection" do
         allow(cequel).to receive(:execute_with_consistency)
           .with(statement, [], nil)
@@ -103,12 +107,10 @@ describe Cequel::Metal::Keyspace do
           .once
 
         expect(cequel).to receive(:execute_with_consistency)
-          .with(statement, [], nil)
-          .twice
+          .with(statement, [], :quorum)
+          .once
 
-        expect { cequel.execute(statement) }.to raise_error
-
-        RSpec::Mocks.proxy_for(cequel).reset
+        expect { cequel.execute(statement) }.not_to raise_error
       end
     end
   end
