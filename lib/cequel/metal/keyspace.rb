@@ -290,7 +290,7 @@ module Cequel
       end
 
       def extract_max_retries(configuration)
-        configuration[:"max-retries"] || 10
+        configuration.fetch(:"max-retries", 3)
       end
     end
   end
