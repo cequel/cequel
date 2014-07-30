@@ -3,13 +3,13 @@ development:
   host: '127.0.0.1'
   port: 9042
   keyspace: <%= app_name %>_development
-  max-retries: 10
+  max-retries: 3
 
 test:
   host: '127.0.0.1'
   port: 9042
   keyspace: <%= app_name %>_test
-  max-retries: 10
+  max-retries: 3
 
 production:
   hosts:
@@ -20,4 +20,4 @@ production:
   keyspace: <%= app_name %>_production
   username: 'myappuser'
   password: 'password1'
-  max-retries: 10
+  max-retries: 3
