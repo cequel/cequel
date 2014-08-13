@@ -30,12 +30,14 @@ module Cequel
       #   the operation
       # @option options [Integer] :ttl time-to-live in seconds for the written
       #   data
+      # @option options [Boolean] :if_not_exists inserts only if no record with
+      #   given keys exists
       # @option options [Time,Integer] :timestamp the timestamp associated with
       #   the column values
       # @return [void]
       #
       def execute(options = {})
-        options.assert_valid_keys(:timestamp, :ttl, :consistency)
+        options.assert_valid_keys(:timestamp, :ttl, :consistency, :if_not_exists)
         return if empty?
         statement = Statement.new
         consistency = options.fetch(:consistency, data_set.query_consistency)
@@ -69,19 +71,29 @@ module Cequel
       # Generate CQL option statement for inserts and updates
       #
       def generate_upsert_options(options)
-        upsert_options = options.slice(:timestamp, :ttl)
+        upsert_options = options.slice(:timestamp, :ttl, :if_not_exists)
         if upsert_options.empty?
           ''
         else
-          ' USING ' <<
-          upsert_options.map do |key, value|
-            serialized_value =
-              case key
-              when :timestamp then (value.to_f * 1_000_000).to_i
-              else value
-              end
-            "#{key.to_s.upcase} #{serialized_value}"
-          end.join(' AND ')
+          str = " "
+
+          if upsert_options.delete(:if_not_exists)
+            str << " IF NOT EXISTS "
+          end
+
+          if !upsert_options.empty?
+          str << ' USING ' <<
+            upsert_options.map do |key, value|
+              serialized_value =
+                case key
+                when :timestamp then (value.to_f * 1_000_000).to_i
+                else value
+                end
+              "#{key.to_s.upcase} #{serialized_value}"
+            end.join(' AND ')
+          end
+
+          str
         end
       end
     end
