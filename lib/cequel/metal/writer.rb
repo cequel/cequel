@@ -35,7 +35,7 @@ module Cequel
       # @return [void]
       #
       def execute(options = {})
-        options.assert_valid_keys(:timestamp, :ttl, :consistency, :if_not_exists)
+        options.assert_valid_keys(:timestamp, :ttl, :consistency)
         return if empty?
         statement = Statement.new
         consistency = options.fetch(:consistency, data_set.query_consistency)
