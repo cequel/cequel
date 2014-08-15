@@ -71,29 +71,19 @@ module Cequel
       # Generate CQL option statement for inserts and updates
       #
       def generate_upsert_options(options)
-        upsert_options = options.slice(:timestamp, :ttl, :if_not_exists)
+        upsert_options = options.slice(:timestamp, :ttl)
         if upsert_options.empty?
           ''
         else
-          str = " "
-
-          if upsert_options.delete(:if_not_exists)
-            str << " IF NOT EXISTS "
-          end
-
-          if !upsert_options.empty?
-          str << ' USING ' <<
-            upsert_options.map do |key, value|
-              serialized_value =
-                case key
-                when :timestamp then (value.to_f * 1_000_000).to_i
-                else value
-                end
-              "#{key.to_s.upcase} #{serialized_value}"
-            end.join(' AND ')
-          end
-
-          str
+          ' USING ' <<
+          upsert_options.map do |key, value|
+            serialized_value =
+              case key
+              when :timestamp then (value.to_f * 1_000_000).to_i
+              else value
+              end
+            "#{key.to_s.upcase} #{serialized_value}"
+          end.join(' AND ')
         end
       end
     end
