@@ -30,8 +30,6 @@ module Cequel
       #   the operation
       # @option options [Integer] :ttl time-to-live in seconds for the written
       #   data
-      # @option options [Boolean] :if_not_exists inserts only if no record with
-      #   given keys exists
       # @option options [Time,Integer] :timestamp the timestamp associated with
       #   the column values
       # @return [void]
