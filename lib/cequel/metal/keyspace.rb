@@ -174,9 +174,9 @@ module Cequel
 
         begin
           execute_with_consistency(statement, bind_vars, default_consistency)
-        rescue Cql::NotConnectedError, Ione::Io::ConnectionError => e
+        rescue Cql::NotConnectedError, Ione::Io::ConnectionError
           clear_active_connections!
-          raise e if retries < 0
+          raise if retries < 0
           retries -= 1
           retry
         end
@@ -290,7 +290,7 @@ module Cequel
       end
 
       def extract_max_retries(configuration)
-        configuration.fetch(:"max_retries", 3)
+        configuration.fetch(:max_retries, 3)
       end
     end
   end
