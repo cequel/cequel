@@ -100,7 +100,7 @@ module Cequel
       #   single Cassandra instance to connect to
       # @option configuration [Integer] :port (9042) port on which to connect
       #   to all specified hosts
-      # @option configuration [Integer] :max-retries maximum number of retries
+      # @option configuration [Integer] :max_retries maximum number of retries
       #   on connection failure
       # @option configuration [Array<String>] :hosts list of Cassandra
       #   instances to connect to (hostnames only)
@@ -175,7 +175,7 @@ module Cequel
         begin
           execute_with_consistency(statement, bind_vars, default_consistency)
         rescue Cql::NotConnectedError, Ione::Io::ConnectionError => e
-          @raw_client = nil
+          clear_active_connections!
           raise e if retries < 0
           retries -= 1
           retry
@@ -290,7 +290,7 @@ module Cequel
       end
 
       def extract_max_retries(configuration)
-        configuration.fetch(:"max-retries", 3)
+        configuration.fetch(:"max_retries", 3)
       end
     end
   end
