@@ -114,13 +114,6 @@ module Cequel
         cequel.client.should_not_receive(:execute)
       end
 
-      def expect_query(matcher)
-        expect(cequel.client).to receive(:execute).with(matcher, anything())
-          .and_call_original
-        yield
-        RSpec::Mocks.proxy_for(cequel.client).reset
-      end
-
       def expect_query_with_consistency(matcher, consistency)
         expect(cequel.client).to receive(:execute).with(matcher, consistency)
           .and_call_original

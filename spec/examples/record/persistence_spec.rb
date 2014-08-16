@@ -58,12 +58,6 @@ describe Cequel::Record::Persistence do
           end
         end
 
-        it 'should save item with IF NOT EXISTS in query' do
-          expect_query(/INSERT.*IF NOT EXISTS/) do
-            Blog.new(subdomain: 'cequel', name: 'Cequel').save(if_not_exists: true)
-          end
-        end
-
         it 'should save item if key doesn\'t exist when if_not_exists option is on' do
           Blog.new(subdomain: 'cequel', name: 'Cequel').save(if_not_exists: true)
           Blog.new(subdomain: 'cequel', name: 'Cequel 2').save(if_not_exists: true)
