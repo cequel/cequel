@@ -62,7 +62,6 @@ module Cequel
         statement.append(
           " (#{column_names.join(', ')}) VALUES (#{statements.join(', ')}) ",
           *bind_vars)
-        statement.append(" IF NOT EXISTS ") if options[:if_not_exists]
         statement.append(generate_upsert_options(options))
       end
     end
