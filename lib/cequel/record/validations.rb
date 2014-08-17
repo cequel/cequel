@@ -61,9 +61,9 @@ module Cequel
       # @return [Record] self
       # @raise [RecordInvalid] if there are validation errors
       #
-      def save!(attributes = {})
+      def save!(options = {})
         tap do
-          unless save(attributes)
+          unless save(options)
             fail RecordInvalid, errors.full_messages.join("; ")
           end
         end

@@ -58,6 +58,24 @@ describe Cequel::Record::Persistence do
           end
         end
 
+        it 'should save item if key doesn\'t exist when if_not_exists option is on' do
+          Blog.new(subdomain: 'cequel', name: 'Cequel').save(if_not_exists: true)
+          Blog.new(subdomain: 'cequel', name: 'Cequel 2').save(if_not_exists: true)
+
+          blog = cequel[Blog.table_name].where(:subdomain => 'cequel').first
+
+          expect(blog[:name]).to eql('Cequel')
+        end
+
+        it 'should override item even if key exists when if_not_exists option is off' do
+          Blog.new(subdomain: 'cequel', name: 'Cequel').save(if_not_exists: false)
+          Blog.new(subdomain: 'cequel', name: 'Cequel 2').save(if_not_exists: false)
+
+          blog = cequel[Blog.table_name].where(:subdomain => 'cequel').first
+
+          expect(blog[:name]).to eql('Cequel 2')
+        end
+
         it 'should save with specified TTL' do
           Blog.new(subdomain: 'cequel', name: 'Cequel').save(ttl: 10)
           expect(cequel[Blog.table_name].select_ttl(:name).first.ttl(:name))
