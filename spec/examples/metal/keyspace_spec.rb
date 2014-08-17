@@ -82,7 +82,36 @@ describe Cequel::Metal::Keyspace do
                            port: Cequel::SpecSupport::Helpers.port,
                            keyspace: "totallymadeup"
 
-      expect(nonexistent_keyspace.exists?).to be_false
+      expect(nonexistent_keyspace.exists?).to be false
+    end
+  end
+
+  describe "#execute" do
+    let(:statement) { "SELECT id FROM posts" }
+
+    context "without a connection error" do
+      it "executes a CQL query" do
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
+    end
+
+    context "with a connection error" do
+      after(:each) do
+        RSpec::Mocks.proxy_for(cequel).reset
+      end
+
+      it "reconnects to cassandra with a new client after first failed connection" do
+        allow(cequel).to receive(:execute_with_consistency)
+          .with(statement, [], nil)
+          .and_raise(Ione::Io::ConnectionError)
+          .once
+
+        expect(cequel).to receive(:execute_with_consistency)
+          .with(statement, [], :quorum)
+          .once
+
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
     end
   end
 end

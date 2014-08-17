@@ -21,6 +21,8 @@ module Cequel
       attr_reader :hosts
       # @return Integer port to connect to Cassandra nodes on
       attr_reader :port
+      # @return Integer maximum number of retries to reconnect to Cassandra
+      attr_reader :max_retries
       # @return [Symbol] the default consistency for queries in this keyspace
       # @since 1.1.0
       attr_writer :default_consistency
@@ -98,6 +100,8 @@ module Cequel
       #   single Cassandra instance to connect to
       # @option configuration [Integer] :port (9042) port on which to connect
       #   to all specified hosts
+      # @option configuration [Integer] :max_retries maximum number of retries
+      #   on connection failure
       # @option configuration [Array<String>] :hosts list of Cassandra
       #   instances to connect to (hostnames only)
       # @option configuration [String] :username user to auth with (leave blank
@@ -115,9 +119,11 @@ module Cequel
         @configuration = configuration
 
         @hosts, @port = extract_hosts_and_port(configuration)
-        @credentials = extract_credentials(configuration)
+        @credentials  = extract_credentials(configuration)
+        @max_retries  = extract_max_retries(configuration)
 
         @name = configuration[:keyspace]
+
         # reset the connections
         clear_active_connections!
       end
@@ -153,6 +159,10 @@ module Cequel
       #
       # Execute a CQL query in this keyspace
       #
+      #   If a connection error occurs, will retry a maximum number of
+      #   time (default 3) before re-raising the original connection
+      #   error.
+      #
       # @param statement [String] CQL string
       # @param bind_vars [Object] values for bind variables
       # @return [Enumerable] the results of the query
@@ -160,7 +170,16 @@ module Cequel
       # @see #execute_with_consistency
       #
       def execute(statement, *bind_vars)
-        execute_with_consistency(statement, bind_vars, default_consistency)
+        retries = max_retries
+
+        begin
+          execute_with_consistency(statement, bind_vars, default_consistency)
+        rescue Cql::NotConnectedError, Ione::Io::ConnectionError
+          clear_active_connections!
+          raise if retries < 0
+          retries -= 1
+          retry
+        end
       end
 
       #
@@ -268,6 +287,10 @@ module Cequel
 
       def extract_credentials(configuration)
         configuration.slice(:username, :password).presence
+      end
+
+      def extract_max_retries(configuration)
+        configuration.fetch(:max_retries, 3)
       end
     end
   end
