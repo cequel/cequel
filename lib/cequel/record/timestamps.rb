@@ -14,6 +14,7 @@ module Cequel
     #
     # @example Record class with timestamps
     #   class Blog
+    #     include Cequel::Record
     #     key :subdomain, :text
     #     column :name, :text
     #
