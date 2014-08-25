@@ -68,6 +68,9 @@ module Cequel
         def find_one(key)
           all.where!(key_alias => key).first.tap do |result|
             if result.nil?
+              if key.is_a CassandraCQL::UUID
+                key = key.to_guid
+              end
               raise RecordNotFound,
                 "Couldn't find #{name} with #{key_alias}=#{key}"
             end
@@ -132,8 +135,13 @@ module Cequel
         result = data_set.first
         key_alias = self.class.key_alias
         if result.keys == [key_alias.to_s]
+          if @_cequel.key.is_a CassandraCQL::UUID
+            key = @_cequel.key.to_guid
+          else
+            key = @_cequel.key
+          end
           raise RecordNotFound,
-            "Couldn't find #{self.class.name} with #{key_alias}=#{@_cequel.key}"
+            "Couldn't find #{self.class.name} with #{key_alias}=#{key}"
         end
         _hydrate(result)
         self
