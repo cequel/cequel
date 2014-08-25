@@ -10,6 +10,7 @@ describe Cequel::Schema::TableSynchronizer do
       cequel.schema.sync_table :posts do
         key :blog_subdomain, :text
         key :permalink, :text
+        column :blog_title, :text, static: true
         column :title, :text
         column :body, :text
         column :created_at, :timestamp
@@ -22,6 +23,8 @@ describe Cequel::Schema::TableSynchronizer do
 
     it 'should create table' do
       table.column(:title).type.should == Cequel::Type[:text] #etc.
+      table.column(:blog_title).type.should == Cequel::Type[:text]
+      table.column(:blog_title).static?.should == true
     end
   end
 
@@ -30,6 +33,7 @@ describe Cequel::Schema::TableSynchronizer do
       cequel.schema.create_table :posts do
         key :blog_subdomain, :text
         key :permalink, :text
+        column :blog_title, :text, static: true
         column :title, :ascii, :index => true
         column :body, :ascii
         column :created_at, :timestamp
@@ -46,6 +50,8 @@ describe Cequel::Schema::TableSynchronizer do
         cequel.schema.sync_table :posts do
           key :blog_subdomain, :text
           key :post_permalink, :text
+          column :blog_title, :text, static: true
+          column :blog_description, :text, static: true
           column :title, :ascii
           column :body, :text
           column :primary_author_id, :uuid, :index => true
@@ -63,6 +69,8 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should add new columns' do
         table.column(:published_at).type.should == Cequel::Type[:timestamp]
+        table.column(:blog_description).type.should == Cequel::Type[:text]
+        table.column(:blog_description).static?.should == true
       end
 
       it 'should add new collections' do
@@ -182,6 +190,35 @@ describe Cequel::Schema::TableSynchronizer do
           cequel.schema.sync_table :posts do
             key :blog_subdomain, :text
             key :permalink, :text, :desc
+            column :title, :ascii, :index => true
+            column :body, :ascii
+            column :created_at, :timestamp
+            set :author_names, :text
+            with :comment, 'Test Table'
+          end
+        }.to raise_error(Cequel::InvalidSchemaMigration)
+      end
+
+      it 'should not allow changing a column to static' do
+        expect {
+          cequel.schema.sync_table :posts do
+            key :blog_subdomain, :text
+            key :permalink, :text
+            column :title, :ascii, :index => true
+            column :body, :ascii
+            column :created_at, :timestamp, static: true
+            set :author_names, :text
+            with :comment, 'Test Table'
+          end
+        }.to raise_error(Cequel::InvalidSchemaMigration)
+      end
+
+      it 'should not allow changing a column from static' do
+        expect {
+          cequel.schema.sync_table :posts do
+            key :blog_subdomain, :text
+            key :permalink, :text
+            column :blog_title, :text, static: false
             column :title, :ascii, :index => true
             column :body, :ascii
             column :created_at, :timestamp
