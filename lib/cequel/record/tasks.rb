@@ -26,13 +26,13 @@ namespace :cequel do
       watch_namespaces = ["Object"]
       model_file_name = file.sub(/^#{Regexp.escape(models_dir_path)}/, "")
       dirname = File.dirname(model_file_name)
-      watch_namespaces << dirname.classify unless dirname == "."
+      watch_namespaces << dirname.sub(/.*\./,'').camelize unless dirname == "."
       watch_stack.watch_namespaces(watch_namespaces)
       require_dependency(file)
 
       new_constants = watch_stack.new_constants
       if new_constants.empty?
-        new_constants << model_file_name.sub(/\.rb$/, "").classify
+        new_constants << model_file_name.sub(/\.rb$/, "").camelize
       end
 
       new_constants.each do |class_name|
