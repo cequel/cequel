@@ -219,7 +219,9 @@ module Cequel
       def destroy(options = {})
         options.assert_valid_keys(:consistency, :timestamp)
         assert_keys_present!
-        metal_scope.delete(options)
+        ActiveSupport::Notifications.instrument "destroy.cequel", table_name: table_name do
+          metal_scope.delete(options)
+        end
         transient!
         self
       end
@@ -272,18 +274,22 @@ module Cequel
 
       def create(options = {})
         assert_keys_present!
-        metal_scope
-          .insert(attributes.reject { |attr, value| value.nil? }, options)
-        loaded!
-        persisted!
+        ActiveSupport::Notifications.instrument "create.cequel", table_name: table_name do
+          metal_scope
+            .insert(attributes.reject { |attr, value| value.nil? }, options)
+          loaded!
+          persisted!
+        end
       end
 
       def update(options = {})
         assert_keys_present!
-        connection.batch do
-          updater.execute(options)
-          deleter.execute(options.except(:ttl))
-          @updater, @deleter = nil
+        ActiveSupport::Notifications.instrument "update.cequel", table_name: table_name do
+          connection.batch do
+            updater.execute(options)
+            deleter.execute(options.except(:ttl))
+            @updater, @deleter = nil
+          end
         end
       end
 

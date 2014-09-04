@@ -72,6 +72,14 @@ describe Cequel::Record::Persistence do
             .to eq((timestamp.to_f * 1_000_000).to_i)
           Blog.connection.schema.truncate_table(Blog.table_name)
         end
+
+        it 'should notify of create' do
+          expect { Blog.new do |blog|
+              blog.subdomain = 'cequel'
+              blog.name = 'Cequel'
+            end.save
+          }.to notify_name("create.cequel")
+        end
       end
 
       context 'on update' do
@@ -303,6 +311,14 @@ describe Cequel::Record::Persistence do
             post.save
           }.to raise_error(ArgumentError)
         end
+
+        it 'should notify subscribers' do
+          expect {
+            post.title = 'Cequel 1.0'
+            post.save
+          }.to notify_name('update.cequel')
+        end
+
       end
     end
 
@@ -317,5 +333,25 @@ describe Cequel::Record::Persistence do
         post.should be_transient
       end
     end
+
+    describe '#destroy' do
+      it 'should notify subscribers' do
+        expect { post.destroy }.to notify_name('destroy.cequel')
+      end
+    end
+  end
+
+  # Custom matcher for active support notification
+  matcher :notify_name do |expected_name|
+    match { |blk|
+      notification_recieved = false
+      ActiveSupport::Notifications.subscribe expected_name do |*args|
+        notification_recieved = true
+      end
+
+      blk.call
+
+      notification_recieved
+    }
   end
 end
