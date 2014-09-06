@@ -35,12 +35,24 @@ module Cequel
       #   http://cassandra.apache.org/doc/cql3/CQL.html#createKeyspaceStmt
       #   CQL3 CREATE KEYSPACE documentation
       #
+      # Uses the config/cequel.yml config file for defaults.
+      #   strategy_class: SimpleStrategy
+      #   strategy_options:
+      #     replication_factor: 2
+      #   or
+      #   strategy_class: NetworkTopologyStrategy
+      #   strategy_options:
+      #     DC1: 2
+      #     DC2: 1
+      #
       def create!(options = {})
         bare_connection =
           Metal::Keyspace.new(keyspace.configuration.except(:keyspace))
 
         options = options.symbolize_keys
-        options[:class] ||= 'SimpleStrategy'
+        strategy_options = keyspace.configuration[:strategy_options] || {}
+        options[:class] ||= keyspace.configuration[:strategy_class] || 'SimpleStrategy'
+        options.reverse_merge!(strategy_options)
         if options[:class] == 'SimpleStrategy'
           options[:replication_factor] ||= 1
         end
