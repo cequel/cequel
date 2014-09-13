@@ -144,20 +144,22 @@ module Cequel
       end
 
       def write_to_statement(statement, options)
-        prepare_column_updates
+        all_statements, all_bind_vars = statements_with_column_updates
         statement.append("UPDATE #{table_name}")
           .append(generate_upsert_options(options))
           .append(" SET ")
-          .append(statements.join(', '), *bind_vars)
+          .append(all_statements.join(', '), *all_bind_vars)
       end
 
-      def prepare_column_updates
+      def statements_with_column_updates
+        all_statements, all_bind_vars = statements.dup, bind_vars.dup
         column_updates.each_pair do |column, value|
           prepare_upsert_value(value) do |binding, *values|
-            statements << "#{column} = #{binding}"
-            bind_vars.concat(values)
+            all_statements << "#{column} = #{binding}"
+            all_bind_vars.concat(values)
           end
         end
+        [all_statements, all_bind_vars]
       end
     end
   end

@@ -114,6 +114,15 @@ module Cequel
         cequel.client.should_not_receive(:execute)
       end
 
+      def with_client_error(error)
+        cequel.client.stub(:execute).and_raise(error)
+        begin
+          yield
+        ensure
+          cequel.client.unstub(:execute)
+        end
+      end
+
       def expect_query_with_consistency(matcher, consistency)
         expect(cequel.client).to receive(:execute).with(matcher, consistency)
           .and_call_original

@@ -44,12 +44,12 @@ module Cequel
             fail ArgumentError,
                  "Already in an unlogged batch; can't start a logged batch."
           end
-          return yield
+          return yield(current_batch)
         end
 
         begin
           self.current_batch = new_batch
-          yield.tap { new_batch.apply }
+          yield(new_batch).tap { new_batch.apply }
         ensure
           self.current_batch = nil
         end
