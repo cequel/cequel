@@ -103,6 +103,13 @@ describe Cequel::Record::Persistence do
           }.to raise_error(ArgumentError)
         end
 
+        it 'should allow setting a key value to the same thing it already is' do
+          expect {
+            blog.subdomain = 'cequel'
+            blog.save
+          }.to_not raise_error
+        end
+
         it 'should save with specified consistency' do
           expect_query_with_consistency(/UPDATE/, :one) do
             blog.name = 'Cequel'
