@@ -1,3 +1,10 @@
+## 1.4.2
+
+* Allow setting a key attribute to what it already is
+* Don't reset model updater/deleter if save results in an error
+* Read `:default_consistency` from cequel.yml
+* `:max_retries` configuration parameter for customization of maximum retries that will be made to reconnect to cassandra
+
 ## 1.4.1
 
 * Cequel::Record::descendants doesn't return weakrefs
