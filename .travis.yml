@@ -3,8 +3,8 @@ rvm:
   - "2.1"
   - "2.0"
   - "1.9.3"
-  - "rbx-2.2"
-  - "jruby-1.7"
+  - "rbx-2.2.6"
+  - "jruby-1.7.15"
 gemfile:
   - "gemfiles/rails_3.1.gemfile"
   - "gemfiles/rails_3.2.gemfile"

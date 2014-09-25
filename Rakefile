@@ -2,7 +2,7 @@ require 'yaml'
 require 'bundler/setup'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
-require 'appraisal'
+require 'wwtd/tasks'
 require File.expand_path('../lib/cequel/version', __FILE__)
 
 RUBY_VERSIONS = YAML.load_file(File.expand_path('../.travis.yml', __FILE__))['rvm']
@@ -11,7 +11,7 @@ task :default => :release
 task :release => [
   :verify_changelog,
   :rubocop,
-  :"test:all",
+  :wwtd,
   :build,
   :tag,
   :update_stable,
@@ -53,23 +53,6 @@ RSpec::Core::RakeTask.new(:test) do |t|
   t.rspec_opts = '-b'
 end
 
-namespace :bundle do
-  desc 'Run bundler for all environments'
-  task :all do
-    abort unless all_rubies('bundle')
-    abort unless all_rubies('rake', 'appraisal:install')
-  end
-
-  desc 'Update to latest dependencies on all environments'
-  task :update_all do
-    gemfiles = File.expand_path("../gemfiles", __FILE__)
-    FileUtils.rm_r(gemfiles, :verbose => true) if File.exist?(gemfiles)
-    abort unless system('bundle', 'update')
-    abort unless all_rubies('bundle')
-    abort unless all_rubies('rake', 'appraisal:install')
-  end
-end
-
 desc 'Check style with Rubocop'
 Rubocop::RakeTask.new(:rubocop) do |task|
   task.patterns = ['lib/**/*.rb']
@@ -83,12 +66,6 @@ namespace :test do
     t.pattern = './spec/examples/**/*_spec.rb'
     t.rspec_opts = '--fail-fast --format=progress'
     t.fail_on_error = true
-  end
-end
-
-namespace :test do
-  task :all do
-    abort unless all_rubies('rake', 'appraisal', 'test:concise')
   end
 end
 
@@ -112,11 +89,5 @@ task :verify_changelog do
 
   if File.read('./CHANGELOG.md').each_line.first.strip != "## #{Cequel::VERSION}"
     abort "Changelog is not up-to-date."
-  end
-end
-
-def all_rubies(*command)
-  !RUBY_VERSIONS.find do |version|
-    !system('rvm', version, 'do', *command)
   end
 end
