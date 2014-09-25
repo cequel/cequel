@@ -59,6 +59,11 @@ module Cequel
         end
         @keyspace.execute_with_consistency(
           @statement.args.first, @statement.args.drop(1), @consistency)
+        execute_on_complete_hooks
+      end
+
+      def on_complete(&block)
+        on_complete_hooks << block
       end
 
       #
@@ -91,13 +96,20 @@ module Cequel
 
       private
 
+      attr_reader :on_complete_hooks
+
       def reset
         @statement = Statement.new
         @statement_count = 0
+        @on_complete_hooks = []
       end
 
       def begin_statement
         "BEGIN #{"UNLOGGED " if unlogged?}BATCH\n"
+      end
+
+      def execute_on_complete_hooks
+        on_complete_hooks.each { |hook| hook.call }
       end
     end
   end

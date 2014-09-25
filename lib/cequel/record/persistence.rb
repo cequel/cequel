@@ -280,10 +280,10 @@ module Cequel
 
       def update(options = {})
         assert_keys_present!
-        connection.batch do
+        connection.batch do |batch|
+          batch.on_complete { @updater, @deleter = nil }
           updater.execute(options)
           deleter.execute(options.except(:ttl))
-          @updater, @deleter = nil
         end
       end
 

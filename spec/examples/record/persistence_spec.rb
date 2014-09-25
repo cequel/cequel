@@ -125,6 +125,23 @@ describe Cequel::Record::Persistence do
             .to eq((timestamp.to_f * 1_000_000).to_i)
           Blog.connection.schema.truncate_table(Blog.table_name)
         end
+
+        it 'should not query database if no attributes have been changed' do
+          disallow_queries!
+          blog.save
+        end
+
+        it 'should not mark itself as clean if save failed at Cassandra level' do
+          blog.name = 'Pizza'
+          with_client_error(Cql::QueryError.new(1, 'error')) do
+            begin
+              blog.save
+            rescue Cql::QueryError
+            end
+          end
+          blog.save
+          subject[:name].should == 'Pizza'
+        end
       end
     end
 
