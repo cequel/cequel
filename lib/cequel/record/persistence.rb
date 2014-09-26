@@ -192,6 +192,31 @@ module Cequel
       end
 
       #
+      # Upsert the record into the database. In cases where the keys are known
+      # and `UPDATE` should be issued to do an upsert to prevent the need to
+      # do a read, then write. This works especially well when adding data to
+      # collection data types. This should never be used in situations where
+      # keys are auto generated or not known.
+      #
+      # @param options [Options] options that will be passed to save
+      # @option options [Boolean] :validate (true) whether to run validations
+      #   before saving
+      # @option options [Symbol] :consistency (:quorum) what consistency with
+      #   which to persist the changes
+      # @option options [Integer] :ttl time-to-live of the updated rows in
+      #   seconds
+      # @option options [Time] :timestamp the writetime to use for the column
+      #   updates
+      # @return [Boolean] true if record saved successfully, false if invalid
+      #
+      # @see Validations#save!
+      #
+      def upsert(options={})
+        @new_record = false # force save to run as an update
+        save(options)
+      end
+
+      #
       # Set attributes and save the record
       #
       # @param attributes [Hash] hash of attributes to update
