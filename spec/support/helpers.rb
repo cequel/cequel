@@ -65,7 +65,7 @@ module Cequel
       end
 
       def self.host
-        '127.0.0.1'
+        ENV['CEQUEL_TEST_HOST'] || '127.0.0.1'
       end
 
       def self.port
