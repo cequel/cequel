@@ -837,7 +837,7 @@ module Cequel
 
       def order_by_column
         if target_class.clustering_columns.any?
-          target_class.clustering_columns.first.name
+          target_class.clustering_columns.first
         end
       end
 
