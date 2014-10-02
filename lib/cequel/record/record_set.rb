@@ -656,7 +656,19 @@ module Cequel
       protected :reversed?
 
       def next_batch_from(row)
-        reversed? ? before(row[range_key_name]) : after(row[range_key_name])
+        method_map = { :desc => :before, :asc => :after }
+        next_method = if order_by_column.nil?
+                        :after
+                      else
+                        method_map[order_by_column.clustering_order]
+                      end
+
+        if reversed?
+          reversed_map = { :after => :before, :before => :after }
+          next_method = reversed_map[next_method]
+        end
+
+        send(next_method, row[range_key_name])
       end
 
       def find_nested_batches_from(row, options, &block)
