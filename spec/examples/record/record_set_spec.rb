@@ -33,7 +33,7 @@ describe Cequel::Record::RecordSet do
 
   model :PublishedPost do
     key :blog_subdomain, :ascii
-    key :published_at, :timeuuid
+    key :published_at, :timeuuid, order: :desc
     column :permalink, :ascii, index: true
   end
 
@@ -469,7 +469,7 @@ describe Cequel::Record::RecordSet do
 
     it 'should query Time range for Timeuuid key' do
       PublishedPost['cassandra'].after(now - 3.minutes).map(&:permalink).
-        should == %w(cequel2 cequel3 cequel4)
+        should == %w(cequel4 cequel3 cequel2)
     end
   end
 
@@ -488,7 +488,7 @@ describe Cequel::Record::RecordSet do
 
     it 'should query Time range for Timeuuid key' do
       PublishedPost['cassandra'].from(now - 3.minutes).map(&:permalink).
-        should == %w(cequel1 cequel2 cequel3 cequel4)
+        should == %w(cequel4 cequel3 cequel2 cequel1)
     end
 
     it 'should raise ArgumentError when called on partition key' do
@@ -507,7 +507,7 @@ describe Cequel::Record::RecordSet do
 
     it 'should query Time range for Timeuuid key' do
       PublishedPost['cassandra'].before(now - 1.minute).map(&:permalink).
-        should == %w(cequel0 cequel1 cequel2)
+        should == %w(cequel2 cequel1 cequel0)
     end
 
     it 'should cast argument' do
@@ -531,7 +531,7 @@ describe Cequel::Record::RecordSet do
 
     it 'should query Time range for Timeuuid key' do
       PublishedPost['cassandra'].upto(now - 1.minute).map(&:permalink).
-        should == %w(cequel0 cequel1 cequel2 cequel3)
+        should == %w(cequel3 cequel2 cequel1 cequel0)
     end
   end
 
@@ -556,35 +556,35 @@ describe Cequel::Record::RecordSet do
 
     it 'should query Time range for Timeuuid key' do
       PublishedPost['cassandra'].in((now - 3.minutes)..(now - 1.minute)).
-        map(&:permalink).should == %w(cequel1 cequel2 cequel3)
+        map(&:permalink).should == %w(cequel3 cequel2 cequel1)
     end
 
     it 'should query Time range for Timeuuid key with exclusive upper bound' do
       PublishedPost['cassandra'].in((now - 3.minutes)...(now - 1.minute)).
-        map(&:permalink).should == %w(cequel1 cequel2)
+        map(&:permalink).should == %w(cequel2 cequel1)
     end
   end
 
   describe '#reverse' do
-    let(:records) { [posts, comments] }
+    let(:records) { [published_posts, comments] }
 
     it 'should not call the database' do
       disallow_queries!
-      Post['cassandra'].reverse
+      PublishedPost['cassandra'].reverse
     end
 
     it 'should return collection in reverse' do
-      Post['cassandra'].reverse.map(&:title).
-        should == (0...5).map { |i| "Cequel #{i}" }.reverse
+      PublishedPost['cassandra'].reverse.map(&:permalink).
+        should == (0...5).map { |i| "cequel#{i}" }
     end
 
     it 'should batch iterate over collection in reverse' do
-      Post['cassandra'].reverse.find_each(:batch_size => 2).map(&:title).
-        should == (0...5).map { |i| "Cequel #{i}" }.reverse
+      PublishedPost['cassandra'].reverse.find_each(:batch_size => 2).map(&:permalink).
+        should == (0...5).map { |i| "cequel#{i}" }
     end
 
     it 'should raise an error if range key is a partition key' do
-      expect { Post.all.reverse }.to raise_error(Cequel::Record::IllegalQuery)
+      expect { PublishedPost.all.reverse }.to raise_error(Cequel::Record::IllegalQuery)
     end
 
     it 'should use the correct ordering column in deeply nested models' do
