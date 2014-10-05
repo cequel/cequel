@@ -31,7 +31,7 @@ describe Cequel::Record::Schema do
       its(:data_columns) { should include(Cequel::Schema::List.new(:categories, :text)) }
       its(:data_columns) { should include(Cequel::Schema::Set.new(:tags, :text)) }
       its(:data_columns) { should include(Cequel::Schema::Map.new(:trackbacks, :timestamp, :text)) }
-      specify { subject.property(:comment).should == 'Blog Posts' }
+      specify { expect(subject.property(:comment)).to eq('Blog Posts') }
     end
 
     context 'existing model with additional attribute' do
@@ -69,7 +69,7 @@ describe Cequel::Record::Schema do
     subject { cequel.schema.read_table(table_name) }
 
     it 'should order clustering column descending' do
-      subject.clustering_columns.first.clustering_order.should == :desc
+      expect(subject.clustering_columns.first.clustering_order).to eq(:desc)
     end
   end
 
@@ -97,7 +97,7 @@ describe Cequel::Record::Schema do
 
       its(:partition_key_columns) { should == [Cequel::Schema::Column.new(:blog_subdomain, :text)] }
       its(:clustering_columns) { should == [Cequel::Schema::Column.new(:id, :uuid)] }
-      it { should be_compact_storage }
+      it { is_expected.to be_compact_storage }
       its(:data_columns) { should == [Cequel::Schema::Column.new(:data, :text)] }
     end
 
@@ -110,10 +110,10 @@ describe Cequel::Record::Schema do
         legacy_model.synchronize_schema
       end
 
-      its(:partition_key_columns) { should == [Cequel::Schema::Column.new(:blog_subdomain, :text)] }
-      its(:clustering_columns) { should == [Cequel::Schema::Column.new(:id, :uuid)] }
-      it { should be_compact_storage }
-      its(:data_columns) { should == [Cequel::Schema::Column.new(:data, :text)] }
+      its(:partition_key_columns) { is_expected.to eq([Cequel::Schema::Column.new(:blog_subdomain, :text)]) }
+      its(:clustering_columns) { is_expected.to eq([Cequel::Schema::Column.new(:id, :uuid)]) }
+      it { is_expected.to be_compact_storage }
+      its(:data_columns) { is_expected.to eq([Cequel::Schema::Column.new(:data, :text)]) }
 
       it 'should be able to synchronize schema again' do
         expect { legacy_model.synchronize_schema }.to_not raise_error

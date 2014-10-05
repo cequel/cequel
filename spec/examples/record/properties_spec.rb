@@ -17,44 +17,44 @@ describe Cequel::Record::Properties do
     end
 
     it 'should provide accessor for key' do
-      Post.new { |post| post.permalink = 'big-data' }.permalink.
-        should == 'big-data'
+      expect(Post.new { |post| post.permalink = 'big-data' }.permalink).
+        to eq('big-data')
     end
 
     it 'should cast key to correct value' do
-      Post.new { |post| post.permalink = 44 }.permalink.
-        should == '44'
+      expect(Post.new { |post| post.permalink = 44 }.permalink).
+        to eq('44')
     end
 
     it 'should have nil key if unset' do
-      Post.new.permalink.should be_nil
+      expect(Post.new.permalink).to be_nil
     end
 
     it 'should provide accessor for data column' do
-      Post.new { |post| post.title = 'Big Data' }.title.should == 'Big Data'
+      expect(Post.new { |post| post.title = 'Big Data' }.title).to eq('Big Data')
     end
 
     it 'should cast data column to correct value' do
-      Post.new { |post| post.title = 'Big Data'.force_encoding('US-ASCII') }.
-        title.encoding.name.should == 'UTF-8'
+      expect(Post.new { |post| post.title = 'Big Data'.force_encoding('US-ASCII') }.
+        title.encoding.name).to eq('UTF-8')
     end
 
     it 'should have nil data column value if unset' do
-      Post.new.title.should be_nil
+      expect(Post.new.title).to be_nil
     end
 
     it 'should allow setting attributes via #attributes=' do
-      Post.new.tap { |post| post.attributes = {:title => 'Big Data' }}.
-        title.should == 'Big Data'
+      expect(Post.new.tap { |post| post.attributes = {:title => 'Big Data' }}.
+        title).to eq('Big Data')
     end
 
     it 'should use writers when setting attributes' do
-      Post.new.tap { |post| post.attributes = {:downcased_title => 'big data' }}.
-        title.should == 'Big Data'
+      expect(Post.new.tap { |post| post.attributes = {:downcased_title => 'big data' }}.
+        title).to eq('Big Data')
     end
 
     it 'should take attribute arguments to ::new' do
-      Post.new(:downcased_title => 'big data').title.should == 'Big Data'
+      expect(Post.new(:downcased_title => 'big data').title).to eq('Big Data')
     end
 
     it 'should provide accessor for list column' do
@@ -145,11 +145,11 @@ describe Cequel::Record::Properties do
     end
 
     it 'should respect default for keys' do
-      Post.new.permalink.should == 'new_permalink'
+      expect(Post.new.permalink).to eq('new_permalink')
     end
 
     it 'should respect default for data column' do
-      Post.new.title.should == 'New Post'
+      expect(Post.new.title).to eq('New Post')
     end
 
     it 'should respect default for list column' do
@@ -173,7 +173,7 @@ describe Cequel::Record::Properties do
     end
 
     it 'should auto-generate UUID key' do
-      Cequel.uuid?(Post.new.id).should be_true
+      expect(Cequel.uuid?(Post.new.id)).to eq(true)
     end
 
     it 'should raise ArgumentError if auto specified for non-UUID' do
@@ -186,11 +186,11 @@ describe Cequel::Record::Properties do
     end
 
     it 'should run default proc on keys' do
-      Post.new.subid.should == "subid #{1+1}" 
+      expect(Post.new.subid).to eq("subid #{1+1}") 
     end
 
     it 'should run default proc' do
-      Post.new.title.should == "Post #{Date.today}"
+      expect(Post.new.title).to eq("Post #{Date.today}")
     end
   end
 end

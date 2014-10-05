@@ -26,7 +26,7 @@ describe Cequel::Record::List do
 
   context 'new record' do
     it 'should save list as-is' do
-      subject[:tags].should == %w(one two)
+      expect(subject[:tags]).to eq(%w(one two))
     end
   end
 
@@ -34,13 +34,13 @@ describe Cequel::Record::List do
     it 'should overwrite value' do
       post.tags = %w(three four)
       post.save!
-      subject[:tags].should == %w(three four)
+      expect(subject[:tags]).to eq(%w(three four))
     end
 
     it 'should cast collection before overwriting' do
       post.tags = Set['three', 'four']
       post.save!
-      subject[:tags].should == %w(three four)
+      expect(subject[:tags]).to eq(%w(three four))
     end
   end
 
@@ -48,21 +48,21 @@ describe Cequel::Record::List do
     it 'should add new items' do
       post.tags << 'three' << 'four'
       post.save
-      subject[:tags].should == %w(one two three four)
+      expect(subject[:tags]).to eq(%w(one two three four))
     end
 
     it 'should add new items atomically' do
       scope.list_append(:tags, 'three')
       post.tags << 'four' << 'five'
       post.save
-      subject[:tags].should == %w(one two three four five)
+      expect(subject[:tags]).to eq(%w(one two three four five))
     end
 
     it 'should add new items without reading' do
       unloaded_post.tags << 'four' << 'five'
       unloaded_post.save
-      unloaded_post.should_not be_loaded
-      subject[:tags].should == %w(one two four five)
+      expect(unloaded_post).not_to be_loaded
+      expect(subject[:tags]).to eq(%w(one two four five))
     end
 
     it 'should load itself and then add new items in memory when unloaded' do
@@ -82,7 +82,7 @@ describe Cequel::Record::List do
     it 'should atomically replace a single element' do
       post.tags[1] = 'TWO'
       post.save
-      subject[:tags].should == %w(one TWO three)
+      expect(subject[:tags]).to eq(%w(one TWO three))
       expect(post.tags).to eq(%w(one TWO))
     end
 
@@ -92,14 +92,14 @@ describe Cequel::Record::List do
     end
 
     it 'should replace an element without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags[1] = 'TWO'
     end
 
     it 'should persist the replaced element' do
       unloaded_post.tags[1] = 'TWO'
       unloaded_post.save
-      subject[:tags].should == %w(one TWO three)
+      expect(subject[:tags]).to eq(%w(one TWO three))
     end
 
     it 'should apply local modifications when loaded later' do
@@ -110,7 +110,7 @@ describe Cequel::Record::List do
     it 'should atomically replace a given number of arguments' do
       post.tags[0, 2] = 'One', 'Two'
       post.save
-      subject[:tags].should == %w(One Two three)
+      expect(subject[:tags]).to eq(%w(One Two three))
       expect(post.tags).to eq(%w(One Two))
     end
 
@@ -123,14 +123,14 @@ describe Cequel::Record::List do
       scope.list_append(:tags, 'four')
       post.tags[0, 3] = 'ONE'
       post.save
-      subject[:tags].should == %w(ONE four)
+      expect(subject[:tags]).to eq(%w(ONE four))
       expect(post.tags).to eq(%w(ONE))
     end
 
     it 'should atomically replace a given range of elements' do
       post.tags[0..1] = ['One', 'Two']
       post.save
-      subject[:tags].should == %w(One Two three)
+      expect(subject[:tags]).to eq(%w(One Two three))
       expect(post.tags).to eq(%w(One Two))
     end
 
@@ -138,7 +138,7 @@ describe Cequel::Record::List do
       scope.list_append(:tags, 'four')
       post.tags[0..2] = 'ONE'
       post.save
-      subject[:tags].should == %w(ONE four)
+      expect(subject[:tags]).to eq(%w(ONE four))
       expect(post.tags).to eq(%w(ONE))
     end
   end
@@ -147,19 +147,19 @@ describe Cequel::Record::List do
     it 'should clear all elements from the array' do
       post.tags.clear
       post.save
-      subject[:tags].should be_blank
+      expect(subject[:tags]).to be_blank
       expect(post.tags).to eq([])
     end
 
     it 'should clear elements without loading' do
-      cequel.should_not receive(:execute)
+      expect(cequel).not_to receive(:execute)
       unloaded_post.tags.clear
     end
 
     it 'should persist clear without loading' do
       unloaded_post.tags.clear
       unloaded_post.save
-      subject[:tags].should be_blank
+      expect(subject[:tags]).to be_blank
     end
 
     it 'should apply local modifications post-hoc' do
@@ -179,7 +179,7 @@ describe Cequel::Record::List do
       scope.list_append(:tags, 'three')
       post.tags.concat(['four', 'five'])
       post.save
-      subject[:tags].should == %w(one two three four five)
+      expect(subject[:tags]).to eq(%w(one two three four five))
       expect(post.tags).to eq(%w(one two four five))
     end
 
@@ -189,14 +189,14 @@ describe Cequel::Record::List do
     end
 
     it 'should concat elements without loading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.concat(['four', 'five'])
     end
 
     it 'should persist concatenated elements' do
       unloaded_post.tags.concat(['four', 'five'])
       unloaded_post.save
-      subject[:tags].should == %w(one two four five)
+      expect(subject[:tags]).to eq(%w(one two four five))
     end
 
     it 'should apply local modifications when loaded later' do
@@ -211,7 +211,7 @@ describe Cequel::Record::List do
       scope.list_append(:tags, 'two')
       post.tags.delete('two')
       post.save
-      subject[:tags].should == %w(one three)
+      expect(subject[:tags]).to eq(%w(one three))
       expect(post.tags).to eq(%w(one))
     end
 
@@ -221,14 +221,14 @@ describe Cequel::Record::List do
     end
 
     it 'should delete without loading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.delete('two')
     end
 
     it 'should persist deletions without loading' do
       unloaded_post.tags.delete('two')
       unloaded_post.save
-      subject[:tags].should == %w(one)
+      expect(subject[:tags]).to eq(%w(one))
     end
 
     it 'should modify local copy after the fact' do
@@ -242,19 +242,19 @@ describe Cequel::Record::List do
       scope.list_append(:tags, ['three', 'four'])
       post.tags.delete_at(1)
       post.save
-      subject[:tags].should == %w(one three four)
+      expect(subject[:tags]).to eq(%w(one three four))
       expect(post.tags).to eq(%w(one))
     end
 
     it 'should delete from a given index without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.delete_at(1)
     end
 
     it 'should persist deletion from unloaded list' do
       unloaded_post.tags.delete_at(1)
       unloaded_post.save
-      subject[:tags].should == %w(one)
+      expect(subject[:tags]).to eq(%w(one))
     end
 
     it 'should apply deletion after the fact' do
@@ -313,7 +313,7 @@ describe Cequel::Record::List do
       scope.list_append(:tags, 'three')
       post.tags.push('four').push('five')
       post.save
-      subject[:tags].should == %w(one two three four five)
+      expect(subject[:tags]).to eq(%w(one two three four five))
       expect(post.tags).to eq(%w(one two four five))
     end
   end
@@ -330,7 +330,7 @@ describe Cequel::Record::List do
       scope.list_append(:tags, 'three')
       post.tags.replace(%w(four five))
       post.save
-      subject[:tags].should == %w(four five)
+      expect(subject[:tags]).to eq(%w(four five))
       expect(post.tags).to eq(%w(four five))
     end
 
@@ -340,14 +340,14 @@ describe Cequel::Record::List do
     end
 
     it 'should overwrite without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.replace(%w(four five))
     end
 
     it 'should persist unloaded overwrite' do
       unloaded_post.tags.replace(%w(four five))
       unloaded_post.save
-      subject[:tags].should == %w(four five)
+      expect(subject[:tags]).to eq(%w(four five))
     end
 
     it 'should apply replace post-hoc' do
@@ -417,7 +417,7 @@ describe Cequel::Record::List do
       scope.list_prepend(:tags, 'zero')
       post.tags.unshift('minustwo', 'minusone')
       post.save
-      subject[:tags].should == %w(minustwo minusone zero one two)
+      expect(subject[:tags]).to eq(%w(minustwo minusone zero one two))
       expect(post.tags).to eq(%w(minustwo minusone one two))
     end
 
@@ -427,14 +427,14 @@ describe Cequel::Record::List do
     end
 
     it 'should unshift without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.unshift('minustwo', 'minusone')
     end
 
     it 'should persist unloaded unshift' do
       unloaded_post.tags.unshift('minustwo', 'minusone')
       unloaded_post.save
-      subject[:tags].should == %w(minustwo minusone one two)
+      expect(subject[:tags]).to eq(%w(minustwo minusone one two))
     end
 
     it 'should apply unshift after the fact' do

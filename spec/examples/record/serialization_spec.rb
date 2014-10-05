@@ -21,7 +21,7 @@ describe 'serialization' do
 
   it 'should provide JSON serialization' do
     Post.include_root_in_json = false
-    Post.new(attributes).as_json.symbolize_keys.
-      should == attributes.merge(body: nil)
+    expect(Post.new(attributes).as_json.symbolize_keys).
+      to eq(attributes.merge(body: nil))
   end
 end
