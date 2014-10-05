@@ -325,9 +325,9 @@ describe Cequel::Schema::TableReader do
     its(:partition_key_columns) { should ==
       [Cequel::Schema::PartitionKey.new(:permalink, :text)] }
     its(:clustering_columns) { should be_empty }
-    its(:data_columns) { should =~
-      [Cequel::Schema::DataColumn.new(:title, :text),
-        Cequel::Schema::DataColumn.new(:body, :text)] }
+    specify { expect(table.data_columns).to contain_exactly(
+      Cequel::Schema::DataColumn.new(:title, :text),
+      Cequel::Schema::DataColumn.new(:body, :text)) }
   end
 
   describe 'wide-row compact storage' do
