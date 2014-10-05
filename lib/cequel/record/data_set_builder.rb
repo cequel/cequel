@@ -86,17 +86,22 @@ module Cequel
 
       def add_order
         column = order_by_column
-        if reversed? and column.present?
-          reversed_map = { :asc => :desc, :desc => :asc }
-          reversed_order = reversed_map[column.clustering_order]
-
-          self.data_set = data_set.order(column.name => reversed_order)
+        if column.present? && reversed?
+          self.data_set = data_set.order(column.name => sort_direction)
         end
       end
 
       def set_consistency
         if query_consistency
           self.data_set = data_set.consistency(query_consistency)
+        end
+      end
+
+      def sort_direction
+        if reversed? ^ (order_by_column.clustering_order == :desc)
+          :desc
+        else
+          :asc
         end
       end
     end
