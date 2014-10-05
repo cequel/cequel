@@ -36,7 +36,6 @@ RSpec.configure do |config|
   end
 
   config.after(:each) { Timecop.return }
-  config.raise_errors_for_deprecations!
 
   config.expect_with :rspec do |c|
     c.syntax = [:should, :expect]
