@@ -36,10 +36,6 @@ RSpec.configure do |config|
   end
 
   config.after(:each) { Timecop.return }
-
-  config.expect_with :rspec do |c|
-    c.syntax = [:should, :expect]
-  end
 end
 
 if defined? byebug

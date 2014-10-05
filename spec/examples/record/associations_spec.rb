@@ -55,29 +55,29 @@ describe Cequel::Record::Associations do
     let(:post) { Post.new }
 
     it 'should add parent key as first key' do
-      Post.key_column_names.first.should == :blog_subdomain
+      expect(Post.key_column_names.first).to eq(:blog_subdomain)
     end
 
     it 'should add parent key as the partition key' do
-      Post.partition_key_column_names.should == [:blog_subdomain]
+      expect(Post.partition_key_column_names).to eq([:blog_subdomain])
     end
 
     it "should add parent's keys as first keys" do
-      Comment.key_column_names.first(2).should == [:post_blog_subdomain, :post_id]
+      expect(Comment.key_column_names.first(2)).to eq([:post_blog_subdomain, :post_id])
     end
 
     it "should add parent's first key as partition key" do
-      Comment.partition_key_column_names.should == [:post_blog_subdomain]
+      expect(Comment.partition_key_column_names).to eq([:post_blog_subdomain])
     end
 
     it 'should provide accessors for association object' do
       post.blog = blog
-      post.blog.should == blog
+      expect(post.blog).to eq(blog)
     end
 
     it 'should set parent key(s) when setting association object' do
       post.blog = blog
-      post.blog_subdomain.should == 'big-data'
+      expect(post.blog_subdomain).to eq('big-data')
     end
 
     it 'should raise ArgumentError when parent is set without keys' do
@@ -91,13 +91,13 @@ describe Cequel::Record::Associations do
 
     it 'should return Blog instance when parent key set directly' do
       post.blog_subdomain = 'big-data'
-      post.blog.subdomain.should == 'big-data'
+      expect(post.blog.subdomain).to eq('big-data')
     end
 
     it 'should not hydrate parent instance when creating from key' do
       post.blog_subdomain = 'big-data'
       disallow_queries!
-      post.blog.should_not be_loaded
+      expect(post.blog).not_to be_loaded
     end
 
     it 'should not allow declaring belongs_to after key' do
@@ -125,22 +125,22 @@ describe Cequel::Record::Associations do
       let(:photo) { Photo.new }
 
       it "should add parent's keys as first keys" do
-        Photo.key_column_names.first(2).should == [:post_blog_subdomain, :post_id]
+        expect(Photo.key_column_names.first(2)).to eq([:post_blog_subdomain, :post_id])
       end
 
       it "should add parent's keys as partition keys" do
-        Photo.partition_key_column_names.should == [:post_blog_subdomain, :post_id]
+        expect(Photo.partition_key_column_names).to eq([:post_blog_subdomain, :post_id])
       end
 
       it 'should provide accessors for association object' do
         photo.post = post
-        photo.post.should == post
+        expect(photo.post).to eq(post)
       end
 
       it 'should set parent key(s) when setting association object' do
         photo.post = post
-        photo.post_blog_subdomain.should == 'big-data'
-        photo.post_id.should == post.id
+        expect(photo.post_blog_subdomain).to eq('big-data')
+        expect(photo.post_id).to eq(post.id)
       end
 
       it 'should raise ArgumentError when parent is set without a key' do
@@ -155,14 +155,14 @@ describe Cequel::Record::Associations do
       it 'should return Photo instance when parent keys are set directly' do
         photo.post_blog_subdomain = 'big-data'
         photo.post_id = post.id
-        photo.post.should == post
+        expect(photo.post).to eq(post)
       end
 
       it 'should not hydrate parent instance when creating from keys' do
         photo.post_blog_subdomain = 'big-data'
         photo.post_id = post.id
         disallow_queries!
-        photo.post.should_not be_loaded
+        expect(photo.post).not_to be_loaded
       end
 
       it 'should not allow declaring belongs_to after key' do
@@ -208,32 +208,32 @@ describe Cequel::Record::Associations do
     end
 
     it 'should return scope of posts' do
-      blog.posts.map(&:title).should == ["Post 0", "Post 1", "Post 2"]
+      expect(blog.posts.map(&:title)).to eq(["Post 0", "Post 1", "Post 2"])
     end
 
     it 'should retain scope when hydrated multiple times' do
       blog.posts.map(&:id)
       disallow_queries!
-      blog.posts.map(&:title).should == ["Post 0", "Post 1", "Post 2"]
+      expect(blog.posts.map(&:title)).to eq(["Post 0", "Post 1", "Post 2"])
     end
 
     it 'should reload when reload argument passed' do
       blog.posts.map(&:id)
       posts.first.destroy
-      blog.posts(true).map(&:title).should == ['Post 1', 'Post 2']
+      expect(blog.posts(true).map(&:title)).to eq(['Post 1', 'Post 2'])
     end
 
     it 'should support #find with key' do
-      blog.posts.find(posts.first.id).should == posts.first
+      expect(blog.posts.find(posts.first.id)).to eq(posts.first)
     end
 
     it 'should support #find with block' do
-      blog.posts.find { |post| post.title.include?('1') }.should == posts[1]
+      expect(blog.posts.find { |post| post.title.include?('1') }).to eq(posts[1])
     end
 
     it 'should support #select with block' do
-      blog.posts.select { |post| !post.title.include?('2') }
-        .should == posts.first(2)
+      expect(blog.posts.select { |post| !post.title.include?('2') })
+        .to eq(posts.first(2))
     end
 
     it 'should support #select with arguments' do
@@ -243,35 +243,35 @@ describe Cequel::Record::Associations do
 
     it 'should load #first directly from the database if unloaded' do
       blog.posts.first.title
-      blog.posts.should_not be_loaded
+      expect(blog.posts).not_to be_loaded
     end
 
     it 'should read #first from loaded collection' do
       blog.posts.entries
       disallow_queries!
-      blog.posts.first.title.should == 'Post 0'
+      expect(blog.posts.first.title).to eq('Post 0')
     end
 
     it 'should always query the database for #count' do
       blog.posts.entries
       posts.first.destroy
-      blog.posts.count.should == 2
+      expect(blog.posts.count).to eq(2)
     end
 
     it 'should always load the records for #length' do
-      blog.posts.length.should == 3
-      blog.posts.should be_loaded
+      expect(blog.posts.length).to eq(3)
+      expect(blog.posts).to be_loaded
     end
 
     it 'should count from database for #size if unloaded' do
-      blog.posts.size.should == 3
-      blog.posts.should_not be_loaded
+      expect(blog.posts.size).to eq(3)
+      expect(blog.posts).not_to be_loaded
     end
 
     it 'should count records in memory for #size if loaded' do
       blog.posts.entries
       disallow_queries!
-      blog.posts.size.should == 3
+      expect(blog.posts.size).to eq(3)
     end
 
     it "does not allow invalid :dependent options" do

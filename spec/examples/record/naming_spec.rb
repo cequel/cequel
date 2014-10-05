@@ -8,10 +8,10 @@ describe 'naming' do
   end
 
   it 'should implement model_name' do
-    Blog.model_name.should == 'Blog'
+    expect(Blog.model_name).to eq('Blog')
   end
 
   it 'should implement model_name interpolations' do
-    Blog.model_name.i18n_key.should == :blog
+    expect(Blog.model_name.i18n_key).to eq(:blog)
   end
 end

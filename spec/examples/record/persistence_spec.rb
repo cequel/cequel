@@ -29,18 +29,18 @@ describe Cequel::Record::Persistence do
     end
 
     describe 'new record' do
-      specify { Blog.new.should_not be_persisted }
-      specify { Blog.new.should be_transient }
+      specify { expect(Blog.new).not_to be_persisted }
+      specify { expect(Blog.new).to be_transient }
     end
 
     describe '#save' do
       context 'on create' do
         it 'should save row to database' do
-          subject[:name].should == 'Cequel'
+          expect(subject[:name]).to eq('Cequel')
         end
 
         it 'should mark row persisted' do
-          blog.should be_persisted
+          expect(blog).to be_persisted
         end
 
         it 'should fail fast if keys are missing' do
@@ -85,15 +85,15 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should change existing column value' do
-          subject[:name].should == 'Cequel 1.0'
+          expect(subject[:name]).to eq('Cequel 1.0')
         end
 
         it 'should add new column value' do
-          subject[:owner_id].should == owner_id
+          expect(subject[:owner_id]).to eq(owner_id)
         end
 
         it 'should remove old column values' do
-          subject[:description].should be_nil
+          expect(subject[:description]).to be_nil
         end
 
         it 'should not allow changing key values' do
@@ -147,7 +147,7 @@ describe Cequel::Record::Persistence do
             end
           end
           blog.save
-          subject[:name].should == 'Pizza'
+          expect(subject[:name]).to eq('Pizza')
         end
       end
     end
@@ -164,11 +164,11 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should initialize with block' do
-          blog.name.should == 'Big Data'
+          expect(blog.name).to eq('Big Data')
         end
 
         it 'should save instance' do
-          Blog.find(blog.subdomain).name.should == 'Big Data'
+          expect(Blog.find(blog.subdomain).name).to eq('Big Data')
         end
 
         it 'should fail fast if keys are missing' do
@@ -186,11 +186,11 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should initialize with block' do
-          blog.name.should == 'Big Data'
+          expect(blog.name).to eq('Big Data')
         end
 
         it 'should save instance' do
-          Blog.find(blog.subdomain).name.should == 'Big Data'
+          expect(Blog.find(blog.subdomain).name).to eq('Big Data')
         end
 
         it 'should fail fast if keys are missing' do
@@ -209,11 +209,11 @@ describe Cequel::Record::Persistence do
       before { blog.update_attributes(:name => 'The Big Data Blog') }
 
       it 'should update instance in memory' do
-        blog.name.should == 'The Big Data Blog'
+        expect(blog.name).to eq('The Big Data Blog')
       end
 
       it 'should save instance' do
-        Blog.find(blog.subdomain).name.should == 'The Big Data Blog'
+        expect(Blog.find(blog.subdomain).name).to eq('The Big Data Blog')
       end
 
       it 'should not allow updating key values' do
@@ -226,11 +226,11 @@ describe Cequel::Record::Persistence do
       before { blog.destroy }
 
       it 'should delete entire row' do
-        subject.should be_nil
+        expect(subject).to be_nil
       end
 
       it 'should mark record transient' do
-        blog.should be_transient
+        expect(blog).to be_transient
       end
 
       it 'should destroy with specified consistency' do
@@ -266,11 +266,11 @@ describe Cequel::Record::Persistence do
     describe '#save' do
       context 'on create' do
         it 'should save row to database' do
-          subject[:title].should == 'Cequel'
+          expect(subject[:title]).to eq('Cequel')
         end
 
         it 'should mark row persisted' do
-          post.should be_persisted
+          expect(post).to be_persisted
         end
 
         it 'should fail fast if parent keys are missing' do
@@ -303,15 +303,15 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should change existing column value' do
-          subject[:title].should == 'Cequel 1.0'
+          expect(subject[:title]).to eq('Cequel 1.0')
         end
 
         it 'should add new column value' do
-          subject[:author_id].should == author_id
+          expect(subject[:author_id]).to eq(author_id)
         end
 
         it 'should remove old column values' do
-          subject[:body].should be_nil
+          expect(subject[:body]).to be_nil
         end
 
         it 'should not allow changing parent key values' do
@@ -334,11 +334,11 @@ describe Cequel::Record::Persistence do
       before { post.destroy }
 
       it 'should delete entire row' do
-        subject.should be_nil
+        expect(subject).to be_nil
       end
 
       it 'should mark record transient' do
-        post.should be_transient
+        expect(post).to be_transient
       end
     end
   end
