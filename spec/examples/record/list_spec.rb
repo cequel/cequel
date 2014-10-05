@@ -92,7 +92,7 @@ describe Cequel::Record::List do
     end
 
     it 'should replace an element without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags[1] = 'TWO'
     end
 
@@ -189,7 +189,7 @@ describe Cequel::Record::List do
     end
 
     it 'should concat elements without loading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.concat(['four', 'five'])
     end
 
@@ -221,7 +221,7 @@ describe Cequel::Record::List do
     end
 
     it 'should delete without loading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.delete('two')
     end
 
@@ -247,7 +247,7 @@ describe Cequel::Record::List do
     end
 
     it 'should delete from a given index without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.delete_at(1)
     end
 
@@ -340,7 +340,7 @@ describe Cequel::Record::List do
     end
 
     it 'should overwrite without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.replace(%w(four five))
     end
 
@@ -427,7 +427,7 @@ describe Cequel::Record::List do
     end
 
     it 'should unshift without reading' do
-      cequel.should_not_receive :execute
+      disallow_queries!
       unloaded_post.tags.unshift('minustwo', 'minusone')
     end
 

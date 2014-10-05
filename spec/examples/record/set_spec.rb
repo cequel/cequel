@@ -59,9 +59,10 @@ describe Cequel::Record::Set do
       end
 
       it 'should add without reading' do
-        max_statements! 2
-        unloaded_post.tags.add('four')
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.tags.add('four')
+          unloaded_post.save
+        end
         subject[:tags].should == Set['one', 'two', 'three', 'four']
       end
 
@@ -80,9 +81,10 @@ describe Cequel::Record::Set do
       end
 
       it 'should clear without reading' do
-        max_statements! 2
-        unloaded_post.tags.clear
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.tags.clear
+          unloaded_post.save
+        end
         subject[:tags].should be_blank
       end
 
@@ -106,9 +108,10 @@ describe Cequel::Record::Set do
       end
 
       it 'should delete without reading' do
-        max_statements! 2
-        unloaded_post.tags.delete('two')
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.tags.delete('two')
+          unloaded_post.save
+        end
         subject[:tags].should == Set['one', 'three']
       end
 
@@ -132,9 +135,10 @@ describe Cequel::Record::Set do
       end
 
       it 'should replace without reading' do
-        max_statements! 2
-        unloaded_post.tags.replace(Set['a', 'b'])
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.tags.replace(Set['a', 'b'])
+          unloaded_post.save
+        end
         subject[:tags].should == Set['a', 'b']
       end
 

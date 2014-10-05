@@ -65,9 +65,10 @@ describe Cequel::Record::Map do
       end
 
       it 'should write without reading' do
-        max_statements! 2
-        unloaded_post.likes['david'] = 4
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.likes['david'] = 4
+          unloaded_post.save
+        end
         subject[:likes].should ==
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
       end
@@ -88,9 +89,10 @@ describe Cequel::Record::Map do
       end
 
       it 'should clear without reading' do
-        max_statements! 2
-        unloaded_post.likes.clear
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.likes.clear
+          unloaded_post.save
+        end
         subject[:likes].should be_blank
       end
 
@@ -114,9 +116,10 @@ describe Cequel::Record::Map do
       end
 
       it 'should delete without reading' do
-        max_statements! 2
-        unloaded_post.likes.delete('bob')
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.likes.delete('bob')
+          unloaded_post.save
+        end
         subject[:likes].should == {'alice' => 1, 'charles' => 3}
       end
 
@@ -153,9 +156,10 @@ describe Cequel::Record::Map do
       end
 
       it 'should write without reading' do
-        max_statements! 2
-        unloaded_post.likes.merge!('david' => 4, 'emily' => 5)
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.likes.merge!('david' => 4, 'emily' => 5)
+          unloaded_post.save
+        end
         subject[:likes].should ==
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
       end
@@ -188,9 +192,10 @@ describe Cequel::Record::Map do
       end
 
       it 'should overwrite without reading' do
-        max_statements! 2
-        unloaded_post.likes.replace('david' => 4, 'emily' => 5)
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.likes.replace('david' => 4, 'emily' => 5)
+          unloaded_post.save
+        end
         subject[:likes].should == {'david' => 4, 'emily' => 5}
       end
 
@@ -210,9 +215,10 @@ describe Cequel::Record::Map do
       end
 
       it 'should write without reading' do
-        max_statements! 2
-        unloaded_post.likes.store('david', 4)
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.likes.store('david', 4)
+          unloaded_post.save
+        end
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4}
       end
@@ -235,9 +241,10 @@ describe Cequel::Record::Map do
       end
 
       it 'should write without reading' do
-        max_statements! 2
-        unloaded_post.likes.update('david' => 4, 'emily' => 5)
-        unloaded_post.save
+        expect_statement_count 1 do
+          unloaded_post.likes.update('david' => 4, 'emily' => 5)
+          unloaded_post.save
+        end
         subject[:likes].should == 
           {'alice' => 1, 'bob' => 2, 'charles' => 3, 'david' => 4, 'emily' => 5}
       end

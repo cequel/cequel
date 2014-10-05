@@ -34,7 +34,7 @@ describe Cequel::Record::Dirty do
 
     it 'should support *_changed? method' do
       post.title = 'Cequel ORM'
-      post.title_changed?.should be_true
+      post.title_changed?.should == true
     end
 
     it 'should not have changed attributes after save' do

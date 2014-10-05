@@ -274,9 +274,10 @@ describe Cequel::Record::RecordSet do
       end
 
       it 'should load values for all referenced records on first access' do
-        max_statements! 1
-        subject.first.name.should == 'Blog 0'
-        subject.last.name.should == 'Blog 1'
+        expect_statement_count 1 do
+          subject.first.name.should == 'Blog 0'
+          subject.last.name.should == 'Blog 1'
+        end
       end
     end
 
@@ -302,9 +303,10 @@ describe Cequel::Record::RecordSet do
       end
 
       it 'should lazy-load all records when properties of one accessed' do
-        max_statements! 1
-        subject.first.title.should == 'Cequel 0'
-        subject.second.title.should == 'Cequel ORM 0'
+        expect_statement_count 1 do
+          subject.first.title.should == 'Cequel 0'
+          subject.second.title.should == 'Cequel ORM 0'
+        end
       end
     end
 
@@ -319,9 +321,10 @@ describe Cequel::Record::RecordSet do
       end
 
       it 'should lazily load all records when one record accessed' do
-        max_statements! 1
-        subject.first.title.should == 'Cequel 0'
-        subject.second.title.should == 'Cequel 1'
+        expect_statement_count 1 do
+          subject.first.title.should == 'Cequel 0'
+          subject.second.title.should == 'Cequel 1'
+        end
       end
 
       it 'should not allow collection columns to be selected' do
@@ -353,9 +356,10 @@ describe Cequel::Record::RecordSet do
     let(:records) { [posts, blogs, mongo_posts] }
 
     it 'should respect :batch_size argument' do
-      cequel.should_receive(:execute_with_consistency).twice.and_call_original
-      Blog.find_each(:batch_size => 2).map(&:subdomain).
-        should =~ subdomains
+      expect_statement_count 2 do
+        Blog.find_each(:batch_size => 2).map(&:subdomain).
+          should =~ subdomains
+      end
     end
 
     it 'should iterate over all keys' do
@@ -387,8 +391,9 @@ describe Cequel::Record::RecordSet do
     let!(:records) { [posts, blogs, mongo_posts] }
 
     it 'should respect :batch_size argument' do
-      cequel.should_receive(:execute_with_consistency).twice.and_call_original
-      Blog.find_in_batches(:batch_size => 2){|a_batch| next }
+      expect_statement_count 2 do
+        Blog.find_in_batches(:batch_size => 2){|a_batch| next }
+      end
     end
 
     it 'should iterate over all keys' do
@@ -400,7 +405,7 @@ describe Cequel::Record::RecordSet do
         found_posts += recs
       }
       expect(found_posts).to include(*expected_posts)
-      expect(found_posts).to have(expected_posts.size).items
+      expect(found_posts.length).to eq(expected_posts.size)
     end
 
     it 'should iterate over batches' do
@@ -617,8 +622,8 @@ describe Cequel::Record::RecordSet do
       subject { Blog.first(2) }
 
       it { should be_a(Array) }
-      it { should have(2).items }
-      specify { (subject.map(&:subdomain) & subdomains).should have(2).items }
+      its(:size) { should be(2) }
+      specify { expect((subject.map(&:subdomain) & subdomains).size).to be(2) }
     end
   end
 
@@ -626,7 +631,7 @@ describe Cequel::Record::RecordSet do
     let(:records) { blogs }
 
     it 'should return the number of records requested' do
-      Blog.limit(2).should have(2).entries
+      expect(Blog.limit(2).length).to be(2)
     end
   end
 
@@ -730,20 +735,18 @@ describe Cequel::Record::RecordSet do
 
     context 'mixing keys and secondary-indexed columns' do
       it 'should allow mixture in hash argument' do
-        Post.where(blog_subdomain: 'cassandra', author_id: uuids.first).
-          should have(3).entries
+        expect(Post.where(blog_subdomain: 'cassandra', author_id: uuids.first).
+          entries.length).to be(3)
       end
 
       it 'should allow mixture in chain with primary first' do
-        Post.where(blog_subdomain: 'cassandra')
-          .where(author_id: uuids.first)
-          .should have(3).entries
+        expect(Post.where(blog_subdomain: 'cassandra')
+          .where(author_id: uuids.first).entries.length).to be(3)
       end
 
       it 'should allow mixture in chain with secondary first' do
-        Post.where(author_id: uuids.first)
-          .where(blog_subdomain: 'cassandra')
-        .should have(3).entries
+        expect(Post.where(author_id: uuids.first)
+          .where(blog_subdomain: 'cassandra').entries.length).to be(3)
       end
     end
 

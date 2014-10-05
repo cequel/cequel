@@ -173,7 +173,7 @@ describe Cequel::Record::Properties do
     end
 
     it 'should auto-generate UUID key' do
-      Cequel.uuid?(Post.new.id).should be_true
+      Cequel.uuid?(Post.new.id).should == true
     end
 
     it 'should raise ArgumentError if auto specified for non-UUID' do

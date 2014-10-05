@@ -49,16 +49,16 @@ describe Cequel::Record::Validations do
 
   describe '#save' do
     it 'should return false and not persist model if invalid' do
-      invalid_post.save.should be_false
+      expect(invalid_post.save).to eq(false)
     end
 
     it 'should return true and persist model if valid' do
-      valid_post.save.should be_true
+      valid_post.save.should == true
       Post.find('valid').title.should == 'Valid Post'
     end
 
     it 'should bypass validations if :validate => false is passed' do
-      invalid_post.save(:validate => false).should be_true
+      invalid_post.save(:validate => false).should == true
       Post.find('invalid').body.should == 'This is an invalid post.'
     end
   end
@@ -104,7 +104,7 @@ describe Cequel::Record::Validations do
     it 'should call validation callbacks' do
       post = Post.new(:title => 'cequel')
       post.valid?
-      post.called_validate_callback.should be_true
+      post.called_validate_callback.should == true
     end
   end
 end
