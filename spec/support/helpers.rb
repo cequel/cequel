@@ -77,7 +77,14 @@ module Cequel
       end
 
       def self.keyspace_name
-        ENV['CEQUEL_TEST_KEYSPACE'] || 'cequel_test'
+        ENV.fetch('CEQUEL_TEST_KEYSPACE') do
+          test_env_number = ENV['TEST_ENV_NUMBER']
+          if test_env_number.present?
+            "cequel_test_#{test_env_number}"
+          else
+            'cequel_test'
+          end
+        end
       end
 
       def self.legacy_connection
