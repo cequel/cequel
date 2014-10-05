@@ -51,7 +51,7 @@ module Cequel
                      :scoped_key_names, :scoped_key_values,
                      :scoped_indexed_column, :lower_bound,
                      :upper_bound, :reversed?, :order_by_column,
-                     :query_consistency
+                     :query_consistency, :ascends_by?
 
       private
 
@@ -98,11 +98,7 @@ module Cequel
       end
 
       def sort_direction
-        if reversed? ^ (order_by_column.clustering_order == :desc)
-          :desc
-        else
-          :asc
-        end
+        ascends_by?(order_by_column) ? :asc : :desc
       end
     end
   end
