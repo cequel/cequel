@@ -11,7 +11,7 @@ task :default => :release
 task :release => [
   :verify_changelog,
   :rubocop,
-  :wwtd,
+  :"test:all",
   :build,
   :tag,
   :update_stable,
@@ -66,6 +66,10 @@ namespace :test do
     t.pattern = './spec/examples/**/*_spec.rb'
     t.rspec_opts = '--fail-fast --format=progress'
     t.fail_on_error = true
+  end
+
+  task :all do
+    system('bundle', 'exec', 'wwtd', '--parallel')
   end
 end
 
