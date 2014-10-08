@@ -1,3 +1,7 @@
+## 1.4.4
+
+* Round time to nearest millisecond when serializing for CQL
+
 ## 1.4.3
 
 * Make Rake tasks work without Rails
