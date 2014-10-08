@@ -84,8 +84,6 @@ module Cequel
         return value.map { |element| quote(element) }.join(',')
       end
       case value
-      when ::String
-        quote_string(value)
       when Time, ActiveSupport::TimeWithZone
         (value.to_r * 1000).round.to_s
       when DateTime
