@@ -19,4 +19,4 @@ services:
   - cassandra
 matrix:
   allow_failures:
-    - rvm: "rbx-2.2"
+    - rvm: "rbx-2.2.6"
