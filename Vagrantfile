@@ -1,5 +1,6 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+require 'net/http'
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
@@ -136,9 +137,8 @@ exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
     service cassandra start
   SH
 
-  versions = (0..0).map { |p| "2.1.#{p}" } +
-             (0..10).map { |p| "2.0.#{p}" } +
-             (0..19).map { |p| "1.2.#{p}" }
+  listing = Net::HTTP.get(URI.parse("http://archive.apache.org/dist/cassandra/"))
+  versions = listing.scan(%r(href="(\d+\.\d+\.\d+)/")).map(&:first).grep(/^(1\.2\.|2\.)/)
   versions.each do |version|
     java_version = version =~ /^1/ ? '6' : '7'
     config.vm.define version do |machine|
