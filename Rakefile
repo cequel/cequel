@@ -69,7 +69,7 @@ namespace :test do
   end
 
   task :all do
-    system('bundle', 'exec', 'wwtd', '--parallel')
+    abort unless system('bundle', 'exec', 'wwtd', '--parallel')
   end
 end
 
