@@ -178,12 +178,14 @@ module Cequel
       #   seconds
       # @option options [Time] :timestamp the writetime to use for the column
       #   updates
+      # @option options [Boolean] :if_not_exists inserts only if no record with
+      #   given keys exists
       # @return [Boolean] true if record saved successfully, false if invalid
       #
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys(:consistency, :ttl, :timestamp)
+        options.assert_valid_keys(:consistency, :ttl, :timestamp, :if_not_exists)
         if new_record? then create(options)
         else update(options)
         end
