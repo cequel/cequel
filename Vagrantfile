@@ -126,7 +126,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     apt-get update
     echo debconf shared/accepted-oracle-license-v1-1 select true | sudo debconf-set-selections
     echo debconf shared/accepted-oracle-license-v1-1 seen true | sudo debconf-set-selections
-    apt-get install -y oracle-java$2-installer oracle-java$2-set-default
+    apt-get install -y oracle-java7-installer oracle-java7-set-default
     curl -s http://archive.apache.org/dist/cassandra/$1/apache-cassandra-$1-bin.tar.gz | tar -C /opt -xzvf -
     echo "start on runlevel [2345]
 stop on runlevel [06]
@@ -138,12 +138,11 @@ exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
   SH
 
   listing = Net::HTTP.get(URI.parse("http://archive.apache.org/dist/cassandra/"))
-  versions = listing.scan(%r(href="(\d+\.\d+\.\d+)/")).map(&:first).grep(/^(1\.2\.|2\.)/)
+  versions = listing.scan(%r(href="(\d+\.\d+\.\d+)/")).map(&:first).grep(/^2\./)
   versions.each do |version|
-    java_version = version =~ /^1/ ? '6' : '7'
     config.vm.define version do |machine|
       machine.vm.provision :shell, inline: provision,
-        args: [version, java_version]
+        args: [version]
       machine.vm.network :forwarded_port, guest: 9042, host: 9042,
         auto_correct: true
       machine.vm.network :forwarded_port, guest: 9160, host: 9160,
