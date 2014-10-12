@@ -8,6 +8,7 @@ require 'cequel/record/schema'
 require 'cequel/record/properties'
 require 'cequel/record/collection'
 require 'cequel/record/persistence'
+require 'cequel/record/key_collisions'
 require 'cequel/record/bulk_writes'
 require 'cequel/record/record_set'
 require 'cequel/record/data_set_builder'
@@ -68,6 +69,7 @@ module Cequel
   # @see Collection Collection columns
   # @see Associations Defining associations between records
   # @see Persistence Creating, updating, and destroying records
+  # @see KeyCollisions Ensuring uniqueness of keys on create
   # @see BulkWrites Updating and destroying records in bulk
   # @see RecordSet Loading records from the database
   # @see Finders Magic finder methods
@@ -84,6 +86,7 @@ module Cequel
       include Properties
       include Schema
       include Persistence
+      include KeyCollisions
       include Associations
       include Scoped
       extend Finders

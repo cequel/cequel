@@ -57,5 +57,10 @@ module Cequel
     # Cequel::Record without a table name.
     #
     MissingTableNameError = Class.new(StandardError)
+
+    #
+    # Raised when attempting to insert a new record results in a key collision
+    #
+    DuplicateKey = Class.new(StandardError)
   end
 end
