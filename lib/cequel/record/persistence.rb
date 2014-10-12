@@ -286,10 +286,8 @@ module Cequel
 
       def update(options = {})
         assert_keys_present!
-        connection.batch do |batch|
-          batch.on_complete { @updater = nil }
-          updater.execute(options)
-        end
+        updater.execute(options)
+        @updater = nil
       end
       instrument :update, data: ->(rec) { {table_name: rec.table_name} }
 

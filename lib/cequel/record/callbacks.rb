@@ -31,16 +31,12 @@ module Cequel
 
       # (see Persistence#save)
       def save(options = {})
-        connection.batch(options.slice(:consistency)) do
-          run_callbacks(:save) { super }
-        end
+        run_callbacks(:save) { super }
       end
 
       # (see Persistence#destroy)
       def destroy(options = {})
-        connection.batch(options.slice(:consistency)) do
-          run_callbacks(:destroy) { super }
-        end
+        run_callbacks(:destroy) { super }
       end
 
       protected
