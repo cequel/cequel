@@ -277,9 +277,10 @@ module Cequel
       def create(options = {})
         assert_keys_present!
         metal_scope
-          .insert(attributes.reject { |attr, value| value.nil? }, options)
-        loaded!
-        persisted!
+          .insert(attributes.reject { |attr, value| value.nil? }, options).tap do
+          loaded!
+          persisted!
+        end
       end
       instrument :create, data: ->(rec) { {table_name: rec.table_name} }
 
