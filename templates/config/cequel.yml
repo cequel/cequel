@@ -4,6 +4,13 @@ development:
   port: 9042
   keyspace: <%= app_name %>_development
   max_retries: 3
+  strategy_class: SimpleStrategy
+  strategy_options:
+    replication_factor: 2
+#  strategy_class: NetworkTopologyStrategy
+#  strategy_options:
+#    DC1: 2
+#    DC2: 1
 
 test:
   host: '127.0.0.1'
