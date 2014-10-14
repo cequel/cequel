@@ -4,6 +4,10 @@ module Cequel
 
     class ReadableDictionary
 
+      # Cassandra will only fetch the first 10000 column, when dictionaries have
+      # more columsn that that, we have to handle the case
+      CASSANDRA_COLUMN_LIMIT = 10000
+
       class <<self
 
         attr_writer :column_family, :default_batch_size
@@ -60,10 +64,15 @@ module Cequel
         def load(*keys)
           keys.flatten!
           column_family.
-            where(key_alias.to_s => keys).
-            map { |row| new(row.delete(key_alias.to_s), row) }
+              where(key_alias.to_s => keys).
+              map do |row|
+            dict = new(row.delete(key_alias.to_s), row)
+            if row.count >= CASSANDRA_COLUMN_LIMIT
+              dict.load_remaining
+            end
+            dict
+          end
         end
-
       end
 
       include Enumerable
@@ -118,9 +127,9 @@ module Cequel
 
       def each_pair(options = {}, &block)
         return to_enum(:each_pair, options) unless block
-        return @row.each_pair(&block) if @loaded
+        return @row.each_pair(&block) if @loaded && !options[:force_load]
         batch_size = options[:batch_size] || self.class.default_batch_size
-        each_slice(batch_size) do |batch_results|
+        each_slice(batch_size, options[:from]) do |batch_results|
           batch_results.each_pair(&block)
         end
       end
@@ -129,10 +138,10 @@ module Cequel
         each_pair(&block)
       end
 
-      def each_slice(batch_size)
+      def each_slice(batch_size, last_key=nil)
         batch_scope = scope.select(:first => batch_size)
+        batch_scope = batch_scope.select(:from => last_key) if last_key
         key_alias = self.class.key_alias
-        last_key = nil
         begin
           batch_results = batch_scope.first
           batch_results.delete(key_alias)
@@ -146,7 +155,7 @@ module Cequel
 
       def load
         return self if @loaded
-        @row = {}
+        @row ||= {}
         each_pair { |column, value| @row[column] = value }
         @loaded = true
         self
@@ -154,6 +163,12 @@ module Cequel
 
       def loaded?
         !!@loaded
+      end
+
+      def load_remaining
+        each_pair(force_load: true, from: @row.keys.last, batch_size: CASSANDRA_COLUMN_LIMIT) { |column, value| @row[column] = value }
+        @loaded = true
+        self
       end
 
       private
