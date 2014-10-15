@@ -209,6 +209,9 @@ module Cequel
         if defined? @client
           remove_instance_variable(:@client)
         end
+        if defined? @raw_client
+          remove_instance_variable(:@raw_client)
+        end
       end
 
       #
