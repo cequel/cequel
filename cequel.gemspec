@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
     'Louis Simoneau', 'Peter Williams', 'Kenneth Hoffman', 'Antti Tapio',
     'Ilya Bazylchuk', 'Dan Cardamore', 'Kei Kusakari', 'Oleh Novosad',
     'John Smart', 'Angelo Lakra', 'Olivier Lance', 'Tomohiro Nishimura',
-    'Masaki Takahashi', 'G Gordon Worley III'
+    'Masaki Takahashi', 'G Gordon Worley III', 'Clark Bremer'
   ]
   s.homepage = "https://github.com/cequel/cequel"
   s.email = 'mat.a.brown@gmail.com'
