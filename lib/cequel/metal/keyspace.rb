@@ -161,11 +161,7 @@ module Cequel
       end
 
       #
-      # Execute a CQL query in this keyspace
-      #
-      #   If a connection error occurs, will retry a maximum number of
-      #   time (default 3) before re-raising the original connection
-      #   error.
+      # Execute a CQL query in this keyspace with default consistency
       #
       # @param statement [String] CQL string
       # @param bind_vars [Object] values for bind variables
@@ -179,6 +175,10 @@ module Cequel
 
       #
       # Execute a CQL query in this keyspace with the given consistency
+      #
+      #   If a connection error occurs, will retry a maximum number of
+      #   times (default 3) with a configurable delay between attempts
+      #   before re-raising the original connection error.
       #
       # @param statement [String] CQL string
       # @param bind_vars [Array] array of values for bind variables
@@ -195,9 +195,9 @@ module Cequel
             client.execute(sanitize(statement, bind_vars),
                            consistency || default_consistency)
           rescue Cql::NotConnectedError, Ione::Io::ConnectionError
-            clear_active_connections!
-            raise if retries == 0
+            raise if retries <= 0
             retries -= 1
+            clear_active_connections!
             sleep(retry_delay)
             retry
           end
