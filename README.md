@@ -569,6 +569,7 @@ Cequel was written by:
 * Tomohiro Nishimura
 * Masaki Takahashi
 * G Gordon Worley III
+* Clark Bremer
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
 releases of Cequel.
