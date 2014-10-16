@@ -12,7 +12,7 @@ module Cequel
         Rails.application.railtie_name.sub(/_application$/, '')
       end
 
-      initializer "cequel.configure_rails" do
+      def load_configuration
         config_path = Rails.root.join('config/cequel.yml').to_s
 
         if File.exist?(config_path)
@@ -22,20 +22,26 @@ module Cequel
           config = {host: '127.0.0.1:9042'}
         end
         config.reverse_merge!(keyspace: "#{Railtie.app_name}_#{Rails.env}")
-        connection = Cequel.connect(config)
+      end
+
+      initializer "cequel.configure_rails" do
+        connection = Cequel.connect(load_configuration)
 
         connection.logger = Rails.logger
         Record.connection = connection
       end
 
       initializer "cequel.add_new_relic" do
-        begin
-          require 'new_relic/agent/method_tracer'
-        rescue LoadError => e
-          Rails.logger.debug(
-            "New Relic not installed; skipping New Relic integration")
-        else
-          require 'cequel/metal/new_relic_instrumentation'
+        newrelic_enabled = load_configuration(:newrelic_enabled, true)
+        if newrelic_enabled
+          begin
+            require 'new_relic/agent/method_tracer'
+          rescue LoadError => e
+            Rails.logger.debug(
+              "New Relic not installed; skipping New Relic integration")
+          else
+            require 'cequel/metal/new_relic_instrumentation'
+          end
         end
       end
 
