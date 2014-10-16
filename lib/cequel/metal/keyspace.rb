@@ -193,7 +193,7 @@ module Cequel
         log('CQL', statement, *bind_vars) do
           begin
             client.execute(sanitize(statement, bind_vars),
-                         consistency || default_consistency)
+                           consistency || default_consistency)
           rescue Cql::NotConnectedError, Ione::Io::ConnectionError
             clear_active_connections!
             raise if retries == 0
