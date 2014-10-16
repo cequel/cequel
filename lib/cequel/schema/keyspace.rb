@@ -25,6 +25,10 @@ module Cequel
       # Create this keyspace in the database
       #
       # @param options [Options] persistence options for this keyspace.
+      # @option options [String] :class ("SimpleStrategy") the replication
+      #   strategy to use for this keyspace
+      # @option options [Integer] :replication_factor (1) the number of
+      #   replicas that should exist for each piece of data
       # @option options [Hash] :replication ({ class: "SimpleStrategy",
       #   replication_factor: 1 }) replication options for this keyspace
       # @option options [Boolean] :durable_writes (true) durable_writes
@@ -39,33 +43,39 @@ module Cequel
         bare_connection =
           Metal::Keyspace.new(keyspace.configuration.except(:keyspace))
 
-        options = options.symbolize_keys
-
-        default_replication_options = {
-          class: "SimpleStrategy",
-          replication_factor: 1
+        default_options = {
+          replication: {
+            class: "SimpleStrategy",
+            replication_factor: 1
+          },
+          durable_writes: true
         }
 
-        replication_options = options[:replication] ||
-                              keyspace.configuration[:replication] ||
-                              default_replication_options
+        options.symbolize_keys!
+        options.reverse_merge!(keyspace.configuration)
+        options.reverse_merge!(default_options)
 
-        replication_options_strs = replication_options.map do |name, value|
-          "'#{name}': #{Cequel::Type.quote(value)}"
+        if options.has_key? :class
+          options[:replication][:class] = options[:class]
+          if options[:class] != 'SimpleStrategy'
+            raise 'For strategy other than SimpleStrategy, please ' \
+              'use the replication option.'
+          end
         end
 
-        if options.has_key? :durable_writes
-          durable_writes = options[:durable_writes]
-        elsif keyspace.configuration.has_key? :durable_writes
-          durable_writes = keyspace.configuration[:durable_writes]
-        else
-          durable_writes = true
+        if options.has_key? :replication_factor
+          options[:replication][:replication_factor] =
+            options[:replication_factor]
+        end
+
+        replication_options_strs = options[:replication].map do |name, value|
+          "'#{name}': #{Cequel::Type.quote(value)}"
         end
 
         bare_connection.execute(<<-CQL.strip_heredoc)
           CREATE KEYSPACE #{keyspace.name}
           WITH REPLICATION = {#{replication_options_strs.join(', ')}}
-          AND durable_writes = #{durable_writes}
+          AND durable_writes = #{options[:durable_writes]}
         CQL
       end
 

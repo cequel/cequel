@@ -6,7 +6,7 @@ describe Cequel::Schema::Keyspace do
 
   describe 'creating keyspace' do
     before do
-      cequel.schema.drop!
+      cequel.schema.drop! if cequel.schema.exists?
     end
 
     after do
@@ -53,6 +53,28 @@ describe Cequel::Schema::Keyspace do
           "strategy_class"=>"org.apache.cassandra.locator.SimpleStrategy",
           "strategy_options"=>"{\"replication_factor\":\"2\"}"
         })
+      end
+    end
+
+    context 'keeping compatibility' do
+      let(:config) { basic_config }
+
+      it 'accepts class and replication_factor options' do
+        cequel.configure(config)
+        keyspace.create! class: "SimpleStrategy", replication_factor: 2
+        expect(schema_config).to eq({
+          "keyspace_name"=>"totallymadeup",
+          "durable_writes"=>true,
+          "strategy_class"=>"org.apache.cassandra.locator.SimpleStrategy",
+          "strategy_options"=>"{\"replication_factor\":\"2\"}"
+        })
+      end
+
+      it "raises an error if a class other than SimpleStrategy is given" do
+        cequel.configure(config)
+        expect {
+          keyspace.create! class: "NetworkTopologyStrategy", replication_factor: 2
+        }.to raise_error('For strategy other than SimpleStrategy, please use the replication option.')
       end
     end
 
