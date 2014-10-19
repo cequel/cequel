@@ -4,7 +4,7 @@ require 'delegate'
 require 'active_support'
 require 'active_support/deprecation'
 require 'active_support/core_ext'
-require 'cql'
+require 'cassandra'
 
 require 'cequel/errors'
 require 'cequel/util'

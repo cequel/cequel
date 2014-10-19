@@ -154,9 +154,7 @@ module Cequel
       #
       def client
         synchronize do
-          @client ||= raw_client.tap do |client|
-            client.use(name) if name
-          end
+          @client ||= cluster.connect(name)
         end
       end
 
@@ -194,7 +192,7 @@ module Cequel
           begin
             client.execute(sanitize(statement, bind_vars),
                            consistency || default_consistency)
-          rescue Cql::NotConnectedError, Ione::Io::ConnectionError
+          rescue Cassandra::Errors::NotConnectedError, Ione::Io::ConnectionError
             clear_active_connections!
             raise if retries == 0
             retries -= 1
@@ -249,15 +247,21 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
+      def cluster
+        synchronize do
+          @cluster ||= Cassandra.connect(client_options)
+        end
+      end
+
       def raw_client
         synchronize do
-          @raw_client ||= Cql::Client.connect(client_options)
+          @raw_client ||= cluster.connect
         end
       end
 
       def client_options
         {hosts: hosts, port: port}.tap do |options|
-          options[:credentials] = credentials if credentials
+          options.merge!(credentials) if credentials
         end
       end
 

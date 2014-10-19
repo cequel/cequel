@@ -36,6 +36,9 @@ RSpec.configure do |config|
   end
 
   config.after(:each) { Timecop.return }
+
+  config.filter_run :focus => true
+  config.run_all_when_everything_filtered = true
 end
 
 if defined? byebug
