@@ -219,7 +219,7 @@ module Cequel
       def destroy(options = {})
         options.assert_valid_keys(:consistency, :timestamp)
         assert_keys_present!
-        ActiveSupport::Notifications.instrument "destroy.cequel", table_name: table_name do
+        instrument "destroy.cequel", table_name: table_name do
           metal_scope.delete(options)
         end
         transient!
@@ -274,7 +274,7 @@ module Cequel
 
       def create(options = {})
         assert_keys_present!
-        ActiveSupport::Notifications.instrument "create.cequel", table_name: table_name do
+        instrument "create.cequel", table_name: table_name do
           metal_scope
             .insert(attributes.reject { |attr, value| value.nil? }, options)
           loaded!
@@ -284,7 +284,7 @@ module Cequel
 
       def update(options = {})
         assert_keys_present!
-        ActiveSupport::Notifications.instrument "update.cequel", table_name: table_name do
+        instrument "update.cequel", table_name: table_name do
           connection.batch do
             updater.execute(options)
             deleter.execute(options.except(:ttl))
@@ -376,6 +376,10 @@ module Cequel
           fail MissingKeyError,
                "Missing required key values: #{missing_keys.keys.join(', ')}"
         end
+      end
+
+      def instrument(name, data, &blk)
+        ActiveSupport::Notifications.instrument(name, data, &blk)
       end
     end
   end
