@@ -7,3 +7,10 @@ Gemfile.lock
 gemfiles/*.gemfile.lock
 .bundle
 .ruby-version
+
+# RubyMine IDE
+.idea
+scopes
+
+# OSX
+.DS_Store
