@@ -656,7 +656,21 @@ module Cequel
       protected :reversed?
 
       def next_batch_from(row)
-        reversed? ? before(row[range_key_name]) : after(row[range_key_name])
+        range_key_value = row[range_key_name]
+        if ascends_by?(range_key_column)
+          after(range_key_value)
+        else
+          before(range_key_value)
+        end
+      end
+
+      def ascends_by?(column)
+        !descends_by?(column)
+      end
+
+      def descends_by?(column)
+        column.clustering_column? &&
+          (reversed? ^ (column.clustering_order == :desc))
       end
 
       def find_nested_batches_from(row, options, &block)
@@ -837,7 +851,7 @@ module Cequel
 
       def order_by_column
         if target_class.clustering_columns.any?
-          target_class.clustering_columns.first.name
+          target_class.clustering_columns.first
         end
       end
 

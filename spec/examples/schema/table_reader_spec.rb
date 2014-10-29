@@ -15,15 +15,15 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read name correctly' do
-      table.partition_key_columns.first.name.should == :permalink
+      expect(table.partition_key_columns.first.name).to eq(:permalink)
     end
 
     it 'should read type correctly' do
-      table.partition_key_columns.first.type.should be_a(Cequel::Type::Text)
+      expect(table.partition_key_columns.first.type).to be_a(Cequel::Type::Text)
     end
 
     it 'should have no nonpartition keys' do
-      table.clustering_columns.should be_empty
+      expect(table.clustering_columns).to be_empty
     end
   end # describe 'reading simple key'
 
@@ -39,24 +39,24 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read partition key name' do
-      table.partition_key_columns.map(&:name).should == [:blog_subdomain]
+      expect(table.partition_key_columns.map(&:name)).to eq([:blog_subdomain])
     end
 
     it 'should read partition key type' do
-      table.partition_key_columns.map(&:type).should == [Cequel::Type::Text.instance]
+      expect(table.partition_key_columns.map(&:type)).to eq([Cequel::Type::Text.instance])
     end
 
     it 'should read non-partition key name' do
-      table.clustering_columns.map(&:name).should == [:permalink]
+      expect(table.clustering_columns.map(&:name)).to eq([:permalink])
     end
 
     it 'should read non-partition key type' do
-      table.clustering_columns.map(&:type).
-        should == [Cequel::Type::Ascii.instance]
+      expect(table.clustering_columns.map(&:type)).
+        to eq([Cequel::Type::Ascii.instance])
     end
 
     it 'should default clustering order to asc' do
-      table.clustering_columns.map(&:clustering_order).should == [:asc]
+      expect(table.clustering_columns.map(&:clustering_order)).to eq([:asc])
     end
   end # describe 'reading single non-partition key'
 
@@ -73,16 +73,16 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read non-partition key name' do
-      table.clustering_columns.map(&:name).should == [:permalink]
+      expect(table.clustering_columns.map(&:name)).to eq([:permalink])
     end
 
     it 'should read non-partition key type' do
-      table.clustering_columns.map(&:type).
-        should == [Cequel::Type::Ascii.instance]
+      expect(table.clustering_columns.map(&:type)).
+        to eq([Cequel::Type::Ascii.instance])
     end
 
     it 'should recognize reversed clustering order' do
-      table.clustering_columns.map(&:clustering_order).should == [:desc]
+      expect(table.clustering_columns.map(&:clustering_order)).to eq([:desc])
     end
   end # describe 'reading reverse-ordered non-partition key'
 
@@ -100,16 +100,16 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read non-partition key names' do
-      table.clustering_columns.map(&:name).should == [:permalink, :author_id]
+      expect(table.clustering_columns.map(&:name)).to eq([:permalink, :author_id])
     end
 
     it 'should read non-partition key types' do
-      table.clustering_columns.map(&:type).
-        should == [Cequel::Type::Ascii.instance, Cequel::Type::Uuid.instance]
+      expect(table.clustering_columns.map(&:type)).
+        to eq([Cequel::Type::Ascii.instance, Cequel::Type::Uuid.instance])
     end
 
     it 'should read heterogeneous clustering orders' do
-      table.clustering_columns.map(&:clustering_order).should == [:desc, :asc]
+      expect(table.clustering_columns.map(&:clustering_order)).to eq([:desc, :asc])
     end
   end # describe 'reading compound non-partition key'
 
@@ -125,16 +125,16 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read partition key names' do
-      table.partition_key_columns.map(&:name).should == [:blog_subdomain, :permalink]
+      expect(table.partition_key_columns.map(&:name)).to eq([:blog_subdomain, :permalink])
     end
 
     it 'should read partition key types' do
-      table.partition_key_columns.map(&:type).
-        should == [Cequel::Type::Text.instance, Cequel::Type::Ascii.instance]
+      expect(table.partition_key_columns.map(&:type)).
+        to eq([Cequel::Type::Text.instance, Cequel::Type::Ascii.instance])
     end
 
     it 'should have empty nonpartition keys' do
-      table.clustering_columns.should be_empty
+      expect(table.clustering_columns).to be_empty
     end
 
   end # describe 'reading compound partition key'
@@ -154,26 +154,27 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read partition key names' do
-      table.partition_key_columns.map(&:name).should == [:blog_subdomain, :permalink]
+      expect(table.partition_key_columns.map(&:name)).to eq([:blog_subdomain, :permalink])
     end
 
     it 'should read partition key types' do
-      table.partition_key_columns.map(&:type).
-        should == [Cequel::Type::Text.instance, Cequel::Type::Ascii.instance]
+      expect(table.partition_key_columns.map(&:type)).
+        to eq([Cequel::Type::Text.instance, Cequel::Type::Ascii.instance])
     end
 
     it 'should read non-partition key names' do
-      table.clustering_columns.map(&:name).
-        should == [:author_id, :published_at]
+      expect(table.clustering_columns.map(&:name)).
+        to eq([:author_id, :published_at])
     end
 
     it 'should read non-partition key types' do
-      table.clustering_columns.map(&:type).should ==
+      expect(table.clustering_columns.map(&:type)).to eq(
         [Cequel::Type::Uuid.instance, Cequel::Type::Timestamp.instance]
+      )
     end
 
     it 'should read clustering order' do
-      table.clustering_columns.map(&:clustering_order).should == [:asc, :desc]
+      expect(table.clustering_columns.map(&:clustering_order)).to eq([:asc, :desc])
     end
 
   end # describe 'reading compound partition and non-partition keys'
@@ -197,55 +198,55 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read types of scalar data columns' do
-      table.data_columns.find { |column| column.name == :title }.type.
-        should == Cequel::Type[:text]
-      table.data_columns.find { |column| column.name == :author_id }.type.
-        should == Cequel::Type[:uuid]
+      expect(table.data_columns.find { |column| column.name == :title }.type).
+        to eq(Cequel::Type[:text])
+      expect(table.data_columns.find { |column| column.name == :author_id }.type).
+        to eq(Cequel::Type[:uuid])
     end
 
     it 'should read index attributes' do
-      table.data_columns.find { |column| column.name == :author_id }.index_name.
-        should == :posts_author_id_idx
+      expect(table.data_columns.find { |column| column.name == :author_id }.index_name).
+        to eq(:posts_author_id_idx)
     end
 
     it 'should leave nil index for non-indexed columns' do
-      table.data_columns.find { |column| column.name == :title }.index_name.
-        should be_nil
+      expect(table.data_columns.find { |column| column.name == :title }.index_name).
+        to be_nil
     end
 
     it 'should read list columns' do
-      table.data_columns.find { |column| column.name == :categories }.
-        should be_a(Cequel::Schema::List)
+      expect(table.data_columns.find { |column| column.name == :categories }).
+        to be_a(Cequel::Schema::List)
     end
 
     it 'should read list column type' do
-      table.data_columns.find { |column| column.name == :categories }.type.
-        should == Cequel::Type[:text]
+      expect(table.data_columns.find { |column| column.name == :categories }.type).
+        to eq(Cequel::Type[:text])
     end
 
     it 'should read set columns' do
-      table.data_columns.find { |column| column.name == :tags }.
-        should be_a(Cequel::Schema::Set)
+      expect(table.data_columns.find { |column| column.name == :tags }).
+        to be_a(Cequel::Schema::Set)
     end
 
     it 'should read set column type' do
-      table.data_columns.find { |column| column.name == :tags }.type.
-        should == Cequel::Type[:text]
+      expect(table.data_columns.find { |column| column.name == :tags }.type).
+        to eq(Cequel::Type[:text])
     end
 
     it 'should read map columns' do
-      table.data_columns.find { |column| column.name == :trackbacks }.
-        should be_a(Cequel::Schema::Map)
+      expect(table.data_columns.find { |column| column.name == :trackbacks }).
+        to be_a(Cequel::Schema::Map)
     end
 
     it 'should read map column key type' do
-      table.data_columns.find { |column| column.name == :trackbacks }.key_type.
-        should == Cequel::Type[:timestamp]
+      expect(table.data_columns.find { |column| column.name == :trackbacks }.key_type).
+        to eq(Cequel::Type[:timestamp])
     end
 
     it 'should read map column value type' do
-      table.data_columns.find { |column| column.name == :trackbacks }.
-        value_type.should == Cequel::Type[:ascii]
+      expect(table.data_columns.find { |column| column.name == :trackbacks }.
+        value_type).to eq(Cequel::Type[:ascii])
     end
 
   end # describe 'reading data columns'
@@ -272,41 +273,41 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read float properties' do
-      table.property(:bloom_filter_fp_chance).should == 0.02
+      expect(table.property(:bloom_filter_fp_chance)).to eq(0.02)
     end
 
     it 'should read string properties' do
-      table.property(:comment).should == 'Posts table'
+      expect(table.property(:comment)).to eq('Posts table')
     end
 
     it 'should read and simplify compaction class' do
-      table.property(:compaction)[:class].
-        should == 'SizeTieredCompactionStrategy'
+      expect(table.property(:compaction)[:class]).
+        to eq('SizeTieredCompactionStrategy')
     end
 
     it 'should read float properties from compaction hash' do
-      table.property(:compaction)[:bucket_high].should == 1.8
+      expect(table.property(:compaction)[:bucket_high]).to eq(1.8)
     end
 
     it 'should read integer properties from compaction hash' do
-      table.property(:compaction)[:max_threshold].should == 64
+      expect(table.property(:compaction)[:max_threshold]).to eq(64)
     end
 
     it 'should read and simplify compression class' do
-      table.property(:compression)[:sstable_compression].
-        should == 'DeflateCompressor'
+      expect(table.property(:compression)[:sstable_compression]).
+        to eq('DeflateCompressor')
     end
 
     it 'should read integer properties from compression class' do
-      table.property(:compression)[:chunk_length_kb].should == 128
+      expect(table.property(:compression)[:chunk_length_kb]).to eq(128)
     end
 
     it 'should read float properties from compression class' do
-      table.property(:compression)[:crc_check_chance].should == 0.5
+      expect(table.property(:compression)[:crc_check_chance]).to eq(0.5)
     end
 
     it 'should recognize no compact storage' do
-      table.should_not be_compact_storage
+      expect(table).not_to be_compact_storage
     end
 
   end # describe 'reading storage properties'
@@ -320,13 +321,13 @@ describe Cequel::Schema::TableReader do
     end
     subject { table }
 
-    it { should be_compact_storage }
+    it { is_expected.to be_compact_storage }
     its(:partition_key_columns) { should ==
       [Cequel::Schema::PartitionKey.new(:permalink, :text)] }
     its(:clustering_columns) { should be_empty }
-    its(:data_columns) { should =~
-      [Cequel::Schema::DataColumn.new(:title, :text),
-        Cequel::Schema::DataColumn.new(:body, :text)] }
+    specify { expect(table.data_columns).to contain_exactly(
+      Cequel::Schema::DataColumn.new(:title, :text),
+      Cequel::Schema::DataColumn.new(:body, :text)) }
   end
 
   describe 'wide-row compact storage' do
@@ -343,7 +344,7 @@ describe Cequel::Schema::TableReader do
     end
     subject { table }
 
-    it { should be_compact_storage }
+    it { is_expected.to be_compact_storage }
     its(:partition_key_columns) { should ==
       [Cequel::Schema::PartitionKey.new(:blog_subdomain, :text)] }
     its(:clustering_columns) { should ==
@@ -360,13 +361,15 @@ describe Cequel::Schema::TableReader do
     end
     subject { table }
 
-    it { should be_compact_storage }
-    its(:partition_key_columns) { should ==
-      [Cequel::Schema::PartitionKey.new(:permalink, :text)] }
-    its(:clustering_columns) { should be_empty }
-    its(:data_columns) { should =~
+    it { is_expected.to be_compact_storage }
+    its(:partition_key_columns) { is_expected.to eq(
+      [Cequel::Schema::PartitionKey.new(:permalink, :text)]
+    ) }
+    its(:clustering_columns) { is_expected.to be_empty }
+    its(:data_columns) { is_expected.to match_array(
       [Cequel::Schema::DataColumn.new(:title, :text),
-        Cequel::Schema::DataColumn.new(:body, :text)] }
+        Cequel::Schema::DataColumn.new(:body, :text)]
+    ) }
   end
 
   describe 'wide-row legacy table', thrift: true do
@@ -378,12 +381,15 @@ describe Cequel::Schema::TableReader do
     end
     subject { table }
 
-    it { should be_compact_storage }
-    its(:partition_key_columns) { should ==
-      [Cequel::Schema::PartitionKey.new(:blog_subdomain, :text)] }
-    its(:clustering_columns) { should ==
-      [Cequel::Schema::ClusteringColumn.new(:column1, :uuid)] }
-    its(:data_columns) { should ==
-      [Cequel::Schema::DataColumn.new(:value, :text)] }
+    it { is_expected.to be_compact_storage }
+    its(:partition_key_columns) { is_expected.to eq(
+      [Cequel::Schema::PartitionKey.new(:blog_subdomain, :text)]
+    ) }
+    its(:clustering_columns) { is_expected.to eq(
+      [Cequel::Schema::ClusteringColumn.new(:column1, :uuid)]
+    ) }
+    its(:data_columns) { is_expected.to eq(
+      [Cequel::Schema::DataColumn.new(:value, :text)]
+    ) }
   end
 end

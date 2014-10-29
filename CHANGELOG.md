@@ -1,3 +1,24 @@
+## 1.4.5
+
+* Fix recovery from connection error
+
+## 1.4.4
+
+* Round time to nearest millisecond when serializing for CQL
+
+## 1.4.3
+
+* Make Rake tasks work without Rails
+* `RecordSet#reverse` and `find_in_batches` respect clustering order defined in
+  schema
+
+## 1.4.2
+
+* Allow setting a key attribute to what it already is
+* Don't reset model updater/deleter if save results in an error
+* Read `:default_consistency` from cequel.yml
+* `:max_retries` configuration parameter for customization of maximum retries that will be made to reconnect to cassandra
+
 ## 1.4.1
 
 * Cequel::Record::descendants doesn't return weakrefs

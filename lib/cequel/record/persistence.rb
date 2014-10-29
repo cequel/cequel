@@ -280,10 +280,10 @@ module Cequel
 
       def update(options = {})
         assert_keys_present!
-        connection.batch do
+        connection.batch do |batch|
+          batch.on_complete { @updater, @deleter = nil }
           updater.execute(options)
           deleter.execute(options.except(:ttl))
-          @updater, @deleter = nil
         end
       end
 
@@ -312,18 +312,22 @@ module Cequel
         fail UnknownAttributeError, "unknown attribute: #{name}" unless column
         value = column.cast(value) unless value.nil?
 
-        super.tap do
-          unless new_record?
-            if key_attributes.keys.include?(name)
-              fail ArgumentError,
-                   "Can't update key #{name} on persisted record"
-            end
+        if !new_record? && key_attributes.keys.include?(name)
+          if read_attribute(name) != value
+            fail ArgumentError,
+                 "Can't update key #{name} on persisted record"
+          end
+        else
+          super.tap { stage_attribute_update(name, value) }
+        end
+      end
 
-            if value.nil?
-              deleter.delete_columns(name)
-            else
-              updater.set(name => value)
-            end
+      def stage_attribute_update(name, value)
+        unless new_record?
+          if value.nil?
+            deleter.delete_columns(name)
+          else
+            updater.set(name => value)
           end
         end
       end

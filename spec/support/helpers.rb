@@ -65,7 +65,7 @@ module Cequel
       end
 
       def self.host
-        '127.0.0.1'
+        ENV['CEQUEL_TEST_HOST'] || '127.0.0.1'
       end
 
       def self.port
@@ -77,7 +77,14 @@ module Cequel
       end
 
       def self.keyspace_name
-        ENV['CEQUEL_TEST_KEYSPACE'] || 'cequel_test'
+        ENV.fetch('CEQUEL_TEST_KEYSPACE') do
+          test_env_number = ENV['TEST_ENV_NUMBER']
+          if test_env_number.present?
+            "cequel_test_#{test_env_number}"
+          else
+            'cequel_test'
+          end
+        end
       end
 
       def self.legacy_connection
@@ -106,19 +113,29 @@ module Cequel
         Helpers.legacy_connection
       end
 
-      def max_statements!(number)
-        cequel.client.should_receive(:execute).at_most(number).times.and_call_original
+      def expect_statement_count(number)
+        allow(cequel.client).to receive(:execute).and_call_original
+        yield
+        expect(cequel.client).to have_received(:execute).exactly(number).times
       end
 
       def disallow_queries!
-        cequel.client.should_not_receive(:execute)
+        expect(cequel.client).to_not receive(:execute)
+      end
+
+      def with_client_error(error)
+        allow(cequel.client).to receive(:execute).once.and_raise(error)
+        begin
+          yield
+        ensure
+          allow(cequel.client).to receive(:execute).and_call_original
+        end
       end
 
       def expect_query_with_consistency(matcher, consistency)
-        expect(cequel.client).to receive(:execute).with(matcher, consistency)
-          .and_call_original
+        allow(cequel.client).to receive(:execute).and_call_original
         yield
-        RSpec::Mocks.proxy_for(cequel.client).reset
+        expect(cequel.client).to have_received(:execute).with(matcher, consistency)
       end
     end
   end

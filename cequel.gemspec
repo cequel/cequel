@@ -7,7 +7,8 @@ Gem::Specification.new do |s|
     'Mat Brown', 'Aubrey Holland', 'Keenan Brock', 'Insoo Buzz Jung',
     'Louis Simoneau', 'Peter Williams', 'Kenneth Hoffman', 'Antti Tapio',
     'Ilya Bazylchuk', 'Dan Cardamore', 'Kei Kusakari', 'Oleh Novosad',
-    'John Smart'
+    'John Smart', 'Angelo Lakra', 'Olivier Lance', 'Tomohiro Nishimura',
+    'Masaki Takahashi', 'G Gordon Worley III', 'Clark Bremer'
   ]
   s.homepage = "https://github.com/cequel/cequel"
   s.email = 'mat.a.brown@gmail.com'
@@ -27,9 +28,11 @@ DESC
   s.required_ruby_version = '>= 1.9'
   s.add_runtime_dependency 'activemodel', '>= 3.1', '< 5.0'
   s.add_runtime_dependency 'cql-rb', '>= 1.2', '< 3.0'
-  s.add_development_dependency 'appraisal', '~> 0.5'
+  s.add_development_dependency 'appraisal', '~> 1.0'
+  s.add_development_dependency 'wwtd', '~> 0.5'
   s.add_development_dependency 'rake', '~> 10.1'
-  s.add_development_dependency 'rspec', '~> 2.0'
+  s.add_development_dependency 'rspec', '~> 3.1'
+  s.add_development_dependency 'rspec-its', '~> 1.0'
   s.add_development_dependency 'rubocop', '~> 0.19.0'
   s.add_development_dependency 'timecop', '~> 0.7'
   s.add_development_dependency 'yard', '~> 0.6'

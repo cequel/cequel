@@ -9,12 +9,12 @@ describe Cequel::Record::MassAssignment do
     end
 
     it 'should allow assignment of vanilla hash' do
-      Post.new(:title => 'Cequel').title.should == 'Cequel'
+      expect(Post.new(:title => 'Cequel').title).to eq('Cequel')
     end
 
     it 'should allow assignment of permitted strong params' do
-      Post.new(StrongParams.new(true, :title => 'Cequel')).title.
-        should == 'Cequel'
+      expect(Post.new(StrongParams.new(true, :title => 'Cequel')).title).
+        to eq('Cequel')
     end
 
     it 'should raise exception when assigned non-permitted strong params' do
@@ -46,11 +46,11 @@ describe Cequel::Record::MassAssignment do
     let(:post) { Post.new(:title => 'Cequel', :page_views => 1000) }
 
     it 'should allow assignment of accessible params' do
-      post.title.should == 'Cequel'
+      expect(post.title).to eq('Cequel')
     end
 
     it 'should not allow assignment of inaccessible params' do
-      post.page_views.should be_nil
+      expect(post.page_views).to be_nil
     end
   end
 end

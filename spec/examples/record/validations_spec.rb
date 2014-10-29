@@ -29,37 +29,37 @@ describe Cequel::Record::Validations do
 
   describe '#valid?' do
     it 'should be false if model is not valid' do
-      invalid_post.should_not be_valid
+      expect(invalid_post).not_to be_valid
     end
 
     it 'should be true if model is valid' do
-      valid_post.should be_valid
+      expect(valid_post).to be_valid
     end
   end
 
   describe '#invalid?' do
     it 'should be true if model is not valid' do
-      invalid_post.should be_invalid
+      expect(invalid_post).to be_invalid
     end
 
     it 'should be false if model is valid' do
-      valid_post.should_not be_invalid
+      expect(valid_post).not_to be_invalid
     end
   end
 
   describe '#save' do
     it 'should return false and not persist model if invalid' do
-      invalid_post.save.should be_false
+      expect(invalid_post.save).to eq(false)
     end
 
     it 'should return true and persist model if valid' do
-      valid_post.save.should be_true
-      Post.find('valid').title.should == 'Valid Post'
+      expect(valid_post.save).to eq(true)
+      expect(Post.find('valid').title).to eq('Valid Post')
     end
 
     it 'should bypass validations if :validate => false is passed' do
-      invalid_post.save(:validate => false).should be_true
-      Post.find('invalid').body.should == 'This is an invalid post.'
+      expect(invalid_post.save(:validate => false)).to eq(true)
+      expect(Post.find('invalid').body).to eq('This is an invalid post.')
     end
   end
 
@@ -71,7 +71,7 @@ describe Cequel::Record::Validations do
 
     it 'should persist model and return self if valid' do
       expect { valid_post.save! }.to_not raise_error
-      Post.find(valid_post.permalink).title.should == 'Valid Post'
+      expect(Post.find(valid_post.permalink).title).to eq('Valid Post')
     end
   end
 
@@ -83,7 +83,7 @@ describe Cequel::Record::Validations do
 
     it 'should return successfully and update data in the database if valid' do
       invalid_post.update_attributes!(:title => 'My Post')
-      Post.find(invalid_post.permalink).title.should == 'My Post'
+      expect(Post.find(invalid_post.permalink).title).to eq('My Post')
     end
   end
 
@@ -96,7 +96,7 @@ describe Cequel::Record::Validations do
 
     it 'should persist record to database if valid' do
       Post.create!(:permalink => 'cequel', :title => 'Cequel')
-      Post.find('cequel').title.should == 'Cequel'
+      expect(Post.find('cequel').title).to eq('Cequel')
     end
   end
 
@@ -104,7 +104,7 @@ describe Cequel::Record::Validations do
     it 'should call validation callbacks' do
       post = Post.new(:title => 'cequel')
       post.valid?
-      post.called_validate_callback.should be_true
+      expect(post.called_validate_callback).to eq(true)
     end
   end
 end

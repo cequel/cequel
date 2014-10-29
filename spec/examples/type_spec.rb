@@ -10,8 +10,8 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.AsciiType' }
 
     describe '#cast' do
-      specify { subject.cast('hey'.encode('UTF-8')).encoding.name.
-        should == 'US-ASCII' }
+      specify { expect(subject.cast('hey'.encode('UTF-8')).encoding.name).
+        to eq('US-ASCII') }
     end
   end
 
@@ -22,9 +22,9 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.BytesType' }
 
     describe '#cast' do
-      specify { subject.cast(123).should == 123.to_s(16) }
-      specify { subject.cast(123).encoding.name.should == 'ASCII-8BIT' }
-      specify { subject.cast('2345').encoding.name.should == 'ASCII-8BIT' }
+      specify { expect(subject.cast(123)).to eq(123.to_s(16)) }
+      specify { expect(subject.cast(123).encoding.name).to eq('ASCII-8BIT') }
+      specify { expect(subject.cast('2345').encoding.name).to eq('ASCII-8BIT') }
     end
   end
 
@@ -35,9 +35,9 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.BooleanType' }
 
     describe '#cast' do
-      specify { subject.cast(true).should == true }
-      specify { subject.cast(false).should == false }
-      specify { subject.cast(1).should == true }
+      specify { expect(subject.cast(true)).to eq(true) }
+      specify { expect(subject.cast(false)).to eq(false) }
+      specify { expect(subject.cast(1)).to eq(true) }
     end
   end
 
@@ -48,8 +48,8 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.CounterColumnType' }
 
     describe '#cast' do
-      specify { subject.cast(1).should == 1 }
-      specify { subject.cast('1').should == 1 }
+      specify { expect(subject.cast(1)).to eq(1) }
+      specify { expect(subject.cast('1')).to eq(1) }
     end
   end
 
@@ -60,10 +60,10 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.DecimalType' }
 
     describe '#cast' do
-      specify { subject.cast(1).should eql(BigDecimal.new('1.0')) }
-      specify { subject.cast(1.0).should eql(BigDecimal.new('1.0')) }
-      specify { subject.cast(1.0.to_r).should eql(BigDecimal.new('1.0')) }
-      specify { subject.cast('1').should eql(BigDecimal.new('1.0')) }
+      specify { expect(subject.cast(1)).to eql(BigDecimal.new('1.0')) }
+      specify { expect(subject.cast(1.0)).to eql(BigDecimal.new('1.0')) }
+      specify { expect(subject.cast(1.0.to_r)).to eql(BigDecimal.new('1.0')) }
+      specify { expect(subject.cast('1')).to eql(BigDecimal.new('1.0')) }
     end
   end
 
@@ -74,11 +74,11 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.DoubleType' }
 
     describe '#cast' do
-      specify { subject.cast(1.0).should eql(1.0) }
-      specify { subject.cast(1).should eql(1.0) }
-      specify { subject.cast(1.0.to_r).should eql(1.0) }
-      specify { subject.cast('1.0').should eql(1.0) }
-      specify { subject.cast(BigDecimal.new('1.0')).should eql(1.0) }
+      specify { expect(subject.cast(1.0)).to eql(1.0) }
+      specify { expect(subject.cast(1)).to eql(1.0) }
+      specify { expect(subject.cast(1.0.to_r)).to eql(1.0) }
+      specify { expect(subject.cast('1.0')).to eql(1.0) }
+      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1.0) }
     end
   end
 
@@ -89,11 +89,11 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.FloatType' }
 
     describe '#cast' do
-      specify { subject.cast(1.0).should eql(1.0) }
-      specify { subject.cast(1).should eql(1.0) }
-      specify { subject.cast(1.0.to_r).should eql(1.0) }
-      specify { subject.cast('1.0').should eql(1.0) }
-      specify { subject.cast(BigDecimal.new('1.0')).should eql(1.0) }
+      specify { expect(subject.cast(1.0)).to eql(1.0) }
+      specify { expect(subject.cast(1)).to eql(1.0) }
+      specify { expect(subject.cast(1.0.to_r)).to eql(1.0) }
+      specify { expect(subject.cast('1.0')).to eql(1.0) }
+      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1.0) }
     end
   end
 
@@ -111,11 +111,11 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.Int32Type' }
 
     describe '#cast' do
-      specify { subject.cast(1).should eql(1) }
-      specify { subject.cast('1').should eql(1) }
-      specify { subject.cast(1.0).should eql(1) }
-      specify { subject.cast(1.0.to_r).should eql(1) }
-      specify { subject.cast(BigDecimal.new('1.0')).should eql(1) }
+      specify { expect(subject.cast(1)).to eql(1) }
+      specify { expect(subject.cast('1')).to eql(1) }
+      specify { expect(subject.cast(1.0)).to eql(1) }
+      specify { expect(subject.cast(1.0.to_r)).to eql(1) }
+      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1) }
     end
   end
 
@@ -126,11 +126,11 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.LongType' }
 
     describe '#cast' do
-      specify { subject.cast(1).should eql(1) }
-      specify { subject.cast('1').should eql(1) }
-      specify { subject.cast(1.0).should eql(1) }
-      specify { subject.cast(1.0.to_r).should eql(1) }
-      specify { subject.cast(BigDecimal.new('1.0')).should eql(1) }
+      specify { expect(subject.cast(1)).to eql(1) }
+      specify { expect(subject.cast('1')).to eql(1) }
+      specify { expect(subject.cast(1.0)).to eql(1) }
+      specify { expect(subject.cast(1.0.to_r)).to eql(1) }
+      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1) }
     end
   end
 
@@ -138,14 +138,14 @@ describe Cequel::Type do
     subject { Cequel::Type[:text] }
     its(:cql_name) { should == :text }
     its(:internal_name) { should == 'org.apache.cassandra.db.marshal.UTF8Type' }
-    it { should == Cequel::Type[:varchar] }
+    it { is_expected.to eq(Cequel::Type[:varchar]) }
 
     describe '#cast' do
-      specify { subject.cast('cql').should == 'cql' }
-      specify { subject.cast(1).should == '1' }
-      specify { subject.cast('cql').encoding.name.should == 'UTF-8' }
-      specify { subject.cast('cql'.force_encoding('US-ASCII')).
-        encoding.name.should == 'UTF-8' }
+      specify { expect(subject.cast('cql')).to eq('cql') }
+      specify { expect(subject.cast(1)).to eq('1') }
+      specify { expect(subject.cast('cql').encoding.name).to eq('UTF-8') }
+      specify { expect(subject.cast('cql'.force_encoding('US-ASCII')).
+        encoding.name).to eq('UTF-8') }
     end
   end
 
@@ -156,11 +156,11 @@ describe Cequel::Type do
 
     describe '#cast' do
       let(:now) { Time.at(Time.now.to_i) }
-      specify { subject.cast(now).should == now }
-      specify { subject.cast(now.to_i).should == now }
-      specify { subject.cast(now.to_s).should == now }
-      specify { subject.cast(now.to_datetime).should == now }
-      specify { subject.cast(now.to_date).should == now.to_date.to_time }
+      specify { expect(subject.cast(now)).to eq(now) }
+      specify { expect(subject.cast(now.to_i)).to eq(now) }
+      specify { expect(subject.cast(now.to_s)).to eq(now) }
+      specify { expect(subject.cast(now.to_datetime)).to eq(now) }
+      specify { expect(subject.cast(now.to_date)).to eq(now.to_date.to_time) }
     end
   end
 
@@ -179,12 +179,12 @@ describe Cequel::Type do
 
     describe '#cast' do
       let(:uuid) { Cequel.uuid }
-      specify { subject.cast(uuid).should == uuid }
-      specify { subject.cast(uuid.to_s).should == uuid }
-      specify { subject.cast(uuid.value).should == uuid }
+      specify { expect(subject.cast(uuid)).to eq(uuid) }
+      specify { expect(subject.cast(uuid.to_s)).to eq(uuid) }
+      specify { expect(subject.cast(uuid.value)).to eq(uuid) }
       if defined? SimpleUUID::UUID
-        specify { subject.cast(SimpleUUID::UUID.new(uuid.value))
-                    .should == uuid }
+        specify { expect(subject.cast(SimpleUUID::UUID.new(uuid.value)))
+                    .to eq(uuid) }
       end
     end
   end
@@ -196,11 +196,11 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.IntegerType' }
 
     describe '#cast' do
-      specify { subject.cast(1).should eql(1) }
-      specify { subject.cast('1').should eql(1) }
-      specify { subject.cast(1.0).should eql(1) }
-      specify { subject.cast(1.0.to_r).should eql(1) }
-      specify { subject.cast(BigDecimal.new('1.0')).should eql(1) }
+      specify { expect(subject.cast(1)).to eql(1) }
+      specify { expect(subject.cast('1')).to eql(1) }
+      specify { expect(subject.cast(1.0)).to eql(1) }
+      specify { expect(subject.cast(1.0.to_r)).to eql(1) }
+      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1) }
     end
   end
 
@@ -216,6 +216,7 @@ describe Cequel::Type do
       [true, 'true'],
       [false, 'false'],
       [Time.at(1401323181, 381000), '1401323181381'],
+      [Time.at(1401323181, 381999), '1401323181382'],
       [Time.at(1401323181, 381000).in_time_zone, '1401323181381'],
       [Date.parse('2014-05-28'), "1401235200000"],
       [Time.at(1401323181, 381000).to_datetime, '1401323181381'],

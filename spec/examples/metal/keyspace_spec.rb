@@ -21,13 +21,13 @@ describe Cequel::Metal::Keyspace do
 
   describe '::batch' do
     it 'should send enclosed write statements in bulk' do
-      expect(cequel).to receive(:execute).once.and_call_original
-      cequel.batch do
-        cequel[:posts].insert(id: 1, title: 'Hey')
-        cequel[:posts].where(id: 1).update(body: 'Body')
-        cequel[:posts].where(id: 1).delete(:title)
+      expect_statement_count 1 do
+        cequel.batch do
+          cequel[:posts].insert(id: 1, title: 'Hey')
+          cequel[:posts].where(id: 1).update(body: 'Body')
+          cequel[:posts].where(id: 1).delete(:title)
+        end
       end
-      RSpec::Mocks.proxy_for(cequel).reset
       expect(cequel[:posts].first).to eq({id: 1, title: nil, body: 'Body'}
         .with_indifferent_access)
     end
@@ -82,7 +82,28 @@ describe Cequel::Metal::Keyspace do
                            port: Cequel::SpecSupport::Helpers.port,
                            keyspace: "totallymadeup"
 
-      expect(nonexistent_keyspace.exists?).to be_false
+      expect(nonexistent_keyspace.exists?).to be false
+    end
+  end
+
+  describe "#execute" do
+    let(:statement) { "SELECT id FROM posts" }
+
+    context "without a connection error" do
+      it "executes a CQL query" do
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
+    end
+
+    context "with a connection error" do
+      it "reconnects to cassandra with a new client after first failed connection" do
+        allow(cequel.client).to receive(:execute)
+          .with(statement, cequel.default_consistency)
+          .and_raise(Ione::Io::ConnectionError)
+          .once
+
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
     end
   end
 end

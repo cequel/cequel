@@ -24,7 +24,7 @@ describe Cequel::Record::Set do
 
   context 'new record' do
     it 'should save set as-is' do
-      subject[:tags].should == Set['one', 'two']
+      expect(subject[:tags]).to eq(Set['one', 'two'])
     end
   end
 
@@ -32,13 +32,13 @@ describe Cequel::Record::Set do
     it 'should overwrite value' do
       post.tags = Set['three', 'four']
       post.save!
-      subject[:tags].should == Set['three', 'four']
+      expect(subject[:tags]).to eq(Set['three', 'four'])
     end
 
     it 'should cast collection before overwriting' do
       post.tags = %w(three four)
       post.save!
-      subject[:tags].should == Set['three', 'four']
+      expect(subject[:tags]).to eq(Set['three', 'four'])
     end
   end
 
@@ -49,7 +49,7 @@ describe Cequel::Record::Set do
       it 'should add atomically' do
         post.tags.add('four')
         post.save
-        subject[:tags].should == Set['one', 'two', 'three', 'four']
+        expect(subject[:tags]).to eq(Set['one', 'two', 'three', 'four'])
         expect(post.tags).to eq(Set['one', 'two', 'four'])
       end
 
@@ -59,10 +59,11 @@ describe Cequel::Record::Set do
       end
 
       it 'should add without reading' do
-        max_statements! 2
-        unloaded_post.tags.add('four')
-        unloaded_post.save
-        subject[:tags].should == Set['one', 'two', 'three', 'four']
+        expect_statement_count 1 do
+          unloaded_post.tags.add('four')
+          unloaded_post.save
+        end
+        expect(subject[:tags]).to eq(Set['one', 'two', 'three', 'four'])
       end
 
       it 'should apply add post-hoc' do
@@ -75,15 +76,16 @@ describe Cequel::Record::Set do
       it 'should clear atomically' do
         post.tags.clear
         post.save
-        subject[:tags].should be_blank
+        expect(subject[:tags]).to be_blank
         expect(post.tags).to eq(Set[])
       end
 
       it 'should clear without reading' do
-        max_statements! 2
-        unloaded_post.tags.clear
-        unloaded_post.save
-        subject[:tags].should be_blank
+        expect_statement_count 1 do
+          unloaded_post.tags.clear
+          unloaded_post.save
+        end
+        expect(subject[:tags]).to be_blank
       end
 
       it 'should apply clear post-hoc' do
@@ -96,7 +98,7 @@ describe Cequel::Record::Set do
       it 'should delete atomically' do
         post.tags.delete('two')
         post.save
-        subject[:tags].should == Set['one', 'three']
+        expect(subject[:tags]).to eq(Set['one', 'three'])
         expect(post.tags).to eq(Set['one'])
       end
 
@@ -106,10 +108,11 @@ describe Cequel::Record::Set do
       end
 
       it 'should delete without reading' do
-        max_statements! 2
-        unloaded_post.tags.delete('two')
-        unloaded_post.save
-        subject[:tags].should == Set['one', 'three']
+        expect_statement_count 1 do
+          unloaded_post.tags.delete('two')
+          unloaded_post.save
+        end
+        expect(subject[:tags]).to eq(Set['one', 'three'])
       end
 
       it 'should apply delete post-hoc' do
@@ -122,7 +125,7 @@ describe Cequel::Record::Set do
       it 'should replace atomically' do
         post.tags.replace(Set['a', 'b'])
         post.save
-        subject[:tags].should == Set['a', 'b']
+        expect(subject[:tags]).to eq(Set['a', 'b'])
         expect(post.tags).to eq(Set['a', 'b'])
       end
 
@@ -132,10 +135,11 @@ describe Cequel::Record::Set do
       end
 
       it 'should replace without reading' do
-        max_statements! 2
-        unloaded_post.tags.replace(Set['a', 'b'])
-        unloaded_post.save
-        subject[:tags].should == Set['a', 'b']
+        expect_statement_count 1 do
+          unloaded_post.tags.replace(Set['a', 'b'])
+          unloaded_post.save
+        end
+        expect(subject[:tags]).to eq(Set['a', 'b'])
       end
 
       it 'should apply delete post-hoc' do

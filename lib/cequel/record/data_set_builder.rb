@@ -51,7 +51,7 @@ module Cequel
                      :scoped_key_names, :scoped_key_values,
                      :scoped_indexed_column, :lower_bound,
                      :upper_bound, :reversed?, :order_by_column,
-                     :query_consistency
+                     :query_consistency, :ascends_by?
 
       private
 
@@ -85,13 +85,20 @@ module Cequel
       end
 
       def add_order
-        self.data_set = data_set.order(order_by_column => :desc) if reversed?
+        column = order_by_column
+        if column.present? && reversed?
+          self.data_set = data_set.order(column.name => sort_direction)
+        end
       end
 
       def set_consistency
         if query_consistency
           self.data_set = data_set.consistency(query_consistency)
         end
+      end
+
+      def sort_direction
+        ascends_by?(order_by_column) ? :asc : :desc
       end
     end
   end

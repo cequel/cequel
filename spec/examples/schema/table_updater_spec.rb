@@ -23,7 +23,7 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should add the column with the given type' do
-      table.data_column(:published_at).type.should == Cequel::Type[:timestamp]
+      expect(table.data_column(:published_at).type).to eq(Cequel::Type[:timestamp])
     end
   end
 
@@ -35,11 +35,11 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should add the list' do
-      table.data_column(:author_names).should be_a(Cequel::Schema::List)
+      expect(table.data_column(:author_names)).to be_a(Cequel::Schema::List)
     end
 
     it 'should set the given type' do
-      table.data_column(:author_names).type.should == Cequel::Type[:text]
+      expect(table.data_column(:author_names).type).to eq(Cequel::Type[:text])
     end
   end
 
@@ -51,11 +51,11 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should add the list' do
-      table.data_column(:author_names).should be_a(Cequel::Schema::Set)
+      expect(table.data_column(:author_names)).to be_a(Cequel::Schema::Set)
     end
 
     it 'should set the given type' do
-      table.data_column(:author_names).type.should == Cequel::Type[:text]
+      expect(table.data_column(:author_names).type).to eq(Cequel::Type[:text])
     end
   end
 
@@ -67,17 +67,17 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should add the list' do
-      table.data_column(:trackbacks).should be_a(Cequel::Schema::Map)
+      expect(table.data_column(:trackbacks)).to be_a(Cequel::Schema::Map)
     end
 
     it 'should set the key type' do
-      table.data_column(:trackbacks).key_type.
-        should == Cequel::Type[:timestamp]
+      expect(table.data_column(:trackbacks).key_type).
+        to eq(Cequel::Type[:timestamp])
     end
 
     it 'should set the value type' do
-      table.data_column(:trackbacks).value_type.
-        should == Cequel::Type[:ascii]
+      expect(table.data_column(:trackbacks).value_type).
+        to eq(Cequel::Type[:ascii])
     end
   end
 
@@ -89,7 +89,7 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should change the type' do
-      table.data_column(:title).type.should == Cequel::Type[:text]
+      expect(table.data_column(:title).type).to eq(Cequel::Type[:text])
     end
   end
 
@@ -101,8 +101,8 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should change the name' do
-      table.clustering_column(:slug).should be
-      table.clustering_column(:permalink).should be_nil
+      expect(table.clustering_column(:slug)).to be
+      expect(table.clustering_column(:permalink)).to be_nil
     end
   end
 
@@ -114,7 +114,7 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should change properties' do
-      table.properties[:comment].value.should == 'Test Comment'
+      expect(table.properties[:comment].value).to eq('Test Comment')
     end
   end
 
@@ -126,7 +126,7 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should add the index' do
-      table.data_column(:title).should be_indexed
+      expect(table.data_column(:title)).to be_indexed
     end
   end
 
@@ -139,7 +139,7 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should drop the index' do
-      table.data_column(:title).should_not be_indexed
+      expect(table.data_column(:title)).not_to be_indexed
     end
   end
 
@@ -152,7 +152,7 @@ describe Cequel::Schema::TableUpdater do
     end
 
     it 'should remove the column' do
-      table.data_column(:body).should be_nil
+      expect(table.data_column(:body)).to be_nil
     end
   end
 end

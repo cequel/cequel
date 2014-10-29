@@ -20,16 +20,16 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create key alias' do
-        table.partition_key_columns.map(&:name).should == [:permalink]
+        expect(table.partition_key_columns.map(&:name)).to eq([:permalink])
       end
 
       it 'should set key validator' do
-        table.partition_key_columns.map(&:type).should == [Cequel::Type[:ascii]]
+        expect(table.partition_key_columns.map(&:type)).to eq([Cequel::Type[:ascii]])
       end
 
       it 'should set non-key columns' do
-        table.columns.find { |column| column.name == :title }.type.
-          should == Cequel::Type[:text]
+        expect(table.columns.find { |column| column.name == :title }.type).
+          to eq(Cequel::Type[:text])
       end
     end
 
@@ -43,19 +43,19 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create key alias' do
-        table.partition_key_columns.map(&:name).should == [:blog_subdomain]
+        expect(table.partition_key_columns.map(&:name)).to eq([:blog_subdomain])
       end
 
       it 'should set key validator' do
-        table.partition_key_columns.map(&:type).should == [Cequel::Type[:ascii]]
+        expect(table.partition_key_columns.map(&:type)).to eq([Cequel::Type[:ascii]])
       end
 
       it 'should create non-partition key components' do
-        table.clustering_columns.map(&:name).should == [:permalink]
+        expect(table.clustering_columns.map(&:name)).to eq([:permalink])
       end
 
       it 'should set type for non-partition key components' do
-        table.clustering_columns.map(&:type).should == [Cequel::Type[:ascii]]
+        expect(table.clustering_columns.map(&:type)).to eq([Cequel::Type[:ascii]])
       end
     end
 
@@ -69,12 +69,12 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create all partition key components' do
-        table.partition_key_columns.map(&:name).should == [:blog_subdomain, :permalink]
+        expect(table.partition_key_columns.map(&:name)).to eq([:blog_subdomain, :permalink])
       end
 
       it 'should set key validators' do
-        table.partition_key_columns.map(&:type).
-          should == [Cequel::Type[:ascii], Cequel::Type[:ascii]]
+        expect(table.partition_key_columns.map(&:type)).
+          to eq([Cequel::Type[:ascii], Cequel::Type[:ascii]])
       end
     end
 
@@ -89,21 +89,21 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create all partition key components' do
-        table.partition_key_columns.map(&:name).
-          should == [:blog_subdomain, :permalink]
+        expect(table.partition_key_columns.map(&:name)).
+          to eq([:blog_subdomain, :permalink])
       end
 
       it 'should set key validators' do
-        table.partition_key_columns.map(&:type).
-          should == [Cequel::Type[:ascii], Cequel::Type[:ascii]]
+        expect(table.partition_key_columns.map(&:type)).
+          to eq([Cequel::Type[:ascii], Cequel::Type[:ascii]])
       end
 
       it 'should create non-partition key components' do
-        table.clustering_columns.map(&:name).should == [:month]
+        expect(table.clustering_columns.map(&:name)).to eq([:month])
       end
 
       it 'should set type for non-partition key components' do
-        table.clustering_columns.map(&:type).should == [Cequel::Type[:timestamp]]
+        expect(table.clustering_columns.map(&:type)).to eq([Cequel::Type[:timestamp]])
       end
     end
 
@@ -119,33 +119,33 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create list' do
-        table.data_column(:authors).should be_a(Cequel::Schema::List)
+        expect(table.data_column(:authors)).to be_a(Cequel::Schema::List)
       end
 
       it 'should set correct type for list' do
-        table.data_column(:authors).type.should == Cequel::Type[:blob]
+        expect(table.data_column(:authors).type).to eq(Cequel::Type[:blob])
       end
 
       it 'should create set' do
-        table.data_column(:tags).should be_a(Cequel::Schema::Set)
+        expect(table.data_column(:tags)).to be_a(Cequel::Schema::Set)
       end
 
       it 'should set correct type for set' do
-        table.data_column(:tags).type.should == Cequel::Type[:text]
+        expect(table.data_column(:tags).type).to eq(Cequel::Type[:text])
       end
 
       it 'should create map' do
-        table.data_column(:trackbacks).should be_a(Cequel::Schema::Map)
+        expect(table.data_column(:trackbacks)).to be_a(Cequel::Schema::Map)
       end
 
       it 'should set correct key type' do
-        table.data_column(:trackbacks).key_type.
-          should == Cequel::Type[:timestamp]
+        expect(table.data_column(:trackbacks).key_type).
+          to eq(Cequel::Type[:timestamp])
       end
 
       it 'should set correct value type' do
-        table.data_column(:trackbacks).value_type.
-          should == Cequel::Type[:ascii]
+        expect(table.data_column(:trackbacks).value_type).
+          to eq(Cequel::Type[:ascii])
       end
     end
 
@@ -162,14 +162,14 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should set simple properties' do
-        table.property(:comment).should == 'Blog posts'
+        expect(table.property(:comment)).to eq('Blog posts')
       end
 
       it 'should set map collection properties' do
-        table.property(:compression).should == {
+        expect(table.property(:compression)).to eq({
           :sstable_compression => 'DeflateCompressor',
           :chunk_length_kb => 64
-        }
+        })
       end
     end
 
@@ -183,7 +183,7 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should have compact storage' do
-        table.should be_compact_storage
+        expect(table).to be_compact_storage
       end
     end
 
@@ -197,7 +197,7 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should set clustering order' do
-        table.clustering_columns.map(&:clustering_order).should == [:desc]
+        expect(table.clustering_columns.map(&:clustering_order)).to eq([:desc])
       end
     end
 
@@ -208,7 +208,7 @@ describe Cequel::Schema::TableWriter do
           key :id, :uuid, :desc
           column :title, :text, :index => true
         end
-        table.data_column(:title).should be_indexed
+        expect(table.data_column(:title)).to be_indexed
       end
 
       it 'should create indices with specified name' do
@@ -217,7 +217,7 @@ describe Cequel::Schema::TableWriter do
           key :id, :uuid, :desc
           column :title, :text, :index => :silly_idx
         end
-        table.data_column(:title).index_name.should == :silly_idx
+        expect(table.data_column(:title).index_name).to eq(:silly_idx)
       end
     end
 

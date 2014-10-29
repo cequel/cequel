@@ -9,13 +9,13 @@ describe Cequel::Record::Scoped do
   end
 
   it 'should use current scoped key values to populate new record' do
-    Post['bigdata'].new.blog_subdomain.should == 'bigdata'
+    expect(Post['bigdata'].new.blog_subdomain).to eq('bigdata')
   end
 
   it "should not mess up class' #puts" do
     StringIO.new.tap do |out|
       out.puts Post
-      out.string.should == "Post\n"
+      expect(out.string).to eq("Post\n")
     end
 
   end

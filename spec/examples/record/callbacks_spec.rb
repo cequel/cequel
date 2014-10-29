@@ -68,28 +68,28 @@ describe Cequel::Record::Callbacks do
     before { new_post.save! }
     subject { new_post.executed_callbacks }
 
-    it { should include(:before_save) }
-    it { should include(:after_save) }
-    it { should include(:before_create) }
-    it { should include(:after_create) }
-    it { should_not include(:before_update) }
-    it { should_not include(:after_update) }
-    it { should_not include(:before_destroy) }
-    it { should_not include(:after_destroy) }
+    it { is_expected.to include(:before_save) }
+    it { is_expected.to include(:after_save) }
+    it { is_expected.to include(:before_create) }
+    it { is_expected.to include(:after_create) }
+    it { is_expected.not_to include(:before_update) }
+    it { is_expected.not_to include(:after_update) }
+    it { is_expected.not_to include(:before_destroy) }
+    it { is_expected.not_to include(:after_destroy) }
   end
 
   context 'on update' do
     before { existing_post.save! }
     subject { existing_post.executed_callbacks }
 
-    it { should include(:before_save) }
-    it { should include(:after_save) }
-    it { should_not include(:before_create) }
-    it { should_not include(:after_create) }
-    it { should include(:before_update) }
-    it { should include(:after_update) }
-    it { should_not include(:before_destroy) }
-    it { should_not include(:after_destroy) }
+    it { is_expected.to include(:before_save) }
+    it { is_expected.to include(:after_save) }
+    it { is_expected.not_to include(:before_create) }
+    it { is_expected.not_to include(:after_create) }
+    it { is_expected.to include(:before_update) }
+    it { is_expected.to include(:after_update) }
+    it { is_expected.not_to include(:before_destroy) }
+    it { is_expected.not_to include(:after_destroy) }
   end
 
   context 'on destroy' do
@@ -97,14 +97,14 @@ describe Cequel::Record::Callbacks do
 
     subject { existing_post.executed_callbacks }
 
-    it { should_not include(:before_save) }
-    it { should_not include(:after_save) }
-    it { should_not include(:before_create) }
-    it { should_not include(:after_create) }
-    it { should_not include(:before_update) }
-    it { should_not include(:after_update) }
-    it { should include(:before_destroy) }
-    it { should include(:after_destroy) }
+    it { is_expected.not_to include(:before_save) }
+    it { is_expected.not_to include(:after_save) }
+    it { is_expected.not_to include(:before_create) }
+    it { is_expected.not_to include(:after_create) }
+    it { is_expected.not_to include(:before_update) }
+    it { is_expected.not_to include(:after_update) }
+    it { is_expected.to include(:before_destroy) }
+    it { is_expected.to include(:after_destroy) }
   end
 
   describe 'atomic writes' do
@@ -114,7 +114,7 @@ describe Cequel::Record::Callbacks do
         -> { expect { Post.find('autopost') }.
           to raise_error(Cequel::Record::RecordNotFound) }
       comment.save!
-      Post.find('autopost').title.should == 'Auto Post'
+      expect(Post.find('autopost').title).to eq('Auto Post')
     end
   end
 end

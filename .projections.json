@@ -1,0 +1,5 @@
+{
+  "lib/cequel/metal/*.rb": {"type": "metal"},
+  "lib/cequel/record/*.rb": {"type": "record"},
+  "spec/examples/*_spec.rb": {"type": "spec"}
+}

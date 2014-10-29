@@ -84,10 +84,10 @@ module Cequel
         return value.map { |element| quote(element) }.join(',')
       end
       case value
-      when ::String
-        quote_string(value)
-      when Time, ActiveSupport::TimeWithZone, DateTime
-        value.strftime('%s%L')
+      when Time, ActiveSupport::TimeWithZone
+        (value.to_r * 1000).round.to_s
+      when DateTime
+        quote(value.utc.to_time)
       when Date
         quote(Time.gm(value.year, value.month, value.day))
       when Numeric, true, false, Cql::Uuid
