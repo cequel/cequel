@@ -112,7 +112,7 @@ module Cequel
       # @return [String] the column's name
       #
       def to_s
-        name
+        name.to_s
       end
 
       #
