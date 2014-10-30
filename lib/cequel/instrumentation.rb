@@ -11,15 +11,16 @@ module Cequel
       #
       # @param method_name [Symbol,String] The method to instrument
       #
-      # @param topic [String] The name with which to publish this
-      #   instrumentation
+      # @param opts [String] :topic ("#{method_name}.cequel") The name
+      #   with which to publish this instrumentation
       #
       # @option opts [Object] :data_method (nil) the data to publish along
       #   with the notification. If it responds to `#call` it will be
       #   called with the record object and the return value used for
       #   each notification.
-      def instrument(method_name, topic, opts)
+      def instrument(method_name, opts)
         data = opts[:data]
+        topic = opts.fetch(:topic, "#{method_name}.cequel")
 
         data_proc = if data.respond_to? :call
                       data
@@ -31,7 +32,7 @@ module Cequel
 
         module_eval <<-METH
           def #{method_name}_with_instrumentation(*args)
-            instrument("#{topic.to_s}", __data_for_#{method_name}_instrumentation(self)) do
+            instrument("#{topic}", __data_for_#{method_name}_instrumentation(self)) do
               #{method_name}_without_instrumentation(*args)
             end
           end
