@@ -12,6 +12,7 @@ module Cequel
     module Persistence
       extend ActiveSupport::Concern
       extend Forwardable
+      include Instrumentation
 
       #
       # Class-level functionality for loading and saving records
@@ -219,12 +220,11 @@ module Cequel
       def destroy(options = {})
         options.assert_valid_keys(:consistency, :timestamp)
         assert_keys_present!
-        instrument "destroy.cequel", table_name: table_name do
-          metal_scope.delete(options)
-        end
+        metal_scope.delete(options)
         transient!
         self
       end
+      instrument :destroy, "destroy.cequel", data: ->(rec){{table_name: rec.table_name}}
 
       #
       # @return true if this is a new, unsaved record
@@ -274,24 +274,22 @@ module Cequel
 
       def create(options = {})
         assert_keys_present!
-        instrument "create.cequel", table_name: table_name do
-          metal_scope
-            .insert(attributes.reject { |attr, value| value.nil? }, options)
-          loaded!
-          persisted!
-        end
+        metal_scope
+          .insert(attributes.reject { |attr, value| value.nil? }, options)
+        loaded!
+        persisted!
       end
+      instrument :create, "create.cequel", data: ->(rec){{table_name: rec.table_name}}
 
       def update(options = {})
         assert_keys_present!
-        instrument "update.cequel", table_name: table_name do
-          connection.batch do
-            updater.execute(options)
-            deleter.execute(options.except(:ttl))
-            @updater, @deleter = nil
-          end
+        connection.batch do
+          updater.execute(options)
+          deleter.execute(options.except(:ttl))
+          @updater, @deleter = nil
         end
       end
+      instrument :update, "update.cequel", data: ->(rec){{table_name: rec.table_name}}
 
       def updater
         @updater ||= Metal::Updater.new(metal_scope)
@@ -378,9 +376,6 @@ module Cequel
         end
       end
 
-      def instrument(name, data, &blk)
-        ActiveSupport::Notifications.instrument(name, data, &blk)
-      end
     end
   end
 end

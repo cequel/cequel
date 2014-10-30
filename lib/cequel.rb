@@ -12,6 +12,7 @@ require 'cequel/schema'
 require 'cequel/type'
 require 'cequel/util'
 require 'cequel/uuids'
+require 'cequel/instrumentation'
 require 'cequel/record'
 
 #
