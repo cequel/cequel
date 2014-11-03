@@ -42,13 +42,19 @@ namespace :cequel do
       new_constants.each do |class_name|
         begin
           clazz = class_name.constantize
-          if clazz.ancestors.include?(Cequel::Record) &&
-              !migration_table_names.include?(clazz.table_name.to_sym)
-            clazz.synchronize_schema
-            migration_table_names << clazz.table_name.to_sym
-            puts "Synchronized schema for #{class_name}"
-          end
         rescue NameError, RuntimeError # rubocop:disable HandleExceptions
+          # rescue block doesn't get entered, even on NameError
+          #puts "rescue #{clazz}"
+        else
+          #puts "else #{clazz}"   # always entered
+          if clazz.is_a?(Class)
+            if clazz.ancestors.include?(Cequel::Record) &&
+                !migration_table_names.include?(clazz.table_name.to_sym)
+              clazz.synchronize_schema
+              migration_table_names << clazz.table_name.to_sym
+              puts "Synchronized schema for #{class_name}"
+            end
+          end
         end
       end
     end
