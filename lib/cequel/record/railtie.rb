@@ -1,5 +1,7 @@
 # -*- encoding : utf-8 -*-
 require 'i18n/core_ext/hash'
+require 'yaml'
+require 'erb'
 
 module Cequel
   module Record
