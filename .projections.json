@@ -1,5 +1,6 @@
 {
   "lib/cequel/metal/*.rb": {"type": "metal"},
   "lib/cequel/record/*.rb": {"type": "record"},
+  "lib/cequel/schema/*.rb": {"type": "schema"},
   "spec/examples/*_spec.rb": {"type": "spec"}
 }
