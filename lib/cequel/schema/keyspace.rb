@@ -55,15 +55,15 @@ module Cequel
         options.reverse_merge!(keyspace.configuration)
         options.reverse_merge!(default_options)
 
-        if options.has_key? :class
+        if options.key?(:class)
           options[:replication][:class] = options[:class]
           if options[:class] != 'SimpleStrategy'
             raise 'For strategy other than SimpleStrategy, please ' \
-              'use the replication option.'
+              'use the :replication option.'
           end
         end
 
-        if options.has_key? :replication_factor
+        if options.key?(:replication_factor)
           options[:replication][:replication_factor] =
             options[:replication_factor]
         end
