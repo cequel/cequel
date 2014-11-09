@@ -1,3 +1,14 @@
+## 1.5.0
+
+* Support ActiveSupport instrumentation of Record create, update, destroy
+* Allow config/cequel.yml to specify `:replication` and `:durable_writes`
+  settings
+* `Key#to_s` correctly returns String, not Symbol
+* Don't assume all constants are classes in migrations
+* Explicitly require yaml and erb in Railtie
+* NewRelic integration can be explicitly disabled
+* Demodulize model class name before transforming it to table name
+
 ## 1.4.5
 
 * Fix recovery from connection error
