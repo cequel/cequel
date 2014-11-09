@@ -51,7 +51,7 @@ module Cequel
           durable_writes: true
         }
 
-        options.symbolize_keys!
+        options = options.symbolize_keys
         options.reverse_merge!(keyspace.configuration)
         options.reverse_merge!(default_options)
 
