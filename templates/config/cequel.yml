@@ -27,3 +27,11 @@ production:
   max_retries: 3
   retry_delay: 0.5
   newrelic: true
+  replication:
+    class: SimpleStrategy
+    replication_factor: 1
+# replication:
+#   class: NetworkTopologyStrategy
+#   datacenter1: 3
+#   datacenter2: 2
+# durable_writes: false
