@@ -224,7 +224,7 @@ module Cequel
         transient!
         self
       end
-      instrument :destroy, data: ->(rec){{table_name: rec.table_name}}
+      instrument :destroy, data: ->(rec) { {table_name: rec.table_name} }
 
       #
       # @return true if this is a new, unsaved record
@@ -279,7 +279,7 @@ module Cequel
         loaded!
         persisted!
       end
-      instrument :create, data: ->(rec){{table_name: rec.table_name}}
+      instrument :create, data: ->(rec) { {table_name: rec.table_name} }
 
       def update(options = {})
         assert_keys_present!
@@ -289,7 +289,7 @@ module Cequel
           deleter.execute(options.except(:ttl))
         end
       end
-      instrument :update, data: ->(rec){{table_name: rec.table_name}}
+      instrument :update, data: ->(rec) { {table_name: rec.table_name} }
 
       def updater
         @updater ||= Metal::Updater.new(metal_scope)
@@ -379,7 +379,6 @@ module Cequel
                "Missing required key values: #{missing_keys.keys.join(', ')}"
         end
       end
-
     end
   end
 end

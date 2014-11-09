@@ -1,5 +1,12 @@
 module Cequel
+  #
+  # Generic module which enables injection of ActiveSupport notification
+  # functionality into including classes
+  #
   module Instrumentation
+    #
+    # Metaprogramming method to wrap an existing method with instrumentation
+    #
     module ModuleMethods
       # Instruments `method_name` to publish the value returned by the
       # `data_builder` proc onto `topic`
@@ -25,14 +32,15 @@ module Cequel
         data_proc = if data.respond_to? :call
                       data
                     else
-                      ->(_){ data }
+                      ->(_) { data }
                     end
 
         define_method(:"__data_for_#{method_name}_instrumentation", &data_proc)
 
         module_eval <<-METH
           def #{method_name}_with_instrumentation(*args)
-            instrument("#{topic}", __data_for_#{method_name}_instrumentation(self)) do
+            instrument("#{topic}",
+                       __data_for_#{method_name}_instrumentation(self)) do
               #{method_name}_without_instrumentation(*args)
             end
           end
