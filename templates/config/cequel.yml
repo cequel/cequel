@@ -5,6 +5,7 @@ development:
   keyspace: <%= app_name %>_development
   max_retries: 3
   retry_delay: 0.5
+  newrelic: false
 
 test:
   host: '127.0.0.1'
@@ -12,6 +13,7 @@ test:
   keyspace: <%= app_name %>_test
   max_retries: 3
   retry_delay: 0.5
+  newrelic: false
 
 production:
   hosts:
@@ -24,3 +26,4 @@ production:
   password: 'password1'
   max_retries: 3
   retry_delay: 0.5
+  newrelic: true
