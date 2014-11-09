@@ -43,10 +43,7 @@ namespace :cequel do
         begin
           clazz = class_name.constantize
         rescue NameError, RuntimeError # rubocop:disable HandleExceptions
-          # rescue block doesn't get entered, even on NameError
-          #puts "rescue #{clazz}"
         else
-          #puts "else #{clazz}"   # always entered
           if clazz.is_a?(Class)
             if clazz.ancestors.include?(Cequel::Record) &&
                 !migration_table_names.include?(clazz.table_name.to_sym)
