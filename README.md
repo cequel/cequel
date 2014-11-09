@@ -571,6 +571,7 @@ Cequel was written by:
 * G Gordon Worley III
 * Clark Bremer
 * Tamara Temple
+* Long On
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
 releases of Cequel.
