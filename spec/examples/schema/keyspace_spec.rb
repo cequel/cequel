@@ -2,38 +2,44 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Schema::Keyspace do
-  let(:keyspace) { cequel.schema }
+  let(:connection) do
+    Cequel.connect(config)
+  end
+  let(:keyspace) { connection.schema }
 
   describe 'creating keyspace' do
     before do
-      cequel.schema.drop! if cequel.schema.exists?
+      connection.configure(config)
+      connection.schema.drop! if connection.schema.exists?
     end
 
-    after do
-      cequel.clear_active_connections!
+    let(:keyspace_name) do
+      test_env_number = ENV['TEST_ENV_NUMBER']
+      test_env_number ?
+        "cequel_schema_test_#{test_env_number}" :
+        "cequel_schema_test"
     end
 
-    let(:basic_config) {
+    let(:basic_config) do
       {
         host: Cequel::SpecSupport::Helpers.host,
         port: Cequel::SpecSupport::Helpers.port,
-        keyspace: 'totallymadeup'
+        keyspace: keyspace_name
       }
-    }
+    end
 
-    let(:schema_config) {
-      cequel.client.use('system')
-      cequel.client.execute("SELECT * FROM schema_keyspaces WHERE keyspace_name = 'totallymadeup'").first
-    }
+    let(:schema_config) do
+      connection.client.use('system')
+      connection.client.execute("SELECT * FROM schema_keyspaces WHERE keyspace_name = '#{keyspace_name}'").first
+    end
 
     context 'with default options' do
       let(:config) { basic_config }
 
       it 'uses default keyspace configuration' do
-        cequel.configure(config)
         keyspace.create!
         expect(schema_config).to eq({
-          "keyspace_name"=>"totallymadeup",
+          "keyspace_name"=>keyspace_name,
           "durable_writes"=>true,
           "strategy_class"=>"org.apache.cassandra.locator.SimpleStrategy",
           "strategy_options"=>"{\"replication_factor\":\"1\"}"
@@ -45,10 +51,9 @@ describe Cequel::Schema::Keyspace do
       let(:config) { basic_config }
 
       it 'uses specified options' do
-        cequel.configure(config)
         keyspace.create! replication: { class: "SimpleStrategy", replication_factor: 2 }
         expect(schema_config).to eq({
-          "keyspace_name"=>"totallymadeup",
+          "keyspace_name"=>keyspace_name,
           "durable_writes"=>true,
           "strategy_class"=>"org.apache.cassandra.locator.SimpleStrategy",
           "strategy_options"=>"{\"replication_factor\":\"2\"}"
@@ -60,10 +65,9 @@ describe Cequel::Schema::Keyspace do
       let(:config) { basic_config }
 
       it 'accepts class and replication_factor options' do
-        cequel.configure(config)
         keyspace.create! class: "SimpleStrategy", replication_factor: 2
         expect(schema_config).to eq({
-          "keyspace_name"=>"totallymadeup",
+          "keyspace_name"=>keyspace_name,
           "durable_writes"=>true,
           "strategy_class"=>"org.apache.cassandra.locator.SimpleStrategy",
           "strategy_options"=>"{\"replication_factor\":\"2\"}"
@@ -71,10 +75,9 @@ describe Cequel::Schema::Keyspace do
       end
 
       it "raises an error if a class other than SimpleStrategy is given" do
-        cequel.configure(config)
         expect {
           keyspace.create! class: "NetworkTopologyStrategy", replication_factor: 2
-        }.to raise_error('For strategy other than SimpleStrategy, please use the replication option.')
+        }.to raise_error
       end
     end
 
@@ -84,10 +87,9 @@ describe Cequel::Schema::Keyspace do
       }
 
       it 'uses default keyspace configuration' do
-        cequel.configure(config)
         keyspace.create!
         expect(schema_config).to eq({
-          "keyspace_name"=>"totallymadeup",
+          "keyspace_name"=>keyspace_name,
           "durable_writes"=>true,
           "strategy_class"=>"org.apache.cassandra.locator.SimpleStrategy",
           "strategy_options"=>"{\"replication_factor\":\"3\"}"
@@ -101,10 +103,9 @@ describe Cequel::Schema::Keyspace do
       }
 
       it 'uses default keyspace configuration' do
-        cequel.configure(config)
         keyspace.create!
         expect(schema_config).to eq({
-          "keyspace_name"=>"totallymadeup",
+          "keyspace_name"=>keyspace_name,
           "durable_writes"=>true,
           "strategy_class"=>"org.apache.cassandra.locator.NetworkTopologyStrategy",
           "strategy_options"=>"{\"datacenter1\":\"3\",\"datacenter2\":\"2\"}"
@@ -118,10 +119,9 @@ describe Cequel::Schema::Keyspace do
       }
 
       it 'uses default keyspace configuration' do
-        cequel.configure(config)
         keyspace.create!
         expect(schema_config).to eq({
-          "keyspace_name"=>"totallymadeup",
+          "keyspace_name"=>keyspace_name,
           "durable_writes"=>false,
           "strategy_class"=>"org.apache.cassandra.locator.SimpleStrategy",
           "strategy_options"=>"{\"replication_factor\":\"1\"}"
