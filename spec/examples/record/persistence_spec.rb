@@ -377,5 +377,7 @@ describe Cequel::Record::Persistence do
 
       notification_recieved
     }
+
+    supports_block_expectations
   end
 end
