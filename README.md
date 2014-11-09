@@ -572,6 +572,7 @@ Cequel was written by:
 * Clark Bremer
 * Tamara Temple
 * Long On
+* Lucas Mundim
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
 releases of Cequel.
