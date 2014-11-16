@@ -292,10 +292,12 @@ module Cequel
       instrument :update, data: ->(rec) { {table_name: rec.table_name} }
 
       def updater
+        raise ArgumentError, "Can't get updater for new record" if new_record?
         @updater ||= Metal::Updater.new(metal_scope)
       end
 
       def deleter
+        raise ArgumentError, "Can't get deleter for new record" if new_record?
         @deleter ||= Metal::Deleter.new(metal_scope)
       end
 

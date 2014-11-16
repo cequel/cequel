@@ -137,10 +137,14 @@ module Cequel
       def to_modify(&block)
         if loaded?
           model.__send__("#{column_name}_will_change!")
-          block.call()
+          block.call
         else modifications << block
         end
         self
+      end
+
+      def to_update
+        yield unless model.new_record?
       end
 
       def modifications
@@ -231,15 +235,17 @@ module Cequel
                "indices"
         end
 
-        if count.nil?
-          updater.list_replace(column_name, first, element)
-        else
-          element = Array.wrap(element)
-          count.times do |i|
-            if i < element.length
-              updater.list_replace(column_name, first+i, element[i])
-            else
-              deleter.list_remove_at(column_name, first+i)
+        to_update do
+          if count.nil?
+            updater.list_replace(column_name, first, element)
+          else
+            element = Array.wrap(element)
+            count.times do |i|
+              if i < element.length
+                updater.list_replace(column_name, first+i, element[i])
+              else
+                deleter.list_remove_at(column_name, first+i)
+              end
             end
           end
         end
@@ -253,7 +259,7 @@ module Cequel
       # @return [List] self
       #
       def clear
-        deleter.delete_columns(column_name)
+        to_update { deleter.delete_columns(column_name) }
         to_modify { super }
       end
 
@@ -265,7 +271,7 @@ module Cequel
       #
       def concat(array)
         array = cast_collection(array)
-        updater.list_append(column_name, array)
+        to_update { updater.list_append(column_name, array) }
         to_modify { super }
       end
 
@@ -277,7 +283,7 @@ module Cequel
       #
       def delete(object)
         object = cast_element(object)
-        updater.list_remove(column_name, object)
+        to_update { updater.list_remove(column_name, object) }
         to_modify { super }
       end
 
@@ -288,7 +294,7 @@ module Cequel
       # @return [List] self
       #
       def delete_at(index)
-        deleter.list_remove_at(column_name, index)
+        to_update { deleter.list_remove_at(column_name, index) }
         to_modify { super }
       end
 
@@ -300,7 +306,7 @@ module Cequel
       #
       def push(*objects)
         objects.map! { |object| cast_element(object) }
-        updater.list_append(column_name, objects)
+        to_update { updater.list_append(column_name, objects) }
         to_modify { super }
       end
       alias_method :<<, :push
@@ -314,7 +320,7 @@ module Cequel
       #
       def replace(array)
         array = cast_collection(array)
-        updater.set(column_name => array)
+        to_update { updater.set(column_name => array) }
         to_modify { super }
       end
 
@@ -326,7 +332,7 @@ module Cequel
       #
       def unshift(*objects)
         objects.map!(&method(:cast_element))
-        updater.list_prepend(column_name, objects.reverse)
+        to_update { updater.list_prepend(column_name, objects.reverse) }
         to_modify { super }
       end
       alias_method :prepend, :unshift
@@ -368,7 +374,7 @@ module Cequel
       #
       def add(object)
         object = cast_element(object)
-        updater.set_add(column_name, object)
+        to_update { updater.set_add(column_name, object) }
         to_modify { super }
       end
       alias_method :<<, :add
@@ -380,7 +386,7 @@ module Cequel
       # @return [Set] self
       #
       def clear
-        deleter.delete_columns(column_name)
+        to_update { deleter.delete_columns(column_name) }
         to_modify { super }
       end
 
@@ -392,7 +398,7 @@ module Cequel
       #
       def delete(object)
         object = cast_element(object)
-        updater.set_remove(column_name, object)
+        to_update { updater.set_remove(column_name, object) }
         to_modify { super }
       end
 
@@ -404,7 +410,7 @@ module Cequel
       #
       def replace(set)
         set = cast_collection(set)
-        updater.set(column_name => set)
+        to_update { updater.set(column_name => set) }
         to_modify { super }
       end
     end
@@ -456,7 +462,7 @@ module Cequel
       #
       def []=(key, value)
         key = cast_key(key)
-        updater.map_update(column_name, key => value)
+        to_update { updater.map_update(column_name, key => value) }
         to_modify { super }
       end
       alias_method :store, :[]=
@@ -468,7 +474,7 @@ module Cequel
       # @return [Map] self
       #
       def clear
-        deleter.delete_columns(column_name)
+        to_update { deleter.delete_columns(column_name) }
         to_modify { super }
       end
 
@@ -480,7 +486,7 @@ module Cequel
       #
       def delete(key)
         key = cast_key(key)
-        deleter.map_remove(column_name, key)
+        to_update { deleter.map_remove(column_name, key) }
         to_modify { super }
       end
 
@@ -492,7 +498,7 @@ module Cequel
       #
       def merge!(hash)
         hash = cast_collection(hash)
-        updater.map_update(column_name, hash)
+        to_update { updater.map_update(column_name, hash) }
         to_modify { super }
       end
       alias_method :update, :merge!
@@ -505,7 +511,7 @@ module Cequel
       #
       def replace(hash)
         hash = cast_collection(hash)
-        updater.set(column_name => hash)
+        to_update { updater.set(column_name => hash) }
         to_modify { super }
       end
 
