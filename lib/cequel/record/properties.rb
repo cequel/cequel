@@ -261,7 +261,7 @@ module Cequel
       #
       def attributes
         attribute_names.each_with_object({}) do |name, attributes|
-          attributes[name] = read_attribute(name)
+          attributes[name.to_s] = read_attribute(name)
         end
       end
 
