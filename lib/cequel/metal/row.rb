@@ -24,7 +24,7 @@ module Cequel
                 if $1 == 'ttl' then row.set_ttl($2, value)
                 else row.set_writetime($2, value)
                 end
-              elsif value.respond_to?(:in_time_zone) row[name] = value.in_time_zone
+              elsif value.respond_to?(:in_time_zone) then row[name] = value.in_time_zone
               else row[name] = value
               end
             end
