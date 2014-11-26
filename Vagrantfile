@@ -11,7 +11,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # please see the online documentation at vagrantup.com.
 
   # Every Vagrant virtual environment requires a box to build off of.
-  config.vm.box = "precise64"
+  config.vm.box = "ubuntu/trusty64"
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
@@ -137,8 +137,8 @@ exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
     service cassandra start
   SH
 
-  listing = Net::HTTP.get(URI.parse("http://archive.apache.org/dist/cassandra/"))
-  versions = listing.scan(%r(href="(\d+\.\d+\.\d+)/")).map(&:first).grep(/^(1\.2\.|2\.)/)
+  versions = File.read(File.expand_path('../.cassandra-versions', __FILE__)).each_line
+    .map(&:strip).grep(/^(1\.2\.|2\.)/)
   versions.each do |version|
     java_version = version =~ /^1/ ? '6' : '7'
     config.vm.define version do |machine|
