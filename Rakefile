@@ -95,3 +95,16 @@ task :verify_changelog do
     abort "Changelog is not up-to-date."
   end
 end
+
+namespace :cassandra do
+  namespace :versions do
+    desc 'Update list of available Cassandra versions'
+    task :update do
+      listing = Net::HTTP.get(URI.parse("http://archive.apache.org/dist/cassandra/"))
+      versions = listing.scan(%r(href="(\d+\.\d+\.\d+)/")).map(&:first)
+      File.open(File.expand_path('../.cassandra-versions', __FILE__), 'w') do |f|
+        f.puts(versions.sort_by(&Gem::Version.method(:new)).join("\n"))
+      end
+    end
+  end
+end
