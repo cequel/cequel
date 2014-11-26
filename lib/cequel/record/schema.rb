@@ -20,7 +20,7 @@ module Cequel
 
       included do
         class_attribute :table_name, instance_writer: false
-        self.table_name = name.tableize.to_sym unless name.nil?
+        self.table_name = name.demodulize.tableize.to_sym unless name.nil?
       end
 
       #

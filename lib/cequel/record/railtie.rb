@@ -1,5 +1,7 @@
 # -*- encoding : utf-8 -*-
 require 'i18n/core_ext/hash'
+require 'yaml'
+require 'erb'
 
 module Cequel
   module Record
@@ -13,29 +15,22 @@ module Cequel
       end
 
       initializer "cequel.configure_rails" do
-        config_path = Rails.root.join('config/cequel.yml').to_s
-
-        if File.exist?(config_path)
-          config = YAML.load(ERB.new(IO.read(config_path)).result)[Rails.env]
-            .deep_symbolize_keys
-        else
-          config = {host: '127.0.0.1:9042'}
-        end
-        config.reverse_merge!(keyspace: "#{Railtie.app_name}_#{Rails.env}")
-        connection = Cequel.connect(config)
+        connection = Cequel.connect(configuration)
 
         connection.logger = Rails.logger
         Record.connection = connection
       end
 
       initializer "cequel.add_new_relic" do
-        begin
-          require 'new_relic/agent/method_tracer'
-        rescue LoadError => e
-          Rails.logger.debug(
-            "New Relic not installed; skipping New Relic integration")
-        else
-          require 'cequel/metal/new_relic_instrumentation'
+        if configuration.fetch(:newrelic_enabled, true)
+          begin
+            require 'new_relic/agent/method_tracer'
+          rescue LoadError => e
+            Rails.logger.debug(
+              "New Relic not installed; skipping New Relic integration")
+          else
+            require 'cequel/metal/new_relic_instrumentation'
+          end
         end
       end
 
@@ -46,6 +41,26 @@ module Cequel
       generators do
         require 'cequel/record/configuration_generator'
         require 'cequel/record/record_generator'
+      end
+
+      private
+
+      def configuration
+        return @configuration if defined? @configuration
+
+        config_path = Rails.root.join('config/cequel.yml').to_s
+
+        if File.exist?(config_path)
+          config_yaml = ERB.new(File.read(config_path)).result
+          @configuration = YAML.load(config_yaml)[Rails.env]
+            .deep_symbolize_keys
+        else
+          @configuration = {host: '127.0.0.1:9042'}
+        end
+        @configuration
+          .reverse_merge!(keyspace: "#{Railtie.app_name}_#{Rails.env}")
+
+        @configuration
       end
     end
   end

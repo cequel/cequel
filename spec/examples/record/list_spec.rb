@@ -45,6 +45,15 @@ describe Cequel::Record::List do
   end
 
   describe '#<<' do
+    it 'should not re-apply after creation' do
+      post = Post.new(permalink: 'cequel')
+      post.tags << 'one'
+      post.save!
+      post.tags << 'two'
+      post.save!
+      expect(subject[:tags]).to eq(%w(one two))
+    end
+
     it 'should add new items' do
       post.tags << 'three' << 'four'
       post.save
