@@ -92,6 +92,8 @@ module Cequel
         quote(Time.gm(value.year, value.month, value.day))
       when Numeric, true, false, Cql::Uuid
         value.to_s
+      when nil
+        'NULL'
       else
         quote_string(value.to_s)
       end

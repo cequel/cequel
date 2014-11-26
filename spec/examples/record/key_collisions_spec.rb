@@ -4,6 +4,7 @@ describe Cequel::Record::KeyCollisions do
   model :BlogWithDuplicateKeyOverwrite do
     key :subdomain, :text
     column :name, :text
+    column :description, :text
     on_duplicate_key :overwrite
   end
 
@@ -22,18 +23,26 @@ describe Cequel::Record::KeyCollisions do
   describe 'on_duplicate_key :overwrite' do
     let!(:blog) do
       BlogWithDuplicateKeyOverwrite.create!(
-        subdomain: 'cassandra', name: 'Cassandra')
+        subdomain: 'cassandra', name: 'Cassandra',
+        description: 'A blog about Cassandra')
     end
 
-    it 'should not raise error on duplicate key' do
+    before do
       expect do
         BlogWithDuplicateKeyOverwrite.create!(
           subdomain: 'cassandra',
           name: 'Cassandra Blog')
       end.to_not raise_error
+    end
 
+    it 'should overwrite the row' do
       expect(BlogWithDuplicateKeyOverwrite.find('cassandra').name)
         .to eq('Cassandra Blog')
+    end
+
+    it 'should overwrite all columns in the row, specified or not' do
+      expect(BlogWithDuplicateKeyOverwrite.find('cassandra').description)
+        .to be_nil
     end
   end
 
