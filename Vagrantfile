@@ -45,13 +45,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
   #
-  # config.vm.provider :virtualbox do |vb|
-  #   # Don't boot with headless mode
-  #   vb.gui = true
-  #
-  #   # Use VBoxManage to customize the VM. For example to change memory:
-  #   vb.customize ["modifyvm", :id, "--memory", "1024"]
-  # end
+  config.vm.provider :virtualbox do |vb|
+    vb.memory = 1024
+  end
   #
   # View the documentation for the provider you're using for more
   # information on available options.
@@ -131,9 +127,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     echo "start on runlevel [2345]
 stop on runlevel [06]
 exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
-    sed -i -e 's/rpc_address:.*/rpc_address: 0.0.0.0/' /opt/apache-cassandra-$1/conf/cassandra.yaml
-    sed -i -e 's/start_native_transport:.*/start_native_transport: true/' /opt/apache-cassandra-$1/conf/cassandra.yaml
-    sed -i -e 's/start_rpc:.*/start_rpc: true/' /opt/apache-cassandra-$1/conf/cassandra.yaml
+    sed -i -e 's/.*broadcast_rpc_address:.*/broadcast_rpc_address: 127.0.0.1/' /opt/apache-cassandra-$1/conf/cassandra.yaml
+    sed -i -e 's/^rpc_address:.*/rpc_address: 0.0.0.0/' /opt/apache-cassandra-$1/conf/cassandra.yaml
+    sed -i -e 's/^start_native_transport:.*/start_native_transport: true/' /opt/apache-cassandra-$1/conf/cassandra.yaml
+    sed -i -e 's/^start_rpc:.*/start_rpc: true/' /opt/apache-cassandra-$1/conf/cassandra.yaml
     service cassandra start
   SH
 
