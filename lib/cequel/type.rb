@@ -85,7 +85,7 @@ module Cequel
       end
       case value
       when Time, ActiveSupport::TimeWithZone, DateTime, Date
-        quite_time(value)
+        quote_time(value)
       when Numeric, true, false, Cql::Uuid
         value.to_s
       when nil
