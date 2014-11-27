@@ -554,8 +554,7 @@ the columns that are given.
 
 ### Cassandra ###
 
-* 1.2
-* 2.0
+* 2.1.1+
 
 Though Cequel is tested against Cassandra 2.0, it does not at this time support
 any of the CQL3.1 features introduced in Cassandra 2.0. This will change in the
