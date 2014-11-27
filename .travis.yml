@@ -13,10 +13,8 @@ gemfile:
 script: 'bundle exec rake test'
 before_install:
   - sudo rm -rf /var/lib/cassandra/*
-  - curl -s http://www.us.apache.org/dist/cassandra/2.1.2/apache-cassandra-2.1.2-bin.tar.gz | tar -xvzf - && pkill -f cassandra && sudo sh apache-cassandra-2.1.2/bin/cassandra
+  - curl -s http://www.us.apache.org/dist/cassandra/2.1.2/apache-cassandra-2.1.2-bin.tar.gz | tar -xvzf - && sudo sh apache-cassandra-2.1.2/bin/cassandra
 bundler_args: '--without=debug'
-services:
-  - cassandra
 matrix:
   allow_failures:
     - rvm: "rbx-2.2.6"
