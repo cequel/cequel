@@ -12,8 +12,8 @@ gemfile:
   - "gemfiles/rails_4.1.gemfile"
 script: 'bundle exec rake test'
 before_install:
-  - sudo sh -c "echo 'JVM_OPTS=\"\${JVM_OPTS} -Djava.net.preferIPv4Stack=false\"' >> /usr/local/cassandra/conf/cassandra-env.sh"
-  - sudo service cassandra start
+  - sudo rm -rf /var/lib/cassandra/*
+  - curl -s http://www.us.apache.org/dist/cassandra/2.1.2/apache-cassandra-2.1.2-bin.tar.gz | tar -xvzf - && sudo sh apache-cassandra-2.1.2/bin/cassandra
 bundler_args: '--without=debug'
 services:
   - cassandra
