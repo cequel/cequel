@@ -6,7 +6,6 @@ module Cequel
     # columns, atomically mutate collections)
     #
     # @see DataSet#update
-    # @see Deleter
     # @see
     #   http://cassandra.apache.org/doc/cql3/CQL.html#updateStmt
     #   CQL UPDATE documentation
@@ -33,6 +32,16 @@ module Cequel
         data.each_pair do |column, value|
           column_updates[column.to_sym] = value
         end
+      end
+
+      #
+      # Delete specified columns
+      #
+      # @param columns [Symbol] column names to delete
+      # @return [void]
+      #
+      def delete(*columns)
+        set(Hash[columns.zip([])])
       end
 
       #
@@ -75,6 +84,18 @@ module Cequel
       def list_remove(column, value)
         statements << "#{column} = #{column} - [?]"
         bind_vars << value
+      end
+
+      #
+      # Remove elements from a list by position
+      #
+      # @param column [Symbol] name of list column
+      # @param positions [Integer] positions in list from which to delete
+      #   elements
+      # @return [void]
+      #
+      def list_remove_at(column, *positions)
+        positions.each { |position| list_replace(column, position, nil) }
       end
 
       #
@@ -133,6 +154,20 @@ module Cequel
         binding_pairs = ::Array.new(updates.length) { '?:?' }.join(',')
         statements << "#{column} = #{column} + {#{binding_pairs}}"
         bind_vars.concat(updates.flatten)
+      end
+
+      #
+      # Remove one or more keys from a map
+      #
+      # @param column [Symbol] column name
+      # @param keys [Array] keys to remove from set
+      # @return [void]
+      #
+      def map_remove(column, *keys)
+        keys.flatten!
+        bindings = ::Array.new(keys.length) { '?' }.join(',')
+        statements << "#{column} = #{column} - {#{bindings}}"
+        bind_vars.concat(keys)
       end
 
       private

@@ -287,9 +287,8 @@ module Cequel
       def update(options = {})
         assert_keys_present!
         connection.batch do |batch|
-          batch.on_complete { @updater, @deleter = nil }
+          batch.on_complete { @updater = nil }
           updater.execute(options)
-          deleter.execute(options.except(:ttl))
         end
       end
       instrument :update, data: ->(rec) { {table_name: rec.table_name} }
@@ -297,11 +296,6 @@ module Cequel
       def updater
         raise ArgumentError, "Can't get updater for new record" if new_record?
         @updater ||= Metal::Updater.new(metal_scope)
-      end
-
-      def deleter
-        raise ArgumentError, "Can't get deleter for new record" if new_record?
-        @deleter ||= Metal::Deleter.new(metal_scope)
       end
 
       private
@@ -332,13 +326,7 @@ module Cequel
       end
 
       def stage_attribute_update(name, value)
-        unless new_record?
-          if value.nil?
-            deleter.delete_columns(name)
-          else
-            updater.set(name => value)
-          end
-        end
+        updater.set(name => value) unless new_record?
       end
 
       def record_collection

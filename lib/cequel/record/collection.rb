@@ -60,8 +60,8 @@ module Cequel
       #   @return [Boolean] `true` if the collection's contents are loaded into
       #     memory
       #
-      def_delegators :@model, :loaded?, :updater, :deleter
-      private :updater, :deleter
+      def_delegators :@model, :loaded?, :updater
+      private :updater
 
       #
       # @!method column_name
@@ -85,6 +85,17 @@ module Cequel
       #
       def initialize(model, column)
         @model, @column = model, column
+      end
+
+      #
+      # Remove all elements from this collection. Equivalent to deleting the
+      # column value from the row in CQL
+      #
+      # @return [Collection] self
+      #
+      def clear
+        to_update { updater.delete(column_name) }
+        to_modify { super }
       end
 
       #
@@ -241,25 +252,10 @@ module Cequel
           else
             element = Array.wrap(element)
             count.times do |i|
-              if i < element.length
-                updater.list_replace(column_name, first+i, element[i])
-              else
-                deleter.list_remove_at(column_name, first+i)
-              end
+              updater.list_replace(column_name, first+i, element[i])
             end
           end
         end
-        to_modify { super }
-      end
-
-      #
-      # Remove all elements from the list. This will propagate to the database
-      # as a DELETE of the list column.
-      #
-      # @return [List] self
-      #
-      def clear
-        to_update { deleter.delete_columns(column_name) }
         to_modify { super }
       end
 
@@ -294,7 +290,7 @@ module Cequel
       # @return [List] self
       #
       def delete_at(index)
-        to_update { deleter.list_remove_at(column_name, index) }
+        to_update { updater.list_remove_at(column_name, index) }
         to_modify { super }
       end
 
@@ -380,17 +376,6 @@ module Cequel
       alias_method :<<, :add
 
       #
-      # Remove everything from the set. Equivalent to deleting the collection
-      # column from the record's row.
-      #
-      # @return [Set] self
-      #
-      def clear
-        to_update { deleter.delete_columns(column_name) }
-        to_modify { super }
-      end
-
-      #
       # Remove a single element from the set
       #
       # @param object element to remove
@@ -468,17 +453,6 @@ module Cequel
       alias_method :store, :[]=
 
       #
-      # Remove all elements from this map. Equivalent to deleting the column
-      # value from the row in CQL
-      #
-      # @return [Map] self
-      #
-      def clear
-        to_update { deleter.delete_columns(column_name) }
-        to_modify { super }
-      end
-
-      #
       # Delete one key from the map
       #
       # @param key the key to delete
@@ -486,7 +460,7 @@ module Cequel
       #
       def delete(key)
         key = cast_key(key)
-        to_update { deleter.map_remove(column_name, key) }
+        to_update { updater.map_remove(column_name, key) }
         to_modify { super }
       end
 
