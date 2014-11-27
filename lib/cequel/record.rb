@@ -8,6 +8,7 @@ require 'cequel/record/schema'
 require 'cequel/record/properties'
 require 'cequel/record/collection'
 require 'cequel/record/persistence'
+require 'cequel/record/batching'
 require 'cequel/record/key_collisions'
 require 'cequel/record/bulk_writes'
 require 'cequel/record/record_set'
@@ -86,6 +87,7 @@ module Cequel
       include Properties
       include Schema
       include Persistence
+      extend Batching
       include KeyCollisions
       include Associations
       include Scoped

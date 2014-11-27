@@ -61,6 +61,12 @@ module Cequel
       def_delegator :batch_manager, :batch
 
       #
+      # @!method in_batch?
+      #   (see Cequel::Metal::BatchManager#batch)
+      #
+      def_delegator :batch_manager, :in_batch?
+
+      #
       # Combine a statement with bind vars into a fully-fledged CQL query. This
       # will no longer be needed once the CQL driver supports bound values
       # natively.
