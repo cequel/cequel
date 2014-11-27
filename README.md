@@ -115,6 +115,35 @@ class PostsController < ActionController::Base
 end
 ```
 
+### Primary key collisions ###
+
+If a new record is created that has the same primary key as an existing record
+in the database, **the default behavior is to overwrite the existing record
+with the new record**. If your primary key column is not naturally unique, you
+can change this behavior:
+
+```ruby
+class Blog
+  key :subdomain, :text
+  column :name, :text
+
+  on_duplicate_key :error
+end
+```
+
+This will instruct Cequel to insert new records with a check for a key
+collision; this check happens at the database level and is guaranteed to
+prevent overwrites. If there is a key collision, the library will raise a
+`Cequel::Record::RecordNotUnique` exception.
+
+Another option is `on_duplicate_key :ignore`, which will prevent overwriting
+but will not throw an error if a key collision occurs.
+
+Note that **checking for key collisions carries a substantial performance
+penalty**. Duplicate key checks should only be enabled for records that don't
+have naturally unique keys; use UUIDs whenever possible to guarantee key
+uniqueness without having to enforce it at the database level.
+
 ### Timestamps ###
 
 If your final primary key column is a `timeuuid` with the `:auto` option set,

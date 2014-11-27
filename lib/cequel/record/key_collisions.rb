@@ -1,5 +1,13 @@
 module Cequel
   module Record
+    #
+    # Extends {Record} to enable detection of duplicate primary keys, and to
+    # customize the behavior when a key collision occurs.
+    #
+    # @see ClassMethods#on_duplicate_key
+    #
+    # @since 2.0.0
+    #
     module KeyCollisions
       extend ActiveSupport::Concern
 
@@ -8,7 +16,33 @@ module Cequel
         on_duplicate_key :overwrite
       end
 
+      #
+      # @since 2.0.0
+      #
       module ClassMethods
+        #
+        # Enables detection of duplicate primary keys when creating a new
+        # record. By default, if a new record is created with a primary key
+        # that already exists in the database, *the new record will overwrite
+        # the existing record*. This method allows you to change that behavior.
+        # Valid arguments are:
+        #
+        # * `:overwrite`, the default behavior, does not check for duplicate
+        #   keys
+        # * `:error` will check for duplicate keys and raise an error at
+        #   creation time if a new record's primary key conflicts with that of
+        #   an existing record
+        # * `:ignore` will check for duplicate keys and silently fail to create
+        #   a new record if there is a key collision
+        #
+        # @param behavior [Symbol] `:overwrite`, `:error`, or `:ignore`
+        # @return [void]
+        #
+        # @note checking for duplicate keys at creation time imposes a
+        #   substantial performance penalty. Only use duplicate key detection
+        #   if keys are not naturally unique. Whenever possible, use a unique
+        #   natural key or a UUID as a primary key
+        #
         def on_duplicate_key(behavior)
           unless [:overwrite, :error, :ignore].include?(behavior.to_sym)
             raise ArgumentError, "Invalid behavior #{behavior.inspect}. " \
