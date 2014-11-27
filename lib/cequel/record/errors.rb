@@ -62,5 +62,11 @@ module Cequel
     # Raised when attempting to insert a new record results in a key collision
     #
     DuplicateKey = Class.new(StandardError)
+
+    #
+    # Raised when performing an operation in a context in which it's not
+    # permitted
+    #
+    IllegalOperation = Class.new(StandardError)
   end
 end

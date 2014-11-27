@@ -62,6 +62,24 @@ describe Cequel::Record::KeyCollisions do
       expect(BlogWithDuplicateKeyError.find('cassandra').name)
         .to eq('Cassandra')
     end
+
+    it 'should fail fast when run in a batch' do
+      expect do
+        cequel.batch do
+          BlogWithDuplicateKeyError.create!(subdomain: 'anything')
+        end
+      end.to raise_error(Cequel::Record::IllegalOperation)
+    end
+
+    it 'should allow overriding of key collision behavior on an instance level' do
+      cequel.batch do
+        blog = BlogWithDuplicateKeyError.new(subdomain: 'anything')
+        blog.duplicate_key_behavior = :ignore
+        blog.save!
+      end
+      expect(BlogWithDuplicateKeyError.find('anything').subdomain)
+        .to eq('anything')
+    end
   end
 
   describe 'on_duplicate_key :ignore' do
