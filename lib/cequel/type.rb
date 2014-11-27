@@ -96,7 +96,7 @@ module Cequel
     end
 
     def self.quote_time(value)
-      case time
+      case value
       when Time, ActiveSupport::TimeWithZone
         (value.to_r * 1000).round.to_s
       when DateTime
