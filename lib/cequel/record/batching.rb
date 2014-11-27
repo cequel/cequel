@@ -1,5 +1,10 @@
 module Cequel
   module Record
+    #
+    # Exposes batching-related methods on Record class singletons
+    #
+    # @see Metal::BatchManager
+    #
     module Batching
       extend Forwardable
 

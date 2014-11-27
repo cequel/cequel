@@ -56,7 +56,7 @@ module Cequel
 
       def create(options = {})
         if duplicate_key_behavior == :error && self.class.in_batch?
-          raise IllegalOperation, "Cannot create a record in a batch when " \
+          fail IllegalOperation, "Cannot create a record in a batch when " \
             "duplicate key behavior is set to :error. You may set the " \
             "`duplicate_key_behavior` property on this instance to :ignore " \
             " or :overwrite to allow creation within a batch."
@@ -68,7 +68,8 @@ module Cequel
 
         super(options).tap do |result|
           if result == false && duplicate_key_behavior == :error
-            raise DuplicateKey, "There is an existing record with key #{key_attributes.inspect}"
+            fail DuplicateKey, "There is an existing record " \
+              "with key #{key_attributes.inspect}"
           end
         end
       end

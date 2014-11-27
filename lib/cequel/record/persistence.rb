@@ -186,7 +186,8 @@ module Cequel
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys(:consistency, :ttl, :timestamp, :if_not_exists)
+        options.assert_valid_keys(
+          :consistency, :ttl, :timestamp, :if_not_exists)
         if new_record? then create(options)
         else update(options)
         end

@@ -84,12 +84,8 @@ module Cequel
         return value.map { |element| quote(element) }.join(',')
       end
       case value
-      when Time, ActiveSupport::TimeWithZone
-        (value.to_r * 1000).round.to_s
-      when DateTime
-        quote(value.utc.to_time)
-      when Date
-        quote(Time.gm(value.year, value.month, value.day))
+      when Time, ActiveSupport::TimeWithZone, DateTime, Date
+        quite_time(value)
       when Numeric, true, false, Cql::Uuid
         value.to_s
       when nil
@@ -98,6 +94,18 @@ module Cequel
         quote_string(value.to_s)
       end
     end
+
+    def self.quote_time(value)
+      case time
+      when Time, ActiveSupport::TimeWithZone
+        (value.to_r * 1000).round.to_s
+      when DateTime
+        quote_time(value.utc.to_time)
+      when Date
+        quote_time(Time.gm(value.year, value.month, value.day))
+      end
+    end
+    private_class_method :quote_time
 
     def self.quote_string(string)
       if string.encoding == Encoding::ASCII_8BIT && string =~ /^[[:xdigit:]]+$/
