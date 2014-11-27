@@ -379,7 +379,7 @@ describe Cequel::Metal::DataSet do
     end
 
     it 'should send delete with specified consistency' do
-      expect_query_with_consistency(/DELETE/, :one) do
+      expect_query_with_consistency(/body/, :one) do
         cequel[:posts].where(row_keys).delete(:body, :consistency => :one)
       end
     end
@@ -610,7 +610,7 @@ describe Cequel::Metal::DataSet do
     end
 
     it 'should issue DELETE column with scoped consistency' do
-      expect_query_with_consistency(/DELETE/, :one) do
+      expect_query_with_consistency(/title/, :one) do
         data_set.where(row_keys).delete(:title)
       end
     end
@@ -648,7 +648,7 @@ describe Cequel::Metal::DataSet do
     end
 
     it 'should issue DELETE column with default consistency' do
-      expect_query_with_consistency(/DELETE/, :all) do
+      expect_query_with_consistency(/title/, :all) do
         data_set.where(row_keys).delete(:title)
       end
     end

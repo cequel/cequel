@@ -134,8 +134,10 @@ exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
     service cassandra start
   SH
 
+  minimum_cassandra_version = Gem::Version.new('2.1.1')
+
   versions = File.read(File.expand_path('../.cassandra-versions', __FILE__)).each_line
-    .map(&:strip).grep(/^2\./)
+    .map(&:strip).select { |v| Gem::Version.new(v) >= minimum_cassandra_version }
   versions.each do |version|
     config.vm.define version do |machine|
       machine.vm.provision :shell, inline: provision,

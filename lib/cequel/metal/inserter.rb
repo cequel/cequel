@@ -23,8 +23,10 @@ module Cequel
         statement = Statement.new
         consistency = options.fetch(:consistency, data_set.query_consistency)
         write_to_statement(statement, options)
-        data_set.write_with_consistency(
+        result = data_set.write_with_consistency(
           statement.cql, statement.bind_vars, consistency)
+
+        result.first['[applied]'] unless result.nil? || result.empty?
       end
 
       #

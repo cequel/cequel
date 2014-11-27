@@ -37,5 +37,5 @@ DESC
   s.add_development_dependency 'rubocop', '~> 0.19.0'
   s.add_development_dependency 'timecop', '~> 0.7'
   s.add_development_dependency 'yard', '~> 0.6'
-  s.requirements << 'Cassandra >= 1.2.0'
+  s.requirements << 'Cassandra >= 2.1.1'
 end

@@ -186,7 +186,8 @@ module Cequel
       # @see Validations#save!
       #
       def save(options = {})
-        options.assert_valid_keys(:consistency, :ttl, :timestamp, :if_not_exists)
+        options.assert_valid_keys(
+          :consistency, :ttl, :timestamp, :if_not_exists)
         if new_record? then create(options)
         else update(options)
         end
@@ -277,30 +278,23 @@ module Cequel
       def create(options = {})
         assert_keys_present!
         metal_scope
-          .insert(attributes.reject { |attr, value| value.nil? }, options)
-        loaded!
-        persisted!
+          .insert(attributes, options).tap do
+          loaded!
+          persisted!
+        end
       end
       instrument :create, data: ->(rec) { {table_name: rec.table_name} }
 
       def update(options = {})
         assert_keys_present!
-        connection.batch do |batch|
-          batch.on_complete { @updater, @deleter = nil }
-          updater.execute(options)
-          deleter.execute(options.except(:ttl))
-        end
+        updater.execute(options)
+        @updater = nil
       end
       instrument :update, data: ->(rec) { {table_name: rec.table_name} }
 
       def updater
         raise ArgumentError, "Can't get updater for new record" if new_record?
         @updater ||= Metal::Updater.new(metal_scope)
-      end
-
-      def deleter
-        raise ArgumentError, "Can't get deleter for new record" if new_record?
-        @deleter ||= Metal::Deleter.new(metal_scope)
       end
 
       private
@@ -331,13 +325,7 @@ module Cequel
       end
 
       def stage_attribute_update(name, value)
-        unless new_record?
-          if value.nil?
-            deleter.delete_columns(name)
-          else
-            updater.set(name => value)
-          end
-        end
+        updater.set(name => value) unless new_record?
       end
 
       def record_collection

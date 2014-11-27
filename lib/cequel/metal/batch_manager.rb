@@ -55,6 +55,16 @@ module Cequel
         end
       end
 
+      #
+      # @return [Boolean] true if write operations are currently being buffered
+      #   in a batch
+      #
+      # @since 2.0.0
+      #
+      def in_batch?
+        !!current_batch
+      end
+
       private
 
       attr_reader :keyspace

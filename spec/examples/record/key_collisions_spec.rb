@@ -1,0 +1,101 @@
+require File.expand_path('../spec_helper', __FILE__)
+
+describe Cequel::Record::KeyCollisions do
+  model :BlogWithDuplicateKeyOverwrite do
+    key :subdomain, :text
+    column :name, :text
+    column :description, :text
+    on_duplicate_key :overwrite
+  end
+
+  model :BlogWithDuplicateKeyError do
+    key :subdomain, :text
+    column :name, :text
+    on_duplicate_key :error
+  end
+
+  model :BlogWithDuplicateKeyIgnore do
+    key :subdomain, :text
+    column :name, :text
+    on_duplicate_key :ignore
+  end
+
+  describe 'on_duplicate_key :overwrite' do
+    let!(:blog) do
+      BlogWithDuplicateKeyOverwrite.create!(
+        subdomain: 'cassandra', name: 'Cassandra',
+        description: 'A blog about Cassandra')
+    end
+
+    before do
+      expect do
+        BlogWithDuplicateKeyOverwrite.create!(
+          subdomain: 'cassandra',
+          name: 'Cassandra Blog')
+      end.to_not raise_error
+    end
+
+    it 'should overwrite the row' do
+      expect(BlogWithDuplicateKeyOverwrite.find('cassandra').name)
+        .to eq('Cassandra Blog')
+    end
+
+    it 'should overwrite all columns in the row, specified or not' do
+      expect(BlogWithDuplicateKeyOverwrite.find('cassandra').description)
+        .to be_nil
+    end
+  end
+
+  describe 'on_duplicate_key :error' do
+    let!(:blog) do
+      BlogWithDuplicateKeyError.create!(
+        subdomain: 'cassandra', name: 'Cassandra')
+    end
+
+    it 'should raise error on duplicate key' do
+      expect do
+        BlogWithDuplicateKeyError.create!(
+          subdomain: 'cassandra',
+          name: 'Cassandra Blog')
+      end.to raise_error(Cequel::Record::DuplicateKey)
+
+      expect(BlogWithDuplicateKeyError.find('cassandra').name)
+        .to eq('Cassandra')
+    end
+
+    it 'should fail fast when run in a batch' do
+      expect do
+        cequel.batch do
+          BlogWithDuplicateKeyError.create!(subdomain: 'anything')
+        end
+      end.to raise_error(Cequel::Record::IllegalOperation)
+    end
+
+    it 'should allow overriding of key collision behavior on an instance level' do
+      cequel.batch do
+        blog = BlogWithDuplicateKeyError.new(subdomain: 'anything')
+        blog.duplicate_key_behavior = :ignore
+        blog.save!
+      end
+      expect(BlogWithDuplicateKeyError.find('anything').subdomain)
+        .to eq('anything')
+    end
+  end
+
+  describe 'on_duplicate_key :ignore' do
+    let!(:blog) do
+      BlogWithDuplicateKeyIgnore.create!(
+        subdomain: 'cassandra', name: 'Cassandra')
+    end
+
+    it 'should not raise error on duplicate key' do
+      expect do
+        BlogWithDuplicateKeyIgnore.create!(
+          subdomain: 'cassandra', name: 'Cassandra Blog')
+      end.to_not raise_error
+
+      expect(BlogWithDuplicateKeyIgnore.find('cassandra').name)
+        .to eq('Cassandra')
+    end
+  end
+end

@@ -286,7 +286,7 @@ module Cequel
       #
       def list_remove_at(column, *positions)
         options = positions.extract_options!
-        deleter { list_remove_at(column, *positions) }.execute(options)
+        updater { list_remove_at(column, *positions) }.execute(options)
       end
 
       #
@@ -309,7 +309,7 @@ module Cequel
       #
       def map_remove(column, *keys)
         options = keys.extract_options!
-        deleter { map_remove(column, *keys) }.execute(options)
+        updater { map_remove(column, *keys) }.execute(options)
       end
 
       #
@@ -398,22 +398,6 @@ module Cequel
       #     posts.where(blog_subdomain: 'cassandra', permalink: 'cequel').
       #       delete(:body)
       #
-      # @overload delete(options = {}, &block)
-      #   Construct a `DELETE` statement with multiple operations (column
-      #   deletions, collection element removals, etc.)
-      #
-      #   @param options [Options] options for persistence
-      #   @option (see Writer#initialize)
-      #   @yield DSL context for construction delete statement
-      #
-      #   @example
-      #     posts.where(blog_subdomain: 'bigdata', permalink: 'cql').delete do
-      #       delete_columns :body
-      #       list_remove_at :categories, 2
-      #     end
-      #
-      #   @see Deleter
-      #
       # @return [void]
       #
       # @note If enclosed in a Keyspace#batch block, this method will be
@@ -421,14 +405,12 @@ module Cequel
       # @see http://cassandra.apache.org/doc/cql3/CQL.html#deleteStmt
       #   CQL documentation for DELETE
       #
-      def delete(*columns, &block)
+      def delete(*columns)
         options = columns.extract_options!
-        if block
-          deleter(&block).execute(options)
-        elsif columns.empty?
-          deleter { delete_row }.execute(options)
+        if columns.empty?
+          deleter.execute(options)
         else
-          deleter { delete_columns(*columns) }.execute(options)
+          updater { delete(*columns) }.execute(options)
         end
       end
 
@@ -675,8 +657,8 @@ module Cequel
         Updater.new(self, &block)
       end
 
-      def deleter(&block)
-        Deleter.new(self, &block)
+      def deleter
+        Deleter.new(self)
       end
 
       def initialize_copy(source)
