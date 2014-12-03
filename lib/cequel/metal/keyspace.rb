@@ -211,8 +211,11 @@ module Cequel
         if defined? @client
           remove_instance_variable(:@client)
         end
-        if defined? @raw_client
-          remove_instance_variable(:@raw_client)
+        if defined? @client_without_keyspace
+          remove_instance_variable(:@client_without_keyspace)
+        end
+        if defined? @cluster
+          remove_instance_variable(:@cluster)
         end
       end
 
@@ -233,7 +236,7 @@ module Cequel
         CQL
 
         log('CQL', statement, [name]) do
-          raw_client.execute(sanitize(statement, [name])).any?
+          client_without_keyspace.execute(sanitize(statement, [name])).any?
         end
       end
 
@@ -253,9 +256,9 @@ module Cequel
         end
       end
 
-      def raw_client
+      def client_without_keyspace
         synchronize do
-          @raw_client ||= cluster.connect
+          @client_without_keyspace ||= cluster.connect
         end
       end
 
