@@ -249,7 +249,7 @@ module Cequel
 
       def cluster
         synchronize do
-          @cluster ||= Cassandra.connect(client_options)
+          @cluster ||= Cassandra.cluster(client_options)
         end
       end
 

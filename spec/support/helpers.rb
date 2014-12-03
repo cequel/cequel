@@ -98,12 +98,12 @@ module Cequel
       end
 
       def min_uuid(time = Time.now)
-        Cassandra::TimeUuid::Generator.new(0, 0).from_time(time, 0)
+        Cassandra::TimeUuid::Generator.new(0, 0).at(time, 0)
       end
 
       def max_uuid(time = Time.now)
         Cassandra::TimeUuid::Generator.new(0x3fff, 0xffffffffffff).
-          from_time(time, 999)
+          at(time, 999)
       end
 
       def cequel
@@ -136,7 +136,8 @@ module Cequel
       def expect_query_with_consistency(matcher, consistency)
         allow(cequel.client).to receive(:execute).and_call_original
         yield
-        expect(cequel.client).to have_received(:execute).with(matcher, consistency)
+        expect(cequel.client).to have_received(:execute).
+          with(matcher, hash_including(:consistency => consistency))
       end
     end
   end

@@ -17,11 +17,11 @@ module Cequel
     #
     def uuid(value = nil)
       if value.nil?
-        timeuuid_generator.next
+        timeuuid_generator.now
       elsif value.is_a?(Time)
-        timeuuid_generator.from_time(value)
+        timeuuid_generator.at(value)
       elsif value.is_a?(DateTime)
-        timeuuid_generator.from_time(Time.at(value.to_f))
+        timeuuid_generator.at(Time.at(value.to_f))
       else
         Type::Timeuuid.instance.cast(value)
       end
