@@ -628,6 +628,48 @@ describe Cequel::Record::RecordSet do
     end
   end
 
+  describe '#first_or_initialize' do
+    context 'when there are posts' do
+      let(:post) { posts.first }
+
+      before { post }
+
+      it 'returns the first post' do
+        expect_any_instance_of(described_class).to receive(:first).and_return(post)
+        expect(Post.first_or_initialize).to eq post
+      end
+    end
+
+    context 'when there are no posts' do
+      it 'returns a new post instance' do
+        expect_any_instance_of(described_class).to receive(:first).and_return(nil)
+        expect_any_instance_of(described_class).to receive(:new).and_call_original
+        expect(Post.first_or_initialize).to be_new_record
+      end
+    end
+  end
+
+  describe '#first!' do
+    context 'when there are posts' do
+      let(:post) { posts.first }
+
+      before { post }
+
+      it 'returns the first post' do
+        expect_any_instance_of(described_class).to receive(:first).and_return(post)
+        expect(Post.first!).to eq post
+      end
+    end
+
+    context 'when there are no posts' do
+      it 'raises a RecordNotFound exception with a meaningful message' do
+        expect_any_instance_of(described_class).to receive(:first).and_return(nil)
+        expect { Post['1'].first! }.to raise_error Cequel::Record::RecordNotFound,
+          "Couldn't find record with keys: blog_subdomain: 1"
+      end
+    end
+  end
+
   describe '#limit' do
     let(:records) { blogs }
 
