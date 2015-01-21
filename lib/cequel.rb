@@ -13,6 +13,7 @@ require 'cequel/type'
 require 'cequel/util'
 require 'cequel/uuids'
 require 'cequel/instrumentation'
+require 'cequel/forwardable'
 require 'cequel/record'
 
 #
