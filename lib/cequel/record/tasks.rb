@@ -26,6 +26,7 @@ namespace :cequel do
     project_root = defined?(Rails) ? Rails.root : Dir.pwd
     models_dir_path = "#{File.expand_path('app/models', project_root)}/"
     model_files = Dir.glob(File.join(models_dir_path, '**', '*.rb'))
+    model_files.reject! {|file| file =~ /^#{File.join(models_dir_path, 'concerns')}/}
     model_files.sort.each do |file|
       watch_namespaces = ["Object"]
       model_file_name = file.sub(/^#{Regexp.escape(models_dir_path)}/, "")
