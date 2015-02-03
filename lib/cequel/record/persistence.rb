@@ -11,14 +11,14 @@ module Cequel
     #
     module Persistence
       extend ActiveSupport::Concern
-      extend Forwardable
+      extend Util::Forwardable
       include Instrumentation
 
       #
       # Class-level functionality for loading and saving records
       #
       module ClassMethods
-        extend Forwardable
+        extend Util::Forwardable
 
         #
         # Initialize a new record instance, assign attributes, and immediately

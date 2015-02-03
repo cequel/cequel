@@ -7,7 +7,7 @@ module Cequel
     # @api private
     #
     class RequestLogger
-      extend Forwardable
+      extend Util::Forwardable
       # @return [::Logger] An instance of Logger that responds to methods for
       #   standard severity levels
       attr_accessor :logger

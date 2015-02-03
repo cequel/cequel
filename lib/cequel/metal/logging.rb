@@ -5,7 +5,7 @@ module Cequel
     # Methods to handle logging for {Keyspace} instances
     #
     module Logging
-      extend Forwardable
+      extend Util::Forwardable
       def_delegators :request_logger, :logger, :logger=, :slowlog_threshold,
                      :slowlog_threshold=
 

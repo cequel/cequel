@@ -78,7 +78,7 @@ module Cequel
   #
   module Record
     extend ActiveSupport::Concern
-    extend Forwardable
+    extend Util::Forwardable
 
     included do
       include Properties

@@ -11,7 +11,7 @@ module Cequel
     # @api private
     #
     class Writer
-      extend Forwardable
+      extend Util::Forwardable
 
       #
       # @param data_set [DataSet] data set to write to

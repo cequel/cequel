@@ -7,7 +7,7 @@ module Cequel
     # @see Keyspace#create_table
     #
     class CreateTableDSL < BasicObject
-      extend ::Forwardable
+      extend ::Cequel::Util::Forwardable
       #
       # Evaluate `block` in the context of this DSL, and apply directives to
       # `table`

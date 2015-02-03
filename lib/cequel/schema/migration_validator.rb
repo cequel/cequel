@@ -8,7 +8,7 @@ module Cequel
     # @api private
     #
     class MigrationValidator
-      extend Forwardable
+      extend Util::Forwardable
       #
       # Check for various impossible schema changes and raise if any are found
       #
