@@ -1,3 +1,9 @@
+## 1.5.1
+
+* Don't overwrite ActiveSupport's `Module#forwardable` (fixes Rails 4.2
+  incompatibility)
+* Don't interact with updater/deleter if new record
+
 ## 1.5.0
 
 * Support ActiveSupport instrumentation of Record create, update, destroy
