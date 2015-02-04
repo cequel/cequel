@@ -16,7 +16,7 @@ module Cequel
     #
     module Schema
       extend ActiveSupport::Concern
-      extend Forwardable
+      extend Util::Forwardable
 
       included do
         class_attribute :table_name, instance_writer: false
@@ -33,7 +33,7 @@ module Cequel
         #   @return [Symbol] name of the CQL table that backs this record class
         #
 
-        extend Forwardable
+        extend Util::Forwardable
 
         #
         # @!attribute [r] columns

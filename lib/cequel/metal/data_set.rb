@@ -21,7 +21,7 @@ module Cequel
     #
     class DataSet
       include Enumerable
-      extend Forwardable
+      extend Util::Forwardable
 
       # @return [Keyspace] keyspace that this data set's table resides in
       attr_reader :keyspace

@@ -9,7 +9,7 @@ module Cequel
     # instance.
     #
     class Keyspace
-      extend Forwardable
+      extend Util::Forwardable
       include Logging
       include MonitorMixin
 

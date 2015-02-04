@@ -9,7 +9,7 @@ module Cequel
     #   {Cequel::Metal::Keyspace} in a future version of Cequel
     #
     class Keyspace
-      extend Forwardable
+      extend Util::Forwardable
 
       #
       # @param keyspace [Keyspace] the keyspace whose schema this object

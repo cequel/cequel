@@ -12,7 +12,7 @@ module Cequel
     #
     class AssociationCollection < DelegateClass(RecordSet)
       include Enumerable
-      extend Forwardable
+      extend Util::Forwardable
 
       #
       # @yield [Record]

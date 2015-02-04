@@ -53,7 +53,7 @@ module Cequel
     #
     module Collection
       extend ActiveSupport::Concern
-      extend Forwardable
+      extend Util::Forwardable
 
       #
       # @!method loaded?
@@ -425,7 +425,7 @@ module Cequel
     #
     class Map < DelegateClass(::Hash)
       include Collection
-      extend Forwardable
+      extend Util::Forwardable
 
       # These methods involve mutation that cannot be expressed as a CQL
       # operation, so are not implemented.

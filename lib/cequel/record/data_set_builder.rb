@@ -8,7 +8,7 @@ module Cequel
     # @api private
     #
     class DataSetBuilder
-      extend Forwardable
+      extend Util::Forwardable
 
       #
       # Build a data set for the given record set

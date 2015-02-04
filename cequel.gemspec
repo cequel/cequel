@@ -31,6 +31,7 @@ DESC
   s.add_runtime_dependency 'cql-rb', '>= 1.2', '< 3.0'
   s.add_development_dependency 'appraisal', '~> 1.0'
   s.add_development_dependency 'wwtd', '~> 0.5'
+  s.add_development_dependency 'pry', '~> 0.10'
   s.add_development_dependency 'rake', '~> 10.1'
   s.add_development_dependency 'rspec', '~> 3.1'
   s.add_development_dependency 'rspec-its', '~> 1.0'
