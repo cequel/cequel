@@ -3,7 +3,8 @@ module Cequel
   module SpecSupport
     module Macros
       def model(class_name, options = {}, &block)
-        return if RSpec.configuration.filter_manager.exclude?(self)
+        return if RSpec.configuration.filter_manager.exclusions
+          .include_example?(self)
         setup_models = !self.metadata.key?(:models)
         self.metadata[:models] ||= {}
 
