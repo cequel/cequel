@@ -53,9 +53,14 @@ module Cequel
     module Forwardable
       include ::Forwardable
 
-      def delegate(*args, &block)
-        Module.instance_method(:delegate).bind(self).call(*args, &block)
+      def delegate_with_argument_check(*args, &block)
+        if args.size == 1
+          delegate_without_argument_check(args.first)
+        else
+          Module.instance_method(:delegate).bind(self).call(*args, &block)
+        end
       end
+      alias_method_chain :delegate, :argument_check
     end
   end
 end
