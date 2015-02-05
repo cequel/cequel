@@ -54,7 +54,7 @@ module Cequel
       include ::Forwardable
 
       def delegate(*args, &block)
-        return super if args.size == 1
+        return super if args.one?
         Module.instance_method(:delegate).bind(self).call(*args, &block)
       end
     end
