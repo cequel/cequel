@@ -1,7 +1,11 @@
 # -*- encoding : utf-8 -*-
 module Cequel
+  #
+  # Utility methods
+  #
   module Util
     module_function
+
     #
     # @api private
     #
