@@ -3,7 +3,7 @@ require_relative 'spec_helper'
 
 describe Cequel::Uuids do
   describe '#uuid' do
-    specify { Cequel.uuid.is_a?(Cql::TimeUuid) }
+    specify { Cequel.uuid.is_a?(Cassandra::TimeUuid) }
     specify { Cequel.uuid != Cequel.uuid }
     specify { time = Time.now; Cequel.uuid(time).to_time == time }
     specify { time = DateTime.now; Cequel.uuid(time).to_time == time.to_time }

@@ -17,11 +17,11 @@ module Cequel
     #
     def uuid(value = nil)
       if value.nil?
-        timeuuid_generator.next
+        timeuuid_generator.now
       elsif value.is_a?(Time)
-        timeuuid_generator.from_time(value)
+        timeuuid_generator.at(value)
       elsif value.is_a?(DateTime)
-        timeuuid_generator.from_time(Time.at(value.to_f))
+        timeuuid_generator.at(Time.at(value.to_f))
       else
         Type::Timeuuid.instance.cast(value)
       end
@@ -34,13 +34,13 @@ module Cequel
     # @return [Boolean] true if the object is recognized by Cequel as a UUID
     #
     def uuid?(object)
-      object.is_a?(Cql::Uuid)
+      object.is_a?(Cassandra::Uuid)
     end
 
     private
 
     def timeuuid_generator
-      @timeuuid_generator ||= Cql::TimeUuid::Generator.new
+      @timeuuid_generator ||= Cassandra::TimeUuid::Generator.new
     end
   end
 end
