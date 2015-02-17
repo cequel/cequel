@@ -50,7 +50,16 @@ end
 desc 'Run the specs'
 RSpec::Core::RakeTask.new(:test) do |t|
   t.pattern = './spec/examples/**/*_spec.rb'
-  t.rspec_opts = '-b'
+  rspec_opts = '--backtrace'
+  version = File.basename(File.dirname(RbConfig::CONFIG['bindir']))
+  gemfile = ENV.fetch('BUNDLE_GEMFILE', 'Gemfile')
+  log_path = File.expand_path("../spec/log/#{Time.now.to_i}-#{version}-#{File.basename(gemfile, '.gemfile')}", __FILE__)
+  FileUtils.mkdir_p(File.dirname(log_path))
+  File.open(log_path, 'w') do |f|
+    f.puts "RBENV_VERSION=#{version} BUNDLE_GEMFILE=#{gemfile} bundle exec rake test"
+  end
+  rspec_opts << " --out='#{log_path}' --format=progress"
+  t.rspec_opts = rspec_opts
 end
 
 desc 'Check style with Rubocop'
