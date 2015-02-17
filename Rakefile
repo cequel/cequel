@@ -84,16 +84,15 @@ namespace :test do
     build = travis.builds.find { |build| build.commit.sha == current_commit }
     if build.nil?
       puts "Could not find build for #{current_commit}; running tests locally"
+      abort unless system('bundle', 'exec', 'wwtd', '--parallel')
     elsif !build.finished?
       puts "Build for #{current_commit} is not finished; running tests locally"
+      abort unless system('bundle', 'exec', 'wwtd', '--parallel')
     elsif build.green?
       puts "Travis build for #{current_commit} is green; skipping local tests"
-      break
     else
       abort "Travis build for #{current_commit} failed; canceling release"
     end
-
-    abort unless system('bundle', 'exec', 'wwtd', '--parallel')
   end
 end
 
