@@ -3,6 +3,7 @@ require 'bundler/setup'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
 require 'wwtd/tasks'
+require 'travis'
 require File.expand_path('../lib/cequel/version', __FILE__)
 
 RUBY_VERSIONS = YAML.load_file(File.expand_path('../.travis.yml', __FILE__))['rvm']
@@ -78,6 +79,20 @@ namespace :test do
   end
 
   task :all do
+    travis = Travis::Repository.find('cequel/cequel')
+    current_commit = `git rev-parse HEAD`.chomp
+    build = travis.builds.find { |build| build.commit.sha == current_commit }
+    if build.nil?
+      puts "Could not find build for #{current_commit}; running tests locally"
+    elsif !build.finished?
+      puts "Build for #{current_commit} is not finished; running tests locally"
+    elsif build.green?
+      puts "Travis build for #{current_commit} is green; skipping local tests"
+      break
+    else
+      abort "Travis build for #{current_commit} failed; canceling release"
+    end
+
     abort unless system('bundle', 'exec', 'wwtd', '--parallel')
   end
 end
