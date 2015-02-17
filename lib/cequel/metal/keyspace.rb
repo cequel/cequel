@@ -272,9 +272,9 @@ module Cequel
       def extract_hosts_and_port(configuration)
         hosts, ports = [], Set[]
         ports << configuration[:port] if configuration.key?(:port)
-        Array.wrap(configuration.fetch(
-          :host, configuration.fetch(:hosts, '127.0.0.1'))).each do |host_port|
-
+        host_or_hosts =
+          configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1'))
+        Array.wrap(host_or_hosts).each do |host_port|
           host, port = host_port.split(':')
           hosts << host
           if port

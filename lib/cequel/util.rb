@@ -1,6 +1,7 @@
 # -*- encoding : utf-8 -*-
 module Cequel
   module Util
+    module_function
     #
     # @api private
     #
@@ -39,6 +40,13 @@ module Cequel
         hattr_reader(hash, *attributes)
         hattr_writer(hash, *attributes)
       end
+    end
+
+    #
+    # Make a deep copy of the object
+    #
+    def deep_copy(obj)
+      Marshal.load(Marshal.dump(obj))
     end
 
     #

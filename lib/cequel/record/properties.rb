@@ -370,8 +370,8 @@ module Cequel
       def initialize_new_record(attributes = {})
         dynamic_defaults = default_attributes
           .select { |name, value| value.is_a?(Proc) }
-        new_attributes = Marshal.load(Marshal.dump(
-          default_attributes.except(*dynamic_defaults.keys)))
+        new_attributes =
+          Util.deep_copy(default_attributes.except(*dynamic_defaults.keys))
         dynamic_defaults.each { |name, p| new_attributes[name] = p.call }
         init_attributes(new_attributes)
 
