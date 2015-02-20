@@ -42,7 +42,7 @@ namespace :cequel do
       new_constants.each do |class_name|
         begin
           clazz = class_name.constantize
-        rescue NameError, RuntimeError # rubocop:disable HandleExceptions
+        rescue LoadError, NameError, RuntimeError # rubocop:disable HandleExceptions
         else
           if clazz.is_a?(Class)
             if clazz.ancestors.include?(Cequel::Record) &&
