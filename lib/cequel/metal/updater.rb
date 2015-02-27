@@ -155,7 +155,7 @@ module Cequel
         all_statements, all_bind_vars = statements.dup, bind_vars.dup
         column_updates.each_pair do |column, value|
           prepare_upsert_value(value) do |binding, *values|
-            all_statements << "#{column} = #{binding}"
+            all_statements << "\"#{column}\" = #{binding}"
             all_bind_vars.concat(values)
           end
         end

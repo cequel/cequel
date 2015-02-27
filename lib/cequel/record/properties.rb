@@ -200,15 +200,15 @@ module Cequel
         end
 
         def def_reader(name)
-          module_eval <<-RUBY, __FILE__, __LINE__+1
-            def #{name}; read_attribute(#{name.inspect}); end
-          RUBY
+          define_method(name) do
+            read_attribute(name)
+          end
         end
 
         def def_writer(name)
-          module_eval <<-RUBY, __FILE__, __LINE__+1
-            def #{name}=(value); write_attribute(#{name.inspect}, value); end
-          RUBY
+          define_method("#{name}=") do |value|
+            write_attribute(name, value)
+          end
         end
 
         def def_collection_accessors(name, collection_proxy_class)
@@ -217,20 +217,16 @@ module Cequel
         end
 
         def def_collection_reader(name, collection_proxy_class)
-          module_eval <<-RUBY, __FILE__, __LINE__+1
-            def #{name}
-              proxy_collection(#{name.inspect}, #{collection_proxy_class})
-            end
-          RUBY
+          define_method(name) do
+            proxy_collection(name, collection_proxy_class)
+          end
         end
 
         def def_collection_writer(name)
-          module_eval <<-RUBY, __FILE__, __LINE__+1
-            def #{name}=(value)
-              reset_collection_proxy(#{name.inspect})
-              write_attribute(#{name.inspect}, value)
-            end
-          RUBY
+          define_method("#{name}=") do |value|
+            reset_collection_proxy(name)
+            write_attribute(name, value)
+          end
         end
 
         def set_attribute_default(name, default)

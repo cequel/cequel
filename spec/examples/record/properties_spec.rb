@@ -7,6 +7,7 @@ describe Cequel::Record::Properties do
     model :Post do
       key :permalink, :text
       column :title, :text
+      column :"column.with.periods", :text
       list :tags, :text
       set :categories, :text
       map :shares, :text, :int
@@ -32,6 +33,10 @@ describe Cequel::Record::Properties do
 
     it 'should provide accessor for data column' do
       expect(Post.new { |post| post.title = 'Big Data' }.title).to eq('Big Data')
+    end
+
+    it 'should provide accessor for columns with periods' do
+      expect(Post.new { |post| post.send("column.with.periods=", 'Small Data') }.send("column.with.periods")).to eq('Small Data')
     end
 
     it 'should cast data column to correct value' do
