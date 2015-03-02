@@ -38,12 +38,12 @@ module Cequel
         case @value
         when Array
           if @value.length == 1
-            ["#{@column} = ?", @value.first]
+            [%("#{@column}" = ?), @value.first]
           else
-            ["#{@column} IN (?)", @value]
+            [%("#{@column}" IN (?)), @value]
           end
         else
-          ["#{@column} = ?", @value]
+          [%("#{@column}" = ?), @value]
         end
       end
     end

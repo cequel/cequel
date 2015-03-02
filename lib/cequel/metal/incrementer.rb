@@ -18,7 +18,7 @@ module Cequel
       def increment(data)
         data.each_pair do |column_name, delta|
           operator = delta < 0 ? '-' : '+'
-          statements << "#{column_name} = #{column_name} #{operator} ?"
+          statements << %("#{column_name}" = "#{column_name}" #{operator} ?)
           bind_vars << delta.abs
         end
       end

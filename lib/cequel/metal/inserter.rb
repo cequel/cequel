@@ -60,7 +60,7 @@ module Cequel
       def write_to_statement(statement, options)
         statement.append("INSERT INTO #{table_name}")
         statement.append(
-          " (#{column_names.map{|c| "\"#{c}\""}.join(', ')}) VALUES (#{statements.join(', ')}) ",
+          " (#{column_names.map{|c| %("#{c}")}.join(', ')}) VALUES (#{statements.join(', ')}) ",
           *bind_vars)
         statement.append(generate_upsert_options(options))
       end

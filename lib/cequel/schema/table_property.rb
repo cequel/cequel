@@ -41,7 +41,7 @@ module Cequel
       #   TABLE` statement
       #
       def to_cql
-        "\"#{@name}\" = #{value_cql}"
+        %("#{@name}" = #{value_cql})
       end
 
       protected

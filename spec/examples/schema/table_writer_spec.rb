@@ -221,6 +221,58 @@ describe Cequel::Schema::TableWriter do
       end
     end
 
+    describe 'with a table that has colums with special characters' do
+      before do
+        cequel.schema.create_table(:posts) do
+          partition_key :"Partition.Key", :ascii
+          key :"The.Key", :timestamp
+          column :"Some.Column", :text, index: "some_index"
+
+          list :"Some.List", :blob
+          set :"Some.Set", :text
+          map :"Some.Map", :timestamp, :ascii
+        end
+      end
+
+      it 'should create all partition key components' do
+        expect(table.partition_key_columns.map(&:name)).
+          to eq([:"Partition.Key"])
+      end
+
+      it 'should set key validators' do
+        expect(table.partition_key_columns.map(&:type)).
+          to eq([Cequel::Type[:ascii]])
+      end
+
+      it 'should create non-partition key components' do
+        expect(table.clustering_columns.map(&:name)).to eq([:"The.Key"])
+      end
+
+      it 'should set type for non-partition key components' do
+        expect(table.clustering_columns.map(&:type)).to eq([Cequel::Type[:timestamp]])
+      end
+
+      it 'should set non-key columns' do
+        expect(table.columns.find { |column| column.name == :"Some.Column" }.type).
+          to eq(Cequel::Type[:text])
+      end
+
+      it "should set the index" do
+        expect(table.data_column(:"Some.Column").index_name).to eq(:some_index)
+      end
+
+      it 'should create list' do
+        expect(table.data_column(:"Some.List")).to be_a(Cequel::Schema::List)
+      end
+
+      it 'should create set' do
+        expect(table.data_column(:"Some.Set")).to be_a(Cequel::Schema::Set)
+      end
+
+      it 'should create map' do
+        expect(table.data_column(:"Some.Map")).to be_a(Cequel::Schema::Map)
+      end
+    end
   end
 
 end

@@ -44,7 +44,7 @@ module Cequel
       #
       def list_remove_at(column, *positions)
         statements
-          .concat(positions.map { |position| "#{column}[#{position}]" })
+          .concat(positions.map { |position| %("#{column}"[#{position}]) })
       end
 
       #
@@ -55,7 +55,7 @@ module Cequel
       # @return [void]
       #
       def map_remove(column, *keys)
-        statements.concat(keys.length.times.map { "#{column}[?]" })
+        statements.concat(keys.length.times.map { %("#{column}"[?]) })
         bind_vars.concat(keys)
       end
 

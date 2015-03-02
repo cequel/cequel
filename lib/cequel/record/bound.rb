@@ -107,7 +107,7 @@ module Cequel
       protected
 
       def to_cql
-        "TOKEN(#{column.name}) #{operator} TOKEN(?)"
+        %(TOKEN("#{column.name}") #{operator} TOKEN(?))
       end
     end
 
@@ -121,7 +121,7 @@ module Cequel
       protected
 
       def to_cql
-        "\"#{column.name}\" #{operator} ?"
+        %("#{column.name}" #{operator} ?)
       end
     end
 
@@ -135,7 +135,7 @@ module Cequel
       protected
 
       def to_cql
-        "\"#{column.name}\" #{operator} #{function}(?)"
+        %("#{column.name}" #{operator} #{function}(?))
       end
 
       def operator

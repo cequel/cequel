@@ -257,9 +257,13 @@ describe Cequel::Record::Persistence do
       end
 
       it 'should destroy with specified timestamp' do
-        blog = Blog.create(subdomain: 'big-data', name: 'Big Data')
-        blog.destroy(timestamp: 1.minute.ago)
-        expect(cequel[Blog.table_name].where(subdomain: 'big-data').first).to be
+        blog = Blog.new(subdomain: 'big-data2', name: 'Big Data', description: "something")
+        now = Time.now
+        blog.save!(timestamp: now)
+        blog.destroy(timestamp: 10.minute.ago)
+        expect(cequel[Blog.table_name].where(subdomain: 'big-data2').first).to be
+        blog.destroy(timestamp: now)
+        expect(cequel[Blog.table_name].where(subdomain: 'big-data2').first).to_not be
       end
     end
   end

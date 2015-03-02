@@ -605,7 +605,7 @@ module Cequel
       # @return [String] CQL `SELECT` statement encoding this data set's scope.
       #
       def cql
-        statement = Statement.new
+        Statement.new
           .append(select_cql)
           .append(" FROM #{table_name}")
           .append(*row_specifications_cql)
@@ -689,9 +689,9 @@ module Cequel
       end
 
       def select_cql
-        all_columns = select_columns +
-          ttl_columns.map { |column| "TTL(#{column})" } +
-          writetime_columns.map { |column| "WRITETIME(#{column})" }
+        all_columns = select_columns.map{|c| %("#{c}")} +
+          ttl_columns.map { |column| %(TTL("#{column}")) } +
+          writetime_columns.map { |column| %(WRITETIME("#{column}")) }
 
         if all_columns.any?
           "SELECT #{all_columns.join(',')}"
@@ -707,7 +707,7 @@ module Cequel
       def sort_order_cql
         if sort_order.any?
           order = sort_order
-            .map { |column, direction| "#{column} #{direction.to_s.upcase}" }
+            .map { |column, direction| %("#{column}" #{direction.to_s.upcase}) }
             .join(', ')
           " ORDER BY #{order}"
         end
