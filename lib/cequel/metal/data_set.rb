@@ -689,7 +689,7 @@ module Cequel
       end
 
       def select_cql
-        all_columns = select_columns.map{|c| %("#{c}")} +
+        all_columns = select_columns.map { |c| %("#{c}") } +
           ttl_columns.map { |column| %(TTL("#{column}")) } +
           writetime_columns.map { |column| %(WRITETIME("#{column}")) }
 
