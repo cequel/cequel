@@ -274,4 +274,31 @@ describe Cequel::Record::Finders do
       end
     end
   end
+
+  context "when defining methods" do
+    it "only defines a finder once per key" do
+      clazz = Class.new do
+        include Cequel::Record
+        self.table_name = name.to_s.tableize + "_" + SecureRandom.hex(4)
+      end
+
+      methods_called = []
+      # calling and_call_original doesn't appear to work with 
+      # define_method and/or singleton_class. Hence the method capture
+      original_define_method = clazz.singleton_class.method(:define_method)
+      expect(clazz.singleton_class).to receive(:define_method) do |method_name, &block|
+        methods_called << method_name
+        clazz.singleton_class.instance_eval do
+          original_define_method.call(method_name, &block)
+        end
+      end.at_least(:once)
+
+      clazz.class_eval do
+        key :first_key, :text
+        key :second_key, :text
+      end
+
+      expect(methods_called).to match_array methods_called.uniq
+    end
+  end
 end
