@@ -31,7 +31,7 @@ module Cequel
       # @return [void]
       #
       def delete_columns(*columns)
-        statements.concat(columns)
+        statements.concat(columns.map { |c| %("#{c}") })
       end
 
       #

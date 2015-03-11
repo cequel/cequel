@@ -809,6 +809,16 @@ describe Cequel::Metal::DataSet do
       )
     end
 
+    it "should delete a field" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        delete(:"Title.column", :"Body.column")
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Title.column"]).to be nil
+      expect(row[:"Body.column"]).to be nil
+    end
+
     it "should delete from list" do
       cequel[:legacy_posts].insert(post_fields)
       cequel[:legacy_posts].
