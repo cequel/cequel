@@ -35,14 +35,17 @@ describe Cequel::Metal::DataSet do
   let(:row_keys) { {blog_subdomain: 'cassandra', permalink: 'big-data'} }
 
   describe '#insert' do
+    let(:now) { Time.at(Time.now.to_i) }
+    let(:one_minute_ago) { Time.at(Time.now.to_i - 60) }
+
     let(:row) do
       row_keys.merge(
         title: 'Fun times',
         categories: ['Fun', 'Profit'],
         tags: Set['cassandra', 'big-data'],
         trackbacks: {
-          Time.at(Time.now.to_i) => 'www.google.com',
-          Time.at(Time.now.to_i - 60) => 'www.yahoo.com'
+          now => 'www.google.com',
+          one_minute_ago => 'www.yahoo.com'
         }
       )
     end
@@ -743,7 +746,7 @@ describe Cequel::Metal::DataSet do
       cequel.schema.drop_table(:legacy_post_activity)
     end
 
-    let(:now) { Time.now }
+    let(:now) { Time.at(Time.now.to_i) }
     let(:epoch) { Time.at(0) }
 
     let(:row_keys) do
