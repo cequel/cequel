@@ -80,7 +80,6 @@ module Cequel
         method_suffix = finder_method_suffix(column_names)
         method_name = "#{method_prefix}_#{method_suffix}"
 
-        return if self.respond_to?(method_name)
         singleton_class.send(:define_method, method_name) do |*args|
           query = Hash[column_names.zip(args)]
           scope = where(query)
