@@ -29,8 +29,7 @@ describe Cequel::Schema::Keyspace do
     end
 
     let(:schema_config) do
-      connection.client.use('system')
-      connection.client.execute("SELECT * FROM schema_keyspaces WHERE keyspace_name = '#{keyspace_name}'").first
+      connection.client.execute("SELECT * FROM system.schema_keyspaces WHERE keyspace_name = '#{keyspace_name}'").first
     end
 
     context 'with default options' do

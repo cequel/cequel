@@ -5,7 +5,7 @@ module Cequel
     # DSL for describing a series of schema modification statements
     #
     class UpdateTableDSL < BasicObject
-      extend ::Forwardable
+      extend ::Cequel::Util::Forwardable
       #
       # Describe a series of schema modifications and build a {TableUpdater}
       # to encapsulate them

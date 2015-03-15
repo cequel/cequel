@@ -513,15 +513,16 @@ the columns that are given.
 
 ### Rails ###
 
+* 4.2
+* 4.1
 * 4.0
 * 3.2
-* 3.1
 
 ### Ruby ###
 
-* Ruby 2.1, 2.0, 1.9.3
+* Ruby 2.2, 2.1, 2.0, 1.9.3
 * JRuby 1.7
-* Rubinius 2.2
+* Rubinius 2.5
 
 ### Cassandra ###
 

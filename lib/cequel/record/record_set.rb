@@ -100,7 +100,7 @@ module Cequel
     # @since 1.0.0
     #
     class RecordSet < SimpleDelegator
-      extend Forwardable
+      extend Util::Forwardable
       extend Cequel::Util::HashAccessors
       include Enumerable
       include BulkWrites

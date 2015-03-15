@@ -9,7 +9,7 @@ module Cequel
     #   {Cequel::Metal::Keyspace} in a future version of Cequel
     #
     class Keyspace
-      extend Forwardable
+      extend Util::Forwardable
 
       #
       # @param keyspace [Keyspace] the keyspace whose schema this object
@@ -88,7 +88,22 @@ module Cequel
       #   CQL3 DROP KEYSPACE documentation
       #
       def drop!
-        keyspace.execute("DROP KEYSPACE #{keyspace.name}")
+        keyspace.execute("DROP KEYSPACE #{keyspace.name}").tap do
+
+          # If you execute a DROP KEYSPACE statement on a Cassandra::Session
+          # with keyspace set to the one being dropped, then it will set
+          # its keyspace to nil after the statement finishes. E.g.
+          #   session.keyspace # => "cequel_test"
+          #   session.execute("DROP KEYSPACE cequel_test")
+          #   session.keyspace # => nil
+          # This causes problems in the specs where we drop the test keyspace
+          # and recreate it. Cequel::Record.connection.client's keyspace will
+          # be set to nil after dropping the keyspace, but after creating it
+          # again, it will still be set to nil. Easy fix is to just call
+          # clear_active_connections! after dropping any keyspace.
+
+          keyspace.clear_active_connections!
+        end
       end
 
       # @return [Boolean] true if the keyspace exists

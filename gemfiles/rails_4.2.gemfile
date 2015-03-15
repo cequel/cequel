@@ -5,7 +5,7 @@ source "https://rubygems.org"
 gem "racc", "~> 1.4", :platforms => :rbx
 gem "rubysl", "~> 2.0", :platforms => :rbx
 gem "psych", "~> 2.0", :platforms => :rbx
-gem "activemodel", "~> 4.1.0"
+gem "activemodel", "~> 4.2.0"
 
 group :debug do
   gem "debugger", "~> 1.6", :platforms => :mri_19

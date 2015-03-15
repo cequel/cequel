@@ -194,7 +194,7 @@ describe Cequel::Schema::TableReader do
           PRIMARY KEY (blog_subdomain, permalink)
         )
       CQL
-      cequel.execute('CREATE INDEX ON posts (author_id)')
+      cequel.execute('CREATE INDEX posts_author_id_idx ON posts (author_id)')
     end
 
     it 'should read types of scalar data columns' do

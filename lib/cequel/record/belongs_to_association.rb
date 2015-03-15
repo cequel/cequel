@@ -9,7 +9,7 @@ module Cequel
     # @since 1.0.0
     #
     class BelongsToAssociation
-      extend Forwardable
+      extend Util::Forwardable
 
       # @return [Class] child class that declared `belongs_to`
       attr_reader :owner_class

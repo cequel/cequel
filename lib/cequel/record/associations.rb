@@ -65,7 +65,7 @@ module Cequel
       # @see Associations
       #
       module ClassMethods
-        include Forwardable
+        include Util::Forwardable
 
         # @!attribute parent_association
         #   @return [BelongsToAssociation] association declared by

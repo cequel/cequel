@@ -1,3 +1,11 @@
+## 1.6.0
+
+* Replace cql-rb with cassandra-driver
+* Don't overwrite ActiveSupport's `Module#forwardable` (fixes Rails 4.2
+  incompatibility)
+* Don't interact with updater/deleter if new record
+* Drop support for Rails 3.1
+
 ## 1.5.0
 
 * Support ActiveSupport instrumentation of Record create, update, destroy

@@ -9,7 +9,7 @@ module Cequel
     # instance.
     #
     class Keyspace
-      extend Forwardable
+      extend Util::Forwardable
       include Logging
       include MonitorMixin
 
@@ -154,9 +154,7 @@ module Cequel
       #
       def client
         synchronize do
-          @client ||= raw_client.tap do |client|
-            client.use(name) if name
-          end
+          @client ||= cluster.connect(name)
         end
       end
 
@@ -193,8 +191,9 @@ module Cequel
         log('CQL', statement, *bind_vars) do
           begin
             client.execute(sanitize(statement, bind_vars),
-                           consistency || default_consistency)
-          rescue Cql::NotConnectedError, Ione::Io::ConnectionError
+                           consistency: consistency || default_consistency)
+          rescue Cassandra::Errors::NoHostsAvailable,
+                 Ione::Io::ConnectionError => e
             clear_active_connections!
             raise if retries == 0
             retries -= 1
@@ -213,8 +212,11 @@ module Cequel
         if defined? @client
           remove_instance_variable(:@client)
         end
-        if defined? @raw_client
-          remove_instance_variable(:@raw_client)
+        if defined? @client_without_keyspace
+          remove_instance_variable(:@client_without_keyspace)
+        end
+        if defined? @cluster
+          remove_instance_variable(:@cluster)
         end
       end
 
@@ -235,7 +237,7 @@ module Cequel
         CQL
 
         log('CQL', statement, [name]) do
-          raw_client.execute(sanitize(statement, [name])).any?
+          client_without_keyspace.execute(sanitize(statement, [name])).any?
         end
       end
 
@@ -249,15 +251,21 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
-      def raw_client
+      def cluster
         synchronize do
-          @raw_client ||= Cql::Client.connect(client_options)
+          @cluster ||= Cassandra.cluster(client_options)
+        end
+      end
+
+      def client_without_keyspace
+        synchronize do
+          @client_without_keyspace ||= cluster.connect
         end
       end
 
       def client_options
         {hosts: hosts, port: port}.tap do |options|
-          options[:credentials] = credentials if credentials
+          options.merge!(credentials) if credentials
         end
       end
 
@@ -272,9 +280,9 @@ module Cequel
       def extract_hosts_and_port(configuration)
         hosts, ports = [], Set[]
         ports << configuration[:port] if configuration.key?(:port)
-        Array.wrap(configuration.fetch(
-          :host, configuration.fetch(:hosts, '127.0.0.1'))).each do |host_port|
-
+        host_or_hosts =
+          configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1'))
+        Array.wrap(host_or_hosts).each do |host_port|
           host, port = host_port.split(':')
           hosts << host
           if port

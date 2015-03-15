@@ -2,10 +2,20 @@
 
 source "https://rubygems.org"
 
-gem "racc", "~> 1.4", :platforms=>:rbx
-gem "rubysl", "~> 2.0", :platforms=>:rbx
-gem "psych", "~> 2.0", :platforms=>:rbx
+gem "racc", "~> 1.4", :platforms => :rbx
+gem "rubysl", "~> 2.0", :platforms => :rbx
+gem "psych", "~> 2.0", :platforms => :rbx
 gem "activemodel", "~> 3.2.0"
 gem "tzinfo", "~> 0.3"
 
-gemspec :path=>"../"
+group :debug do
+  gem "debugger", "~> 1.6", :platforms => :mri_19
+  gem "byebug", "~> 2.7", :platforms => [:mri_20, :mri_21]
+  gem "pry", "~> 0.9"
+end
+
+group :development do
+  gem "rubocop", :require => nil
+end
+
+gemspec :path => "../"

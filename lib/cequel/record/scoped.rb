@@ -14,7 +14,7 @@ module Cequel
       # Scoping-related methods for {Record} classes
       #
       module ClassMethods
-        extend Forwardable
+        extend Util::Forwardable
 
         def_delegators :current_scope,
                        *(RecordSet.public_instance_methods(false) +

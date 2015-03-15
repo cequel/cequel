@@ -12,7 +12,7 @@ module Cequel
     # @since 1.0.0
     #
     class LazyRecordCollection < DelegateClass(Array)
-      extend Forwardable
+      extend Util::Forwardable
       include BulkWrites
       #
       # @!method table

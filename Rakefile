@@ -3,6 +3,7 @@ require 'bundler/setup'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
 require 'wwtd/tasks'
+require 'travis'
 require File.expand_path('../lib/cequel/version', __FILE__)
 
 RUBY_VERSIONS = YAML.load_file(File.expand_path('../.travis.yml', __FILE__))['rvm']
@@ -50,11 +51,20 @@ end
 desc 'Run the specs'
 RSpec::Core::RakeTask.new(:test) do |t|
   t.pattern = './spec/examples/**/*_spec.rb'
-  t.rspec_opts = '-b'
+  rspec_opts = '--backtrace'
+  version = File.basename(File.dirname(RbConfig::CONFIG['bindir']))
+  gemfile = ENV.fetch('BUNDLE_GEMFILE', 'Gemfile')
+  log_path = File.expand_path("../spec/log/#{Time.now.to_i}-#{version}-#{File.basename(gemfile, '.gemfile')}", __FILE__)
+  FileUtils.mkdir_p(File.dirname(log_path))
+  File.open(log_path, 'w') do |f|
+    f.puts "RBENV_VERSION=#{version} BUNDLE_GEMFILE=#{gemfile} bundle exec rake test"
+  end
+  rspec_opts << " --out='#{log_path}' --format=progress"
+  t.rspec_opts = rspec_opts
 end
 
 desc 'Check style with Rubocop'
-Rubocop::RakeTask.new(:rubocop) do |task|
+RuboCop::RakeTask.new(:rubocop) do |task|
   task.patterns = ['lib/**/*.rb']
   task.formatters = ['files']
   task.fail_on_error = true
@@ -69,7 +79,20 @@ namespace :test do
   end
 
   task :all do
-    abort unless system('bundle', 'exec', 'wwtd', '--parallel')
+    travis = Travis::Repository.find('cequel/cequel')
+    current_commit = `git rev-parse HEAD`.chomp
+    build = travis.builds.find { |build| build.commit.sha == current_commit }
+    if build.nil?
+      puts "Could not find build for #{current_commit}; running tests locally"
+      abort unless system('bundle', 'exec', 'wwtd', '--parallel')
+    elsif !build.finished?
+      puts "Build for #{current_commit} is not finished; running tests locally"
+      abort unless system('bundle', 'exec', 'wwtd', '--parallel')
+    elsif build.green?
+      puts "Travis build for #{current_commit} is green; skipping local tests"
+    else
+      abort "Travis build for #{current_commit} failed; canceling release"
+    end
   end
 end
 
