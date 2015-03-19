@@ -100,6 +100,7 @@ module Cequel
           if old_column && new_column
             assert_valid_type_transition!(old_column, new_column)
             assert_same_column_structure!(old_column, new_column)
+            assert_same_static_flag!(old_column, new_column)
           end
         end
       end
@@ -123,6 +124,16 @@ module Cequel
                "Can't change #{old_column.name} from " \
                "#{old_column.class.name.demodulize} to " \
                "#{new_column.class.name.demodulize}"
+        end
+      end
+
+      def assert_same_static_flag!(old_column, new_column)
+        if old_column.static? != new_column.static?
+          if old_column.static?
+            fail InvalidSchemaMigration, "Can't remove STATIC flag from #{old_column.name}"
+          else
+            fail InvalidSchemaMigration, "Can't add STATIC flag to existing column #{old_column.name}"
+          end
         end
       end
     end
