@@ -123,7 +123,8 @@ module Cequel
               table.add_data_column(
                 result['column_name'].to_sym,
                 Type.lookup_internal(result['validator']),
-                result['index_name'].try(:to_sym)
+                result['index_name'].try(:to_sym),
+                static: result['type'] == 'static'
               )
             end
           end
@@ -171,7 +172,7 @@ module Cequel
               WHERE keyspace_name = ? AND columnfamily_name = ?
             CQL
             column_query.map(&:to_hash).select do |column|
-              !column.key?('type') || column['type'] == 'regular'
+              !column.key?('type') || %w[regular static].include?(column['type'])
             end
           end
       end

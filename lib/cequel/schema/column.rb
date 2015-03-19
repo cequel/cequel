@@ -80,6 +80,13 @@ module Cequel
       end
 
       #
+      # @return [Boolean] true if this column is static
+      #
+      def static?
+        false
+      end
+
+      #
       # @param value the value to cast
       # @return the value cast to the appropriate type for this column
       #
@@ -181,10 +188,12 @@ module Cequel
       #
       # @param (see Column#initialize)
       # @param index_name [Symbol] name this column's secondary index
+      # @option options [Boolean] :static (false) whether this column is static
       #
-      def initialize(name, type, index_name = nil)
+      def initialize(name, type, index_name = nil, options = {})
         super(name, type)
         @index_name = index_name
+        @static = !!options[:static]
       end
 
       #
@@ -192,6 +201,22 @@ module Cequel
       #
       def indexed?
         !!@index_name
+      end
+
+      #
+      # @return [Boolean] true if this column is static
+      #
+
+      def static?
+        @static
+      end
+      
+      def to_cql
+        if static?
+          "#{super} STATIC"
+        else
+          super
+        end
       end
     end
 
