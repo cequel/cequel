@@ -27,6 +27,7 @@ namespace :cequel do
     models_dir_path = "#{File.expand_path('app/models', project_root)}/"
     model_files = Dir.glob(File.join(models_dir_path, '**', '*.rb'))
     model_files.sort.each do |file|
+      binding.pry
       watch_namespaces = ["Object"]
       model_file_name = file.sub(/^#{Regexp.escape(models_dir_path)}/, "")
       dirname = File.dirname(model_file_name)
