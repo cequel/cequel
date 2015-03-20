@@ -109,7 +109,7 @@ module Cequel
         options = {index: options} unless options.is_a?(Hash)
         index_name = options[:index]
         index_name = :"#{@name}_#{name}_idx" if index_name == true
-        DataColumn.new(name, type(type), index_name)
+        DataColumn.new(name, type(type), index_name, static: options[:static])
           .tap { |column| @data_columns << add_column(column) }
       end
 
