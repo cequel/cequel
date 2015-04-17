@@ -17,7 +17,7 @@ module Cequel
         include NewRelic::Agent::MethodTracer
 
         add_method_tracer :execute_with_consistency,
-                          'Database/Cassandra/#{args[0][/^[A-Z ]*[A-Z]/]' \
+                          'Database/Cassandra/#{args[0][/^[A-Z ]*[A-Z]/].to_s' \
                           '.sub(/ FROM$/, \'\')}'
       end
     end
