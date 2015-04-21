@@ -256,11 +256,11 @@ module Cequel
       end
 
       #
-      # @return [Hash<Symbol,Object>] map of column names to values currently
+      # @return [Hash<String,Object>] map of column names to values currently
       #   set on this record
       #
       def attributes
-        attribute_names.each_with_object({}) do |name, attributes|
+        attribute_names.each_with_object(HashWithIndifferentAccess.new) do |name, attributes|
           attributes[name] = read_attribute(name)
         end
       end

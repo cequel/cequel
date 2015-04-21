@@ -19,9 +19,19 @@ describe 'serialization' do
     }
   end
 
-  it 'should provide JSON serialization' do
+  let(:post){ Post.new(attributes) }
+
+  before :each do
     Post.include_root_in_json = false
-    expect(Post.new(attributes).as_json.symbolize_keys).
-      to eq(attributes.merge(body: nil))
+  end
+
+  it 'should provide JSON serialization' do
+    json = post.as_json.symbolize_keys
+    expect(json).to eq(attributes.merge(body: nil))
+  end
+
+  it 'should be able to serialize restricting to some attributes' do
+    json = post.as_json(only: [:id]).symbolize_keys
+    expect(json).to eq(id: attributes[:id])
   end
 end
