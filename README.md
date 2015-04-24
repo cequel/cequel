@@ -520,7 +520,7 @@ the columns that are given.
 
 ### Ruby ###
 
-* Ruby 2.2, 2.1, 2.0, 1.9.3
+* Ruby 2.2, 2.1, 2.0
 * JRuby 1.7
 * Rubinius 2.5
 
