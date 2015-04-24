@@ -1,3 +1,8 @@
+## 1.6.1
+
+* Ruby 1.9 no longer supported (EOL)
+* Fix exception class changed in Rails 4.2
+
 ## 1.6.0
 
 * Replace cql-rb with cassandra-driver
