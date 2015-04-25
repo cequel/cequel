@@ -53,6 +53,12 @@ describe Cequel::Record::Properties do
         title).to eq('Big Data')
     end
 
+    it 'should get attributes with indifferent access' do
+      post = Post.new.tap { |post| post.attributes = {:downcased_title => 'big data' }}
+      expect(post.attributes[:title]).to eq 'Big Data'
+      expect(post.attributes["title"]).to eq 'Big Data'
+    end
+
     it 'should take attribute arguments to ::new' do
       expect(Post.new(:downcased_title => 'big data').title).to eq('Big Data')
     end
