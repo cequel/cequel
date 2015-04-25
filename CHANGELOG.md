@@ -2,6 +2,7 @@
 
 * Ruby 1.9 no longer supported (EOL)
 * Fix exception class changed in Rails 4.2
+* Fix integration with ActiveModel::Serialization
 
 ## 1.6.0
 
