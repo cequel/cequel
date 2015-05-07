@@ -260,7 +260,8 @@ module Cequel
       #   set on this record
       #
       def attributes
-        attribute_names.each_with_object(HashWithIndifferentAccess.new) do |name, attributes|
+        attribute_names
+          .each_with_object(HashWithIndifferentAccess.new) do |name, attributes|
           attributes[name] = read_attribute(name)
         end
       end
