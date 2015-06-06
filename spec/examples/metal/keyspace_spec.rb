@@ -86,6 +86,24 @@ describe Cequel::Metal::Keyspace do
     end
   end
 
+  describe "#ssl_config" do
+    it "ssl configuration settings get extracted correctly for sending to cluster" do
+      connect = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+                           port: Cequel::SpecSupport::Helpers.port,
+                           ssl: true,
+                           server_cert: 'path/to/server_cert',
+                           client_cert: 'path/to/client_cert',
+                           private_key: 'private_key',
+                           passphrase: 'passphrase'
+
+      expect(connect.ssl_config[:ssl]).to be true
+      expect(connect.ssl_config[:server_cert]).to eq('path/to/server_cert')
+      expect(connect.ssl_config[:client_cert]).to eq('path/to/client_cert')
+      expect(connect.ssl_config[:private_key]).to eq('private_key')
+      expect(connect.ssl_config[:passphrase]).to eq('passphrase')
+    end
+  end
+
   describe "#execute" do
     let(:statement) { "SELECT id FROM posts" }
 
