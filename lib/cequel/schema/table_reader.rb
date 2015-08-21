@@ -73,31 +73,31 @@ module Cequel
       # for now. It will be worth refactoring this code to take advantage of
       # 2.0's better interface in a future version of Cequel that targets 2.0+.
       def read_partition_keys
-        validator = table_data['key_validator']
-        types = parse_composite_types(validator) || [validator]
-        JSON.parse(table_data['key_aliases']).zip(types) do |key_alias, type|
-          name = key_alias.to_sym
-          table.add_partition_key(key_alias.to_sym, Type.lookup_internal(type))
+        partition_columns.each do |column|
+          name, type = column.values_at("column_name", "validator")
+          table.add_partition_key(name.to_sym, Type.lookup_internal(type))
         end
       end
 
       # XXX See comment on {read_partition_keys}
       def read_clustering_columns
-        column_aliases = JSON.parse(table_data['column_aliases'])
-        comparators = parse_composite_types(table_data['comparator'])
-        unless comparators
+        unless parse_composite_types(table_data['comparator'])
           table.compact_storage = true
           return unless column_data.empty?
-          column_aliases << :column1 if column_aliases.empty?
-          comparators = [table_data['comparator']]
+          if cluster_columns.empty?
+            cluster_columns << {name: :column1, type: table_data['comparator']}
+          end
+          p "HERE"
         end
-        column_aliases.zip(comparators) do |column_alias, type|
+        p cluster_columns
+        cluster_columns.each do |column, type|
+          name, type = column.values_at("column_name", "validator")
           if REVERSED_TYPE_PATTERN =~ type
             type = $1
             clustering_order = :desc
           end
           table.add_clustering_column(
-            column_alias.to_sym,
+            name.to_sym,
             Type.lookup_internal(type),
             clustering_order
           )
@@ -163,17 +163,36 @@ module Cequel
         @table_data = table_query.first.try(:to_hash)
       end
 
-      def column_data
-        @column_data ||=
+      def all_columns
+        @all_columns ||=
           if table_data
             column_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
+
               SELECT * FROM system.schema_columns
               WHERE keyspace_name = ? AND columnfamily_name = ?
             CQL
-            column_query.map(&:to_hash).select do |column|
-              !column.key?('type') || column['type'] == 'regular'
-            end
+            column_query.map(&:to_hash)
           end
+      end
+
+      def column_data
+        @column_data ||= all_columns.select do |column|
+          !column.key?('type') ||
+            (column['type'] != 'partition_key' &&
+            column['type'] != 'clustering_key')
+        end
+      end
+
+      def partition_columns
+        @partition_columns ||= all_columns.select do |column|
+          column['type'] == 'partition_key'
+        end
+      end
+
+      def cluster_columns
+        @cluster_columns ||= all_columns.select do |column|
+          column['type'] == 'clustering_key'
+        end
       end
     end
   end
