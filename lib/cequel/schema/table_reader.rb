@@ -73,25 +73,29 @@ module Cequel
       # for now. It will be worth refactoring this code to take advantage of
       # 2.0's better interface in a future version of Cequel that targets 2.0+.
       def read_partition_keys
-        partition_columns.each do |column|
-          name, type = column.values_at("column_name", "validator")
+        validators = table_data['key_validator']
+        types = parse_composite_types(validators) || [validators]
+        columns = partition_columns.sort { |c| c['component_index'] }
+          .map { |c| c['column_name'] }
+
+        columns.zip(types) do |name, type|
           table.add_partition_key(name.to_sym, Type.lookup_internal(type))
         end
       end
 
       # XXX See comment on {read_partition_keys}
       def read_clustering_columns
-        unless parse_composite_types(table_data['comparator'])
+        columns = cluster_columns.sort { |c| c['component_index'] }
+          .map { |c| c['column_name'] }
+        comparators = parse_composite_types(table_data['comparator'])
+        unless comparators
           table.compact_storage = true
           return unless column_data.empty?
-          if cluster_columns.empty?
-            cluster_columns << {name: :column1, type: table_data['comparator']}
-          end
-          p "HERE"
+          columns << :column1 if cluster_columns.empty?
+          comparators = [table_data['comparator']]
         end
-        p cluster_columns
-        cluster_columns.each do |column, type|
-          name, type = column.values_at("column_name", "validator")
+
+        columns.zip(comparators) do |name, type|
           if REVERSED_TYPE_PATTERN =~ type
             type = $1
             clustering_order = :desc
@@ -107,7 +111,7 @@ module Cequel
       def read_data_columns
         if column_data.empty?
           table.add_data_column(
-            (table_data['value_alias'] || :value).to_sym,
+            (compact_value['column_name'] || :value).to_sym,
             Type.lookup_internal(table_data['default_validator']),
             false
           )
@@ -167,7 +171,6 @@ module Cequel
         @all_columns ||=
           if table_data
             column_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
-
               SELECT * FROM system.schema_columns
               WHERE keyspace_name = ? AND columnfamily_name = ?
             CQL
@@ -175,11 +178,15 @@ module Cequel
           end
       end
 
+      def compact_value
+        @compact_value ||= all_columns.find do |column|
+          column['type'] == 'compact_value'
+        end || {}
+      end
+
       def column_data
         @column_data ||= all_columns.select do |column|
-          !column.key?('type') ||
-            (column['type'] != 'partition_key' &&
-            column['type'] != 'clustering_key')
+          !column.key?('type') || column['type'] == 'regular'
         end
       end
 

@@ -330,7 +330,7 @@ describe Cequel::Schema::TableReader do
       Cequel::Schema::DataColumn.new(:body, :text)) }
   end
 
-  describe 'wide-row compact storage', :focus do
+  describe 'wide-row compact storage' do
     before do
       cequel.execute <<-CQL
         CREATE TABLE posts (
