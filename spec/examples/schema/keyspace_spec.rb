@@ -73,10 +73,10 @@ describe Cequel::Schema::Keyspace do
         })
       end
 
-      it "raises an error if a class other than SimpleStrategy is given" do
+      it "raises an error if a class other than SimpleStrategy is given"  do
         expect {
           keyspace.create! class: "NetworkTopologyStrategy", replication_factor: 2
-        }.to raise_error
+        }.to raise_error(RuntimeError)
       end
     end
 

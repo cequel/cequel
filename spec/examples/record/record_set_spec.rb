@@ -708,7 +708,7 @@ describe Cequel::Record::RecordSet do
 
     context 'secondary indexed column' do
       it 'should query for secondary indexed columns with two arguments' do
-        expect(Post.where(:author_id, uuids.first).map(&:permalink)).
+        expect(Post.where(author_id: uuids.first).map(&:permalink)).
           to eq(%w(cequel0 cequel2 cequel4))
       end
 
@@ -723,13 +723,13 @@ describe Cequel::Record::RecordSet do
       end
 
       it 'should not allow chaining of multiple columns' do
-        expect { Post.where(:author_id, uuids.first).
+        expect { Post.where(author_id: uuids.first).
           where(:author_name, 'Mat Brown') }.
           to raise_error(Cequel::Record::IllegalQuery)
       end
 
       it 'should cast argument for column' do
-        expect(Post.where(:author_id, uuids.first.to_s).map(&:permalink)).
+        expect(Post.where(author_id: uuids.first.to_s).map(&:permalink)).
           to eq(%w(cequel0 cequel2 cequel4))
       end
     end
@@ -753,14 +753,14 @@ describe Cequel::Record::RecordSet do
 
     context 'nonexistent column' do
       it 'should raise ArgumentError if column is not recognized' do
-        expect { Post.where(:bogus, 'Business') }.
+        expect { Post.where(bogus: 'Business') }.
           to raise_error(ArgumentError)
       end
     end
 
     context 'non-indexed column' do
       it 'should raise ArgumentError if column is not indexed' do
-        expect { Post.where(:title, 'Cequel 0') }.
+        expect { Post.where(title: 'Cequel 0') }.
           to raise_error(ArgumentError)
       end
     end

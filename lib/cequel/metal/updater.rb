@@ -46,7 +46,11 @@ module Cequel
       #
       def list_prepend(column, elements)
         statements << "#{column} = [?] + #{column}"
-        bind_vars << elements
+        bind_vars << if elements.is_a?(Array)
+                       elements.reverse
+                     else
+                       elements
+                     end
       end
 
       #
