@@ -85,7 +85,7 @@ module Cequel
 
       # XXX See comment on {read_partition_keys}
       def read_clustering_columns
-        columns = cluster_columns.sort { |c| c['component_index'] }
+        columns = cluster_columns.sort { |l, r| l['component_index'] <=> r['component_index'] }
           .map { |c| c['column_name'] }
         comparators = parse_composite_types(table_data['comparator'])
         unless comparators
