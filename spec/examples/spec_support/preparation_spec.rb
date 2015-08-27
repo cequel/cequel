@@ -18,7 +18,6 @@ describe Cequel::SpecSupport::Preparation do
     expect(prep.sync_schema).to eq prep
   end
 
-
   context "existing keyspace" do
     it "can be deleted" do
       prep.drop_keyspace
@@ -46,8 +45,8 @@ describe Cequel::SpecSupport::Preparation do
   end
 
   context "keyspace doesn't exist" do
-    before do
-       Cequel::Record.connection.schema.drop!
+    before(:each) do
+      Cequel::Record.connection.schema.drop!
     end
 
     it "doesn't cause failure upon drop requests" do
@@ -60,13 +59,19 @@ describe Cequel::SpecSupport::Preparation do
     end
 
     it "causes #sync_schema to fail" do
-      expect{ prep.sync_schema }.to raise_error
+      expect{ prep.sync_schema }.to raise_error(Cassandra::Errors::InvalidError)
     end
   end
 
   # background
 
-  after { Cequel::Record.connection.schema.create! rescue nil }
+  after(:each) do
+    begin
+      Cequel::Record.connection.schema.create!
+    rescue
+      nil
+    end
+  end
 
   matcher :contain_table do |table_name|
     match do |keyspace|

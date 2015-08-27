@@ -661,11 +661,6 @@ describe Cequel::Record::RecordSet do
     context 'simple primary key' do
       let(:records) { blogs }
 
-      it 'should correctly query for simple primary key with two arguments' do
-        expect(Blog.where(:subdomain, 'blog-0'))
-          .to eq(blogs.first(1))
-      end
-
       it 'should correctly query for simple primary key with hash argument' do
         expect(Blog.where(subdomain: 'blog-0'))
           .to eq(blogs.first(1))
@@ -724,7 +719,7 @@ describe Cequel::Record::RecordSet do
 
       it 'should not allow chaining of multiple columns' do
         expect { Post.where(author_id: uuids.first).
-          where(:author_name, 'Mat Brown') }.
+          where(author_name: 'Mat Brown') }.
           to raise_error(Cequel::Record::IllegalQuery)
       end
 
