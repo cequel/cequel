@@ -1,3 +1,13 @@
+## 1.7.0
+
+* Support Cassandra up to 2.2
+* Support JRuby 9
+* Drop support for Rails 3, Ruby 1.9
+* Update to `cassandra-driver` 2.0
+* Support SSL configuration
+* Add `RecordSet#first_or_initialize` and `RecordSet#first!`
+* Rake task to reset keyspace
+
 ## 1.6.1
 
 * Ruby 1.9 no longer supported (EOL)
