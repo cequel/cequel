@@ -6,20 +6,46 @@ namespace :cequel do
   namespace :keyspace do
     desc 'Initialize Cassandra keyspace'
     task :create => :environment do
-      Cequel::Record.connection.schema.create!
-      puts "Created keyspace #{Cequel::Record.connection.name}"
+      create!
     end
 
     desc 'Drop Cassandra keyspace'
     task :drop => :environment do
-      Cequel::Record.connection.schema.drop!
-      puts "Dropped keyspace #{Cequel::Record.connection.name}"
+      drop!
     end
   end
 
   desc "Synchronize all models defined in `app/models' with Cassandra " \
        "database schema"
   task :migrate => :environment do
+    migrate
+  end
+
+  desc "Create keyspace and tables for all defined models"
+  task :init => %w(keyspace:create migrate)
+
+
+  desc 'Drop keyspace if exists, then create and migrate'
+  task :reset => :environment do
+    if Cequel::Record.connection.schema.exists?
+      drop!
+    end
+    create!
+    migrate
+  end
+
+  def create!
+    Cequel::Record.connection.schema.create!
+    puts "Created keyspace #{Cequel::Record.connection.name}"
+  end
+
+
+  def drop!
+    Cequel::Record.connection.schema.drop!
+    puts "Dropped keyspace #{Cequel::Record.connection.name}"
+  end
+
+  def migrate
     watch_stack = ActiveSupport::Dependencies::WatchStack.new
 
     migration_table_names = Set[]
@@ -58,7 +84,4 @@ namespace :cequel do
       end
     end
   end
-
-  desc "Create keyspace and tables for all defined models"
-  task :init => %w(keyspace:create migrate)
 end
