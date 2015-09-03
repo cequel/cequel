@@ -490,11 +490,10 @@ module Cequel
       # @raise [RecordNotFound] if the record set is empty
       #
       def first!
-        first || fail(RecordNotFound,
-          "Couldn't find record with keys: #{
-          scoped_key_attributes.map { |k, v| "#{k}: #{v}" }.join(', ')
-          }"
-        )
+        first or fail(RecordNotFound,
+                      "Couldn't find record with keys: #{
+                      scoped_key_attributes.map { |k, v|
+                        "#{k}: #{v}" }.join(', ')}")
       end
 
       #
