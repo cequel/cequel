@@ -516,21 +516,19 @@ the columns that are given.
 * 4.2
 * 4.1
 * 4.0
-* 3.2
 
 ### Ruby ###
 
 * Ruby 2.2, 2.1, 2.0
-* JRuby 1.7
+* JRuby 1.7, 9.0
 * Rubinius 2.5
 
 ### Cassandra ###
 
-* 1.2
-* 2.0
+* 2.x
 
-Though Cequel is tested against Cassandra 2.0, it does not at this time support
-any of the CQL3.1 features introduced in Cassandra 2.0. This will change in the
+Though Cequel is tested against Cassandra 2, it does not at this time support
+any of the CQL3.1 features introduced in Cassandra 2. This will change in the
 future.
 
 ## Support & Bugs ##
