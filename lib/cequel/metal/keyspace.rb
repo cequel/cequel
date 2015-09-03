@@ -114,10 +114,14 @@ module Cequel
       #   blank for no auth)
       # @option configuration [String] :keyspace name of keyspace to connect to
       # @option configuration [Boolean] :ssl enable/disable ssl/tls support
-      # @option configuration [String] :server_cert path to ssl server certificate
-      # @option configuration [String] :client_cert path to ssl client certificate
-      # @option configuration [String] :private_key path to ssl client private key
-      # @option configuartion [String] :passphrase the passphrase for client private key
+      # @option configuration [String] :server_cert path to ssl server
+      #   certificate
+      # @option configuration [String] :client_cert path to ssl client
+      #   certificate
+      # @option configuration [String] :private_key path to ssl client private
+      #   key
+      # @option configuartion [String] :passphrase the passphrase for client
+      #   private key
       # @return [void]
       #
       def configure(configuration = {})
@@ -132,7 +136,6 @@ module Cequel
         @max_retries  = extract_max_retries(configuration)
         @retry_delay  = extract_retry_delay(configuration)
         @ssl_config = extract_ssl_config(configuration)
-
 
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
@@ -331,7 +334,7 @@ module Cequel
         ssl_config[:client_cert] = configuration.fetch(:client_cert, nil)
         ssl_config[:private_key] = configuration.fetch(:private_key, nil)
         ssl_config[:passphrase] = configuration.fetch(:passphrase, nil)
-        ssl_config.each {|key,value| ssl_config.delete(key) unless value } 
+        ssl_config.each { |key, value| ssl_config.delete(key) unless value }
         ssl_config
       end
     end
