@@ -479,6 +479,25 @@ module Cequel
       end
 
       #
+      # @return [Record] the first record or a new instance
+      #
+      def first_or_initialize
+        first || new
+      end
+
+      #
+      # @return [Record] the first record
+      # @raise [RecordNotFound] if the record set is empty
+      #
+      def first!
+        first || fail(RecordNotFound,
+          "Couldn't find record with keys: #{
+          scoped_key_attributes.map { |k, v| "#{k}: #{v}" }.join(', ')
+          }"
+        )
+      end
+
+      #
       # @overload last
       #   @return [Record] the last record in this record set
       #
