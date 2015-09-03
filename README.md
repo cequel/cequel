@@ -337,7 +337,7 @@ Post.find_all_by_author_id(id) # returns an array of all posts with that author_
 You can also call the `where` method directly on record sets:
 
 ```ruby
-Post.where(:author_id, id)
+Post.where(author_id: id)
 ```
 
 ### Consistency tuning ###

@@ -73,31 +73,35 @@ module Cequel
       # for now. It will be worth refactoring this code to take advantage of
       # 2.0's better interface in a future version of Cequel that targets 2.0+.
       def read_partition_keys
-        validator = table_data['key_validator']
-        types = parse_composite_types(validator) || [validator]
-        JSON.parse(table_data['key_aliases']).zip(types) do |key_alias, type|
-          name = key_alias.to_sym
-          table.add_partition_key(key_alias.to_sym, Type.lookup_internal(type))
+        validators = table_data['key_validator']
+        types = parse_composite_types(validators) || [validators]
+        columns = partition_columns.sort { |c| c['component_index'] }
+          .map { |c| c['column_name'] }
+
+        columns.zip(types) do |name, type|
+          table.add_partition_key(name.to_sym, Type.lookup_internal(type))
         end
       end
 
       # XXX See comment on {read_partition_keys}
       def read_clustering_columns
-        column_aliases = JSON.parse(table_data['column_aliases'])
+        columns = cluster_columns.sort { |l, r| l['component_index'] <=> r['component_index'] }
+          .map { |c| c['column_name'] }
         comparators = parse_composite_types(table_data['comparator'])
         unless comparators
           table.compact_storage = true
           return unless column_data.empty?
-          column_aliases << :column1 if column_aliases.empty?
+          columns << :column1 if cluster_columns.empty?
           comparators = [table_data['comparator']]
         end
-        column_aliases.zip(comparators) do |column_alias, type|
+
+        columns.zip(comparators) do |name, type|
           if REVERSED_TYPE_PATTERN =~ type
             type = $1
             clustering_order = :desc
           end
           table.add_clustering_column(
-            column_alias.to_sym,
+            name.to_sym,
             Type.lookup_internal(type),
             clustering_order
           )
@@ -107,7 +111,7 @@ module Cequel
       def read_data_columns
         if column_data.empty?
           table.add_data_column(
-            (table_data['value_alias'] || :value).to_sym,
+            (compact_value['column_name'] || :value).to_sym,
             Type.lookup_internal(table_data['default_validator']),
             false
           )
@@ -163,17 +167,39 @@ module Cequel
         @table_data = table_query.first.try(:to_hash)
       end
 
-      def column_data
-        @column_data ||=
+      def all_columns
+        @all_columns ||=
           if table_data
             column_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
               SELECT * FROM system.schema_columns
               WHERE keyspace_name = ? AND columnfamily_name = ?
             CQL
-            column_query.map(&:to_hash).select do |column|
-              !column.key?('type') || column['type'] == 'regular'
-            end
+            column_query.map(&:to_hash)
           end
+      end
+
+      def compact_value
+        @compact_value ||= all_columns.find do |column|
+          column['type'] == 'compact_value'
+        end || {}
+      end
+
+      def column_data
+        @column_data ||= all_columns.select do |column|
+          !column.key?('type') || column['type'] == 'regular'
+        end
+      end
+
+      def partition_columns
+        @partition_columns ||= all_columns.select do |column|
+          column['type'] == 'partition_key'
+        end
+      end
+
+      def cluster_columns
+        @cluster_columns ||= all_columns.select do |column|
+          column['type'] == 'clustering_key'
+        end
       end
     end
   end

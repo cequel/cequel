@@ -506,7 +506,7 @@ describe Cequel::Metal::DataSet do
       expect(cequel[:posts].where(
         :blog_subdomain => %w(cassandra big-data-weekly),
         :permalink => 'big-data'
-      ).map { |row| row[:title] }).to eq(['Big Data', 'Cassandra'])
+      ).map { |row| row[:title] }).to match_array(['Big Data', 'Cassandra'])
     end
 
     it 'should use = if provided one-element array' do

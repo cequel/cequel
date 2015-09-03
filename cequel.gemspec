@@ -28,7 +28,7 @@ DESC
   s.extra_rdoc_files = 'README.md'
   s.required_ruby_version = '>= 1.9'
   s.add_runtime_dependency 'activemodel', '>= 3.1', '< 5.0'
-  s.add_runtime_dependency 'cassandra-driver', '~> 1.0'
+  s.add_runtime_dependency 'cassandra-driver', '~> 2.0'
   s.add_development_dependency 'appraisal', '~> 1.0'
   s.add_development_dependency 'wwtd', '~> 0.5'
   s.add_development_dependency 'rake', '~> 10.1'
