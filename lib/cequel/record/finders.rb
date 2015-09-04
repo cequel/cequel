@@ -54,11 +54,11 @@ module Cequel
 
       def key(*)
         if key_columns.any?
-          def_key_finders('find_all_by', '.entries')
+          def_key_finders('find_all_by', 'entries')
           undef_key_finders('find_by')
         end
         super
-        def_key_finders('find_by', '.first')
+        def_key_finders('find_by', 'first')
         def_key_finders('with')
       end
 
@@ -66,27 +66,26 @@ module Cequel
         super
         if options[:index]
           def_finder('with', [name])
-          def_finder('find_by', [name], '.first')
-          def_finder('find_all_by', [name], '.entries')
+          def_finder('find_by', [name], 'first')
+          def_finder('find_all_by', [name], 'entries')
         end
       end
 
-      def def_key_finders(method_prefix, scope_operation = '')
+      def def_key_finders(method_prefix, scope_operation = nil)
         def_finder(method_prefix, key_column_names, scope_operation)
         def_finder(method_prefix, key_column_names.last(1), scope_operation)
       end
 
-      def def_finder(method_prefix, column_names, scope_operation = '')
-        arg_names = column_names.join(', ')
+      def def_finder(method_prefix, column_names, scope_operation = nil)
         method_suffix = finder_method_suffix(column_names)
-        column_filter_expr = column_names
-          .map { |name| "#{name}: #{name}" }.join(', ')
+        method_name = "#{method_prefix}_#{method_suffix}"
 
-        singleton_class.module_eval(<<-RUBY, __FILE__, __LINE__+1)
-          def #{method_prefix}_#{method_suffix}(#{arg_names})
-            where(#{column_filter_expr})#{scope_operation}
-          end
-        RUBY
+        singleton_class.send(:define_method, method_name) do |*args|
+          query = Hash[column_names.zip(args)]
+          scope = where(query)
+          return scope unless scope_operation
+          scope.public_send(scope_operation)
+        end
       end
 
       def undef_key_finders(method_prefix)

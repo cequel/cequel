@@ -56,8 +56,8 @@ module Cequel
           table.data_columns.each do |column|
             if column.indexed?
               statements <<
-                "CREATE INDEX #{column.index_name} " \
-                "ON #{table.name} (#{column.name})"
+                %(CREATE INDEX #{column.index_name} \
+                  ON #{table.name} ("#{column.name}"))
             end
           end
         end
@@ -73,10 +73,10 @@ module Cequel
 
       def keys_cql
         partition_cql = table.partition_key_columns
-          .map { |key| key.name }.join(', ')
+          .map { |key| %("#{key.name}") }.join(', ')
         if table.clustering_columns.any?
           nonpartition_cql =
-            table.clustering_columns.map { |key| key.name }.join(', ')
+            table.clustering_columns.map { |key| %("#{key.name}") }.join(', ')
           "PRIMARY KEY ((#{partition_cql}), #{nonpartition_cql})"
         else
           "PRIMARY KEY ((#{partition_cql}))"

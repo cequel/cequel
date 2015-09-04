@@ -5,6 +5,8 @@ describe Cequel::Record::Persistence do
   model :Blog do
     key :subdomain, :text
     column :name, :text
+    column :camelCaseColumn, :text
+    column :"column.with.periods", :text
     column :description, :text
     column :owner_id, :uuid
   end
@@ -24,6 +26,8 @@ describe Cequel::Record::Persistence do
       Blog.new do |blog|
         blog.subdomain = 'cequel'
         blog.name = 'Cequel'
+        blog.camelCaseColumn = 'cequelCequel'
+        blog.send("column.with.periods=", 'cequel.cequel')
         blog.description = 'A Ruby ORM for Cassandra 1.2'
       end.tap(&:save)
     end
@@ -37,6 +41,8 @@ describe Cequel::Record::Persistence do
       context 'on create' do
         it 'should save row to database' do
           expect(subject[:name]).to eq('Cequel')
+          expect(subject["column.with.periods"]).to eq('cequel.cequel')
+          expect(subject["camelCaseColumn"]).to eq('cequelCequel')
         end
 
         it 'should mark row persisted' do
@@ -211,13 +217,15 @@ describe Cequel::Record::Persistence do
 
     describe '#update_attributes' do
       let! :blog do
-        Blog.create(:subdomain => 'big-data', :name => 'Big Data')
+        Blog.create(:subdomain => 'big-data', :name => 'Big Data', :"column.with.periods" => "cequel.cequel", :camelCaseColumn => 'cequelCequel')
       end
 
-      before { blog.update_attributes(:name => 'The Big Data Blog') }
+      before { blog.update_attributes(:name => 'The Big Data Blog', :"column.with.periods" => "Cequel.Cequel", :camelCaseColumn => 'CequelCequel') }
 
       it 'should update instance in memory' do
         expect(blog.name).to eq('The Big Data Blog')
+        expect(blog[:"column.with.periods"]).to eq('Cequel.Cequel')
+        expect(blog[:"camelCaseColumn"]).to eq('CequelCequel')
       end
 
       it 'should save instance' do
@@ -249,9 +257,13 @@ describe Cequel::Record::Persistence do
       end
 
       it 'should destroy with specified timestamp' do
-        blog = Blog.create(subdomain: 'big-data', name: 'Big Data')
-        blog.destroy(timestamp: 1.minute.ago)
-        expect(cequel[Blog.table_name].where(subdomain: 'big-data').first).to be
+        blog = Blog.new(subdomain: 'big-data2', name: 'Big Data', description: "something")
+        now = Time.now
+        blog.save!(timestamp: now)
+        blog.destroy(timestamp: 10.minute.ago)
+        expect(cequel[Blog.table_name].where(subdomain: 'big-data2').first).to be
+        blog.destroy(timestamp: now)
+        expect(cequel[Blog.table_name].where(subdomain: 'big-data2').first).to_not be
       end
     end
   end

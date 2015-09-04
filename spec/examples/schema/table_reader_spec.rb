@@ -392,4 +392,76 @@ describe Cequel::Schema::TableReader do
       [Cequel::Schema::DataColumn.new(:value, :text)]
     ) }
   end
+
+  describe 'reading columns with capital letters and periods' do
+
+    before do
+      cequel.execute <<-CQL
+        CREATE TABLE posts (
+          "Blog_subdomain.column" text,
+          "Permalink.column" ascii,
+          "Title.column" text,
+          "Author_id.column" uuid,
+          "Categories.column" LIST <text>,
+          "Tags.column" SET <text>,
+          "Trackbacks.column" MAP <timestamp,ascii>,
+          PRIMARY KEY ("Blog_subdomain.column", "Permalink.column")
+        )
+      CQL
+      cequel.execute('CREATE INDEX posts_author_id_idx ON posts ("Author_id.column")')
+    end
+
+    it 'should read types of scalar data columns' do
+      expect(table.data_columns.find { |column| column.name == :"Title.column" }.type).
+        to eq(Cequel::Type[:text])
+      expect(table.data_columns.find { |column| column.name == :"Author_id.column" }.type).
+        to eq(Cequel::Type[:uuid])
+    end
+
+    it 'should read index attributes' do
+      expect(table.data_columns.find { |column| column.name == :"Author_id.column" }.index_name).
+        to eq(:posts_author_id_idx)
+    end
+
+    it 'should leave nil index for non-indexed columns' do
+      expect(table.data_columns.find { |column| column.name == :"Title.column" }.index_name).
+        to be_nil
+    end
+
+    it 'should read list columns' do
+      expect(table.data_columns.find { |column| column.name == :"Categories.column" }).
+        to be_a(Cequel::Schema::List)
+    end
+
+    it 'should read list column type' do
+      expect(table.data_columns.find { |column| column.name == :"Categories.column" }.type).
+        to eq(Cequel::Type[:text])
+    end
+
+    it 'should read set columns' do
+      expect(table.data_columns.find { |column| column.name == :"Tags.column" }).
+        to be_a(Cequel::Schema::Set)
+    end
+
+    it 'should read set column type' do
+      expect(table.data_columns.find { |column| column.name == :"Tags.column" }.type).
+        to eq(Cequel::Type[:text])
+    end
+
+    it 'should read map columns' do
+      expect(table.data_columns.find { |column| column.name == :"Trackbacks.column" }).
+        to be_a(Cequel::Schema::Map)
+    end
+
+    it 'should read map column key type' do
+      expect(table.data_columns.find { |column| column.name == :"Trackbacks.column" }.key_type).
+        to eq(Cequel::Type[:timestamp])
+    end
+
+    it 'should read map column value type' do
+      expect(table.data_columns.find { |column| column.name == :"Trackbacks.column" }.
+        value_type).to eq(Cequel::Type[:ascii])
+    end
+
+  end
 end

@@ -96,7 +96,7 @@ module Cequel
       # @api private
       #
       def to_cql
-        "#{@name} #{@type}"
+        %("#{@name}" #{@type})
       end
 
       #
@@ -164,7 +164,7 @@ module Cequel
 
       # @private
       def clustering_order_cql
-        "#{@name} #{@clustering_order}"
+        %("#{@name}" #{@clustering_order})
       end
     end
 
@@ -221,7 +221,7 @@ module Cequel
     class List < CollectionColumn
       # (see Column#to_cql)
       def to_cql
-        "#{@name} LIST <#{@type}>"
+        %("#{@name}" LIST <#{@type}>)
       end
 
       #
@@ -241,7 +241,7 @@ module Cequel
     class Set < CollectionColumn
       # (see Column#to_cql)
       def to_cql
-        "#{@name} SET <#{@type}>"
+        %("#{@name}" SET <#{@type}>)
       end
 
       #
@@ -277,7 +277,7 @@ module Cequel
 
       # (see Column#to_cql)
       def to_cql
-        "#{@name} MAP <#{@key_type}, #{@type}>"
+        %("#{@name}" MAP <#{@key_type}, #{@type}>)
       end
 
       #

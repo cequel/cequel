@@ -35,14 +35,17 @@ describe Cequel::Metal::DataSet do
   let(:row_keys) { {blog_subdomain: 'cassandra', permalink: 'big-data'} }
 
   describe '#insert' do
+    let(:now) { Time.at(Time.now.to_i) }
+    let(:one_minute_ago) { Time.at(Time.now.to_i - 60) }
+
     let(:row) do
       row_keys.merge(
         title: 'Fun times',
         categories: ['Fun', 'Profit'],
         tags: Set['cassandra', 'big-data'],
         trackbacks: {
-          Time.at(Time.now.to_i) => 'www.google.com',
-          Time.at(Time.now.to_i - 60) => 'www.yahoo.com'
+          now => 'www.google.com',
+          one_minute_ago => 'www.yahoo.com'
         }
       )
     end
@@ -715,6 +718,218 @@ describe Cequel::Metal::DataSet do
 
     it 'should use limit if specified' do
       expect(cequel[:posts].limit(2).count).to eq(2)
+    end
+  end
+
+  describe "columns with capital letters and periods" do
+    before :each do
+      cequel.schema.create_table(:legacy_posts) do
+        key :"Blog_subdomain.column", :text
+        key :"Permalink.column", :text
+        column :"Title.column", :text
+        column :"Body.column", :text
+        column :"Published_at.column", :timestamp
+        list :"Categories.column", :text
+        set :"Tags.column", :text
+        map :"Trackbacks.column", :timestamp, :text
+      end
+      cequel.schema.create_table(:legacy_post_activity) do
+        key :"Blog_subdomain.column", :text
+        key :"Permalink.column", :text
+        column :"Visits.column", :counter
+        column :"Tweets.column", :counter
+      end
+    end
+
+    after :each do
+      cequel.schema.drop_table(:legacy_posts)
+      cequel.schema.drop_table(:legacy_post_activity)
+    end
+
+    let(:now) { Time.at(Time.now.to_i) }
+    let(:epoch) { Time.at(0) }
+
+    let(:row_keys) do
+      {
+        :"Blog_subdomain.column" => "blog_subdomain",
+        :"Permalink.column" => "permalink",
+      }
+    end
+
+    let(:post_fields) do
+      row_keys.merge({
+        :"Title.column" => "title",
+        :"Body.column" => "body",
+        :"Published_at.column" => now,
+        :"Categories.column" => ["category1", "category2"],
+        :"Tags.column" => Set["tag1", "tag2"],
+        :"Trackbacks.column" => { now => 'www.google.com' }
+      })
+    end
+
+    let(:non_key_update_fields) do
+      {
+        :"Title.column" => "title updated",
+        :"Body.column" => "body updated",
+        :"Published_at.column" => epoch,
+        :"Categories.column" => ["category1 updated", "category2"],
+        :"Tags.column" => Set["tag1 updated", "tag2"],
+        :"Trackbacks.column" => {epoch => 'www.google.com'}
+      }
+    end
+
+    let(:post_fields_updated) do
+      row_keys.merge(non_key_update_fields)
+    end
+
+    let(:post_activity_fields) do
+      row_keys.merge({
+        :"Visits.column" => 5,
+        :"Tweets.column" => 5
+      })
+    end
+
+    it 'should insert when columns have capital letters and periods' do
+      cequel[:legacy_posts].insert(post_fields)
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(
+        row.each_with_object({}) {|(k,v), hash| hash[k.to_s] = v.inspect}
+      ).to eq(
+        post_fields.each_with_object({}) {|(k,v), hash| hash[k.to_s] = v.inspect}
+      )
+    end
+
+    it "should update" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].where(row_keys).
+        update(non_key_update_fields)
+
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(
+        row.each_with_object({}) {|(k,v), hash| hash[k.to_s] = v.inspect}
+      ).to eq(
+        post_fields_updated.each_with_object({}) {|(k,v), hash| hash[k.to_s] = v.inspect}
+      )
+    end
+
+    it "should delete a field" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        delete(:"Title.column", :"Body.column")
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Title.column"]).to be nil
+      expect(row[:"Body.column"]).to be nil
+    end
+
+    it "should delete from list" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        list_remove_at(:"Categories.column", 0)
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Categories.column"]).to eq ["category2"]
+    end
+
+    it "should preprend to list" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        list_prepend(:"Categories.column", ["category0"])
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Categories.column"]).to eq ["category0", "category1", "category2"]
+    end
+
+    it "should append to list" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        list_append(:"Categories.column", ["category3"])
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Categories.column"]).to eq ["category1", "category2", "category3"]
+    end
+
+    it "should remove from list" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        list_remove(:"Categories.column", ["category2"])
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Categories.column"]).to eq ["category1"]
+    end
+
+    it "should replace from list" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        list_replace(:"Categories.column", 0, "category0")
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Categories.column"]).to eq ["category0", "category2"]
+    end
+
+    it "should delete from set" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        set_remove(:"Tags.column", "tag1")
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Tags.column"]).to eq Set["tag2"]
+    end
+
+    it "should add to set" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        set_add(:"Tags.column", "tag3")
+      row = cequel[:legacy_posts].where(row_keys).first
+      expect(row[:"Tags.column"]).to eq Set["tag1", "tag2", "tag3"]
+    end
+
+    it "should delete from map" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        map_remove(:"Trackbacks.column", now)
+      row = cequel[:legacy_posts].where(row_keys).first
+
+      expect(row[:"Trackbacks.column"]).to be_nil
+    end
+
+    it "should update map" do
+      cequel[:legacy_posts].insert(post_fields)
+      cequel[:legacy_posts].
+        where(row_keys).
+        map_update(:"Trackbacks.column", {now => "moc.elgoog.www"})
+      row = cequel[:legacy_posts].where(row_keys).first
+
+      expect(row[:"Trackbacks.column"].size).to eq 1
+      expect(row[:"Trackbacks.column"].keys.first.to_i).to eq now.to_i
+      expect(row[:"Trackbacks.column"].values.first).to eq "moc.elgoog.www"
+    end
+
+    it 'should increment' do
+      cequel[:legacy_post_activity].
+        where(row_keys).
+        increment(:"Visits.column" => 1, :"Tweets.column" => 2)
+
+      row = cequel[:legacy_post_activity].where(row_keys).first
+
+      expect(row[:"Visits.column"]).to eq(1)
+      expect(row[:"Tweets.column"]).to eq(2)
+    end
+
+    it 'should include ttl argument' do
+      cequel[:legacy_posts].insert(post_fields, :ttl => 10.minutes)
+      expect(cequel[:legacy_posts].select_ttl(:"Title.column").where(row_keys).first.ttl(:"Title.column")).
+        to be_within(5).of(10.minutes)
+    end
+
+    it 'should include timestamp argument' do
+      cequel.schema.truncate_table(:legacy_posts)
+      time = 1.day.ago
+      cequel[:legacy_posts].insert(post_fields, :timestamp => time)
+      expect(cequel[:legacy_posts].select_writetime(:"Title.column").where(row_keys).
+        first.writetime(:"Title.column")).to eq((time.to_f * 1_000_000).to_i)
     end
   end
 

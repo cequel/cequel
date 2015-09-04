@@ -22,6 +22,20 @@ describe Cequel::Record::Finders do
     column :author_id, :uuid, index: true
   end
 
+  model :LegacyBlog do
+    key :"sub.Domain", :text
+    column :"some.name", :text
+    column :someDescription, :text
+    column :owner_id, :uuid
+  end
+
+  model :LegacyPost do
+    key :"legacy_blog_sub.Domain", :text
+    key :"some.id", :timeuuid, auto: true
+    column :title, :text
+    column :"some.Author_id", :uuid, index: "some_valid_index_name"
+  end
+
   let :blogs do
     cequel.batch do
       5.times.map do |i|
@@ -30,7 +44,26 @@ describe Cequel::Record::Finders do
     end
   end
 
+  let :legacy_blogs do
+    cequel.batch do
+      5.times.map do |i|
+        LegacyBlog.create!(:"sub.Domain" => "cassandra#{i}", :"some.name" => 'Cassandra')
+      end
+    end
+  end
+
   let(:author_ids) { Array.new(2) { Cequel.uuid }}
+
+  let :legacy_posts do
+    cequel.batch do
+      5.times.map do |i|
+        LegacyPost.create!(
+          :"legacy_blog_sub.Domain" => "cassandra#{i}",
+          :"some.Author_id" => author_ids[i%2]
+        )
+      end
+    end
+  end
 
   let :cassandra_posts do
     cequel.batch do
@@ -38,6 +71,17 @@ describe Cequel::Record::Finders do
         Post.create!(
           blog_subdomain: 'cassandra',
           author_id: author_ids[i%2]
+        )
+      end
+    end
+  end
+
+  let :legacy_cassandra_posts do
+    cequel.batch do
+      5.times.map do |i|
+        LegacyPost.create!(
+          :"legacy_blog_sub.Domain" => "cassandra",
+          :"some.Author_id" => author_ids[i%2]
         )
       end
     end
@@ -77,6 +121,19 @@ describe Cequel::Record::Finders do
       it 'should not respond to wrong name' do
         expect(User).to_not be_respond_to(:find_by_bogus)
       end
+
+      it 'should respond to method before it is called' do
+        expect(User).to be_respond_to(:find_by_login)
+      end
+
+      describe "legacy data" do
+        let!(:legacy_blog) { legacy_blogs.first }
+
+        it 'should return matching record' do
+          expect(LegacyBlog.send(:"find_by_sub.Domain", 'cassandra0')).to eq(legacy_blog)
+        end
+      end
+
     end
 
     describe '#find_all_by_*' do
@@ -115,6 +172,16 @@ describe Cequel::Record::Finders do
         expect { Post.find_all_by_blog_subdomain_and_id('f', Cequel.uuid) }
           .to raise_error(NoMethodError)
       end
+
+      describe "legacy data" do
+        before { legacy_cassandra_posts }
+
+        it 'should load all legacy records' do
+          records = LegacyPost.send(:"find_all_by_legacy_blog_sub.Domain", 'cassandra')
+          disallow_queries!
+          expect(records).to eq(legacy_cassandra_posts)
+        end
+      end
     end
 
     describe '#find_by_*' do
@@ -139,6 +206,16 @@ describe Cequel::Record::Finders do
                  .find_by_id(cassandra_posts.first.id))
                  .to eq(cassandra_posts.first)
       end
+
+      describe "legacy data" do
+        before { legacy_cassandra_posts }
+
+        it 'should be able to chain indexes for fields with capital letters and periods' do
+          expect(LegacyPost.where(:"legacy_blog_sub.Domain" => 'cassandra')
+                   .send(:"find_by_some.id", legacy_cassandra_posts.first[:"some.id"]))
+                   .to eq(legacy_cassandra_posts.first)
+        end
+      end
     end
 
     describe '#with_*' do
@@ -157,6 +234,17 @@ describe Cequel::Record::Finders do
       it 'should return all records matching key prefix' do
         expect(Post.with_blog_subdomain('cassandra'))
           .to eq(cassandra_posts)
+      end
+
+      describe "legacy data" do
+
+        before { legacy_cassandra_posts }
+
+        it 'should return all records matching key prefix' do
+          expect(LegacyPost.send("with_legacy_blog_sub.Domain", 'cassandra'))
+            .to eq(legacy_cassandra_posts)
+        end
+
       end
     end
   end

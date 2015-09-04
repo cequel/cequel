@@ -100,7 +100,7 @@ module Cequel
       #   Altering column types is not recommended.
       #
       def change_column(name, type)
-        alter_table("ALTER #{name} TYPE #{type(type).cql_name}")
+        alter_table(%(ALTER "#{name}" TYPE #{type(type).cql_name}))
       end
 
       #
@@ -139,7 +139,7 @@ module Cequel
       def create_index(column_name, index_name = nil)
         index_name ||= "#{table_name}_#{column_name}_idx"
         statements <<
-          "CREATE INDEX #{index_name} ON #{table_name} (#{column_name})"
+          %(CREATE INDEX #{index_name} ON #{table_name} ("#{column_name}"))
       end
 
       #
