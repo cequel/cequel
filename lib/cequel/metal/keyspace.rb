@@ -254,6 +254,32 @@ module Cequel
         end
       end
 
+      # @return [String] Cassandra version number
+      def cassandra_version
+        return @cassandra_version if @cassandra_version
+
+        statement = <<-CQL
+          SELECT release_version
+          FROM system.local
+        CQL
+
+        log('CQL', statement) do
+          @cassandra_version = client_without_keyspace.execute(statement).first['release_version']
+        end
+      end
+
+      # return true if Cassandra server version is known to include bug CASSANDRA-8733
+      def bug8733_version?
+        version_file = File.expand_path('../../../../.cassandra-versions', __FILE__)
+        @all_versions ||= File.read(version_file).split("\n").map(&:strip)
+
+        # bug exists in versions 0.3.0-2.0.12 and 2.1.0-2.1.2
+        @bug8733_versions ||= @all_versions[0..@all_versions.index('2.0.12')] +
+            @all_versions[@all_versions.index('2.1.0')..@all_versions.index('2.1.2')]
+
+        @bug8733_versions.include?(cassandra_version)
+      end
+
       private
 
       attr_reader :lock

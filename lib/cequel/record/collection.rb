@@ -332,7 +332,8 @@ module Cequel
       #
       def unshift(*objects)
         objects.map!(&method(:cast_element))
-        to_update { updater.list_prepend(column_name, objects.reverse) }
+        prepared = @model.class.connection.bug8733_version? ? objects.reverse : objects
+        to_update { updater.list_prepend(column_name, prepared) }
         to_modify { super }
       end
       alias_method :prepend, :unshift

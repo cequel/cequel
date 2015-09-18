@@ -191,14 +191,21 @@ describe Cequel::Metal::DataSet do
       )
     end
 
+    # breaks in Cassandra 2.0.13+ or 2.1.3+ because reverse order bug was fixed:
+    # https://issues.apache.org/jira/browse/CASSANDRA-8733
     it 'should prepend multiple elements to list column' do
       cequel[:posts].insert(
         row_keys.merge(categories: ['Big Data', 'Cassandra']))
       cequel[:posts].where(row_keys).
         list_prepend(:categories, ['Scalability', 'Partition Tolerance'])
-      expect(cequel[:posts].where(row_keys).first[:categories]).to eq(
+
+      expected = if cequel.bug8733_version?
         ['Partition Tolerance', 'Scalability', 'Big Data', 'Cassandra']
-      )
+      else
+        ['Scalability', 'Partition Tolerance', 'Big Data', 'Cassandra']
+      end
+
+      expect(cequel[:posts].where(row_keys).first[:categories]).to eq(expected)
     end
   end
 

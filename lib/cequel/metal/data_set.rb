@@ -187,8 +187,8 @@ module Cequel
       # @example
       #   posts.list_prepend(:categories, ['CQL', 'ORMs'])
       #
-      # @note If multiple elements are passed, they will appear in the list in
-      #   reverse order.
+      # @note A bug (CASSANDRA-8733) exists in Cassandra versions 0.3.0-2.0.12 and 2.1.0-2.1.2 which
+      #   will make elements appear in REVERSE ORDER in the list.
       # @note If a enclosed in a Keyspace#batch block, this method will be
       #   executed as part of the batch.
       # @see #list_append
