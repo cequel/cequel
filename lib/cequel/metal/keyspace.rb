@@ -316,7 +316,12 @@ module Cequel
       end
 
       def extract_credentials(configuration)
-        configuration.slice(:username, :password).presence
+        credentials = configuration.slice(:username, :password).presence
+        
+        return credentials unless configuration[:auth_provider]
+
+        { auth_provider: CequelPassword.new(*credentials.values),
+          datacenter: configuration[:datacenter].presence }
       end
 
       def extract_max_retries(configuration)
@@ -336,6 +341,12 @@ module Cequel
         ssl_config[:passphrase] = configuration.fetch(:passphrase, nil)
         ssl_config.each { |key, value| ssl_config.delete(key) unless value }
         ssl_config
+      end
+    end
+
+    class CequelPassword < Cassandra::Auth::Providers::Password
+      def create_authenticator(_)
+        Authenticator.new(@username, @password)
       end
     end
   end
