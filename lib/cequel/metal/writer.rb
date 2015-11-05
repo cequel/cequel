@@ -57,6 +57,9 @@ module Cequel
           yield '[?]', value
         when ::Set then
           yield '{?}', value.to_a
+        when ::Cequel::Type::UserDefined then
+          binding_pairs = value.map { |k,| "#{k}:?" }.join(',')
+          yield "{#{binding_pairs}}", *value.values
         when ::Hash then
           binding_pairs = ::Array.new(value.length) { '?:?' }.join(',')
           yield "{#{binding_pairs}}", *value.flatten

@@ -261,7 +261,7 @@ module Cequel
       #
       def attributes
         attribute_names
-          .each_with_object(HashWithIndifferentAccess.new) do |name, attributes|
+          .each_with_object(Hash.new) do |name, attributes|
           attributes[name] = read_attribute(name)
         end
       end
