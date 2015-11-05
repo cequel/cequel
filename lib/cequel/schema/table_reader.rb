@@ -13,6 +13,8 @@ module Cequel
         /^org\.apache\.cassandra\.db\.marshal\.ReversedType\((.+)\)$/
       COLLECTION_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.(List|Set|Map)Type\((.+)\)$/
+      USER_TYPE_PATTERN =
+        /^(org\.apache\.cassandra\.db\.marshal\.UserType)\((.+)\)$/
 
       # @return [Table] object representation of the table defined in the
       #   database
@@ -117,7 +119,13 @@ module Cequel
           )
         else
           column_data.each do |result|
-            if COLLECTION_TYPE_PATTERN =~ result['validator']
+            if USER_TYPE_PATTERN =~ result['validator']
+              table.add_data_column(
+                result['column_name'].to_sym,
+                Type.lookup_internal($1)
+              )
+
+            elsif COLLECTION_TYPE_PATTERN =~ result['validator']
               read_collection_column(
                 result['column_name'],
                 $1.underscore,

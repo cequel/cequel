@@ -461,12 +461,12 @@ module Cequel
     end
     register Varint.instance
 
-    class Frozen < Base
+    class User < Base
       def internal_names
-        ['org.apache.cassandra.db.marshal.FrozenType']
+        ['org.apache.cassandra.db.marshal.UserType']
       end
     end
-    register Frozen.instance  
+    register User.instance  
   
     class UserDefined < Hash
     end
