@@ -117,7 +117,6 @@ module Cequel
           end
           class_name = name.to_s.gsub(/^([a-z])/){ $1.upcase }.gsub(/_([a-z])/) { $1.upcase }
           Cequel::Type.const_set class_name, klass
-
           Cequel::Type.register klass.instance
         end
 
@@ -144,6 +143,8 @@ module Cequel
         def column(name, type, options = {})
           def_accessors(name)
           set_attribute_default(name, options[:default])
+          Cequel::Type::BY_COLUMN_NAME[name] = type
+
         end
 
         #

@@ -22,6 +22,7 @@ module Cequel
 
     BY_CQL_NAME = {}
     BY_INTERNAL_NAME = {}
+    BY_COLUMN_NAME = {}
 
     #
     # Register a type for lookup
@@ -33,7 +34,8 @@ module Cequel
       BY_CQL_NAME[type.cql_name] = type
       type.cql_aliases.each { |aliaz| BY_CQL_NAME[aliaz] = type }
       type.internal_names.each do |internal_name|
-        BY_INTERNAL_NAME[internal_name] = type
+        BY_INTERNAL_NAME[internal_name] ||= []
+        BY_INTERNAL_NAME[internal_name] << type
       end
     end
 
@@ -67,8 +69,13 @@ module Cequel
     # @return [Base] type with the given internal name
     # @raise [UnknownType] if no type by that name is registered
     #
-    def self.lookup_internal(internal_name)
-      BY_INTERNAL_NAME.fetch(internal_name)
+    def self.lookup_internal(internal_name, name)
+      n = BY_INTERNAL_NAME.fetch(internal_name)
+      if n.size > 1
+        n.select { |c| c == Cequel::Type::BY_CQL_NAME[Cequel::Type::BY_COLUMN_NAME[name]] }.first
+      else
+        n.first
+      end
     rescue KeyError
       raise UnknownType, "Unrecognized internal type #{internal_name.inspect}"
     end

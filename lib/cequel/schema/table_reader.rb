@@ -81,7 +81,7 @@ module Cequel
           .map { |c| c['column_name'] }
 
         columns.zip(types) do |name, type|
-          table.add_partition_key(name.to_sym, Type.lookup_internal(type))
+          table.add_partition_key(name.to_sym, Type.lookup_internal(type, name))
         end
       end
 
@@ -104,7 +104,7 @@ module Cequel
           end
           table.add_clustering_column(
             name.to_sym,
-            Type.lookup_internal(type),
+            Type.lookup_internal(type, name),
             clustering_order
           )
         end
@@ -114,7 +114,7 @@ module Cequel
         if column_data.empty?
           table.add_data_column(
             (compact_value['column_name'] || :value).to_sym,
-            Type.lookup_internal(table_data['default_validator']),
+            Type.lookup_internal(table_data['default_validator'], compact_value['column_name'] || :value),
             false
           )
         else
@@ -122,7 +122,7 @@ module Cequel
             if USER_TYPE_PATTERN =~ result['validator']
               table.add_data_column(
                 result['column_name'].to_sym,
-                Type.lookup_internal($1)
+                Type.lookup_internal($1, result['column_name'].to_sym)
               )
 
             elsif COLLECTION_TYPE_PATTERN =~ result['validator']
@@ -134,7 +134,7 @@ module Cequel
             else
               table.add_data_column(
                 result['column_name'].to_sym,
-                Type.lookup_internal(result['validator']),
+                Type.lookup_internal(result['validator'], result['column_name'].to_sym),
                 result['index_name'].try(:to_sym)
               )
             end
@@ -144,7 +144,7 @@ module Cequel
 
       def read_collection_column(name, collection_type, *internal_types)
         types = internal_types
-          .map { |internal| Type.lookup_internal(internal) }
+          .map { |internal| Type.lookup_internal(internal, name) }
         table.__send__("add_#{collection_type}", name.to_sym, *types)
       end
 

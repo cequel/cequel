@@ -187,6 +187,14 @@ module Cequel
         @index_name = index_name
       end
 
+      def to_cql
+        if Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type)
+          "#{@name} FROZEN <#{@type}>"
+        else
+          super
+        end
+      end
+
       #
       # @return [Boolean] true if this column has a secondary index
       #
