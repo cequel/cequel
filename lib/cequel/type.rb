@@ -461,13 +461,6 @@ module Cequel
     end
     register Varint.instance
 
-    class User < Base
-      def internal_names
-        ['org.apache.cassandra.db.marshal.UserType']
-      end
-    end
-    register User.instance  
-  
     class UserDefined < Hash
     end
   end
