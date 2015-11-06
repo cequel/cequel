@@ -14,7 +14,7 @@ module Cequel
       COLLECTION_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.(List|Set|Map)Type\((.+)\)$/
       USER_TYPE_PATTERN =
-        /^(org\.apache\.cassandra\.db\.marshal\.UserType)\((.+)\)$/
+        /^(org\.apache\.cassandra\.db\.marshal\.UserType)/
 
       # @return [Table] object representation of the table defined in the
       #   database
@@ -119,6 +119,7 @@ module Cequel
           )
         else
           column_data.each do |result|
+            result['validator'].gsub!(/org\.apache\.cassandra\.db\.marshal\.UserType\(.*?\)/, 'org.apache.cassandra.db.marshal.UserType')
             if USER_TYPE_PATTERN =~ result['validator']
               table.add_data_column(
                 result['column_name'].to_sym,
@@ -144,7 +145,7 @@ module Cequel
 
       def read_collection_column(name, collection_type, *internal_types)
         types = internal_types
-          .map { |internal| Type.lookup_internal(internal, name) }
+          .each_with_index.map { |internal, i| Type.lookup_internal(internal, name, i) }
         table.__send__("add_#{collection_type}", name.to_sym, *types)
       end
 

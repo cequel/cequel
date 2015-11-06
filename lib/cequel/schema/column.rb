@@ -293,8 +293,12 @@ module Cequel
 
       # (see Column#to_cql)
       def to_cql
-        if Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type)
+        if  Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@key_type) &&  Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type) 
+          "#{@name} MAP <FROZEN <#{@key_type}>, FROZEN < #{@type}>>"
+        elsif Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type)
           "#{@name} MAP <#{@key_type}, FROZEN < #{@type}>>"
+        elsif Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@key_type)
+          "#{@name} MAP <FROZEN <#{@key_type}>, #{@type}>"
         else
           "#{@name} MAP <#{@key_type}, #{@type}>"
         end

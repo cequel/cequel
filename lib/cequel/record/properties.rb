@@ -144,7 +144,6 @@ module Cequel
           def_accessors(name)
           set_attribute_default(name, options[:default])
           Cequel::Type::BY_COLUMN_NAME[name] = type
-
         end
 
         #
@@ -164,6 +163,7 @@ module Cequel
           def_collection_accessors(name, List)
           set_attribute_default(name, options[:default])
           set_empty_attribute(name) { [] }
+          Cequel::Type::BY_COLUMN_NAME[name] = type
         end
 
         #
@@ -183,6 +183,7 @@ module Cequel
           def_collection_accessors(name, Set)
           set_attribute_default(name, options[:default])
           set_empty_attribute(name) { ::Set[] }
+          Cequel::Type::BY_COLUMN_NAME[name] = type
         end
 
         #
@@ -202,6 +203,7 @@ module Cequel
           def_collection_accessors(name, Map)
           set_attribute_default(name, options[:default])
           set_empty_attribute(name) { {} }
+          Cequel::Type::BY_COLUMN_NAME[name] = [key_type, value_type]
         end
 
         private
