@@ -110,6 +110,10 @@ module Cequel
         end
 
         def type(name, &block)
+          type = Cequel::Record::UserType.new(name)
+          type.instance_eval(&block)
+          type.build
+
           klass = Class.new(Cequel::Type::Base) do
             define_method :internal_names do
               ['org.apache.cassandra.db.marshal.UserType']
@@ -118,6 +122,7 @@ module Cequel
           class_name = name.to_s.gsub(/^([a-z])/){ $1.upcase }.gsub(/_([a-z])/) { $1.upcase }
           Cequel::Type.const_set class_name, klass
           Cequel::Type.register klass.instance
+
         end
 
         # rubocop:enable LineLength

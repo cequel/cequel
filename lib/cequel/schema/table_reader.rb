@@ -119,7 +119,7 @@ module Cequel
           )
         else
           column_data.each do |result|
-            result['validator'].gsub!(/org\.apache\.cassandra\.db\.marshal\.UserType\(.*?\)/, 'org.apache.cassandra.db.marshal.UserType')
+            while result['validator'].gsub!(/org.apache.cassandra.db.marshal.UserType\([^()]*\)/,"org.apache.cassandra.db.marshal.UserType"); end
             if USER_TYPE_PATTERN =~ result['validator']
               table.add_data_column(
                 result['column_name'].to_sym,
