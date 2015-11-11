@@ -12,6 +12,7 @@ module Cequel
       end
 
       def build
+        return unless Rake.application.current_task == 'cequel:migrate'
         cql = "CREATE TYPE #{Cequel::Record.connection.configuration[:keyspace]}.#{@name} ("
         cql += @types.map { |name,t| " #{to_cql(name, t)} "}.join(",\n")
         cql += "\n);"
