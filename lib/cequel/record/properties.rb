@@ -112,7 +112,6 @@ module Cequel
         def type(name, &block)
           type = Cequel::Record::UserType.new(name)
           type.instance_eval(&block)
-          type.build
 
           klass = Class.new(Cequel::Type::Base) do
             define_method :internal_names do
