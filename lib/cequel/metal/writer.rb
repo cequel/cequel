@@ -59,6 +59,10 @@ module Cequel
         bp = []
         if value.is_a?(::Hash)
           value.each do |k,v|
+            unless k.is_a?(Symbol)
+              values << k
+              k = '?'
+            end
             if v.is_a?(Hash)
               bp << "#{k}: #{prepare_upsert_value_rec(v, values)[0]}"
             else
