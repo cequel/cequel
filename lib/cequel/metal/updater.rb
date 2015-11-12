@@ -102,8 +102,23 @@ module Cequel
       # @see DataSet#set_add
       #
       def set_add(column, values)
-        statements << "#{column} = #{column} + {?}"
-        bind_vars << values
+        if values.is_a?(Hash)
+          all_statements = []
+          all_bind_vars = []
+          values = {column => values}
+          values.each_pair do |column, value|
+            prepare_upsert_value(value) do |binding, *v|
+              all_statements << binding
+              all_bind_vars.concat(v)
+            end
+          end
+          statements << "#{column} = #{column} + {#{all_statements.join(', ')}}"
+          bind_vars.concat(all_bind_vars)
+        else
+          statements << "#{column} = #{column} + {?}"
+          bind_vars << values
+        end
+
       end
 
       #
