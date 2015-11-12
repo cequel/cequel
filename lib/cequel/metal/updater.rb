@@ -145,9 +145,24 @@ module Cequel
       # @see DataSet#map_update
       #
       def map_update(column, updates)
-        binding_pairs = ::Array.new(updates.length) { '?:?' }.join(',')
-        statements << "#{column} = #{column} + {#{binding_pairs}}"
-        bind_vars.concat(updates.flatten)
+
+        if updates.values.first.is_a?(Hash)
+          
+          all_statements = []
+          all_bind_vars = []
+          updates.each do |k,v|
+            prepare_upsert_value(v) do |binding, *vv|
+              all_statements << "{#{k}:#{binding}}"
+              all_bind_vars.concat(vv)
+            end
+          end
+          statements << "#{column} = #{column} + #{all_statements.join(', ')}"
+          bind_vars.concat(all_bind_vars.flatten)
+        else
+          binding_pairs = ::Array.new(updates.length) { '?:?' }.join(',')
+          statements << "#{column} = #{column} + {#{binding_pairs}}"
+          bind_vars.concat(updates.flatten)
+        end
       end
 
       private
