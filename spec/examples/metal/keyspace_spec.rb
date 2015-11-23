@@ -104,6 +104,22 @@ describe Cequel::Metal::Keyspace do
     end
   end
 
+  describe "#datacenter" do
+    it "datacenter setting get extracted correctly for sending to cluster" do
+      connect = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+                           port: Cequel::SpecSupport::Helpers.port,
+                           datacenter: 'current_datacenter'
+
+      expect(connect.datacenter).to eq('current_datacenter')
+    end
+
+    it "default is nil" do
+      connect = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+                           port: Cequel::SpecSupport::Helpers.port
+      expect(connect.datacenter).to be_nil
+    end
+  end
+
   describe "#execute" do
     let(:statement) { "SELECT id FROM posts" }
 
