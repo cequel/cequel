@@ -77,7 +77,7 @@ module Cequel
       def read_partition_keys
         validators = table_data['key_validator']
         types = parse_composite_types(validators) || [validators]
-        columns = partition_columns.sort { |c| c['component_index'] }
+        columns = partition_columns { |c| c['component_index'] }
           .map { |c| c['column_name'] }
 
         columns.zip(types) do |name, type|
@@ -87,7 +87,7 @@ module Cequel
 
       # XXX See comment on {read_partition_keys}
       def read_clustering_columns
-        columns = cluster_columns.sort { |l, r| l['component_index'] <=> r['component_index'] }
+        columns = cluster_columns { |l, r| l['component_index'] <=> r['component_index'] }
           .map { |c| c['column_name'] }
         comparators = parse_composite_types(table_data['comparator'])
         unless comparators
