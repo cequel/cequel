@@ -80,6 +80,7 @@ module Cequel
         # @return [void]
         #
         def synchronize_schema
+binding.pry          
           Cequel::Schema::TableSynchronizer
             .apply(connection, read_schema, table_schema)
         end
