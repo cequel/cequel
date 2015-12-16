@@ -14,6 +14,16 @@ module Cequel
         Cequel::Record::UserType::TYPES[@name][name] = {type: type, options: options }
       end
 
+      def list(name, type, options = {})
+        Cequel::Record::UserType::TYPES[@name] ||= {}
+        Cequel::Record::UserType::TYPES[@name][name] = {type: type, options: options, collection_type: :list }
+      end
+
+      def set(name, type, options = {})
+        Cequel::Record::UserType::TYPES[@name] ||= {}
+        Cequel::Record::UserType::TYPES[@name][name] = {type: type, options: options, collection_type: :set }
+      end      
+
       def self.build
         Cequel::Record::UserType::TYPES.each do |type_name, h|
           cql = "CREATE TYPE #{Cequel::Record.connection.configuration[:keyspace]}.#{type_name} ("
@@ -38,12 +48,18 @@ module Cequel
 
       def self.to_cql(name, type)
         if type[:options][:frozen]
-          "#{name} FROZEN <#{type[:type]}>"
+          t = "FROZEN<#{type[:type]}>"
         else
-          "#{name} #{type[:type]}"
+          t = type[:type]
         end
 
+        if type[:collection_type]
+          t = "#{type[:collection_type].upcase}<#{t}>"
+        end
+        "#{name} #{t}"
       end
     end
   end
 end
+
+
