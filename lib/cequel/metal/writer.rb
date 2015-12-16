@@ -65,8 +65,10 @@ module Cequel
             end
             if v.is_a?(Hash) 
               bp << "#{k}: #{prepare_upsert_value_rec(v, values)[0]}"
-            elsif v.is_a?(Array) || v.is_a?(Set)
-              bp << "#{k}: #{prepare_upsert_value_rec(v, values)[0]}"
+            elsif v.is_a?(Array)
+              bp << (v.empty? ? "#{k}: []" : "#{k}: #{prepare_upsert_value_rec(v, values)[0]}")
+            elsif v.is_a?(Set)
+              bp << (v.empty? ? "#{k}: {}" : "#{k}: #{prepare_upsert_value_rec(v, values)[0]}")
             else
               bp << "#{k}:?"
               values << v
@@ -76,14 +78,14 @@ module Cequel
         elsif value.is_a?(::Array) && value.first.is_a?(Hash)
           value.each do |v|
             if v.is_a?(Hash)
-              bp << prepare_upsert_value_rec(v, values)[0]
+              bp << (v.empty? ? "{}" : prepare_upsert_value_rec(v, values)[0])
             end
           end
           return "[#{bp.join(', ')}]", *values
         elsif value.is_a?(::Set) && value.first.is_a?(Hash)
           value.each do |v|
             if v.is_a?(Hash)
-              bp << prepare_upsert_value_rec(v, values)[0]
+              bp << (v.empty? ? "{}" : prepare_upsert_value_rec(v, values)[0])
             end
           end
           return "{#{bp.join(', ')}}", *values.to_a
