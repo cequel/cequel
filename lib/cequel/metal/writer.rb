@@ -57,14 +57,18 @@ module Cequel
 
       def prepare_upsert_value_rec(value, values = [])
         bp = []
+
         if value.is_a?(::Hash)
           value.each do |k,v|
             unless k.is_a?(Symbol)
               values << k
               k = '?'
             end
-            if v.is_a?(Hash)
+            if v.is_a?(Hash) 
               bp << "#{k}: #{prepare_upsert_value_rec(v, values)[0]}"
+            elsif v.is_a?(Array) || v.is_a?(Set)
+              bp << "#{k}: #{prepare_upsert_value_rec(v, values)[0]}"
+              values << v.to_a
             else
               bp << "#{k}:?"
               values << v
