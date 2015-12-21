@@ -32,7 +32,7 @@ module Cequel
 
         exploded_key_attributes = [{}].tap do |all_key_attributes|
           key_columns.zip(scoped_key_values) do |column, values|
-            all_key_attributes.replace(Array(values).flat_map do |value|
+            all_key_attributes.replace([values].flatten.compact.flat_map do |value|
               all_key_attributes.map do |key_attributes|
                 key_attributes.merge(column.name => value)
               end
