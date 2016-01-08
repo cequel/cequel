@@ -13,6 +13,12 @@ namespace :cequel do
     task :drop => :environment do
       drop!
     end
+    
+    desc 'Reset Cassandra keyspace'
+    task :reset => :environment do
+      drop!
+      create!
+    end
   end
 
   desc "Synchronize all models defined in `app/models' with Cassandra " \
