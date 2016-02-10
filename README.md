@@ -28,7 +28,7 @@ gem 'cequel'
 
 Cequel does not require Rails, but if you are using Rails, you
 will need version 3.2+. Cequel::Record will read from the configuration file
-`config/cequel.yml` if it is present. You can generate a default configuarion
+`config/cequel.yml` if it is present. You can generate a default configuration
 file with:
 
 ```bash
