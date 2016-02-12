@@ -46,6 +46,7 @@ module Cequel
       end
 
       def statements
+     
         [].tap do |statements|
           row.each_pair do |column_name, value|
             column_names << column_name

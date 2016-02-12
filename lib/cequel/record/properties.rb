@@ -109,6 +109,21 @@ module Cequel
           set_attribute_default(name, default)
         end
 
+        def type(name, &block)
+          type = Cequel::Record::UserType.new(name)
+          type.instance_eval(&block)
+
+          klass = Class.new(Cequel::Type::Base) do
+            define_method :internal_names do
+              ['org.apache.cassandra.db.marshal.UserType']
+            end
+          end
+          class_name = name.to_s.gsub(/^([a-z])/){ $1.upcase }.gsub(/_([a-z])/) { $1.upcase }
+          Cequel::Type.const_set class_name, klass
+          Cequel::Type.register klass.instance
+
+        end
+
         # rubocop:enable LineLength
 
         #
@@ -132,6 +147,7 @@ module Cequel
         def column(name, type, options = {})
           def_accessors(name)
           set_attribute_default(name, options[:default])
+          Cequel::Type::BY_COLUMN_NAME[name] = type
         end
 
         #
@@ -151,6 +167,7 @@ module Cequel
           def_collection_accessors(name, List)
           set_attribute_default(name, options[:default])
           set_empty_attribute(name) { [] }
+          Cequel::Type::BY_COLUMN_NAME[name] = type
         end
 
         #
@@ -170,6 +187,7 @@ module Cequel
           def_collection_accessors(name, Set)
           set_attribute_default(name, options[:default])
           set_empty_attribute(name) { ::Set[] }
+          Cequel::Type::BY_COLUMN_NAME[name] = type
         end
 
         #
@@ -189,6 +207,7 @@ module Cequel
           def_collection_accessors(name, Map)
           set_attribute_default(name, options[:default])
           set_empty_attribute(name) { {} }
+          Cequel::Type::BY_COLUMN_NAME[name] = [key_type, value_type]
         end
 
         private
@@ -261,7 +280,7 @@ module Cequel
       #
       def attributes
         attribute_names
-          .each_with_object(HashWithIndifferentAccess.new) do |name, attributes|
+          .each_with_object(Hash.new) do |name, attributes|
           attributes[name] = read_attribute(name)
         end
       end

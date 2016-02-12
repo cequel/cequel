@@ -3,6 +3,7 @@ require 'active_model'
 require 'weakref'
 
 require 'cequel'
+require 'cequel/record/user_type'
 require 'cequel/record/errors'
 require 'cequel/record/schema'
 require 'cequel/record/properties'

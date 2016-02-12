@@ -93,7 +93,6 @@ module Cequel
         #
         def read_schema
           fail MissingTableNameError unless table_name
-
           connection.schema.read_table(table_name)
         end
 

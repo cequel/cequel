@@ -187,6 +187,14 @@ module Cequel
         @index_name = index_name
       end
 
+      def to_cql
+        if Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type)
+          "#{@name} FROZEN <#{@type}>"
+        else
+          super
+        end
+      end
+
       #
       # @return [Boolean] true if this column has a secondary index
       #
@@ -221,7 +229,11 @@ module Cequel
     class List < CollectionColumn
       # (see Column#to_cql)
       def to_cql
-        "#{@name} LIST <#{@type}>"
+        if Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type)
+          "#{@name} LIST <FROZEN <#{@type}>>"
+        else
+          "#{@name} LIST <#{@type}>"
+        end
       end
 
       #
@@ -241,7 +253,11 @@ module Cequel
     class Set < CollectionColumn
       # (see Column#to_cql)
       def to_cql
-        "#{@name} SET <#{@type}>"
+        if Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type)
+          "#{@name} SET <FROZEN <#{@type}>>"
+        else
+          "#{@name} SET <#{@type}>"
+        end
       end
 
       #
@@ -277,7 +293,15 @@ module Cequel
 
       # (see Column#to_cql)
       def to_cql
-        "#{@name} MAP <#{@key_type}, #{@type}>"
+        if  Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@key_type) &&  Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type) 
+          "#{@name} MAP <FROZEN <#{@key_type}>, FROZEN < #{@type}>>"
+        elsif Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@type)
+          "#{@name} MAP <#{@key_type}, FROZEN < #{@type}>>"
+        elsif Cequel::Type::BY_INTERNAL_NAME['org.apache.cassandra.db.marshal.UserType'].include?(@key_type)
+          "#{@name} MAP <FROZEN <#{@key_type}>, #{@type}>"
+        else
+          "#{@name} MAP <#{@key_type}, #{@type}>"
+        end
       end
 
       #

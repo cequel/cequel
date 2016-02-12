@@ -52,16 +52,49 @@ module Cequel
       def_delegator :statements, :empty?
 
       def prepare_upsert_value(value)
-        case value
-        when ::Array
-          yield '[?]', value
-        when ::Set then
-          yield '{?}', value.to_a
-        when ::Hash then
-          binding_pairs = ::Array.new(value.length) { '?:?' }.join(',')
-          yield "{#{binding_pairs}}", *value.flatten
+        yield prepare_upsert_value_rec(value)
+      end
+
+      def prepare_upsert_value_rec(value, values = [])
+        bp = []
+        if value.is_a?(::Hash)
+          value.each do |k,v|
+            unless k.is_a?(Symbol)
+              values << k
+              k = '?'
+            end
+            if v.is_a?(Hash) 
+              bp << "#{k}: #{prepare_upsert_value_rec(v, values)[0]}"
+            elsif v.is_a?(Array)
+              bp << (v.empty? ? "#{k}: []" : "#{k}: #{prepare_upsert_value_rec(v, values)[0]}")
+            elsif v.is_a?(Set)
+              bp << (v.empty? ? "#{k}: {}" : "#{k}: #{prepare_upsert_value_rec(v, values)[0]}")
+            else
+              bp << "#{k}:?"
+              values << v
+            end
+          end
+          return "{#{bp.join(', ')}}", *values
+        elsif value.is_a?(::Array) && value.first.is_a?(Hash)
+          value.each do |v|
+            if v.is_a?(Hash)
+              bp << (v.empty? ? "{}" : prepare_upsert_value_rec(v, values)[0])
+            end
+          end
+          return "[#{bp.join(', ')}]", *values
+        elsif value.is_a?(::Set) && value.first.is_a?(Hash)
+          value.each do |v|
+            if v.is_a?(Hash)
+              bp << (v.empty? ? "{}" : prepare_upsert_value_rec(v, values)[0])
+            end
+          end
+          return "{#{bp.join(', ')}}", *values.to_a
+        elsif value.is_a?(::Array)
+          return '[?]', value
+        elsif value.is_a?(::Set)
+          return '{?}', value.to_a
         else
-          yield '?', value
+          return '?', value
         end
       end
 

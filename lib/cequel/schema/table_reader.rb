@@ -13,6 +13,8 @@ module Cequel
         /^org\.apache\.cassandra\.db\.marshal\.ReversedType\((.+)\)$/
       COLLECTION_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.(List|Set|Map)Type\((.+)\)$/
+      USER_TYPE_PATTERN =
+        /^(org\.apache\.cassandra\.db\.marshal\.UserType)/
 
       # @return [Table] object representation of the table defined in the
       #   database
@@ -75,11 +77,11 @@ module Cequel
       def read_partition_keys
         validators = table_data['key_validator']
         types = parse_composite_types(validators) || [validators]
-        columns = partition_columns.sort { |c| c['component_index'] }
+        columns = partition_columns.sort { |a,b| a['component_index'] <=> b['component_index'] }
           .map { |c| c['column_name'] }
 
         columns.zip(types) do |name, type|
-          table.add_partition_key(name.to_sym, Type.lookup_internal(type))
+          table.add_partition_key(name.to_sym, Type.lookup_internal(type, name))
         end
       end
 
@@ -102,7 +104,7 @@ module Cequel
           end
           table.add_clustering_column(
             name.to_sym,
-            Type.lookup_internal(type),
+            Type.lookup_internal(type, name),
             clustering_order
           )
         end
@@ -112,12 +114,19 @@ module Cequel
         if column_data.empty?
           table.add_data_column(
             (compact_value['column_name'] || :value).to_sym,
-            Type.lookup_internal(table_data['default_validator']),
+            Type.lookup_internal(table_data['default_validator'], compact_value['column_name'] || :value),
             false
           )
         else
           column_data.each do |result|
-            if COLLECTION_TYPE_PATTERN =~ result['validator']
+            result['validator'].gsub!(/org\.apache\.cassandra\.db\.marshal\.UserType(?<re>\((?:(?>[^()]+)|\g<re>)*\))/, 'org.apache.cassandra.db.marshal.UserType')
+            if USER_TYPE_PATTERN =~ result['validator']
+              table.add_data_column(
+                result['column_name'].to_sym,
+                Type.lookup_internal($1, result['column_name'].to_sym)
+              )
+
+            elsif COLLECTION_TYPE_PATTERN =~ result['validator']
               read_collection_column(
                 result['column_name'],
                 $1.underscore,
@@ -126,7 +135,7 @@ module Cequel
             else
               table.add_data_column(
                 result['column_name'].to_sym,
-                Type.lookup_internal(result['validator']),
+                Type.lookup_internal(result['validator'], result['column_name'].to_sym),
                 result['index_name'].try(:to_sym)
               )
             end
@@ -136,7 +145,7 @@ module Cequel
 
       def read_collection_column(name, collection_type, *internal_types)
         types = internal_types
-          .map { |internal| Type.lookup_internal(internal) }
+          .each_with_index.map { |internal, i| Type.lookup_internal(internal, name, i) }
         table.__send__("add_#{collection_type}", name.to_sym, *types)
       end
 
