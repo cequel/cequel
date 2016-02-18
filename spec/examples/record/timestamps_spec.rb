@@ -14,10 +14,10 @@ describe Cequel::Record::Timestamps do
     timestamps
   end
 
-  let!(:now) { Timecop.freeze }
+  let!(:now) { Timecop.freeze.round(3) }
 
   context 'with simple primary key' do
-    let(:blog) { Blog.create!(subdomain: 'bigdata') }
+    let!(:blog) { Blog.create!(subdomain: 'bigdata') }
 
     it 'should populate created_at after create new record' do
       expect(blog.created_at).to eq(now)
@@ -32,6 +32,10 @@ describe Cequel::Record::Timestamps do
       blog.name = 'name'
       blog.save!
       expect(blog.updated_at).to eq(future)
+    end
+
+    it 'should cast the timestamp in the same way that Cassandra records it' do
+      expect(Blog.first.updated_at).to eq(blog.updated_at)
     end
   end
 
