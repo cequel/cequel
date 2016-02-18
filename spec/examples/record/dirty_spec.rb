@@ -6,14 +6,17 @@ describe Cequel::Record::Dirty do
     key :permalink, :text
     column :title, :text
     set :categories, :text
+    column :created_at, :timestamp
   end
 
   context 'loaded model' do
+    let(:created_at_float) { 1455754622.8502421 }
     let(:post) do
       Post.create!(
         permalink: 'cequel',
         title: 'Cequel',
-        categories: Set['Libraries']
+        categories: Set['Libraries'],
+        created_at: created_at_float
       )
     end
 
@@ -56,6 +59,11 @@ describe Cequel::Record::Dirty do
         {categories: [Set['Libraries'], Set['Libraries', 'Gems']]}.
         with_indifferent_access
       )
+    end
+
+    it 'should check dirty state against correctly cast timestamp values' do
+      post.created_at = created_at_float
+      expect(post.changed_attributes).to be_empty
     end
   end
 
