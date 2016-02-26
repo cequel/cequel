@@ -465,6 +465,16 @@ module Cequel
       end
 
       #
+      # Set the page_size at which to read records into the record set.
+      #
+      # @param page_size [Integer] page_size for reads
+      # @return [RecordSet] record set tuned to given page_size
+      #
+      def page_size(page_size)
+        scoped(query_page_size: page_size)
+      end
+
+      #
       # @overload first
       #   @return [Record] the first record in this record set
       #
@@ -667,9 +677,9 @@ module Cequel
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
-                   :scoped_indexed_column, :query_consistency
+                   :scoped_indexed_column, :query_consistency, :query_page_size
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-                :upper_bound, :scoped_indexed_column, :query_consistency
+                :upper_bound, :scoped_indexed_column, :query_consistency, :query_page_size
       hattr_inquirer :attributes, :reversed
       protected :reversed?
 
