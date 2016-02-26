@@ -484,6 +484,10 @@ module Cequel
         scoped(query_paging_state: paging_state)
       end
 
+      def next_paging_state
+        data_set.next_paging_state
+      end
+
       #
       # @overload first
       #   @return [Record] the first record in this record set

@@ -579,6 +579,10 @@ module Cequel
         end
       end
 
+      def next_paging_state
+        execute_cql(*cql).paging_state
+      end
+
       # rubocop:enable LineLength
 
       #
