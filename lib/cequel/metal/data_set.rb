@@ -49,6 +49,7 @@ module Cequel
       # @since 1.1.0
       attr_reader :query_consistency
       attr_reader :query_page_size
+      attr_reader :query_paging_state
 
       def_delegator :keyspace, :write_with_consistency
 
@@ -572,6 +573,11 @@ module Cequel
         end
       end
 
+      def paging_state(paging_state)
+        clone.tap do |data_set|
+          data_set.query_paging_state = paging_state
+        end
+      end
 
       # rubocop:enable LineLength
 
@@ -663,12 +669,16 @@ module Cequel
 
       protected
 
-      attr_writer :row_limit, :query_consistency, :query_page_size
+      attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state
 
       private
 
       def execute_cql(cql, *bind_vars)
-        keyspace.execute_with_options(cql, bind_vars, {consistency: query_consistency, page_size: query_page_size})
+        keyspace.execute_with_options(cql, bind_vars, {
+          consistency: query_consistency,
+          page_size: query_page_size,
+          paging_state: query_paging_state
+        })
       end
 
       def inserter(&block)

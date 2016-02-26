@@ -41,6 +41,7 @@ module Cequel
         add_order
         set_consistency
         set_page_size
+        set_paging_state
         data_set
       end
 
@@ -52,7 +53,7 @@ module Cequel
                      :scoped_key_names, :scoped_key_values,
                      :scoped_indexed_column, :lower_bound,
                      :upper_bound, :reversed?, :order_by_column,
-                     :query_consistency, :query_page_size, :ascends_by?
+                     :query_consistency, :query_page_size, :query_paging_state, :ascends_by?
 
       private
 
@@ -101,6 +102,12 @@ module Cequel
       def set_page_size
         if query_page_size
           self.data_set = data_set.page_size(query_page_size)
+        end
+      end
+
+      def set_paging_state
+        if query_paging_state
+          self.data_set = data_set.paging_state(query_paging_state)
         end
       end
 

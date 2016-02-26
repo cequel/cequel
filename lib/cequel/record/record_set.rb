@@ -475,6 +475,16 @@ module Cequel
       end
 
       #
+      # Set the paging_state at which to read records into the record set.
+      #
+      # @param paging_state [String] paging_state for reads
+      # @return [RecordSet] record set tuned to given paging_state
+      #
+      def paging_state(paging_state)
+        scoped(query_paging_state: paging_state)
+      end
+
+      #
       # @overload first
       #   @return [Record] the first record in this record set
       #
@@ -677,9 +687,11 @@ module Cequel
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
-                   :scoped_indexed_column, :query_consistency, :query_page_size
+                   :scoped_indexed_column, :query_consistency,
+                   :query_page_size, :query_paging_state
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-                :upper_bound, :scoped_indexed_column, :query_consistency, :query_page_size
+                :upper_bound, :scoped_indexed_column, :query_consistency,
+                :query_page_size, :query_paging_state
       hattr_inquirer :attributes, :reversed
       protected :reversed?
 
