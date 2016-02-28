@@ -343,6 +343,8 @@ module Cequel
         unless self.class.reflect_on_column(name)
           fail UnknownAttributeError, "unknown attribute: #{name}"
         end
+
+        send("#{name}_will_change!") unless value === read_attribute(name)
         @attributes[name] = value
       end
 
