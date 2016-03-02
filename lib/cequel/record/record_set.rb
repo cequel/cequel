@@ -819,7 +819,7 @@ module Cequel
       end
 
       def next_unscoped_key_name
-        next_unscoped_key_column.name
+        next_unscoped_key_column.try(:name)
       end
 
       def next_range_key_column
