@@ -31,7 +31,7 @@ module Cequel
       # @api private
       #
       def initialize(owner_class, name, options = {})
-        options.assert_valid_keys(:class_name)
+        options.assert_valid_keys(:class_name, :foreign_key)
 
         @owner_class, @name = owner_class, name.to_sym
         @association_class_name =

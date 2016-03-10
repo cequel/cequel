@@ -186,6 +186,31 @@ describe Cequel::Record::Associations do
       end
     end
 
+    context 'with foreign_key option' do
+      model :Parent do
+        key :parent_id, :uuid, auto: true
+        column :name, :text
+        has_many :children, class_name: 'Child'
+      end
+
+      model :Child do
+        belongs_to :parent, partition: true, foreign_key: :parent_id
+        key :child_id, :uuid, auto: true
+        column :name, :text
+      end
+
+      let(:parent) { Parent.new }
+      let(:child) { Child.new }
+
+      it "should add parent's keys as first keys" do
+        expect(Child.key_column_names.first(2)).to eq([:parent_id, :child_id])
+      end
+
+      it "should add parent's keys as partition keys" do
+        expect(Child.partition_key_column_names).to eq([:parent_id])
+      end
+    end
+
   end
 
   describe '::has_many' do
