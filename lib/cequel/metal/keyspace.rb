@@ -34,6 +34,8 @@ module Cequel
       attr_reader :credentials
       # @return [Hash] SSL Configuration options
       attr_reader :ssl_config
+      # @return [::Cassandra::LoadBalancing::Policy] Policy used for Cassandra connection
+      attr_reader :load_balancing_policy
 
       #
       # @!method write(statement, *bind_vars)
@@ -143,6 +145,7 @@ module Cequel
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
 
+        @load_balancing_policy = build_load_balancing_policy
         # reset the connections
         clear_active_connections!
       end
@@ -283,6 +286,7 @@ module Cequel
         {hosts: hosts, port: port}.tap do |options|
           options.merge!(credentials) if credentials
           options.merge!(ssl_config) if ssl_config
+          options.merge!(load_balancing_policy) if load_balancing_policy
         end
       end
 
@@ -292,6 +296,13 @@ module Cequel
 
       def write_target
         current_batch || self
+      end
+
+      def build_load_balancing_policy
+        return unless datacenter
+        dc_aware_round_robin_policy = ::Cassandra::LoadBalancing::Policies::DCAwareRoundRobin.new(@datacenter)
+        token_aware_policy = ::Cassandra::LoadBalancing::Policies::TokenAware.new(dc_aware_round_robin_policy)
+        {load_balancing_policy: token_aware_policy}
       end
 
       def extract_hosts_and_port(configuration)
