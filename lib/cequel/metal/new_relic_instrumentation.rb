@@ -19,16 +19,16 @@ module Cequel
         end
 
         statement_words = statement.split
-        operation = statement_words.first
+        operation = statement_words.first.downcase
         table = nil
         case operation
-        when "BEGIN"
-          operation = "BATCH"
-        when "SELECT"
+        when "begin"
+          operation = "batch"
+        when "select"
           table = statement_words.at(statement_words.index("FROM") + 1)
-        when "INSERT"
+        when "insert"
           table = statement_words[2]
-        when "UPDATE"
+        when "update"
           table = statement_words[1]
         end
 
