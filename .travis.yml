@@ -1,8 +1,9 @@
+sudo: false
 language: ruby
 rvm:
   - "2.2.0"
   - "2.1.5"
-  - "rbx-2.5.2"
+  - "2.3.0"
   - "jruby-1.7.22"
   - "jruby-9.0.0.0"
 gemfile:
@@ -10,12 +11,6 @@ gemfile:
   - "gemfiles/rails_4.1.gemfile"
   - "gemfiles/rails_4.2.gemfile"
 script: 'bundle exec rake test'
-before_install:
-  - sudo sh -c "echo 'JVM_OPTS=\"\${JVM_OPTS} -Djava.net.preferIPv4Stack=false\"' >> /usr/local/cassandra/conf/cassandra-env.sh"
-  - sudo service cassandra start
 bundler_args: '--without=debug'
 services:
   - cassandra
-matrix:
-  allow_failures:
-    - rvm: "rbx-2.5.2"
