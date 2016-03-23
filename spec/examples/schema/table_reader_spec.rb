@@ -2,16 +2,17 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Schema::TableReader do
+  let(:table_name) { :"posts_#{SecureRandom.hex(4)}" }
 
   after do
-    cequel.schema.drop_table(:posts)
+    cequel.schema.drop_table(table_name)
   end
 
-  let(:table) { cequel.schema.read_table(:posts) }
+  let(:table) { cequel.schema.read_table(table_name) }
 
   describe 'reading simple key' do
     before do
-      cequel.execute("CREATE TABLE posts (permalink text PRIMARY KEY)")
+      cequel.execute("CREATE TABLE #{table_name} (permalink text PRIMARY KEY)")
     end
 
     it 'should read name correctly' do
@@ -30,7 +31,7 @@ describe Cequel::Schema::TableReader do
   describe 'reading single non-partition key' do
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (
+        CREATE TABLE #{table_name} (
           blog_subdomain text,
           permalink ascii,
           PRIMARY KEY (blog_subdomain, permalink)
@@ -63,7 +64,7 @@ describe Cequel::Schema::TableReader do
   describe 'reading reverse-ordered non-partition key' do
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (
+        CREATE TABLE #{table_name} (
           blog_subdomain text,
           permalink ascii,
           PRIMARY KEY (blog_subdomain, permalink)
@@ -89,7 +90,7 @@ describe Cequel::Schema::TableReader do
   describe 'reading compound non-partition key' do
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (
+        CREATE TABLE #{table_name} (
           blog_subdomain text,
           permalink ascii,
           author_id uuid,
@@ -116,7 +117,7 @@ describe Cequel::Schema::TableReader do
   describe 'reading compound partition key' do
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (
+        CREATE TABLE #{table_name} (
           blog_subdomain text,
           permalink ascii,
           PRIMARY KEY ((blog_subdomain, permalink))
@@ -142,7 +143,7 @@ describe Cequel::Schema::TableReader do
   describe 'reading compound partition and non-partition keys' do
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (
+        CREATE TABLE #{table_name} (
           blog_subdomain text,
           permalink ascii,
           author_id uuid,
@@ -183,7 +184,7 @@ describe Cequel::Schema::TableReader do
 
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (
+        CREATE TABLE #{table_name} (
           blog_subdomain text,
           permalink ascii,
           title text,
@@ -194,7 +195,7 @@ describe Cequel::Schema::TableReader do
           PRIMARY KEY (blog_subdomain, permalink)
         )
       CQL
-      cequel.execute('CREATE INDEX posts_author_id_idx ON posts (author_id)')
+      cequel.execute("CREATE INDEX posts_author_id_idx ON #{table_name} (author_id)")
     end
 
     it 'should read types of scalar data columns' do
@@ -255,7 +256,7 @@ describe Cequel::Schema::TableReader do
 
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (permalink text PRIMARY KEY)
+        CREATE TABLE #{table_name} (permalink text PRIMARY KEY)
         WITH bloom_filter_fp_chance = 0.02
         AND comment = 'Posts table'
         AND compaction = {
@@ -315,7 +316,7 @@ describe Cequel::Schema::TableReader do
   describe 'skinny-row compact storage' do
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
+        CREATE TABLE #{table_name} (permalink text PRIMARY KEY, title text, body text)
         WITH COMPACT STORAGE
       CQL
     end
@@ -333,7 +334,7 @@ describe Cequel::Schema::TableReader do
   describe 'wide-row compact storage' do
     before do
       cequel.execute <<-CQL
-        CREATE TABLE posts (
+        CREATE TABLE #{table_name} (
           blog_subdomain text,
           id uuid,
           data text,
@@ -356,7 +357,7 @@ describe Cequel::Schema::TableReader do
   describe 'skinny-row legacy table', thrift: true do
     before do
       legacy_connection.execute <<-CQL
-        CREATE TABLE posts (permalink text PRIMARY KEY, title text, body text)
+        CREATE TABLE #{table_name} (permalink text PRIMARY KEY, title text, body text)
       CQL
     end
     subject { table }
@@ -375,7 +376,7 @@ describe Cequel::Schema::TableReader do
   describe 'wide-row legacy table', thrift: true do
     before do
       legacy_connection.execute(<<-CQL2)
-        CREATE COLUMNFAMILY posts (blog_subdomain text PRIMARY KEY)
+        CREATE COLUMNFAMILY #{table_name} (blog_subdomain text PRIMARY KEY)
         WITH comparator=uuid AND default_validation=text
       CQL2
     end

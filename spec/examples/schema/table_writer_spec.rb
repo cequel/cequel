@@ -2,18 +2,19 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Schema::TableWriter do
+  let(:table_name) { :"posts_#{SecureRandom.hex(4)}" }
 
-  let(:table) { cequel.schema.read_table(:posts) }
+  let(:table) { cequel.schema.read_table(table_name) }
 
   describe '#create_table' do
 
     after do
-      cequel.schema.drop_table(:posts)
+      cequel.schema.drop_table(table_name)
     end
 
     describe 'with simple skinny table' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :permalink, :ascii
           column :title, :text
         end
@@ -35,7 +36,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'with multi-column primary key' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :blog_subdomain, :ascii
           key :permalink, :ascii
           column :title, :text
@@ -61,7 +62,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'with composite partition key' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           partition_key :blog_subdomain, :ascii
           partition_key :permalink, :ascii
           column :title, :text
@@ -80,7 +81,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'with composite partition key and non-partition keys' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           partition_key :blog_subdomain, :ascii
           partition_key :permalink, :ascii
           key :month, :timestamp
@@ -109,7 +110,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'collection types' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :permalink, :ascii
           column :title, :text
           list :authors, :blob
@@ -151,7 +152,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'storage properties' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :permalink, :ascii
           column :title, :text
           with :comment, 'Blog posts'
@@ -175,7 +176,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'compact storage' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :permalink, :ascii
           column :title, :text
           compact_storage
@@ -189,7 +190,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'clustering order' do
       before do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :blog_permalink, :ascii
           key :id, :uuid, :desc
           column :title, :text
@@ -203,7 +204,7 @@ describe Cequel::Schema::TableWriter do
 
     describe 'indices' do
       it 'should create indices' do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :blog_permalink, :ascii
           key :id, :uuid, :desc
           column :title, :text, :index => true
@@ -212,7 +213,7 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should create indices with specified name' do
-        cequel.schema.create_table(:posts) do
+        cequel.schema.create_table(table_name) do
           key :blog_permalink, :ascii
           key :id, :uuid, :desc
           column :title, :text, :index => :silly_idx
