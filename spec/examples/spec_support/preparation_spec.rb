@@ -49,6 +49,14 @@ describe Cequel::SpecSupport::Preparation do
       Cequel::Record.connection.schema.drop!
     end
 
+    let!(:model) {
+      Class.new do
+        include Cequel::Record
+        self.table_name = "blog_" + SecureRandom.hex(4)
+        key :name, :text
+      end
+    }
+
     it "doesn't cause failure upon drop requests" do
       expect{ prep.drop_keyspace }.not_to raise_error
     end

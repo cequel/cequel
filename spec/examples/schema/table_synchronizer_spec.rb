@@ -2,12 +2,13 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Schema::TableSynchronizer do
+  let(:table_name) { :"posts_#{SecureRandom.hex(4)}" }
 
-  let(:table) { cequel.schema.read_table(:posts) }
+  let(:table) { cequel.schema.read_table(table_name) }
 
   context 'with no existing table' do
     before do
-      cequel.schema.sync_table :posts do
+      cequel.schema.sync_table table_name do
         key :blog_subdomain, :text
         key :permalink, :text
         column :title, :text
@@ -18,7 +19,7 @@ describe Cequel::Schema::TableSynchronizer do
       end
     end
 
-    after { cequel.schema.drop_table(:posts) }
+    after { cequel.schema.drop_table(table_name) }
 
     it 'should create table' do
       expect(table.column(:title).type).to eq(Cequel::Type[:text]) #etc.
@@ -27,7 +28,7 @@ describe Cequel::Schema::TableSynchronizer do
 
   context 'with an existing table' do
     before do
-      cequel.schema.create_table :posts do
+      cequel.schema.create_table table_name do
         key :blog_subdomain, :text
         key :permalink, :text
         column :title, :ascii, :index => true
@@ -38,12 +39,12 @@ describe Cequel::Schema::TableSynchronizer do
       end
     end
 
-    after { cequel.schema.drop_table(:posts) }
+    after { cequel.schema.drop_table(table_name) }
 
     context 'with valid changes' do
 
       before do
-        cequel.schema.sync_table :posts do
+        cequel.schema.sync_table table_name do
           key :blog_subdomain, :text
           key :post_permalink, :text
           column :title, :ascii
@@ -95,7 +96,7 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should not allow changing type of key' do
         expect {
-          cequel.schema.sync_table :posts do
+          cequel.schema.sync_table table_name do
             key :blog_subdomain, :text
             key :permalink, :ascii
             column :title, :ascii
@@ -109,7 +110,7 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should not allow adding a key' do
         expect {
-          cequel.schema.sync_table :posts do
+          cequel.schema.sync_table table_name do
             key :blog_subdomain, :text
             key :permalink, :text
             key :year, :int
@@ -124,7 +125,7 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should not allow removing a key' do
         expect {
-          cequel.schema.sync_table :posts do
+          cequel.schema.sync_table table_name do
             key :blog_subdomain, :text
             column :title, :ascii
             column :body, :text
@@ -137,7 +138,7 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should not allow changing the partition status of a key' do
         expect {
-          cequel.schema.sync_table :posts do
+          cequel.schema.sync_table table_name do
             key :blog_subdomain, :text
             partition_key :permalink, :text
             column :title, :ascii
@@ -151,7 +152,7 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should not allow changing the data structure of a column' do
         expect {
-          cequel.schema.sync_table :posts do
+          cequel.schema.sync_table table_name do
             key :blog_subdomain, :text
             key :permalink, :text
             column :title, :ascii
@@ -165,7 +166,7 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should not allow invalid type transitions of a data column' do
         expect {
-          cequel.schema.sync_table :posts do
+          cequel.schema.sync_table table_name do
             key :blog_subdomain, :text
             key :permalink, :text
             column :title, :ascii, :index => true
@@ -179,7 +180,7 @@ describe Cequel::Schema::TableSynchronizer do
 
       it 'should not allow changing clustering order' do
         expect {
-          cequel.schema.sync_table :posts do
+          cequel.schema.sync_table table_name do
             key :blog_subdomain, :text
             key :permalink, :text, :desc
             column :title, :ascii, :index => true
