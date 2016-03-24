@@ -654,6 +654,30 @@ describe Cequel::Metal::DataSet do
     end
   end
 
+  describe '#page_size' do
+    let(:data_set) { cequel[:posts].page_size(1) }
+
+    it 'should issue SELECT with scoped page size' do
+      expect_query_with_options(/SELECT/, :page_size => 1) { data_set.to_a }
+    end
+
+    it 'should issue COUNT with scoped page size' do
+      expect_query_with_options(/SELECT.*COUNT/, :page_size => 1) { data_set.count }
+    end
+  end
+
+  describe '#paging_state' do
+    let(:data_set) { cequel[:posts].paging_state(nil) }
+
+    it 'should issue SELECT with scoped paging state' do
+      expect_query_with_options(/SELECT/, :paging_state => nil) { data_set.to_a }
+    end
+
+    it 'should issue COUNT with scoped paging state' do
+      expect_query_with_options(/SELECT.*COUNT/, :paging_state => nil) { data_set.count }
+    end
+  end
+
   describe 'result enumeration' do
     let(:row) { row_keys.merge(:title => 'Big Data') }
 
