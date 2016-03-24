@@ -128,8 +128,8 @@ describe Cequel::Record::Persistence do
         it 'should save with specified TTL' do
           blog.name = 'Cequel 1.4'
           blog.save(ttl: 10)
-          expect(cequel[Blog.table_name].select_ttl(:name).first.ttl(:name)).
-            to be_within(0.1).of(9.9)
+          expect(cequel[Blog.table_name].select_ttl(:name).first.ttl(:name))
+            .to be_between(9,10).inclusive
         end
 
         it 'should save with specified timestamp' do
