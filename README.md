@@ -1,7 +1,7 @@
 # Cequel #
 
 Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
-[CQL3](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html).
+[CQL3][].
 
 [![Gem Version](https://badge.fury.io/rb/cequel.png)](http://badge.fury.io/rb/cequel)
 [![Build Status](https://travis-ci.org/cequel/cequel.png?branch=master)](https://travis-ci.org/cequel/cequel)
@@ -586,3 +586,5 @@ the maintainer of Cequel.
 
 Cequel is distributed under the MIT license. See the attached LICENSE for all
 the sordid details.
+
+[CQL3]: http://docs.datastax.com/en/cql/3.3/cql/cqlIntro.html
