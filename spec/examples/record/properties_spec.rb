@@ -53,6 +53,11 @@ describe Cequel::Record::Properties do
         title).to eq('Big Data')
     end
 
+    it 'should mark the attribute as dirty when setting attributes' do
+      expect(Post.new { |post| post.title = 'Big Data' }.changed).to eq(['title'])
+      expect(Post.new { |post| post.title = 'Big Data' }.changes).to eq({'title' => [nil,'Big Data']})
+    end
+
     it 'should get attributes with indifferent access' do
       post = Post.new.tap { |post| post.attributes = {:downcased_title => 'big data' }}
       expect(post.attributes[:title]).to eq 'Big Data'
