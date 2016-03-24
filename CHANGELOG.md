@@ -3,6 +3,7 @@
 * remove false claims of Rubinius support from readme (we would gratefully accept a PR to fix compatibility)
 * add dirty tracking on unsaved records
 * fix key column order bug on tables with more than 2 key columns
+* trim very large field values to a reasonable size in log messages
 
 ## 1.7.0
 
