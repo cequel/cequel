@@ -580,7 +580,7 @@ module Cequel
       end
 
       def next_paging_state
-        execute_cql(*cql).paging_state
+        results.paging_state
       end
 
       # rubocop:enable LineLength
@@ -600,8 +600,7 @@ module Cequel
       #
       def each
         return enum_for(:each) unless block_given?
-        result = execute_cql(*cql)
-        result.each { |row| yield Row.from_result_row(row) }
+        results.each { |row| yield Row.from_result_row(row) }
       end
 
       #
@@ -676,6 +675,10 @@ module Cequel
       attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state
 
       private
+
+      def results
+        @results ||= execute_cql(*cql)
+      end
 
       def execute_cql(cql, *bind_vars)
         keyspace.execute_with_options(cql, bind_vars, {
