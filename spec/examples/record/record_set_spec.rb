@@ -811,6 +811,41 @@ describe Cequel::Record::RecordSet do
     end
   end
 
+  describe '#page_size' do
+    it 'should return the number of records specified by page_size' do
+      expect(Post.page_size(2).to_a.length).to be(2)
+    end
+  end
+
+  describe '#next_paging_state' do
+    it 'should return the paging state of the result' do
+      expect(Post.page_size(1).next_paging_state).not_to eq(nil)
+    end
+  end
+
+  describe '#paging_state' do
+    let(:page_one) { Post.page_size(1) }
+    let(:page_two) { Post.page_size(1).paging_state(page_one.next_paging_state) }
+    let(:page_size) { 3 }
+
+    it 'should page through all records' do
+      all_pages = []
+      next_paging_state = nil
+
+      loop do
+        a_page = Post.page_size(page_size).paging_state(next_paging_state)
+        next_paging_state = a_page.next_paging_state
+
+        # There may be less than page size records on final page
+        expect(a_page.to_a.length).to be <= page_size
+        all_pages.concat(a_page.to_a)
+        break if next_paging_state.nil?
+      end
+
+      expect(all_pages).to eq(posts.to_a)
+    end
+  end
+
   describe '#count' do
     let(:records) { blogs }
 
