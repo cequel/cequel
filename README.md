@@ -115,6 +115,33 @@ class PostsController < ActionController::Base
 end
 ```
 
+Parent child relationship in a namespaced model can be defined using the `class_name` option of `belongs_to` method as follows:
+
+```ruby
+module Blogger
+  class Blog
+    include Cequel::Record
+
+    key :subdomain, :text
+    column :name, :text
+    column :description, :text
+
+    has_many :posts
+  end
+end
+
+module Blogger
+  class Post
+    include Cequel::Record
+
+    belongs_to :blog, class_name: 'Blogger::Blog'
+    key :id, :timeuuid, auto: true
+    column :title, :text
+    column :body, :text
+  end
+end
+```
+
 ### Timestamps ###
 
 If your final primary key column is a `timeuuid` with the `:auto` option set,
