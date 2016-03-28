@@ -75,6 +75,7 @@ describe Cequel::SpecSupport::Preparation do
 
   after(:each) do
     begin
+      Cequel::Record.connection.clear_active_connections!
       Cequel::Record.connection.schema.create!
     rescue
       nil
