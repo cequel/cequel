@@ -110,12 +110,13 @@ module Cequel
           end
 
           key_options = options.extract!(:partition)
+          foreign_key_parts = [options.fetch(:foreign_key, [])].flatten
 
           self.parent_association =
             BelongsToAssociation.new(self, name.to_sym, options)
 
-          parent_association.association_key_columns.each do |column|
-            foreign_key = options.fetch(:foreign_key, "#{name}_#{column.name}")
+          parent_association.association_key_columns.each_with_index do |column, i|
+            foreign_key = foreign_key_parts[i].nil? ? "#{name}_#{column.name}" : foreign_key_parts[i]
             key foreign_key.to_sym, column.type, key_options
           end
           def_parent_association_accessors
