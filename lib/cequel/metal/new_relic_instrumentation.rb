@@ -15,7 +15,7 @@ module Cequel
 
       define_method :execute_with_consistency_with_newrelic do |statement, bind_vars, consistency|
         callback = Proc.new do |result, scoped_metric, elapsed|
-          NewRelic::Agent::Datastores.notice_sql(statement, scoped_metric, elapsed)
+          NewRelic::Agent::Datastores.notice_statement(statement, elapsed)
         end
 
         statement_words = statement.split
