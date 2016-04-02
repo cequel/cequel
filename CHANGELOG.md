@@ -1,3 +1,9 @@
+## Next
+
+* NewRelic instrumentation
+* fix querying tables whose first partition key is a timestamp
+
+
 ## 1.8.0
 
 * remove false claims of Rubinius support from readme (we would gratefully accept a PR to fix compatibility)
