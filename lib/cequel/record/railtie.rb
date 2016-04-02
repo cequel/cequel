@@ -22,9 +22,9 @@ module Cequel
       end
 
       initializer "cequel.add_new_relic" do
-        if configuration.fetch(:newrelic_enabled, true)
+        if configuration.fetch(:newrelic, true)
           begin
-            require 'new_relic/agent/method_tracer'
+            require 'new_relic/agent/datastores'
           rescue LoadError => e
             Rails.logger.debug(
               "New Relic not installed; skipping New Relic integration")
