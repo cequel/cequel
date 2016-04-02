@@ -1,4 +1,4 @@
-## Next
+## 1.9.0
 
 * NewRelic instrumentation
 * fix querying tables whose first partition key is a timestamp
