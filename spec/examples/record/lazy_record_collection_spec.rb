@@ -11,6 +11,6 @@ describe Cequel::Record::LazyRecordCollection do
     let(:now) { Time.now }
     let(:event) { Event[now] }
 
-    it { expect(event.timestamp).to be_within(1.in_milliseconds).of(now) }
+    it { expect(event.timestamp).to be_within(one_millisecond).of(now) }
   end
 end
