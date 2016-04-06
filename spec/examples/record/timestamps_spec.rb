@@ -40,7 +40,7 @@ describe Cequel::Record::Timestamps do
   end
 
   context 'with auto-generated timeuuid primary key' do
-    let(:post) { Post['bigdata'].create! }
+    let!(:post) { Post['bigdata'].create! }
 
     it 'should not have created_at column' do
       expect(Post.column_names).not_to include(:created_at)
