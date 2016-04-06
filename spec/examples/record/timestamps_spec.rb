@@ -28,7 +28,7 @@ describe Cequel::Record::Timestamps do
     end
 
     it 'should update updated_at after record update but not created_at' do
-      future = Timecop.freeze(now + 2.minutes)
+      future = Timecop.freeze(now + 2.minutes).round(3)
       blog.name = 'name'
       blog.save!
       expect(blog.updated_at).to eq(future)
@@ -55,7 +55,7 @@ describe Cequel::Record::Timestamps do
     end
 
     it 'should update updated_at after record update but not created_at' do
-      future = Timecop.freeze(now + 2.minutes)
+      future = Timecop.freeze(now + 2.minutes).round(3)
       post.name = 'name'
       post.save!
       expect(post.updated_at).to eq(future)

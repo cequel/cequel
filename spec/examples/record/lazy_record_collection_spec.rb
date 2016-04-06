@@ -8,7 +8,7 @@ describe Cequel::Record::LazyRecordCollection do
       column :value, :text
     end
 
-    let(:now) { Time.now }
+    let(:now) { Time.now.round(3) }
     let(:event) { Event[now] }
 
     it { expect(event.attributes).to include(timestamp: now) }
