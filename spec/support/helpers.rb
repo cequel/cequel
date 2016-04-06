@@ -139,6 +139,14 @@ module Cequel
         expect(cequel.client).to have_received(:execute).
           with(matcher, hash_including(:consistency => consistency))
       end
+
+      def expect_query_with_options(matcher, options)
+        allow(cequel.client).to receive(:execute).and_call_original
+        yield
+        expect(cequel.client).to have_received(:execute).
+          with(matcher, hash_including(options))
+      end
+
     end
   end
 end

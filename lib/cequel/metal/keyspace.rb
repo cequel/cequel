@@ -187,6 +187,24 @@ module Cequel
         execute_with_consistency(statement, bind_vars, default_consistency)
       end
 
+      def execute_with_options(statement, bind_vars, options={})
+        options[:consistency] ||= default_consistency
+
+        retries = max_retries
+        log('CQL', statement, *bind_vars) do
+          begin
+            client.execute(sanitize(statement, bind_vars), options)
+          rescue Cassandra::Errors::NoHostsAvailable,
+                 Ione::Io::ConnectionError => e
+            clear_active_connections!
+            raise if retries == 0
+            retries -= 1
+            sleep(retry_delay)
+            retry
+          end
+        end
+
+      end
       #
       # Execute a CQL query in this keyspace with the given consistency
       #
@@ -198,21 +216,7 @@ module Cequel
       # @since 1.1.0
       #
       def execute_with_consistency(statement, bind_vars, consistency)
-        retries = max_retries
-
-        log('CQL', statement, *bind_vars) do
-          begin
-            client.execute(sanitize(statement, bind_vars),
-                           consistency: consistency || default_consistency)
-          rescue Cassandra::Errors::NoHostsAvailable,
-                 Ione::Io::ConnectionError => e
-            clear_active_connections!
-            raise if retries == 0
-            retries -= 1
-            sleep(retry_delay)
-            retry
-          end
-        end
+        execute_with_options(statement, bind_vars, {consistency: consistency || default_consistency})
       end
 
       #

@@ -75,7 +75,7 @@ module Cequel
       def read_partition_keys
         validators = table_data['key_validator']
         types = parse_composite_types(validators) || [validators]
-        columns = partition_columns.sort { |c| c['component_index'] }
+        columns = partition_columns.sort_by { |c| c['component_index'] }
           .map { |c| c['column_name'] }
 
         columns.zip(types) do |name, type|

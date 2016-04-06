@@ -67,12 +67,4 @@ describe Cequel::Record::Dirty do
     end
   end
 
-  context 'unloaded model' do
-    let(:post) { Post['cequel'] }
-
-    it 'should not track changes' do
-      post.title = 'Cequel'
-      expect(post.changes).to be_empty
-    end
-  end
 end

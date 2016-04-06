@@ -1,7 +1,7 @@
 # Cequel #
 
 Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
-[CQL3](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html).
+[CQL3][].
 
 [![Gem Version](https://badge.fury.io/rb/cequel.png)](http://badge.fury.io/rb/cequel)
 [![Build Status](https://travis-ci.org/cequel/cequel.png?branch=master)](https://travis-ci.org/cequel/cequel)
@@ -28,7 +28,7 @@ gem 'cequel'
 
 Cequel does not require Rails, but if you are using Rails, you
 will need version 3.2+. Cequel::Record will read from the configuration file
-`config/cequel.yml` if it is present. You can generate a default configuarion
+`config/cequel.yml` if it is present. You can generate a default configuration
 file with:
 
 ```bash
@@ -111,6 +111,33 @@ Now we might do something like this:
 class PostsController < ActionController::Base
   def show
     Blog.find(current_subdomain).posts.find(params[:id])
+  end
+end
+```
+
+Parent child relationship in a namespaced model can be defined using the `class_name` option of `belongs_to` method as follows:
+
+```ruby
+module Blogger
+  class Blog
+    include Cequel::Record
+
+    key :subdomain, :text
+    column :name, :text
+    column :description, :text
+
+    has_many :posts
+  end
+end
+
+module Blogger
+  class Post
+    include Cequel::Record
+
+    belongs_to :blog, class_name: 'Blogger::Blog'
+    key :id, :timeuuid, auto: true
+    column :title, :text
+    column :body, :text
   end
 end
 ```
@@ -586,3 +613,5 @@ the maintainer of Cequel.
 
 Cequel is distributed under the MIT license. See the attached LICENSE for all
 the sordid details.
+
+[CQL3]: http://docs.datastax.com/en/cql/3.3/cql/cqlIntro.html
