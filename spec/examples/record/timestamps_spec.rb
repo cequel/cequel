@@ -14,24 +14,24 @@ describe Cequel::Record::Timestamps do
     timestamps
   end
 
-  let!(:now) { Timecop.freeze.round(3) }
+  let!(:now) { Timecop.freeze }
 
   context 'with simple primary key' do
     let!(:blog) { Blog.create!(subdomain: 'bigdata') }
 
     it 'should populate created_at after create new record' do
-      expect(blog.created_at).to eq(now)
+      expect(blog.created_at).to be_within(1.in_milliseconds).of(now)
     end
 
     it 'should populate updated_at after create new record' do
-      expect(blog.updated_at).to eq(now)
+      expect(blog.updated_at).to be_within(1.in_milliseconds).of(now)
     end
 
     it 'should update updated_at after record update but not created_at' do
-      future = Timecop.freeze(now + 2.minutes).round(3)
+      future = Timecop.freeze(now + 2.minutes)
       blog.name = 'name'
       blog.save!
-      expect(blog.updated_at).to eq(future)
+      expect(blog.updated_at).to be_within(1.in_milliseconds).of(future)
     end
 
     it 'should cast the timestamp in the same way that Cassandra records it' do
@@ -47,18 +47,19 @@ describe Cequel::Record::Timestamps do
     end
 
     it 'should expose created_at' do
-      expect(post.created_at.to_i).to eq(now.to_i)
+      expect(post.created_at).to be_within(1.in_milliseconds).of(now)
     end
 
     it 'should populate updated_at after create new record' do
-      expect(post.updated_at).to eq(now)
+      expect(post.updated_at).to be_within(1.in_milliseconds).of(now)
     end
 
     it 'should update updated_at after record update but not created_at' do
-      future = Timecop.freeze(now + 2.minutes).round(3)
+      future = Timecop.freeze(now + 2.minutes)
       post.name = 'name'
       post.save!
-      expect(post.updated_at).to eq(future)
+      expect(post.created_at).to be_within(1.in_milliseconds).of(now)
+      expect(post.updated_at).to be_within(1.in_milliseconds).of(future)
     end
   end
 end
