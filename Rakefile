@@ -1,7 +1,6 @@
 require 'yaml'
 require 'bundler/setup'
 require 'rspec/core/rake_task'
-require 'rubocop/rake_task'
 require 'wwtd/tasks'
 require 'travis'
 require File.expand_path('../lib/cequel/version', __FILE__)
@@ -60,13 +59,6 @@ RSpec::Core::RakeTask.new(:test) do |t|
   end
   rspec_opts << " --out='#{log_path}' --format=progress"
   t.rspec_opts = rspec_opts
-end
-
-desc 'Check style with Rubocop'
-RuboCop::RakeTask.new(:rubocop) do |task|
-  task.patterns = ['lib/**/*.rb']
-  task.formatters = ['files']
-  task.fail_on_error = true
 end
 
 namespace :test do
