@@ -550,8 +550,6 @@ module Cequel
         end
       end
 
-      # rubocop:disable LineLength
-
       #
       # Change the consistency for queries performed by this data set
       #
@@ -582,8 +580,6 @@ module Cequel
       def next_paging_state
         results.paging_state
       end
-
-      # rubocop:enable LineLength
 
       #
       # Enumerate over rows in this data set. Along with #each, all other

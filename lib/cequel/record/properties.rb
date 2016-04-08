@@ -66,8 +66,6 @@ module Cequel
       module ClassMethods
         protected
 
-        # rubocop:disable LineLength
-
         # @!visibility public
 
         #
@@ -108,8 +106,6 @@ module Cequel
           end
           set_attribute_default(name, default)
         end
-
-        # rubocop:enable LineLength
 
         #
         # Define a data column

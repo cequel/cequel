@@ -66,7 +66,6 @@ namespace :cequel do
       end
 
       new_constants.each do |class_name|
-        # rubocop:disable HandleExceptions
         begin
           clazz = class_name.constantize
         rescue LoadError, NameError, RuntimeError
@@ -80,7 +79,6 @@ namespace :cequel do
             end
           end
         end
-        # rubocop:enable HandleExceptions
       end
     end
   end
