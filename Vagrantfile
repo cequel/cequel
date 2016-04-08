@@ -135,7 +135,7 @@ exec /opt/apache-cassandra-$1/bin/cassandra" > /etc/init/cassandra.conf
   SH
 
   versions = File.read(File.expand_path('../.cassandra-versions', __FILE__)).each_line
-    .map(&:strip).grep(/^2\./)
+    .map(&:strip).grep(/^2\.[12]\./)
   versions.each do |version|
     java_version = version =~ /^1/ ? '6' : '7'
     config.vm.define version do |machine|
