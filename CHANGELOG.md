@@ -1,8 +1,11 @@
+## next
+
+* fix dirty checking for timestamps more precise than Cassandra can store
+
 ## 1.9.0
 
 * NewRelic instrumentation
 * fix querying tables whose first partition key is a timestamp
-
 
 ## 1.8.0
 
