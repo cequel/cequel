@@ -147,6 +147,10 @@ module Cequel
           with(matcher, hash_including(options))
       end
 
+      def one_millisecond
+        0.001
+      end
+
     end
   end
 end
