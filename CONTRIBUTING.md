@@ -37,7 +37,7 @@ $ git remote add upstream git@github.com:cequel/cequel.git
 $ brew tap phinze/cask
 $ brew install brew-cask
 $ brew cask install virtualbox vagrant
-$ vagrant up 2.0.4
+$ vagrant up 2.2.5
 $ rake test
 ```
 
@@ -50,15 +50,15 @@ install [VirtualBox](https://www.virtualbox.org/) and
 [Homebrew-cask](https://github.com/phinze/homebrew-cask) if you're on OS X.
 
 Cequel's Vagrantfile can generate a virtual machine for any Cassandra version
-that Cequel supports (i.e., 1.2.x and 2.0.x). You can run multiple VMs at the
+that Cequel supports (i.e., 2.1.x & 2.2.x). You can run multiple VMs at the
 same time; the first machine you boot will expose its Cassandra instance on
 port `9042`, which is the default port that Cequel will look for.
 
 Cequel is tested against a large range of Ruby, Rails, and Cassandra versions;
 for most patches, you can just run the tests using the latest version of all of
 them. If you're messing with the `Cequel::Schema` or `Cequel::Type` modules,
-you'll want to test at least against an early 1.2 release (1.2.4 is good), a
-later 1.2 release (1.2.13), and the latest 2.0 release.
+you'll want to test at least against an early 2.1 release, a
+later 2.1 release (2.1.13), and the latest 2.2 release.
 
 ## And finally
 
