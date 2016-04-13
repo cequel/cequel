@@ -551,11 +551,9 @@ the columns that are given.
 
 ### Cassandra ###
 
-* 2.x
+* 2.1.x
+* 2.2.x
 
-Though Cequel is tested against Cassandra 2, it does not at this time support
-any of the CQL3.1 features introduced in Cassandra 2. This will change in the
-future.
 
 ## Support & Bugs ##
 
@@ -598,6 +596,9 @@ Cequel was written by:
 * Tamara Temple
 * Long On
 * Lucas Mundim
+* Luke Duncalfe
+* Eric Betts
+* Maxim Dobryakov
 
 Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
 releases of Cequel.
@@ -607,7 +608,7 @@ releases of Cequel.
 If you're new to Cassandra, check out [Learning Apache
 Cassandra](http://www.amazon.com/gp/product/1783989203/ref=s9_simh_co_p14_d4_i1?pf_rd_m=ATVPDKIKX0DER&pf_rd_s=left-1&pf_rd_r=1TX356WHGF06W32ZHD8S&pf_rd_t=3201&pf_rd_p=1953562742&pf_rd_i=typ01),
 a hands-on guide to Cassandra application development by example, written by
-the maintainer of Cequel.
+the creator of Cequel.
 
 ## License ##
 
