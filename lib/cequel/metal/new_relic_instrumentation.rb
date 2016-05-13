@@ -1,7 +1,7 @@
 # -*- encoding : utf-8 -*-
 begin
   require 'new_relic/agent/datastores'
-rescue LoadError => e
+rescue LoadError
   fail LoadError, "Can't use NewRelic instrumentation without NewRelic gem"
 end
 
@@ -13,7 +13,7 @@ module Cequel
     module NewRelicInstrumentation
       extend ActiveSupport::Concern
 
-      define_method :execute_with_consistency_with_newrelic do |statement, bind_vars, consistency|
+      define_method :execute_with_options_with_newrelic do |statement, bind_vars, options|
         callback = Proc.new do |result, scoped_metric, elapsed|
           NewRelic::Agent::Datastores.notice_statement(statement, elapsed)
         end
@@ -33,12 +33,13 @@ module Cequel
         end
 
         NewRelic::Agent::Datastores.wrap("Cassandra", operation, table, callback) do
-          execute_with_consistency_without_newrelic(statement, bind_vars, consistency)
+          execute_with_options_without_newrelic(statement, bind_vars, options)
         end
       end
 
+
       included do
-        alias_method_chain :execute_with_consistency, :newrelic
+        alias_method_chain :execute_with_options, :newrelic
       end
     end
   end
