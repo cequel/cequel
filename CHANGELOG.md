@@ -1,6 +1,7 @@
-## next
+## 1.9.1
 
 * fix dirty checking for timestamps more precise than Cassandra can store
+* fix bug with new relic instrumentation
 
 ## 1.9.0
 
