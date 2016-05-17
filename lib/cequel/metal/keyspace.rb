@@ -21,6 +21,8 @@ module Cequel
       attr_reader :hosts
       # @return Integer port to connect to Cassandra nodes on
       attr_reader :port
+      # @return [String] name of the current datacenter
+      attr_reader :datacenter
       # @return Integer maximum number of retries to reconnect to Cassandra
       attr_reader :max_retries
       # @return Float delay between retries to reconnect to Cassandra
@@ -32,6 +34,8 @@ module Cequel
       attr_reader :credentials
       # @return [Hash] SSL Configuration options
       attr_reader :ssl_config
+      # @return [::Cassandra::LoadBalancing::Policy] Policy used for Cassandra connection
+      attr_reader :load_balancing_policy
 
       #
       # @!method write(statement, *bind_vars)
@@ -132,6 +136,7 @@ module Cequel
         @configuration = configuration
 
         @hosts, @port = extract_hosts_and_port(configuration)
+        @datacenter   = extract_datacenter(configuration)
         @credentials  = extract_credentials(configuration)
         @max_retries  = extract_max_retries(configuration)
         @retry_delay  = extract_retry_delay(configuration)
@@ -140,6 +145,7 @@ module Cequel
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
 
+        @load_balancing_policy = build_load_balancing_policy
         # reset the connections
         clear_active_connections!
       end
@@ -284,6 +290,7 @@ module Cequel
         {hosts: hosts, port: port}.tap do |options|
           options.merge!(credentials) if credentials
           options.merge!(ssl_config) if ssl_config
+          options.merge!(load_balancing_policy) if load_balancing_policy
         end
       end
 
@@ -293,6 +300,13 @@ module Cequel
 
       def write_target
         current_batch || self
+      end
+
+      def build_load_balancing_policy
+        return unless datacenter
+        dc_aware_round_robin_policy = ::Cassandra::LoadBalancing::Policies::DCAwareRoundRobin.new(@datacenter)
+        token_aware_policy = ::Cassandra::LoadBalancing::Policies::TokenAware.new(dc_aware_round_robin_policy)
+        {load_balancing_policy: token_aware_policy}
       end
 
       def extract_hosts_and_port(configuration)
@@ -317,6 +331,10 @@ module Cequel
         end
 
         [hosts, ports.first || 9042]
+      end
+
+      def extract_datacenter(configuration)
+        configuration.fetch(:datacenter, nil)
       end
 
       def extract_credentials(configuration)
