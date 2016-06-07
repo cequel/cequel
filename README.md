@@ -382,6 +382,20 @@ Post.consistency(:one).find_each { |post| puts post.title }
 
 Both read and write consistency default to `QUORUM`.
 
+### Compression ###
+
+Cassandra supports [frame compression](http://datastax.github.io/ruby-driver/features/#compression),
+which can give you a performance boost if your requests or responses are big. To enable it you can 
+specify `client_compression` to use in cequel.yaml.
+
+```yaml
+development:
+  host: '127.0.0.1'
+  port: 9042
+  keyspace: Blog
+  client_compression: :lz4
+```
+
 ### ActiveModel Support ###
 
 Cequel supports ActiveModel functionality, such as callbacks, validations,
