@@ -34,7 +34,6 @@ DESC
   s.add_development_dependency 'rake', '~> 10.1'
   s.add_development_dependency 'rspec', '~> 3.1'
   s.add_development_dependency 'rspec-its', '~> 1.0'
-  s.add_development_dependency 'rubocop', '~> 0.28'
   s.add_development_dependency 'timecop', '~> 0.7'
   s.add_development_dependency 'travis', '~> 1.7'
   s.add_development_dependency 'yard', '~> 0.6'

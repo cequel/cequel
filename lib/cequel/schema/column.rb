@@ -20,8 +20,6 @@ module Cequel
         @name, @type = name, type
       end
 
-      # rubocop:disable LineLength
-
       #
       # @return [Boolean] true if this is a key column
       #
@@ -54,8 +52,6 @@ module Cequel
       def clustering_column?
         false
       end
-
-      # rubocop:enable LineLength
 
       #
       # @return [Boolean] true if this is a data column
