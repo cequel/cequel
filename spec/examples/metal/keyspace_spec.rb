@@ -104,6 +104,18 @@ describe Cequel::Metal::Keyspace do
     end
   end
 
+  describe "#client_compression" do
+    let(:client_compression) { :lz4 }
+    let(:connect) do
+      Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port,
+          client_compression: client_compression
+    end
+    it "client compression settings get extracted correctly for sending to cluster" do
+      expect(connect.client_compression).to eq client_compression
+    end
+  end
+
   describe "#execute" do
     let(:statement) { "SELECT id FROM posts" }
 

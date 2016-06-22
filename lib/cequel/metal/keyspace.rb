@@ -32,6 +32,8 @@ module Cequel
       attr_reader :credentials
       # @return [Hash] SSL Configuration options
       attr_reader :ssl_config
+      # @return [Symbol] The client compression option
+      attr_reader :client_compression
 
       #
       # @!method write(statement, *bind_vars)
@@ -139,6 +141,7 @@ module Cequel
 
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
+        @client_compression = configuration[:client_compression].try(:to_sym)
 
         # reset the connections
         clear_active_connections!
@@ -284,6 +287,7 @@ module Cequel
         {hosts: hosts, port: port}.tap do |options|
           options.merge!(credentials) if credentials
           options.merge!(ssl_config) if ssl_config
+          options.merge!(compression: client_compression) if client_compression
         end
       end
 
