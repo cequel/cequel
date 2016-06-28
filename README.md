@@ -83,6 +83,9 @@ The `auto` option for the `key` declaration means Cequel will initialize new
 records with a UUID already generated. This option is only valid for `:uuid` and
 `:timeuuid` key columns.
 
+The `belongs_to` association accepts a `:foreign_key` option which allows you to
+specify the attribute used as the partition key.
+
 Note that the `belongs_to` declaration must come *before* the `key` declaration.
 This is because `belongs_to` defines the
 [partition key](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html#glossentry_dhv_s24_bk); the `id` column is
