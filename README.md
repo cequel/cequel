@@ -88,8 +88,8 @@ specify the attribute used as the partition key.
 
 Note that the `belongs_to` declaration must come *before* the `key` declaration.
 This is because `belongs_to` defines the
-[partition key](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html#glossentry_dhv_s24_bk); the `id` column is
-the [clustering column](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#glossentry_h31_xjk_bk).
+[partition key](http://docs.datastax.com/en/glossary/doc/glossary/gloss_partition_key.html); the `id` column is
+the [clustering column](http://docs.datastax.com/en/glossary/doc/glossary/gloss_clustering_column.html).
 
 Practically speaking, this means that posts are accessed using both the
 `blog_subdomain` (automatically defined by the `belongs_to` association) and the
@@ -224,7 +224,7 @@ multiple queries in your logs if you're iterating over a huge result set.
 #### Time UUID Queries ####
 
 CQL has [special handling for the `timeuuid`
-type](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/cql_data_types_c.html#reference_ds_axc_xk5_yj),
+type](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/uuid_type_r.html),
 which allows you to return a rows whose UUID keys correspond to a range of
 timestamps. 
 
@@ -617,7 +617,7 @@ Cequel was written by:
 * Eric Betts
 * Maxim Dobryakov
 
-Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
+Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.
 
 ## Shameless Self-Promotion ##
