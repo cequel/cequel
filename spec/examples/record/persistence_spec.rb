@@ -15,6 +15,7 @@ describe Cequel::Record::Persistence do
     column :title, :text
     column :body, :text
     column :author_id, :uuid
+    column :picture, :blob
   end
 
   context 'simple keys' do
@@ -262,12 +263,36 @@ describe Cequel::Record::Persistence do
         where(:blog_subdomain => 'cassandra', :permalink => 'cequel').first
     end
 
+    let(:picture) do
+      <<-EOP
+      * ***                                                 ***
+    *  ****  *                                               ***
+   *  *  ****                                                 **
+  *  **   **                                                  **
+ *  ***                     ****    **   ****                 **
+**   **           ***      * ***  *  **    ***  *    ***      **
+**   **          * ***    *   ****   **     ****    * ***     **
+**   **         *   ***  **    **    **      **    *   ***    **
+**   **        **    *** **    **    **      **   **    ***   **
+**   **        ********  **    **    **      **   ********    **
+ **  **        *******   **    **    **      **   *******     **
+  ** *      *  **        **    **    **      **   **          **
+   ***     *   ****    *  *******     ******* **  ****    *   **
+    *******     *******    ******      *****   **  *******    *** *
+      ***        *****         **                   *****      ***
+                               **
+                               **
+                                **
+      EOP
+    end
+
     let!(:post) do
       Post.new do |post|
         post.blog_subdomain = 'cassandra'
         post.permalink = 'cequel'
         post.title = 'Cequel'
         post.body = 'A Ruby ORM for Cassandra 1.2'
+        post.picture = picture
       end.tap(&:save)
     end
 
@@ -275,6 +300,7 @@ describe Cequel::Record::Persistence do
       context 'on create' do
         it 'should save row to database' do
           expect(subject[:title]).to eq('Cequel')
+          expect(subject[:picture]).to eq(picture)
         end
 
         it 'should mark row persisted' do
