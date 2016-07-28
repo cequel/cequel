@@ -676,6 +676,10 @@ describe Cequel::Record::RecordSet do
     it 'should return the number of records requested' do
       expect(Blog.limit(2).length).to be(2)
     end
+
+    it 'should return the minimum of the requested limit and the actual record count' do
+      expect(Blog.limit(5).length).to be(3)
+    end
   end
 
   describe '#select' do

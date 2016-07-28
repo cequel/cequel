@@ -747,6 +747,10 @@ describe Cequel::Metal::DataSet do
     it 'should use limit if specified' do
       expect(cequel[:posts].limit(2).count).to eq(2)
     end
+
+    it 'should return the minimum of the requested limit and the actual record count' do
+      expect(cequel[:posts].limit(5).count).to eq(4)
+    end
   end
 
 end
