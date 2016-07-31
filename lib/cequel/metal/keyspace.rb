@@ -196,7 +196,7 @@ module Cequel
         retries = max_retries
         log('CQL', statement, *bind_vars) do
           begin
-            client.execute(sanitize(statement, bind_vars), options)
+            client.execute(statement, options.merge(arguments: bind_vars))
           rescue Cassandra::Errors::NoHostsAvailable,
                  Ione::Io::ConnectionError => e
             clear_active_connections!
@@ -257,7 +257,7 @@ module Cequel
         CQL
 
         log('CQL', statement, [name]) do
-          client_without_keyspace.execute(sanitize(statement, [name])).any?
+          client_without_keyspace.execute(statement, arguments: [name]).any?
         end
       end
 
