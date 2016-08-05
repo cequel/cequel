@@ -10,16 +10,18 @@ module Cequel
     class Statement
       # @return [Array] bind variables for CQL string
       attr_reader :bind_vars
+      # @return [Array] cassandra type hints for bind variables
+      attr_reader :type_hints
 
-      def initialize
-        @cql, @bind_vars = [], []
+      def initialize(cql='', bind_vars=[], type_hints=[])
+        @cql, @bind_vars, @type_hints = cql, bind_vars, type_hints
       end
 
       #
       # @return [String] CQL statement
       #
       def cql
-        @cql.join
+        @cql
       end
 
       #
@@ -30,7 +32,7 @@ module Cequel
       # @return [void]
       #
       def prepend(cql, *bind_vars)
-        @cql.unshift(cql)
+        @cql.prepend(cql)
         @bind_vars.unshift(*bind_vars)
       end
 
@@ -43,8 +45,10 @@ module Cequel
       # @return [void]
       #
       def append(cql, *bind_vars)
-        @cql << cql
-        @bind_vars.concat(bind_vars)
+        unless cql.nil?
+          @cql << cql
+          @bind_vars.concat(bind_vars)
+        end
         self
       end
 

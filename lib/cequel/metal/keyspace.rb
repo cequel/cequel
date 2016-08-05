@@ -55,8 +55,8 @@ module Cequel
       #   @param (see #execute_with_consistency)
       #   @return [void]
       #
-      def_delegator :write_target, :execute_with_consistency,
-                    :write_with_consistency
+      def_delegator :write_target, :execute_with_options,
+                    :write_with_options
 
       #
       # @!method batch
@@ -187,16 +187,30 @@ module Cequel
       # @see #execute_with_consistency
       #
       def execute(statement, *bind_vars)
-        execute_with_consistency(statement, bind_vars, default_consistency)
+        execute_with_options(Statement.new(statement, bind_vars), { consistency: default_consistency })
       end
 
-      def execute_with_options(statement, bind_vars, options={})
+      #
+      # Execute a CQL query in this keyspace with the given options
+      #
+      # @param statement [String,Statement,Batch] statement to execute
+      # @param options [Options] options for statement execution
+      # @return [Enumerable] the results of the query
+      #
+      # @since 1.1.0
+      #
+      def execute_with_options(statement, options={})
         options[:consistency] ||= default_consistency
 
         retries = max_retries
-        log('CQL', statement, *bind_vars) do
+        log('CQL', statement) do
           begin
-            client.execute(sanitize(statement, bind_vars), options)
+            case statement
+            when Statement
+              client.execute(sanitize(statement.cql, statement.bind_vars), options)
+            when Cassandra::Statements::Batch
+              client.execute(statement, options)
+            end
           rescue Cassandra::Errors::NoHostsAvailable,
                  Ione::Io::ConnectionError => e
             clear_active_connections!
@@ -206,20 +220,6 @@ module Cequel
             retry
           end
         end
-
-      end
-      #
-      # Execute a CQL query in this keyspace with the given consistency
-      #
-      # @param statement [String] CQL string
-      # @param bind_vars [Array] array of values for bind variables
-      # @param consistency [Symbol] consistency at which to execute query
-      # @return [Enumerable] the results of the query
-      #
-      # @since 1.1.0
-      #
-      def execute_with_consistency(statement, bind_vars, consistency)
-        execute_with_options(statement, bind_vars, {consistency: consistency || default_consistency})
       end
 
       #
@@ -364,6 +364,7 @@ module Cequel
         ssl_config.each { |key, value| ssl_config.delete(key) unless value }
         ssl_config
       end
+
     end
   end
 end

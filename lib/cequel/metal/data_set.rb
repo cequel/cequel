@@ -51,7 +51,7 @@ module Cequel
       attr_reader :query_page_size
       attr_reader :query_paging_state
 
-      def_delegator :keyspace, :write_with_consistency
+      def_delegator :keyspace, :write_with_options
 
       #
       # @param table_name [Symbol] column family for this data set
@@ -672,7 +672,7 @@ module Cequel
       end
 
       def execute_cql(cql, *bind_vars)
-        keyspace.execute_with_options(cql, bind_vars, {
+        keyspace.execute_with_options(Statement.new(cql, bind_vars), {
           consistency: query_consistency,
           page_size: query_page_size,
           paging_state: query_paging_state

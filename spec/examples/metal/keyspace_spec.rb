@@ -46,7 +46,7 @@ describe Cequel::Metal::Keyspace do
     end
 
     it 'should execute unlogged batch if specified' do
-      expect_query_with_consistency(/BEGIN UNLOGGED BATCH/, anything) do
+      expect_query_with_consistency(instance_of(Cassandra::Statements::Batch::Unlogged), anything) do
         cequel.batch(unlogged: true) do
           cequel[:posts].insert(id: 1, title: 'One')
           cequel[:posts].insert(id: 2, title: 'Two')
@@ -55,7 +55,7 @@ describe Cequel::Metal::Keyspace do
     end
 
     it 'should execute batch with given consistency' do
-      expect_query_with_consistency(/BEGIN BATCH/, :one) do
+      expect_query_with_consistency(instance_of(Cassandra::Statements::Batch::Logged), :one) do
         cequel.batch(consistency: :one) do
           cequel[:posts].insert(id: 1, title: 'One')
           cequel[:posts].insert(id: 2, title: 'Two')
