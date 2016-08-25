@@ -26,7 +26,7 @@ module Cequel
       included do
         include ActiveModel::Validations
         define_model_callbacks :validation
-        alias_method_chain :valid?, :callbacks
+        prepend Callbacks
       end
 
       #
@@ -85,6 +85,12 @@ module Cequel
 
       def valid_with_callbacks?(context=nil)
         run_callbacks(:validation) { valid_without_callbacks? context }
+      end
+    end
+
+    module Callbacks
+      def valid?(context=nil)
+        run_callbacks(:validation) { super context }
       end
     end
   end

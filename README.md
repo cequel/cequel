@@ -22,6 +22,7 @@ Add it to your Gemfile:
 
 ``` ruby
 gem 'cequel'
+gem 'activemodel-serializers-xml'
 ```
 
 ### Rails integration ###
