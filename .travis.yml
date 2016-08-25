@@ -12,12 +12,12 @@ language: ruby
 rvm:
   - "2.1"
   - "2.3"
-  - "jruby-9.0.0.0"
 
 gemfile:
   - "gemfiles/rails_4.0.gemfile"
   - "gemfiles/rails_4.1.gemfile"
   - "gemfiles/rails_4.2.gemfile"
+  - "gemfiles/rails_5.0.gemfile"
 
 env:
   - CASSANDRA_VERSION: 2.1
@@ -26,3 +26,8 @@ env:
 script: script/ci-unit-test
 
 bundler_args: '--without=debug'
+
+matrix:
+  exclude:
+  - rvm: 2.1
+    gemfile: gemfiles/rails_5.0.gemfile
