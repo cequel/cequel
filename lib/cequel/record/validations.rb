@@ -26,7 +26,7 @@ module Cequel
       included do
         include ActiveModel::Validations
         define_model_callbacks :validation
-        prepend Callbacks
+        prepend Callback
       end
 
       #
@@ -80,15 +80,9 @@ module Cequel
         self.attributes = attributes
         save!
       end
-
-      private
-
-      def valid_with_callbacks?(context=nil)
-        run_callbacks(:validation) { valid_without_callbacks? context }
-      end
     end
 
-    module Callbacks
+    module Callback
       def valid?(context=nil)
         run_callbacks(:validation) { super context }
       end

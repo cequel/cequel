@@ -29,6 +29,7 @@ DESC
   s.required_ruby_version = '>= 2.0'
   s.add_runtime_dependency 'activemodel', '>= 4.0'
   s.add_runtime_dependency 'cassandra-driver', '~> 2.0'
+  s.add_runtime_dependency 'activemodel-serializers-xml'
   s.add_development_dependency 'appraisal', '~> 1.0'
   s.add_development_dependency 'wwtd', '~> 0.5'
   s.add_development_dependency 'rake', '~> 10.1'
