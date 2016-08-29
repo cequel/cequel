@@ -250,12 +250,8 @@ module Cequel
 
       # @return [Boolean] true if the keyspace exists
       def exists?
-        statement = <<-CQL
-          SELECT keyspace_name
-          FROM system.schema_keyspaces
-          WHERE keyspace_name = ?
-        CQL
-
+        statement = Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_KEYSPACE 
+        
         log('CQL', statement, [name]) do
           client_without_keyspace.execute(sanitize(statement, [name])).any?
         end

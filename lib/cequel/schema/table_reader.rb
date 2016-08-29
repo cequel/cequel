@@ -160,20 +160,14 @@ module Cequel
 
       def table_data
         return @table_data if defined? @table_data
-        table_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
-              SELECT * FROM system.schema_columnfamilies
-              WHERE keyspace_name = ? AND columnfamily_name = ?
-        CQL
+        table_query = keyspace.execute(Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_TABLE, keyspace.name, table_name)
         @table_data = table_query.first.try(:to_hash)
       end
 
       def all_columns
         @all_columns ||=
           if table_data
-            column_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
-              SELECT * FROM system.schema_columns
-              WHERE keyspace_name = ? AND columnfamily_name = ?
-            CQL
+            column_query = keyspace.execute(Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_TABLE, keyspace.name, table_name)
             column_query.map(&:to_hash)
           end
       end

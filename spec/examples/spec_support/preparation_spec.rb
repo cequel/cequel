@@ -84,12 +84,7 @@ describe Cequel::SpecSupport::Preparation do
 
   matcher :contain_table do |table_name|
     match do |keyspace|
-      keyspace.execute(<<-CQL).any?
-        SELECT columnfamily_name
-        FROM System.schema_columnfamilies
-        WHERE keyspace_name='#{keyspace.name}'
-          AND columnfamily_name='#{table_name}'
-      CQL
+      keyspace.execute(Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_TABLE, keyspace.name, table_name).any?
     end
   end
 end
