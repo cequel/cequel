@@ -34,6 +34,8 @@ module Cequel
       attr_reader :ssl_config
       # @return [Symbol] The client compression option
       attr_reader :client_compression
+      # @return [Hash] A hash of configuration options passed to Cassandra.cluster, with absolute precedence 
+      attr_reader :cluster_options
 
       #
       # @!method write(statement, *bind_vars)
@@ -138,6 +140,7 @@ module Cequel
         @max_retries  = extract_max_retries(configuration)
         @retry_delay  = extract_retry_delay(configuration)
         @ssl_config = extract_ssl_config(configuration)
+        @cluster_options = configuration[:cluster_options]
 
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
@@ -284,6 +287,7 @@ module Cequel
           options.merge!(credentials) if credentials
           options.merge!(ssl_config) if ssl_config
           options.merge!(compression: client_compression) if client_compression
+          options.merge!(cluster_options) if cluster_options
         end
       end
 
