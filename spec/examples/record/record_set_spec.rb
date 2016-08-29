@@ -674,7 +674,7 @@ describe Cequel::Record::RecordSet do
     let(:records) { blogs }
 
     it 'should return the number of records requested' do
-      expect(Blog.limit(2).length).to be(2)
+      expect(Blog.limit(2).length).to eq(2)
     end
   end
 

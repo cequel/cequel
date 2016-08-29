@@ -332,7 +332,7 @@ module Cequel
       #
       def unshift(*objects)
         objects.map!(&method(:cast_element))
-        to_update { updater.list_prepend(column_name, objects.reverse) }
+        to_update { updater.list_prepend(column_name, objects) }
         to_modify { super }
       end
       alias_method :prepend, :unshift

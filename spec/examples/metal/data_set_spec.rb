@@ -197,7 +197,7 @@ describe Cequel::Metal::DataSet do
       cequel[:posts].where(row_keys).
         list_prepend(:categories, ['Scalability', 'Partition Tolerance'])
       expect(cequel[:posts].where(row_keys).first[:categories]).to eq(
-        ['Partition Tolerance', 'Scalability', 'Big Data', 'Cassandra']
+        ['Scalability', 'Partition Tolerance', 'Big Data', 'Cassandra']
       )
     end
   end
