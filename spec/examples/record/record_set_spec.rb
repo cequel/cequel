@@ -674,7 +674,9 @@ describe Cequel::Record::RecordSet do
     let(:records) { blogs }
 
     it 'should return the number of records requested' do
-      expect(Blog.limit(2).length).to eq(2)
+      # The method length is aliased to count, which does not work as expected 
+      # in Cassandra 2.x
+      expect(Blog.limit(2).find_each.to_a.length).to eq(2)
     end
   end
 
