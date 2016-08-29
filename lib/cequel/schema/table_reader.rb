@@ -11,8 +11,8 @@ module Cequel
         /^org\.apache\.cassandra\.db\.marshal\.CompositeType\((.+)\)$/
       REVERSED_TYPE_PATTERN =
         /^org\.apache\.cassandra\.db\.marshal\.ReversedType\((.+)\)$/
-      COLLECTION_TYPE_PATTERN =
-        /^org\.apache\.cassandra\.db\.marshal\.(List|Set|Map)Type\((.+)\)$/
+#      COLLECTION_TYPE_PATTERN =
+#        /^org\.apache\.cassandra\.db\.marshal\.(List|Set|Map)Type\((.+)\)$/
 
       # @return [Table] object representation of the table defined in the
       #   database
@@ -64,29 +64,30 @@ module Cequel
 
       private
 
-      # XXX This gets a lot easier in Cassandra 2.0: all logical columns
-      # (including keys) are returned from the `schema_columns` query, so
-      # there's no need to jump through all these hoops to figure out what the
-      # key columns look like.
-      #
-      # However, this approach works for both 1.2 and 2.0, so better to keep it
-      # for now. It will be worth refactoring this code to take advantage of
-      # 2.0's better interface in a future version of Cequel that targets 2.0+.
       def read_partition_keys
-        validators = table_data['key_validator']
-        types = parse_composite_types(validators) || [validators]
-        columns = partition_columns.sort_by { |c| c['component_index'] }
-          .map { |c| c['column_name'] }
-
-        columns.zip(types) do |name, type|
-          table.add_partition_key(name.to_sym, Type.lookup_internal(type))
-        end
+        partition_columns.sort_by { |c| c.fetch('position') }
+          .each do |c|
+            name = c.fetch('column_name').to_sym
+            cql_type = Type.lookup_cql(c.fetch('type'))
+            table.add_partition_key(name, cql_type)
+          end
       end
 
-      # XXX See comment on {read_partition_keys}
       def read_clustering_columns
-        columns = cluster_columns.sort { |l, r| l['component_index'] <=> r['component_index'] }
-          .map { |c| c['column_name'] }
+        #TODO deal w/ compact storage? Does this class even care anymore ?
+        
+        cluster_columns.sort_by { |c| c.fetch('position') }
+          .each do |c| 
+            name = c.fetch('column_name').to_sym 
+            cql_type = Type.lookup_cql(c.fetch('type'))
+            clustering_order = c.fetch('clustering_order').to_sym
+            table.add_clustering_column(name, cql_type, clustering_order)
+          end
+        return 
+        
+        columns = cluster_columns.sort { |l, r| l.fetch('component_index') <=> r.fetch('component_index') }
+          .map { |c| c.fetch('column_name') }
+          
         comparators = parse_composite_types(table_data['comparator'])
         unless comparators
           table.compact_storage = true
@@ -108,6 +109,35 @@ module Cequel
         end
       end
 
+      COLLECTION_TYPE_PATTERN = /^(.+)<(.+)>/
+
+      def read_data_columns 
+        column_data.each do |result|
+          name = result.fetch('column_name').to_sym
+          
+          column_type = result.fetch('type')
+          m = COLLECTION_TYPE_PATTERN.match(column_type)
+          
+          if m.present? 
+            composition_type = m[1]
+            if composition_type != 'map' 
+              cql_type = Type.lookup_cql(m[2])
+              table.send("add_#{composition_type}", name, cql_type)
+            else 
+              composition_types = m[2].split(',').map(&:strip)
+              key_type = composition_types.fetch(0)
+              value_type = composition_types.fetch(1)
+              table.send("add_#{composition_type}", name, key_type, value_type)
+            end
+          else 
+            cql_type = Type.lookup_cql(column_type)
+            
+            table.add_data_column(name, cql_type)
+          end
+        end
+      end
+
+=begin
       def read_data_columns
         if column_data.empty?
           table.add_data_column(
@@ -119,13 +149,13 @@ module Cequel
           column_data.each do |result|
             if COLLECTION_TYPE_PATTERN =~ result['validator']
               read_collection_column(
-                result['column_name'],
+                result.fetch('column_name'),
                 $1.underscore,
                 *$2.split(',')
               )
             else
               table.add_data_column(
-                result['column_name'].to_sym,
+                result.fetch('column_name').to_sym,
                 Type.lookup_internal(result['validator']),
                 result['index_name'].try(:to_sym)
               )
@@ -139,17 +169,12 @@ module Cequel
           .map { |internal| Type.lookup_internal(internal) }
         table.__send__("add_#{collection_type}", name.to_sym, *types)
       end
+=end      
 
       def read_properties
         table_data.slice(*Table::STORAGE_PROPERTIES).each do |name, value|
           table.add_property(name, value)
-        end
-        compaction = JSON.parse(table_data['compaction_strategy_options'])
-          .symbolize_keys
-        compaction[:class] = table_data['compaction_strategy_class']
-        table.add_property(:compaction, compaction)
-        compression = JSON.parse(table_data['compression_parameters'])
-        table.add_property(:compression, compression)
+        end        
       end
 
       def parse_composite_types(type_string)
@@ -167,7 +192,7 @@ module Cequel
       def all_columns
         @all_columns ||=
           if table_data
-            column_query = keyspace.execute(Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_TABLE, keyspace.name, table_name)
+            column_query = keyspace.execute(Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_TABLE_COLUMNS, keyspace.name, table_name)
             column_query.map(&:to_hash)
           end
       end
@@ -180,19 +205,19 @@ module Cequel
 
       def column_data
         @column_data ||= all_columns.select do |column|
-          !column.key?('type') || column['type'] == 'regular'
+          !column.key?('kind') || column.fetch('kind') == 'regular'
         end
       end
 
       def partition_columns
         @partition_columns ||= all_columns.select do |column|
-          column['type'] == 'partition_key'
+          column.fetch('kind') == 'partition_key'
         end
       end
 
       def cluster_columns
         @cluster_columns ||= all_columns.select do |column|
-          column['type'] == 'clustering_key'
+          column.fetch('kind') == 'clustering'
         end
       end
     end
