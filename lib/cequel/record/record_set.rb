@@ -537,11 +537,10 @@ module Cequel
         end
       end
 
-      #
-      # @return [Integer] the total number of records in this record set
-      #
+      # @raise [DangerousQueryError] to prevent loading the entire record set
+      #   to be counted
       def count
-        data_set.count
+        raise Cequel::Record::DangerousQueryError.new
       end
       alias_method :length, :count
       alias_method :size, :count

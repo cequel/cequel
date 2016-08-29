@@ -594,10 +594,6 @@ describe Cequel::Metal::DataSet do
       expect_query_with_consistency(/SELECT/, :one) { data_set.to_a }
     end
 
-    it 'should issue COUNT with scoped consistency' do
-      expect_query_with_consistency(/SELECT.*COUNT/, :one) { data_set.count }
-    end
-
     it 'should issue INSERT with scoped consistency' do
       expect_query_with_consistency(/INSERT/, :one) do
         data_set.insert(row_keys)
@@ -632,10 +628,6 @@ describe Cequel::Metal::DataSet do
       expect_query_with_consistency(/SELECT/, :all) { data_set.to_a }
     end
 
-    it 'should issue COUNT with default consistency' do
-      expect_query_with_consistency(/SELECT.*COUNT/, :all) { data_set.count }
-    end
-
     it 'should issue INSERT with default consistency' do
       expect_query_with_consistency(/INSERT/, :all) do
         data_set.insert(row_keys)
@@ -667,10 +659,6 @@ describe Cequel::Metal::DataSet do
     it 'should issue SELECT with scoped page size' do
       expect_query_with_options(/SELECT/, :page_size => 1) { data_set.to_a }
     end
-
-    it 'should issue COUNT with scoped page size' do
-      expect_query_with_options(/SELECT.*COUNT/, :page_size => 1) { data_set.count }
-    end
   end
 
   describe '#paging_state' do
@@ -678,10 +666,6 @@ describe Cequel::Metal::DataSet do
 
     it 'should issue SELECT with scoped paging state' do
       expect_query_with_options(/SELECT/, :paging_state => nil) { data_set.to_a }
-    end
-
-    it 'should issue COUNT with scoped paging state' do
-      expect_query_with_options(/SELECT.*COUNT/, :paging_state => nil) { data_set.count }
     end
   end
 
@@ -735,22 +719,16 @@ describe Cequel::Metal::DataSet do
       end
     end
 
-    it 'should run a count query and return count' do
-      expect(cequel[:posts].count).to eq(4)
+    it 'should raise DangerousQueryError when attempting to count' do
+      expect{ cequel[:posts].count }.to raise_error(Cequel::Record::DangerousQueryError)
     end
 
-    it 'should use where clause if specified' do
-      expect(cequel[:posts].where(row_keys.merge(permalink: 'post-1')).
-        count).to eq(1)
+    it 'should raise DangerousQueryError when attempting to access size' do
+      expect{ cequel[:posts].size }.to raise_error(Cequel::Record::DangerousQueryError)
     end
 
-    it 'should use limit if specified' do
-      expect(cequel[:posts].limit(2).count).to eq(2)
-    end
-
-    it 'should return the minimum of the requested limit and the actual record count' do
-      expect(cequel[:posts].limit(5).count).to eq(4)
+    it 'should raise DangerousQueryError when attempting to access length' do
+      expect{ cequel[:posts].length }.to raise_error(Cequel::Record::DangerousQueryError)
     end
   end
-
 end

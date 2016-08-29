@@ -35,9 +35,9 @@ describe Cequel::Metal::Keyspace do
     it 'should auto-apply if option given' do
       cequel.batch(auto_apply: 2) do
         cequel[:posts].insert(id: 1, title: 'One')
-        expect(cequel[:posts].count).to be_zero
+        expect(cequel[:posts].to_a.count).to be_zero
         cequel[:posts].insert(id: 2, title: 'Two')
-        expect(cequel[:posts].count).to be(2)
+        expect(cequel[:posts].to_a.count).to be(2)
       end
     end
 

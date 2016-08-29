@@ -611,17 +611,13 @@ module Cequel
         Row.from_result_row(row)
       end
 
-      #
-      # @return [Fixnum] the number of rows in this data set
-      #
+      # @raise [DangerousQueryError] to prevent loading the entire record set
+      #   to be counted
       def count
-        actual_count = execute_cql(*count_cql).first['count']
-        if row_limit
-          [actual_count, row_limit].min
-        else
-          actual_count
-        end
+        raise Cequel::Record::DangerousQueryError.new
       end
+      alias_method :length, :count
+      alias_method :size, :count
 
       #
       # @return [String] CQL `SELECT` statement encoding this data set's scope.
@@ -634,15 +630,6 @@ module Cequel
           .append(sort_order_cql)
           .append(limit_cql)
           .args
-      end
-
-      #
-      # @return [String] CQL statement to get count of rows in this data set
-      #
-      def count_cql
-        Statement.new
-          .append("SELECT COUNT(*) FROM #{table_name}")
-          .append(*row_specifications_cql).args
       end
 
       #

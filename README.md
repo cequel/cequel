@@ -534,6 +534,14 @@ essentially the same thing: both simply persist the given column data at the
 given key(s). So, you may think you are creating a new record, but in fact
 you're overwriting data at an existing record:
 
+#### Counting ####
+
+Counting is not the same as in a RDB, as it can have a much longer runtime and
+can put unexpected load on your cluster. As a result Cequel does not support
+this feature. It is still possible to execute raw cql to get the counts, should
+you require this functionality.
+`MyModel.connection.execute('select count(*) from table_name;').first['count']`
+
 ``` ruby
 # I'm just creating a blog here.
 blog1 = Blog.create!(

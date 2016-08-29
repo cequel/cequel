@@ -1,6 +1,8 @@
 ## Unreleased
 
 * drop support for JRuby 1.7
+* Dropped support for count, length, and size as it results in unbounded run times and memory usage
+  ([PR 313](https://github.com/cequel/cequel/pull/313))
 
 ## 1.10.0
 
