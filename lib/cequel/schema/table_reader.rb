@@ -50,6 +50,7 @@ module Cequel
       #
       def read
         if table_data.present?
+          check_for_compact_storage
           read_partition_keys
           read_clustering_columns
           read_data_columns
@@ -63,6 +64,15 @@ module Cequel
       attr_reader :keyspace, :table_name, :table
 
       private
+      
+      def check_for_compact_storage
+        flags = table_data.fetch('flags', [])
+        flags = ::Set.new(flags)
+        
+        if flags.include?('dense') || flags.include?('super') || !flags.include?('compound')
+          table.compact_storage = true 
+        end
+      end
 
       def read_partition_keys
         partition_columns.sort_by { |c| c.fetch('position') }
@@ -74,39 +84,13 @@ module Cequel
       end
 
       def read_clustering_columns
-        #TODO deal w/ compact storage? Does this class even care anymore ?
-        
         cluster_columns.sort_by { |c| c.fetch('position') }
           .each do |c| 
             name = c.fetch('column_name').to_sym 
             cql_type = Type.lookup_cql(c.fetch('type'))
             clustering_order = c.fetch('clustering_order').to_sym
             table.add_clustering_column(name, cql_type, clustering_order)
-          end
-        return 
-        
-        columns = cluster_columns.sort { |l, r| l.fetch('component_index') <=> r.fetch('component_index') }
-          .map { |c| c.fetch('column_name') }
-          
-        comparators = parse_composite_types(table_data['comparator'])
-        unless comparators
-          table.compact_storage = true
-          return unless column_data.empty?
-          columns << :column1 if cluster_columns.empty?
-          comparators = [table_data['comparator']]
-        end
-
-        columns.zip(comparators) do |name, type|
-          if REVERSED_TYPE_PATTERN =~ type
-            type = $1
-            clustering_order = :desc
-          end
-          table.add_clustering_column(
-            name.to_sym,
-            Type.lookup_internal(type),
-            clustering_order
-          )
-        end
+          end  
       end
 
       COLLECTION_TYPE_PATTERN = /^(.+)<(.+)>/
@@ -137,39 +121,7 @@ module Cequel
         end
       end
 
-=begin
-      def read_data_columns
-        if column_data.empty?
-          table.add_data_column(
-            (compact_value['column_name'] || :value).to_sym,
-            Type.lookup_internal(table_data['default_validator']),
-            false
-          )
-        else
-          column_data.each do |result|
-            if COLLECTION_TYPE_PATTERN =~ result['validator']
-              read_collection_column(
-                result.fetch('column_name'),
-                $1.underscore,
-                *$2.split(',')
-              )
-            else
-              table.add_data_column(
-                result.fetch('column_name').to_sym,
-                Type.lookup_internal(result['validator']),
-                result['index_name'].try(:to_sym)
-              )
-            end
-          end
-        end
-      end
-
-      def read_collection_column(name, collection_type, *internal_types)
-        types = internal_types
-          .map { |internal| Type.lookup_internal(internal) }
-        table.__send__("add_#{collection_type}", name.to_sym, *types)
-      end
-=end      
+    
 
       def read_properties
         table_data.slice(*Table::STORAGE_PROPERTIES).each do |name, value|
