@@ -48,7 +48,13 @@ module Cequel
       # @!method column(name, type, options = {})
       #   (see Cequel::Schema::Table#add_data_column)
       #
-      def_delegator :@table, :add_data_column, :column
+      def column(name, type, options = {})
+        index_name = options[:index]
+        # If passed a boolean, autogenerate the index name
+        index_name = :"#{name}_#{name}_idx" if index_name == true
+        @table.add_data_column(name, type, index: index_name)
+      end 
+        
 
       #
       # @!method list(name, type)
