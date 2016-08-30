@@ -7,13 +7,6 @@ module Cequel
     # that schema
     #
     class TableReader
-      COMPOSITE_TYPE_PATTERN =
-        /^org\.apache\.cassandra\.db\.marshal\.CompositeType\((.+)\)$/
-      REVERSED_TYPE_PATTERN =
-        /^org\.apache\.cassandra\.db\.marshal\.ReversedType\((.+)\)$/
-#      COLLECTION_TYPE_PATTERN =
-#        /^org\.apache\.cassandra\.db\.marshal\.(List|Set|Map)Type\((.+)\)$/
-
       # @return [Table] object representation of the table defined in the
       #   database
       attr_reader :table
@@ -121,18 +114,10 @@ module Cequel
         end
       end
 
-    
-
       def read_properties
         table_data.slice(*Table::STORAGE_PROPERTIES).each do |name, value|
           table.add_property(name, value)
         end        
-      end
-
-      def parse_composite_types(type_string)
-        if COMPOSITE_TYPE_PATTERN =~ type_string
-          $1.split(',')
-        end
       end
 
       def table_data
@@ -150,6 +135,7 @@ module Cequel
       end
 
       def compact_value
+        #TODO determine if this has test coverage and if it works or not in Cassandra 3
         @compact_value ||= all_columns.find do |column|
           column['type'] == 'compact_value'
         end || {}
