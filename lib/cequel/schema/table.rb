@@ -12,6 +12,7 @@ module Cequel
       STORAGE_PROPERTIES = %w(
         bloom_filter_fp_chance caching comment compaction compression
         dclocal_read_repair_chance gc_grace_seconds read_repair_chance
+        crc_check_chance
       )
 
       # @return [Symbol] the name of the table

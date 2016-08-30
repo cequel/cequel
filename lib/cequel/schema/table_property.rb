@@ -17,6 +17,10 @@ module Cequel
       # @api private
       #
       def self.build(name, value)
+        if value.is_a?(Hash)
+          value = value.symbolize_keys 
+        end
+        
         clazz =
           case name.to_sym
           when :compaction then CompactionProperty
@@ -98,9 +102,9 @@ module Cequel
         case key
         when :class
           value.sub(/^org\.apache\.cassandra\.db\.compaction\./, '')
-        when :bucket_high, :bucket_low, :tombstone_threshold then value.to_f
+        when :bucket_high, :bucket_low, :tombstone_threshold then Kernel.Float(value)
         when :max_threshold, :min_threshold, :min_sstable_size,
-          :sstable_size_in_mb, :tombstone_compaction_interval then value.to_i
+          :sstable_size_in_mb, :tombstone_compaction_interval then Kernel.Integer(value)
         else value.to_s
         end
       end
@@ -114,10 +118,10 @@ module Cequel
 
       def normalize_map_property(key, value)
         case key
-        when :sstable_compression
+        when :class
           value.sub(/^org\.apache\.cassandra\.io\.compress\./, '')
-        when :chunk_length_kb then value.to_i
-        when :crc_check_chance then value.to_f
+        when :chunk_length_in_kb then Kernel.Integer(value)
+        when :crc_check_chance then Kernel.Float(value)
         else value.to_s
         end
       end
