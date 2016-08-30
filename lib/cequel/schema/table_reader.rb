@@ -109,7 +109,16 @@ module Cequel
           else 
             cql_type = Type.lookup_cql(column_type)
             
-            table.add_data_column(name, cql_type)
+            index_name = all_indexes.detect do |r|
+              target = r.fetch('options',{})['target']
+              target.present? && target == name.to_s 
+            end
+            
+            index_name = if index_name.present?
+              index_name.fetch('index_name').to_sym
+            end
+            
+            table.add_data_column(name, cql_type, index: index_name)
           end
         end
       end
@@ -131,6 +140,14 @@ module Cequel
           if table_data
             column_query = keyspace.execute(Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_TABLE_COLUMNS, keyspace.name, table_name)
             column_query.map(&:to_hash)
+          end
+      end
+      
+      def all_indexes 
+        @all_indexes ||=
+          if table_data.present?
+            index_query = keyspace.execute(Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_TABLE_INDEXES, keyspace.name, table_name)
+            index_query.map(&:to_hash)
           end
       end
 
