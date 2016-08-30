@@ -164,13 +164,6 @@ module Cequel
             index_query.map(&:to_hash)
           end
       end
-
-      def compact_value
-        #TODO determine if this has test coverage and if it works or not in Cassandra 3
-        @compact_value ||= all_columns.find do |column|
-          column['type'] == 'compact_value'
-        end || {}
-      end
       
       def compact_columns 
         @compact_columns ||= all_columns.select do |column|
