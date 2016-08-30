@@ -33,6 +33,7 @@ module Cequel
       # @return [Boolean] `true` if this table is configured with compact
       #   storage
       attr_writer :compact_storage
+      attr_writer :dense
 
       #
       # @param name [Symbol] the name of the table
@@ -278,6 +279,13 @@ module Cequel
       #
       def compact_storage?
         !!@compact_storage
+      end
+      
+      #
+      # @return [Boolean] `true` if this table uses dense storage
+      #
+      def dense?
+        !!@dense
       end
 
       protected

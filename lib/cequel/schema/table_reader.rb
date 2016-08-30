@@ -65,6 +65,8 @@ module Cequel
         if flags.include?('dense') || flags.include?('super') || !flags.include?('compound')
           table.compact_storage = true 
         end
+        
+        table.dense = flags.include?('dense')
       end
 
       def read_partition_keys
@@ -79,7 +81,12 @@ module Cequel
       def read_clustering_columns
         cluster_columns.sort_by { |c| c.fetch('position') }
           .each do |c| 
-            name = c.fetch('column_name').to_sym 
+            name = c.fetch('column_name').to_sym
+            
+            if name == :column1 && table.compact_storage? && !table.dense?
+              next
+            end 
+             
             cql_type = Type.lookup_cql(c.fetch('type'))
             clustering_order = c.fetch('clustering_order').to_sym
             table.add_clustering_column(name, cql_type, clustering_order)
@@ -89,7 +96,14 @@ module Cequel
       COLLECTION_TYPE_PATTERN = /^(.+)<(.+)>/
 
       def read_data_columns 
-        column_data.each do |result|
+        columns_to_read = 
+        if table.compact_storage? && !table.dense?
+          compact_columns
+        else
+          column_data 
+        end
+
+        columns_to_read.each do |result|
           name = result.fetch('column_name').to_sym
           
           column_type = result.fetch('type')
@@ -156,6 +170,12 @@ module Cequel
         @compact_value ||= all_columns.find do |column|
           column['type'] == 'compact_value'
         end || {}
+      end
+      
+      def compact_columns 
+        @compact_columns ||= all_columns.select do |column|
+          column.fetch('kind') == 'static' 
+        end
       end
 
       def column_data
