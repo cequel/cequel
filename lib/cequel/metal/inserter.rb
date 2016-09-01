@@ -57,6 +57,7 @@ module Cequel
       end
 
       def write_to_statement(statement, options)
+        statement.type_hints = options.fetch(:type_hints, nil)
         statement.append("INSERT INTO #{table_name}")
         statement.append(
           " (#{column_names.join(', ')}) VALUES (#{statements.join(', ')}) ",

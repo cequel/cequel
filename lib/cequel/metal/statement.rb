@@ -11,7 +11,7 @@ module Cequel
       # @return [Array] bind variables for CQL string
       attr_reader :bind_vars
       # @return [Array] cassandra type hints for bind variables
-      attr_reader :type_hints
+      attr_accessor :type_hints
 
       def initialize(cql='', bind_vars=[], type_hints=[])
         @cql, @bind_vars, @type_hints = cql, bind_vars, type_hints

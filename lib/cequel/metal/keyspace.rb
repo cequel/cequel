@@ -207,7 +207,8 @@ module Cequel
           begin
             case statement
             when Statement
-              client.execute(sanitize(statement.cql, statement.bind_vars), options)
+              options = options.merge(arguments: statement.bind_vars, type_hints: statement.type_hints)
+              client.execute(statement.cql, options)
             when Cassandra::Statements::Batch
               client.execute(statement, options)
             end

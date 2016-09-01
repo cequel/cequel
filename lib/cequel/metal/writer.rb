@@ -13,6 +13,8 @@ module Cequel
     class Writer
       extend Util::Forwardable
 
+      attr_accessor :type_hints
+
       #
       # @param data_set [DataSet] data set to write to
       #

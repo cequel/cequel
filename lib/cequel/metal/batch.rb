@@ -61,7 +61,7 @@ module Cequel
             else
               Cassandra::Statements::Batch::Unlogged.new
             end
-          @statements.each { |s| statement.add(Keyspace.sanitize(s.cql, s.bind_vars)) }
+          @statements.each { |s| statement.add(s.cql, s.bind_vars, s.type_hints) }
         end
 
         @keyspace.execute_with_options(statement, consistency: @consistency)

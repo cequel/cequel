@@ -261,6 +261,14 @@ module Cequel
         @data_columns.find { |column| column.name == name }
       end
 
+      def column_type_hints
+        columns.map { |column| column_type_hint(column.type) }
+      end
+
+      def column_type_hint(name)
+        cassandra_type_hint(columns_by_name[name.to_sym].type)
+      end
+
       #
       # @param name [Symbol] name of property to look up
       # @return [TableProperty] property as defined on table
@@ -291,6 +299,22 @@ module Cequel
         type = type.kind if type.respond_to?(:kind)
 
         ::Cequel::Type[type]
+      end
+
+      def cassandra_type_hint(type)
+        case type
+        when ::Cequel::Record::Map
+          ::Cassandra::Types::Map.new(type.key_type, type.value_type)
+        when ::Cequel::Record::Set
+          ::Cassandra::Types::Set.new(type)
+        when ::Cequel::Record::List
+          ::Cassandra::Types::List.new(type)
+        when ::Cequel::Type::Text
+          # the driver complains here with :text but seems to like :varchar which is an alias
+          ::Cassandra::Types.varchar
+        else
+          ::Cassandra::Types.send type.to_s
+        end
       end
     end
   end

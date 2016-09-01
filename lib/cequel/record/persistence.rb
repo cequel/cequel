@@ -274,8 +274,10 @@ module Cequel
 
       def create(options = {})
         assert_keys_present!
-        metal_scope
-          .insert(attributes.reject { |attr, value| value.nil? }, options)
+        attributes_for_write = attributes.reject { |attr, value| value.nil? }
+        attribute_type_hints = attributes_for_write.keys.map { |attr| table_schema.column_type_hint(attr) }
+        options.merge!(type_hints: attribute_type_hints) if attribute_type_hints
+        metal_scope.insert(attributes_for_write, options)
         loaded!
         persisted!
       end

@@ -144,6 +144,7 @@ module Cequel
       end
 
       def write_to_statement(statement, options)
+        statement.type_hints = options.fetch(:type_hints, nil)
         all_statements, all_bind_vars = statements_with_column_updates
         statement.append("UPDATE #{table_name}")
           .append(generate_upsert_options(options))

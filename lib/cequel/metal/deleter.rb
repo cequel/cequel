@@ -67,6 +67,7 @@ module Cequel
         elsif statements.empty?
           fail ArgumentError, "No targets given for deletion!"
         else
+          statement.type_hints = options.fetch(:type_hints, nil)
           statement.append("DELETE ")
             .append(statements.join(','), *bind_vars)
             .append(" FROM #{table_name}")
