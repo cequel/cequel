@@ -1,3 +1,7 @@
+## Unreleased
+
+* drop support for JRuby 1.7
+
 ## 1.10.0
 
 * `:foreign_key` option for belongs_to associations
