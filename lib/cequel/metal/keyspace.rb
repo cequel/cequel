@@ -323,7 +323,7 @@ module Cequel
         end
         
 
-        [hosts, Integer(ports.first) || 9042]
+        [hosts, Integer(ports.first || 9042)]
       end
 
       def extract_credentials(configuration)
