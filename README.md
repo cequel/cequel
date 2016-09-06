@@ -83,10 +83,13 @@ The `auto` option for the `key` declaration means Cequel will initialize new
 records with a UUID already generated. This option is only valid for `:uuid` and
 `:timeuuid` key columns.
 
+The `belongs_to` association accepts a `:foreign_key` option which allows you to
+specify the attribute used as the partition key.
+
 Note that the `belongs_to` declaration must come *before* the `key` declaration.
 This is because `belongs_to` defines the
-[partition key](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html#glossentry_dhv_s24_bk); the `id` column is
-the [clustering column](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#glossentry_h31_xjk_bk).
+[partition key](http://docs.datastax.com/en/glossary/doc/glossary/gloss_partition_key.html); the `id` column is
+the [clustering column](http://docs.datastax.com/en/glossary/doc/glossary/gloss_clustering_column.html).
 
 Practically speaking, this means that posts are accessed using both the
 `blog_subdomain` (automatically defined by the `belongs_to` association) and the
@@ -221,7 +224,7 @@ multiple queries in your logs if you're iterating over a huge result set.
 #### Time UUID Queries ####
 
 CQL has [special handling for the `timeuuid`
-type](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/cql_data_types_c.html#reference_ds_axc_xk5_yj),
+type](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/uuid_type_r.html),
 which allows you to return a rows whose UUID keys correspond to a range of
 timestamps. 
 
@@ -381,6 +384,20 @@ Post.consistency(:one).find_each { |post| puts post.title }
 ```
 
 Both read and write consistency default to `QUORUM`.
+
+### Compression ###
+
+Cassandra supports [frame compression](http://datastax.github.io/ruby-driver/features/#compression),
+which can give you a performance boost if your requests or responses are big. To enable it you can 
+specify `client_compression` to use in cequel.yaml.
+
+```yaml
+development:
+  host: '127.0.0.1'
+  port: 9042
+  keyspace: Blog
+  client_compression: :lz4
+```
 
 ### ActiveModel Support ###
 
@@ -547,15 +564,13 @@ the columns that are given.
 ### Ruby ###
 
 * Ruby 2.3, 2.2, 2.1, 2.0
-* JRuby 1.7, 9.0
+* JRuby 9.0
 
 ### Cassandra ###
 
-* 2.x
+* 2.1.x
+* 2.2.x
 
-Though Cequel is tested against Cassandra 2, it does not at this time support
-any of the CQL3.1 features introduced in Cassandra 2. This will change in the
-future.
 
 ## Support & Bugs ##
 
@@ -598,8 +613,11 @@ Cequel was written by:
 * Tamara Temple
 * Long On
 * Lucas Mundim
+* Luke Duncalfe
+* Eric Betts
+* Maxim Dobryakov
 
-Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
+Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.
 
 ## Shameless Self-Promotion ##
@@ -607,7 +625,7 @@ releases of Cequel.
 If you're new to Cassandra, check out [Learning Apache
 Cassandra](http://www.amazon.com/gp/product/1783989203/ref=s9_simh_co_p14_d4_i1?pf_rd_m=ATVPDKIKX0DER&pf_rd_s=left-1&pf_rd_r=1TX356WHGF06W32ZHD8S&pf_rd_t=3201&pf_rd_p=1953562742&pf_rd_i=typ01),
 a hands-on guide to Cassandra application development by example, written by
-the maintainer of Cequel.
+the creator of Cequel.
 
 ## License ##
 

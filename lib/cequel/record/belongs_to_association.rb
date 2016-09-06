@@ -17,6 +17,8 @@ module Cequel
       attr_reader :name
       # @return [String] name of parent class
       attr_reader :association_class_name
+      # @return [Array] array of foreign key symbols
+      attr_reader :foreign_keys
 
       # @!attribute [r] association_key_columns
       #   @return [Array<Schema::Column>] key columns on the parent class
@@ -31,8 +33,9 @@ module Cequel
       # @api private
       #
       def initialize(owner_class, name, options = {})
-        options.assert_valid_keys(:class_name)
+        options.assert_valid_keys(:class_name, :foreign_key)
 
+        @foreign_keys = Array(options.fetch(:foreign_key, [])).map { |x| x.to_sym }
         @owner_class, @name = owner_class, name.to_sym
         @association_class_name =
           options.fetch(:class_name, @name.to_s.classify)

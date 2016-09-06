@@ -379,7 +379,8 @@ module Cequel
 
     #
     # `timestamp` columns store timestamps. Timestamps do not include time zone
-    # data, and all input times are cast to UTC before being stored.
+    # data, and all input times are cast to UTC and rounded to the nearest
+    # millisecond before being stored.
     #
     # @see http://cassandra.apache.org/doc/cql3/CQL.html#usingdates
     #   CQL3 documentation for date columns
@@ -395,7 +396,7 @@ module Cequel
         elsif value.respond_to?(:to_time) then value.to_time
         elsif value.is_a?(Numeric) then Time.at(value)
         else Time.parse(value.to_s)
-        end.utc
+        end.utc.round(3)
       end
     end
     register Timestamp.instance

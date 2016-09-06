@@ -1,8 +1,23 @@
+## Unreleased
+
+* drop support for JRuby 1.7
+
+## 1.10.0
+
+* `:foreign_key` option for belongs_to associations
+  ([PR 287](https://github.com/cequel/cequel/pull/287))
+* `:client_compression` option in cequel.yaml
+  ([PR 304](https://github.com/cequel/cequel/pull/304))
+
+## 1.9.1
+
+* fix dirty checking for timestamps more precise than Cassandra can store
+* fix bug with new relic instrumentation
+
 ## 1.9.0
 
 * NewRelic instrumentation
 * fix querying tables whose first partition key is a timestamp
-
 
 ## 1.8.0
 

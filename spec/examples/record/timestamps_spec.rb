@@ -17,44 +17,49 @@ describe Cequel::Record::Timestamps do
   let!(:now) { Timecop.freeze }
 
   context 'with simple primary key' do
-    let(:blog) { Blog.create!(subdomain: 'bigdata') }
+    let!(:blog) { Blog.create!(subdomain: 'bigdata') }
 
     it 'should populate created_at after create new record' do
-      expect(blog.created_at).to eq(now)
+      expect(blog.created_at).to be_within(one_millisecond).of(now)
     end
 
     it 'should populate updated_at after create new record' do
-      expect(blog.updated_at).to eq(now)
+      expect(blog.updated_at).to be_within(one_millisecond).of(now)
     end
 
     it 'should update updated_at after record update but not created_at' do
       future = Timecop.freeze(now + 2.minutes)
       blog.name = 'name'
       blog.save!
-      expect(blog.updated_at).to eq(future)
+      expect(blog.updated_at).to be_within(one_millisecond).of(future)
+    end
+
+    it 'should cast the timestamp in the same way that Cassandra records it' do
+      expect(Blog.first.updated_at).to eq(blog.updated_at)
     end
   end
 
   context 'with auto-generated timeuuid primary key' do
-    let(:post) { Post['bigdata'].create! }
+    let!(:post) { Post['bigdata'].create! }
 
     it 'should not have created_at column' do
       expect(Post.column_names).not_to include(:created_at)
     end
 
     it 'should expose created_at' do
-      expect(post.created_at.to_i).to eq(now.to_i)
+      expect(post.created_at).to be_within(one_millisecond).of(now)
     end
 
     it 'should populate updated_at after create new record' do
-      expect(post.updated_at).to eq(now)
+      expect(post.updated_at).to be_within(one_millisecond).of(now)
     end
 
     it 'should update updated_at after record update but not created_at' do
       future = Timecop.freeze(now + 2.minutes)
       post.name = 'name'
       post.save!
-      expect(post.updated_at).to eq(future)
+      expect(post.created_at).to be_within(one_millisecond).of(now)
+      expect(post.updated_at).to be_within(one_millisecond).of(future)
     end
   end
 end

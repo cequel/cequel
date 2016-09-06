@@ -108,14 +108,16 @@ module Cequel
                  "belongs_to association must be declared before declaring " \
                  "key(s)"
           end
-          
+
           key_options = options.extract!(:partition)
 
           self.parent_association =
             BelongsToAssociation.new(self, name.to_sym, options)
 
-          parent_association.association_key_columns.each do |column|
-            key :"#{name}_#{column.name}", column.type, key_options
+          parent_association.association_key_columns.each_with_index do |column, i|
+            foreign_key_parts = self.parent_association.foreign_keys
+            foreign_key = foreign_key_parts.any? ? foreign_key_parts[i] : "#{name}_#{column.name}"
+            key foreign_key.to_sym, column.type, key_options
           end
           def_parent_association_accessors
         end
