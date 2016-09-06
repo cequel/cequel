@@ -12,7 +12,7 @@ module Cequel
       STORAGE_PROPERTIES = %w(
         bloom_filter_fp_chance caching comment compaction compression
         dclocal_read_repair_chance gc_grace_seconds read_repair_chance
-        replicate_on_write
+        crc_check_chance
       )
 
       # @return [Symbol] the name of the table
@@ -33,6 +33,7 @@ module Cequel
       # @return [Boolean] `true` if this table is configured with compact
       #   storage
       attr_writer :compact_storage
+      attr_writer :dense
 
       #
       # @param name [Symbol] the name of the table
@@ -100,15 +101,14 @@ module Cequel
       # @param name [Symbol] name of the column
       # @param type [Type] type for the column
       # @param options [Options] options for the column
-      # @option options [Boolean,Symbol] :index (nil) name of a secondary index
-      #   to apply to the column, or `true` to infer an index name by
-      #   convention
+      # @option options [Symbol] :index (nil) name of a secondary index
+      #   to apply to the column
       # @return [void]
       #
       def add_data_column(name, type, options = {})
         options = {index: options} unless options.is_a?(Hash)
         index_name = options[:index]
-        index_name = :"#{@name}_#{name}_idx" if index_name == true
+        
         DataColumn.new(name, type(type), index_name)
           .tap { |column| @data_columns << add_column(column) }
       end
@@ -279,6 +279,13 @@ module Cequel
       #
       def compact_storage?
         !!@compact_storage
+      end
+      
+      #
+      # @return [Boolean] `true` if this table uses dense storage
+      #
+      def dense?
+        !!@dense
       end
 
       protected

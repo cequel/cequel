@@ -147,14 +147,25 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should not mark itself as clean if save failed at Cassandra level' do
-          blog.name = 'Pizza'
-          with_client_error(Cassandra::Errors::InvalidError.new(1, 'error')) do
+          blog.name = 'Pizza'          
+          simulated_error = Cassandra::Errors::InvalidError.new('simulated error', 
+            {},
+            [],
+            'cequel_test',
+            'simulated statement;',
+            {},
+            ['host-a','host-b'],
+            :one,
+            1)
+                        
+            
+          with_client_error(simulated_error) do
             begin
               blog.save
             rescue Cassandra::Errors::InvalidError
             end
           end
-          blog.save
+          blog.save          
           expect(subject[:name]).to eq('Pizza')
         end
       end

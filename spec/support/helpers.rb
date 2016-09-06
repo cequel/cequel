@@ -55,7 +55,8 @@ module Cequel
         @cequel ||= Cequel.connect(
           host: host,
           port: port,
-          keyspace: keyspace_name
+          keyspace: keyspace_name,
+          cluster_options: {timeout: Integer(ENV.fetch('SPEC_TIMEOUT','60'))}
         ).tap do |cequel|
           if ENV['CEQUEL_LOG_QUERIES']
             cequel.logger = Logger.new(STDOUT)

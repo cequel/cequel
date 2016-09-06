@@ -282,29 +282,29 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read and simplify compaction class' do
-      expect(table.property(:compaction)[:class]).
+      expect(table.property(:compaction).fetch(:class)).
         to eq('SizeTieredCompactionStrategy')
     end
 
     it 'should read float properties from compaction hash' do
-      expect(table.property(:compaction)[:bucket_high]).to eq(1.8)
+      expect(table.property(:compaction).fetch(:bucket_high)).to eq(1.8)
     end
 
     it 'should read integer properties from compaction hash' do
-      expect(table.property(:compaction)[:max_threshold]).to eq(64)
+      expect(table.property(:compaction).fetch(:max_threshold)).to eq(64)
     end
-
+    
     it 'should read and simplify compression class' do
-      expect(table.property(:compression)[:sstable_compression]).
+      expect(table.property(:compression).fetch(:class)).
         to eq('DeflateCompressor')
     end
 
     it 'should read integer properties from compression class' do
-      expect(table.property(:compression)[:chunk_length_kb]).to eq(128)
+      expect(table.property(:compression).fetch(:chunk_length_in_kb)).to eq(128)
     end
 
     it 'should read float properties from compression class' do
-      expect(table.property(:compression)[:crc_check_chance]).to eq(0.5)
+      expect(table.property(:crc_check_chance)).to eq(0.5)
     end
 
     it 'should recognize no compact storage' do
@@ -326,7 +326,8 @@ describe Cequel::Schema::TableReader do
     its(:partition_key_columns) { should ==
       [Cequel::Schema::PartitionKey.new(:permalink, :text)] }
     its(:clustering_columns) { should be_empty }
-    specify { expect(table.data_columns).to contain_exactly(
+    specify { 
+      expect(table.data_columns).to contain_exactly(
       Cequel::Schema::DataColumn.new(:title, :text),
       Cequel::Schema::DataColumn.new(:body, :text)) }
   end

@@ -197,7 +197,7 @@ describe Cequel::Metal::DataSet do
       cequel[:posts].where(row_keys).
         list_prepend(:categories, ['Scalability', 'Partition Tolerance'])
       expect(cequel[:posts].where(row_keys).first[:categories]).to eq(
-        ['Partition Tolerance', 'Scalability', 'Big Data', 'Cassandra']
+        ['Scalability', 'Partition Tolerance', 'Big Data', 'Cassandra']
       )
     end
   end
@@ -738,7 +738,10 @@ describe Cequel::Metal::DataSet do
     end
 
     it 'should use limit if specified' do
-      expect(cequel[:posts].limit(2).count).to eq(2)
+      # In Cassandra 2.x, it is valid to specify limit with a 
+      # count query, but there is no meaninful effect on the result 
+      expect(cequel[:posts].limit(2).count_cql.first.downcase).to match("limit")
+      expect(cequel[:posts].limit(1).count).to eq(4) # Total number of rows in the table
     end
   end
 

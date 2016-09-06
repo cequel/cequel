@@ -34,6 +34,8 @@ module Cequel
       attr_reader :ssl_config
       # @return [Symbol] The client compression option
       attr_reader :client_compression
+      # @return [Hash] A hash of configuration options passed to Cassandra.cluster, with absolute precedence 
+      attr_reader :cluster_options
 
       #
       # @!method write(statement, *bind_vars)
@@ -138,6 +140,7 @@ module Cequel
         @max_retries  = extract_max_retries(configuration)
         @retry_delay  = extract_retry_delay(configuration)
         @ssl_config = extract_ssl_config(configuration)
+        @cluster_options = configuration[:cluster_options]
 
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
@@ -250,12 +253,8 @@ module Cequel
 
       # @return [Boolean] true if the keyspace exists
       def exists?
-        statement = <<-CQL
-          SELECT keyspace_name
-          FROM system.schema_keyspaces
-          WHERE keyspace_name = ?
-        CQL
-
+        statement = Cassandra::Cluster::Schema::Fetchers::V3_0_x::SELECT_KEYSPACE 
+        
         log('CQL', statement, [name]) do
           client_without_keyspace.execute(sanitize(statement, [name])).any?
         end
@@ -288,6 +287,7 @@ module Cequel
           options.merge!(credentials) if credentials
           options.merge!(ssl_config) if ssl_config
           options.merge!(compression: client_compression) if client_compression
+          options.merge!(cluster_options) if cluster_options
         end
       end
 
@@ -301,7 +301,7 @@ module Cequel
 
       def extract_hosts_and_port(configuration)
         hosts, ports = [], Set[]
-        ports << configuration[:port] if configuration.key?(:port)
+        ports << configuration[:port] if configuration[:port].present?
         host_or_hosts =
           configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1'))
         Array.wrap(host_or_hosts).each do |host_port|
@@ -311,16 +311,19 @@ module Cequel
             warn "Specifying a hostname as host:port is deprecated. Specify " \
                  "only the host IP or hostname in :hosts, and specify a " \
                  "port for all nodes using the :port option."
-            ports << port.to_i
+            ports << port
           end
         end
 
         if ports.size > 1
           fail ArgumentError, "All Cassandra nodes must listen on the same " \
                "port; specified multiple ports #{ports.join(', ')}"
+        elsif ports.size != 1
+          fail ArgumentError, "Port for cassandra nodes not specified"
         end
+        
 
-        [hosts, ports.first || 9042]
+        [hosts, Integer(ports.first || 9042)]
       end
 
       def extract_credentials(configuration)

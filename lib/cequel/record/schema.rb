@@ -118,7 +118,12 @@ module Cequel
 
         def column(name, type, options = {})
           super
-          table_schema.add_data_column(name, type, options[:index])
+          
+          index_name = options[:index]
+          # If passed a boolean, autogenerate the index name
+          index_name = :"#{name}_#{name}_idx" if index_name == true
+          
+          table_schema.add_data_column(name, type, index: index_name)
         end
 
         def list(name, type, options = {})
