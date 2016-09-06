@@ -564,7 +564,7 @@ the columns that are given.
 ### Ruby ###
 
 * Ruby 2.3, 2.2, 2.1, 2.0
-* JRuby 1.7, 9.0
+* JRuby 9.0
 
 ### Cassandra ###
 

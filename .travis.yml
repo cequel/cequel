@@ -4,7 +4,6 @@ rvm:
   - "2.2.0"
   - "2.1.5"
   - "2.3.0"
-  - "jruby-1.7.22"
   - "jruby-9.0.0.0"
 gemfile:
   - "gemfiles/rails_4.0.gemfile"
