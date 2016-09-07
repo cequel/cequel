@@ -149,7 +149,7 @@ module Cequel
       # @return [void]
       #
       def drop_index(index_name)
-        statements << "DROP INDEX #{index_name}"
+        statements << "DROP INDEX IF EXISTS #{index_name}"
       end
 
       # @!visibility protected

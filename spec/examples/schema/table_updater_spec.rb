@@ -121,16 +121,31 @@ describe Cequel::Schema::TableUpdater do
   end
 
   describe '#drop_index' do
-    before do
-      tab_name = table_name
-      cequel.schema.alter_table(table_name) do
-        create_index :title
-        drop_index :"#{tab_name}_title_idx"
+    context 'index exists' do
+      before do
+        tab_name = table_name
+        cequel.schema.alter_table(table_name) do
+          create_index :title
+          drop_index :"#{tab_name}_title_idx"
+        end
+      end
+
+      it 'should drop the index' do
+        expect(table.data_column(:title)).not_to be_indexed
       end
     end
 
-    it 'should drop the index' do
-      expect(table.data_column(:title)).not_to be_indexed
+    context 'index does not exist' do
+      before do
+        tab_name = table_name
+        cequel.schema.alter_table(table_name) do
+          drop_index :"#{tab_name}_title_idx"
+        end
+      end
+
+      it 'should nop on non existent index' do
+        expect(table.data_column(:title)).not_to be_indexed
+      end
     end
   end
 
