@@ -45,6 +45,12 @@ module Cequel
     IllegalQuery = Class.new(StandardError)
 
     #
+    # Raised when attempting to perform a query that has detrimental effects.
+    # Typically when trying to count records.
+    #
+    DangerousQueryError = Class.new(StandardError)
+
+    #
     # Raised when attempting to persist a Cequel::Record without defining all
     # primary key columns
     #

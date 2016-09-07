@@ -674,7 +674,11 @@ describe Cequel::Record::RecordSet do
     let(:records) { blogs }
 
     it 'should return the number of records requested' do
-      expect(Blog.limit(2).length).to be(2)
+      expect(Blog.limit(2).to_a.length).to be(2)
+    end
+
+    it 'should return the minimum of the requested limit and the actual record count' do
+      expect(Blog.limit(5).to_a.length).to be(3)
     end
   end
 
@@ -847,10 +851,34 @@ describe Cequel::Record::RecordSet do
   end
 
   describe '#count' do
-    let(:records) { blogs }
+    let(:records) { posts }
 
-    it 'should count records' do
-      expect(Blog.count).to eq(3)
+    context 'without scoping' do
+      it 'should raise DangerousQueryError when attempting to count' do
+        expect{ Post.count }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access size' do
+        expect{ Post.size }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access length' do
+        expect{ Post.length }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+    end
+
+    context 'with scoping' do
+      it 'should raise DangerousQueryError when attempting to count' do
+        expect{ Post['postgres'].count }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access size' do
+        expect{ Post['postgres'].size }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access length' do
+        expect{ Post['postgres'].length }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
     end
   end
 
@@ -895,13 +923,13 @@ describe Cequel::Record::RecordSet do
 
     it 'should be able to delete with no scoping' do
       Post.delete_all
-      expect(Post.count).to be_zero
+      expect(Post.first).to be_nil
     end
 
     it 'should be able to delete with scoping' do
       Post['postgres'].delete_all
-      expect(Post['postgres'].count).to be_zero
-      expect(Post['cassandra'].count).to eq(cassandra_posts.length)
+      expect(Post['postgres'].first).to be_nil
+      expect(Post['cassandra'].to_a.count).to eq(cassandra_posts.length)
     end
 
     it 'should be able to delete fully specified collection' do
@@ -916,13 +944,13 @@ describe Cequel::Record::RecordSet do
 
     it 'should be able to delete with no scoping' do
       Post.destroy_all
-      expect(Post.count).to be_zero
+      expect(Post.first).to be_nil
     end
 
     it 'should be able to delete with scoping' do
       Post['postgres'].destroy_all
-      expect(Post['postgres'].count).to be_zero
-      expect(Post['cassandra'].count).to eq(cassandra_posts.length)
+      expect(Post['postgres'].first).to be_nil
+      expect(Post['cassandra'].to_a.count).to eq(cassandra_posts.length)
     end
 
     it 'should be able to delete fully specified collection' do
@@ -974,5 +1002,4 @@ describe Cequel::Record::RecordSet do
         .to yield_successive_args *blog_1_views
     end
   end
-
 end
