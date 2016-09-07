@@ -22,6 +22,10 @@ Add it to your Gemfile:
 
 ``` ruby
 gem 'cequel'
+```
+
+If you use Rails 5, add this:
+``` ruby
 gem 'activemodel-serializers-xml'
 ```
 
