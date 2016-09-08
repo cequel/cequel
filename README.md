@@ -24,6 +24,11 @@ Add it to your Gemfile:
 gem 'cequel'
 ```
 
+If you use Rails 5, add this:
+``` ruby
+gem 'activemodel-serializers-xml'
+```
+
 ### Rails integration ###
 
 Cequel does not require Rails, but if you are using Rails, you

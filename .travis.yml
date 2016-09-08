@@ -4,12 +4,17 @@ rvm:
   - "2.2.0"
   - "2.1.5"
   - "2.3.0"
-  - "jruby-9.0.0.0"
+  - "jruby-9.1.5.0"
 gemfile:
   - "gemfiles/rails_4.0.gemfile"
   - "gemfiles/rails_4.1.gemfile"
   - "gemfiles/rails_4.2.gemfile"
+  - "gemfiles/rails_5.0.gemfile"
 script: 'bundle exec rake test'
 bundler_args: '--without=debug'
 services:
   - cassandra
+matrix:
+  exclude:
+  - rvm: 2.1.5
+    gemfile: gemfiles/rails_5.0.gemfile
