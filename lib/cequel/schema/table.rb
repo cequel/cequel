@@ -157,11 +157,26 @@ module Cequel
       # @return [void]
       #
       def add_data_column(name, type, options = {})
-        options = {index: options} unless options.is_a?(Hash)
-        index_name = options[:index]
-        index_name = :"#{@name}_#{name}_idx" if index_name == true
-        DataColumn.new(name, type(type), index_name)
-          .tap { |column| data_columns_hash[name] << add_column(column) }
+        if valid_data_column?(name)
+          options = {index: options} unless options.is_a?(Hash)
+          index_name = options[:index]
+          index_name = :"#{@name}_#{name}_idx" if index_name == true
+          DataColumn.new(name, type(type), index_name)
+            .tap do |column|
+              data_columns_hash[name] = add_column(column)
+            end
+        else
+          # return the data column like we would if we built it
+          data_columns_hash[name]
+        end
+      end
+
+      #
+      # Determines if the data_column names has already been used
+      # and if so, returns false
+      #
+      def valid_data_column?(name)
+        !data_column_names.include?(name)
       end
 
       #
@@ -175,7 +190,7 @@ module Cequel
       #
       def add_list(name, type)
         List.new(name, type(type)).tap do |column|
-          data_columns_hash[name] << add_column(column)
+          data_columns_hash[name] = add_column(column)
         end
       end
 
@@ -190,7 +205,7 @@ module Cequel
       #
       def add_set(name, type)
         Set.new(name, type(type)).tap do |column|
-          data_columns_hash[name] << add_column(column)
+          data_columns_hash[name] = add_column(column)
         end
       end
 
@@ -206,7 +221,7 @@ module Cequel
       #
       def add_map(name, key_type, value_type)
         Map.new(name, type(key_type), type(value_type)).tap do |column|
-          data_columns_hash[name] << add_column(column)
+          data_columns_hash[name] = add_column(column)
         end
       end
 
