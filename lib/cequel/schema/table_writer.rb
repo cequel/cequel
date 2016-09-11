@@ -45,11 +45,10 @@ module Cequel
       private
 
       def create_statement
-        resp = "CREATE TABLE #{table.name} (#{columns_cql}, #{keys_cql})".tap do |cql|
+        "CREATE TABLE #{table.name} (#{columns_cql}, #{keys_cql})".tap do |cql|
           properties = properties_cql
           cql << " WITH #{properties}" if properties
         end
-        resp
       end
 
       def index_statements

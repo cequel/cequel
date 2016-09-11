@@ -79,10 +79,6 @@ module Cequel
         columns_hash.values
       end
 
-      def column_names
-        columns.map { |column| column.name }
-      end
-
       #
       # Define a partition key names attribute to checking column
       # inclusion
