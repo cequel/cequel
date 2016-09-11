@@ -63,12 +63,15 @@ namespace :cequel do
     puts "Dropped keyspace #{Cequel::Record.connection.name}"
   end
 
+  def models_dir_path
+    ENV['CEQUEL_MODELS_PATH'] || "#{File.expand_path('app/models', project_root)}/"
+  end
+
   def migrate
     watch_stack = ActiveSupport::Dependencies::WatchStack.new
 
     migration_table_names = Set[]
     project_root = defined?(Rails) ? Rails.root : Dir.pwd
-    models_dir_path = "#{File.expand_path('app/models', project_root)}/"
     model_files = Dir.glob(File.join(models_dir_path, '**', '*.rb'))
     model_files.sort.each do |file|
       watch_namespaces = ["Object"]

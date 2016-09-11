@@ -23,7 +23,9 @@ RSpec.configure do |config|
     config.filter_run_excluding thrift: true
   end
 
+
   config.before(:all) do
+    cequel.schema.drop! if cequel.exists?
     cequel.schema.create!
     Cequel::Record.connection = cequel
     Time.zone = 'UTC'
