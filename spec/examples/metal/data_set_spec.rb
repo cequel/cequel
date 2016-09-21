@@ -275,9 +275,9 @@ describe Cequel::Metal::DataSet do
     end
 
     it 'should add multiple elements to set' do
-      cequel[:posts].insert(
-        row_keys.merge(tags: Set['big-data', 'nosql']))
+      cequel[:posts].insert(row_keys.merge(tags: Set['big-data', 'nosql']))
       cequel[:posts].where(row_keys).set_add(:tags, 'cassandra')
+
       expect(cequel[:posts].where(row_keys).first[:tags]).
         to eq(Set['big-data', 'nosql', 'cassandra'])
     end
@@ -511,8 +511,7 @@ describe Cequel::Metal::DataSet do
         title: 'Bogus Post',
       ))
       expect(cequel[:posts].where(
-        :blog_subdomain => %w(cassandra big-data-weekly),
-        :permalink => 'big-data'
+        :blog_subdomain => %w(cassandra big-data-weekly)
       ).map { |row| row[:title] }).to match_array(['Big Data', 'Cassandra'])
     end
 

@@ -45,7 +45,8 @@ module Cequel
       # @see DataSet#list_prepend
       #
       def list_prepend(column, elements)
-        statements << "#{column} = [?] + #{column}"
+        elements = Array(elements)
+        statements << "#{column} = ? + #{column}"
         bind_vars << elements
       end
 
@@ -59,7 +60,8 @@ module Cequel
       # @see DataSet#list_append
       #
       def list_append(column, elements)
-        statements << "#{column} = #{column} + [?]"
+        elements = Array(elements)
+        statements << "#{column} = #{column} + ?"
         bind_vars << elements
       end
 
@@ -73,7 +75,8 @@ module Cequel
       # @see DataSet#list_remove
       #
       def list_remove(column, value)
-        statements << "#{column} = #{column} - [?]"
+        value = Array(value)
+        statements << "#{column} = #{column} - ?"
         bind_vars << value
       end
 
@@ -102,8 +105,9 @@ module Cequel
       # @see DataSet#set_add
       #
       def set_add(column, values)
-        statements << "#{column} = #{column} + {?}"
-        bind_vars << values
+        pp statements
+        statements << "#{column} = #{column} + ?"
+        bind_vars << Set.new(::Kernel.Array(values))
       end
 
       #
@@ -116,8 +120,8 @@ module Cequel
       # @see DataSet#set_remove
       #
       def set_remove(column, values)
-        statements << "#{column} = #{column} - {?}"
-        bind_vars << ::Kernel.Array(values)
+        statements << "#{column} = #{column} - ?"
+        bind_vars << Set.new(::Kernel.Array(values))
       end
 
       #
@@ -130,9 +134,8 @@ module Cequel
       # @see DataSet#map_update
       #
       def map_update(column, updates)
-        binding_pairs = ::Array.new(updates.length) { '?:?' }.join(',')
-        statements << "#{column} = #{column} + {#{binding_pairs}}"
-        bind_vars.concat(updates.flatten)
+        statements << "#{column} = #{column} + ?"
+        bind_vars << updates
       end
 
       private

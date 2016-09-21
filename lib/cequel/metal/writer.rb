@@ -53,17 +53,7 @@ module Cequel
       def_delegator :statements, :empty?
 
       def prepare_upsert_value(value)
-        case value
-        when ::Array
-          yield '[?]', value
-        when ::Set then
-          yield '{?}', value.to_a
-        when ::Hash then
-          binding_pairs = ::Array.new(value.length) { '?:?' }.join(',')
-          yield "{#{binding_pairs}}", *value.flatten
-        else
-          yield '?', value
-        end
+        yield '?', value
       end
 
       #
