@@ -23,7 +23,9 @@ module Cequel
         statement = Statement.new
         consistency = options.fetch(:consistency, data_set.query_consistency)
         write_to_statement(statement, options)
-        data_set.write_with_options(statement, consistency: consistency)
+        data_set.write_with_options(statement,
+                                    consistency: consistency
+                                   )
       end
 
       #
@@ -57,7 +59,6 @@ module Cequel
       end
 
       def write_to_statement(statement, options)
-        statement.type_hints = options.fetch(:type_hints, nil)
         statement.append("INSERT INTO #{table_name}")
         statement.append(
           " (#{column_names.join(', ')}) VALUES (#{statements.join(', ')}) ",

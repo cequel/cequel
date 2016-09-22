@@ -127,8 +127,10 @@ describe Cequel::Metal::Keyspace do
 
     context "with a connection error" do
       it "reconnects to cassandra with a new client after first failed connection" do
-        allow(cequel.client).to receive(:execute)
-          .with(statement, :consistency => cequel.default_consistency)
+        allow(cequel.client)
+          .to receive(:execute)
+               .with(->(s){ s.cql == statement},
+                     hash_including(:consistency => cequel.default_consistency))
           .and_raise(Ione::Io::ConnectionError)
           .once
 

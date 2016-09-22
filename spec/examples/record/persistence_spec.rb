@@ -50,7 +50,7 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should save with specified consistency' do
-          expect_query_with_consistency(/INSERT/, :one) do
+          expect_query_with_consistency(anything, :one) do
             Blog.new do |blog|
               blog.subdomain = 'cequel'
               blog.name = 'Cequel'
@@ -119,7 +119,7 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should save with specified consistency' do
-          expect_query_with_consistency(/UPDATE/, :one) do
+          expect_query_with_consistency(anything, :one) do
             blog.name = 'Cequel'
             blog.save(consistency: :one)
           end
@@ -243,14 +243,14 @@ describe Cequel::Record::Persistence do
 
       it 'should destroy with specified consistency' do
         blog = Blog.create(:subdomain => 'big-data', :name => 'Big Data')
-        expect_query_with_consistency(/DELETE/, :one) do
+        expect_query_with_consistency(anything, :one) do
           blog.destroy(consistency: :one)
         end
       end
 
-      it 'should destroy with specified timestamp' do
+      it 'should not destroy records without specified timestamp' do
         blog = Blog.create(subdomain: 'big-data', name: 'Big Data')
-        blog.destroy(timestamp: 1.minute.ago)
+        blog.destroy(timestamp: 1.hour.ago)
         expect(cequel[Blog.table_name].where(subdomain: 'big-data').first).to be
       end
     end

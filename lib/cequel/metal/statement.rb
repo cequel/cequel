@@ -11,17 +11,29 @@ module Cequel
       # @return [Array] bind variables for CQL string
       attr_reader :bind_vars
       # @return [Array] cassandra type hints for bind variables
-      attr_accessor :type_hints
 
-      def initialize(cql='', bind_vars=[], type_hints=[])
-        @cql, @bind_vars, @type_hints = cql, bind_vars, type_hints
+      def initialize(cql_or_prepared='', bind_vars=[])
+        cql, prepared = *case cql_or_prepared
+                         when Cassandra::Statements::Prepared
+                           [cql_or_prepared.cql, cql_or_prepared]
+                         else
+                           [cql_or_prepared.to_s, nil]
+                         end
+
+        @cql, @prepared, @bind_vars = cql, prepared, bind_vars
       end
 
       #
       # @return [String] CQL statement
       #
-      def cql
+      def to_s
         @cql
+      end
+      alias_method :cql, :to_s
+
+      # @return [Cassandra::Statements::Prepared] prepared version of this statement
+      def prepare(keyspace)
+        @prepared ||= keyspace.client.prepare(cql)
       end
 
       #

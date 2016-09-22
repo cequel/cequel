@@ -46,7 +46,7 @@ module Cequel
       #
       def_delegator :write_target, :execute, :write
 
-      # @!method write_with_consistency(statement, bind_vars, consistency)
+      # @!method write_with_options(statement, bind_vars, consistency)
       #
       #   Write data to this keyspace using a CQL query at the given
       #   consistency. Will be included the current batch operation if one is
@@ -203,15 +203,17 @@ module Cequel
         options[:consistency] ||= default_consistency
 
         retries = max_retries
+        cql, options = *case statement
+                        when Statement
+                          [client.prepare(statement.cql),
+                           {arguments: statement.bind_vars}.merge(options)]
+                        when Cassandra::Statements::Batch
+                          [statement, options]
+                        end
+
         log('CQL', statement) do
           begin
-            case statement
-            when Statement
-              options = options.merge(arguments: statement.bind_vars, type_hints: statement.type_hints)
-              client.execute(statement.cql, options)
-            when Cassandra::Statements::Batch
-              client.execute(statement, options)
-            end
+            client.execute(cql, options)
           rescue Cassandra::Errors::NoHostsAvailable,
                  Ione::Io::ConnectionError => e
             clear_active_connections!

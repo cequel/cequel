@@ -61,10 +61,10 @@ module Cequel
             else
               Cassandra::Statements::Batch::Unlogged.new
             end
-          @statements.each { |s| statement.add(s.cql, s.bind_vars, s.type_hints) }
+          @statements.each { |s| statement.add(s.prepare(keyspace), s.bind_vars) }
         end
 
-        @keyspace.execute_with_options(statement, consistency: @consistency)
+        keyspace.execute_with_options(statement, consistency: @consistency)
         execute_on_complete_hooks
       end
 
@@ -103,7 +103,7 @@ module Cequel
 
       private
 
-      attr_reader :on_complete_hooks
+      attr_reader :on_complete_hooks, :keyspace
 
       def reset
         @statements = []

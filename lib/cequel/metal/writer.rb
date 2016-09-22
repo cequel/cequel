@@ -43,7 +43,8 @@ module Cequel
         consistency = options.fetch(:consistency, data_set.query_consistency)
         write_to_statement(statement, options)
         statement.append(*data_set.row_specifications_cql)
-        data_set.write_with_options(statement, consistency: consistency)
+        data_set.write_with_options(statement,
+                                    consistency: consistency)
       end
 
       private
