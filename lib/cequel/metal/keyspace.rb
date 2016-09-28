@@ -327,7 +327,7 @@ module Cequel
 
       def extract_hosts_and_port(configuration)
         hosts, ports = [], Set[]
-        ports << configuration[:port] if configuration.key?(:port)
+        ports << Integer(configuration[:port]) if configuration.key?(:port)
         host_or_hosts =
           configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1'))
         Array.wrap(host_or_hosts).each do |host_port|
@@ -337,7 +337,7 @@ module Cequel
             warn "Specifying a hostname as host:port is deprecated. Specify " \
                  "only the host IP or hostname in :hosts, and specify a " \
                  "port for all nodes using the :port option."
-            ports << port.to_i
+            ports << Integer(port)
           end
         end
 
