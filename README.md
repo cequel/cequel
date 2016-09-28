@@ -570,6 +570,7 @@ the columns that are given.
 
 ### Rails ###
 
+* 5.0
 * 4.2
 * 4.1
 * 4.0
@@ -583,6 +584,11 @@ the columns that are given.
 * 2.1.x
 * 2.2.x
 
+## Breaking API changes
+
+### 2.0
+
+ * dropped support for jruby (Due to difficult to work around bugs in jruby. PRs welcome to restore jruby compatibility.)
 
 ## Support & Bugs ##
 
