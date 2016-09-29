@@ -24,6 +24,11 @@ Add it to your Gemfile:
 gem 'cequel'
 ```
 
+If you use Rails 5, add this:
+``` ruby
+gem 'activemodel-serializers-xml'
+```
+
 ### Rails integration ###
 
 Cequel does not require Rails, but if you are using Rails, you
@@ -565,6 +570,7 @@ the columns that are given.
 
 ### Rails ###
 
+* 5.0
 * 4.2
 * 4.1
 * 4.0
@@ -572,13 +578,17 @@ the columns that are given.
 ### Ruby ###
 
 * Ruby 2.3, 2.2, 2.1, 2.0
-* JRuby 9.0
 
 ### Cassandra ###
 
 * 2.1.x
 * 2.2.x
 
+## Breaking API changes
+
+### 2.0
+
+ * dropped support for jruby (Due to difficult to work around bugs in jruby. PRs welcome to restore jruby compatibility.)
 
 ## Support & Bugs ##
 
