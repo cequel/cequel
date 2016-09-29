@@ -63,11 +63,12 @@ describe Cequel::SpecSupport::Preparation do
 
     it "allows keyspace can be created" do
       prep.create_keyspace
+      keyspace.cluster.refresh_schema
       expect(keyspace).to exist
     end
 
     it "causes #sync_schema to fail" do
-      expect{ prep.sync_schema }.to raise_error(Cassandra::Errors::InvalidError)
+      expect{ prep.sync_schema }.to raise_error(Cequel::NoSuchKeyspaceError)
     end
   end
 
@@ -84,12 +85,18 @@ describe Cequel::SpecSupport::Preparation do
 
   matcher :contain_table do |table_name|
     match do |keyspace|
-      keyspace.execute(<<-CQL).any?
-        SELECT columnfamily_name
-        FROM System.schema_columnfamilies
-        WHERE keyspace_name='#{keyspace.name}'
-          AND columnfamily_name='#{table_name}'
-      CQL
+      keyspace.cluster.refresh_schema
+      ks = keyspace.cluster.keyspace(keyspace.name)
+
+      ks && ks.has_table?(table_name)
+    end
+
+    failure_message do |keyspace|
+      if keyspace.cluster.has_keyspace?(keyspace.name)
+        "no such keyspace #{keyspace.name}"
+      else
+        "no such table #{keyspace.name}.#{table_name}"
+      end
     end
   end
 end
