@@ -634,6 +634,8 @@ Cequel was written by:
 * Luke Duncalfe
 * Eric Betts
 * Maxim Dobryakov
+* Yi-Cyuan Chen
+* Justin Hannus
 
 Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.
