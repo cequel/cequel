@@ -85,10 +85,10 @@ describe Cequel::SpecSupport::Preparation do
   matcher :contain_table do |table_name|
     match do |keyspace|
       keyspace.execute(<<-CQL).any?
-        SELECT columnfamily_name
-        FROM System.schema_columnfamilies
+        SELECT table_name
+        FROM system_schema.tables
         WHERE keyspace_name='#{keyspace.name}'
-          AND columnfamily_name='#{table_name}'
+          AND table_name='#{table_name}'
       CQL
     end
   end

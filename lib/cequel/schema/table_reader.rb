@@ -161,8 +161,8 @@ module Cequel
       def table_data
         return @table_data if defined? @table_data
         table_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
-              SELECT * FROM system.schema_columnfamilies
-              WHERE keyspace_name = ? AND columnfamily_name = ?
+              SELECT * FROM system_schema.tables
+              WHERE keyspace_name = ? AND table_name = ?
         CQL
         @table_data = table_query.first.try(:to_hash)
       end
@@ -171,8 +171,8 @@ module Cequel
         @all_columns ||=
           if table_data
             column_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
-              SELECT * FROM system.schema_columns
-              WHERE keyspace_name = ? AND columnfamily_name = ?
+              SELECT * FROM system_schema.tables
+              WHERE keyspace_name = ? AND table_name = ?
             CQL
             column_query.map(&:to_hash)
           end
