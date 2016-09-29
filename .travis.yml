@@ -29,5 +29,5 @@ bundler_args: '--without=debug'
 
 matrix:
   exclude:
-  - rvm: 2.1
+  - rvm: "2.1"
     gemfile: gemfiles/rails_5.0.gemfile
