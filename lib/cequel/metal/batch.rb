@@ -57,11 +57,11 @@ module Cequel
         if @statements.size > 1
           statement =
             if logged?
-              Cassandra::Statements::Batch::Logged.new
+              keyspace.client.logged_batch
             else
-              Cassandra::Statements::Batch::Unlogged.new
+              keyspace.client.unlogged_batch
             end
-          @statements.each { |s| statement.add(s.prepare(keyspace), s.bind_vars) }
+          @statements.each { |s| statement.add(s.prepare(keyspace), arguments: s.bind_vars) }
         end
 
         keyspace.execute_with_options(statement, consistency: @consistency)
