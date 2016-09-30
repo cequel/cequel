@@ -13,6 +13,7 @@ describe Cequel::Schema::TableReader do
   describe 'reading simple key' do
     before do
       cequel.execute("CREATE TABLE #{table_name} (permalink text PRIMARY KEY)")
+      cequel.send(:cluster).refresh_schema
     end
 
     it 'should read name correctly' do
@@ -295,8 +296,10 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read and simplify compression class' do
-      expect(table.property(:compression)[:sstable_compression]).
+      expect(table.property(:compression)[:sstable_compression] ||
+             table.property(:compression)[:class]).
         to eq('DeflateCompressor')
+
     end
 
     it 'should read integer properties from compression class' do

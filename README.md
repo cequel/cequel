@@ -583,6 +583,7 @@ the columns that are given.
 
 * 2.1.x
 * 2.2.x
+* 3.0.x
 
 ## Breaking API changes
 
@@ -634,6 +635,7 @@ Cequel was written by:
 * Luke Duncalfe
 * Eric Betts
 * Maxim Dobryakov
+* Yi-Cyuan Chen
 
 Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.

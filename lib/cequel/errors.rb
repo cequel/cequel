@@ -8,4 +8,6 @@ module Cequel
   # key)
   #
   InvalidSchemaMigration = Class.new(StandardError)
+
+  NoSuchKeyspaceError = Class.new(StandardError)
 end

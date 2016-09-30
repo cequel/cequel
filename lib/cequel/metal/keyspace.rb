@@ -250,15 +250,7 @@ module Cequel
 
       # @return [Boolean] true if the keyspace exists
       def exists?
-        statement = <<-CQL
-          SELECT keyspace_name
-          FROM system.schema_keyspaces
-          WHERE keyspace_name = ?
-        CQL
-
-        log('CQL', statement, [name]) do
-          client_without_keyspace.execute(sanitize(statement, [name])).any?
-        end
+        cluster.has_keyspace?(name)
       end
 
       # @return [String] Cassandra version number
@@ -287,6 +279,12 @@ module Cequel
         @bug8733_versions.include?(cassandra_version)
       end
 
+      def cluster
+        synchronize do
+          @cluster ||= Cassandra.cluster(client_options)
+        end
+      end
+
       private
 
       attr_reader :lock
@@ -297,11 +295,6 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
-      def cluster
-        synchronize do
-          @cluster ||= Cassandra.cluster(client_options)
-        end
-      end
 
       def client_without_keyspace
         synchronize do
