@@ -292,6 +292,7 @@ module Cequel
 
         ::Cequel::Type[type]
       end
+
     end
   end
 end

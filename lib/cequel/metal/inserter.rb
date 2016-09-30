@@ -23,8 +23,9 @@ module Cequel
         statement = Statement.new
         consistency = options.fetch(:consistency, data_set.query_consistency)
         write_to_statement(statement, options)
-        data_set.write_with_consistency(
-          statement.cql, statement.bind_vars, consistency)
+        data_set.write_with_options(statement,
+                                    consistency: consistency
+                                   )
       end
 
       #

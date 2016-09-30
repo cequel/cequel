@@ -51,7 +51,7 @@ module Cequel
       attr_reader :query_page_size
       attr_reader :query_paging_state
 
-      def_delegator :keyspace, :write_with_consistency
+      def_delegator :keyspace, :write_with_options
 
       #
       # @param table_name [Symbol] column family for this data set
@@ -620,7 +620,7 @@ module Cequel
       alias_method :size, :count
 
       #
-      # @return [String] CQL `SELECT` statement encoding this data set's scope.
+      # @return [Statement] CQL `SELECT` statement encoding this data set's scope.
       #
       def cql
         statement = Statement.new
@@ -629,15 +629,13 @@ module Cequel
           .append(*row_specifications_cql)
           .append(sort_order_cql)
           .append(limit_cql)
-          .args
       end
 
       #
       # @return [String]
       #
       def inspect
-        "#<#{self.class.name}: " \
-          "#{Keyspace.sanitize(cql.first, cql.drop(1))}>"
+        "#<#{self.class.name}: #{cql.inspect}>"
       end
 
       #
@@ -668,15 +666,15 @@ module Cequel
       private
 
       def results
-        @results ||= execute_cql(*cql)
+        @results ||= execute_cql(cql)
       end
 
-      def execute_cql(cql, *bind_vars)
-        keyspace.execute_with_options(cql, bind_vars, {
-          consistency: query_consistency,
-          page_size: query_page_size,
-          paging_state: query_paging_state
-        })
+      def execute_cql(cql_stmt)
+        keyspace.execute_with_options(cql_stmt,
+                                      consistency: query_consistency,
+                                      page_size: query_page_size,
+                                      paging_state: query_paging_state
+                                     )
       end
 
       def inserter(&block)
