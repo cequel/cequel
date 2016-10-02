@@ -1,4 +1,4 @@
-## 2.0
+## 2.0.0
 
 * add support for Cassandra 3.x ([PR 324](https://github.com/cequel/cequel/pull/324))
 * upgrade cassandra driver to 3.x ([PR 323](https://github.com/cequel/cequel/pull/323))
