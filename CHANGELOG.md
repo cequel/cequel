@@ -1,6 +1,11 @@
-## Unreleased
+## 2.0
 
-* drop support for JRuby 1.7
+* add support for Cassandra 3.x ([PR 324](https://github.com/cequel/cequel/pull/324))
+* upgrade cassandra driver to 3.x ([PR 323](https://github.com/cequel/cequel/pull/323))
+* add support for storing blobs (via parameterized CQL statements) ([PR 320](https://github.com/cequel/cequel/pull/320))
+* add support for Rails 5 ([PR 310](https://github.com/cequel/cequel/pull/310))
+* drop support for JRuby ([PR 310](https://github.com/cequel/cequel/pull/310))
+* handle missing indexes gracefully ([PR 317](https://github.com/cequel/cequel/pull/317))
 * Dropped support for count, length, and size as it results in unbounded run times and memory usage
   ([PR 313](https://github.com/cequel/cequel/pull/313))
 
