@@ -15,4 +15,3 @@ end
 gem 'racc', '~> 1.4', :platforms => :rbx
 gem 'rubysl', '~> 2.0', :platforms => :rbx
 gem 'psych', '~> 2.0', :platforms => :rbx
-gem 'activemodel-serializers-xml'

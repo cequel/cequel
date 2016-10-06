@@ -94,7 +94,7 @@ module Cequel
       extend ActiveModel::Naming
       include Conversion
       include ActiveModel::Serializers::JSON
-      include ActiveModel::Serializers::Xml
+      include ActiveModel::Serializers::Xml if defined?(ActiveModel::Serializers::Xml)
       include Timestamps
     end
 
