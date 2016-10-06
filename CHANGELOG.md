@@ -1,3 +1,7 @@
+## 2.0.1
+
+* Remove requirment on activemodel-serializers-xml ([PR 329](https://github.com/cequel/cequel/pull/329))
+
 ## 2.0.0
 
 * add support for Cassandra 3.x ([PR 324](https://github.com/cequel/cequel/pull/324))
