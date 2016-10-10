@@ -205,7 +205,7 @@ module Cequel
         retries = max_retries
         cql, options = *case statement
                         when Statement
-                          [client.prepare(statement.cql),
+                          [prepare_statement(statement),
                            {arguments: statement.bind_vars}.merge(options)]
                         when Cassandra::Statements::Batch
                           [statement, options]
@@ -215,13 +215,40 @@ module Cequel
           begin
             client.execute(cql, options)
           rescue Cassandra::Errors::NoHostsAvailable,
-                 Ione::Io::ConnectionError => e
+                 Cassandra::Errors::ExecutionError,
+                 Cassandra::Errors::TimeoutError
             clear_active_connections!
             raise if retries == 0
             retries -= 1
             sleep(retry_delay)
             retry
           end
+        end
+      end
+
+      #
+      # Wraps the prepare statement in the default retry strategy
+      #
+      # @param statement [String,Statement] statement to prepare
+      # @return [Cassandra::Statement::Prepared] the prepared statement
+      #
+      def prepare_statement(statement)
+        retries = max_retries
+        cql = case statement
+              when Statement
+                statement.cql
+              else
+                statement
+              end
+        begin
+          client.prepare(cql)
+        rescue Cassandra::Errors::NoHostsAvailable,
+               Cassandra::Errors::ExecutionError
+          clear_active_connections!
+          raise if retries == 0
+          retries -= 1
+          sleep(retry_delay)
+          retry
         end
       end
 
