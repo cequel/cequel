@@ -202,7 +202,6 @@ module Cequel
       def execute_with_options(statement, options={})
         options[:consistency] ||= default_consistency
 
-        retries = max_retries
         cql, options = *case statement
                         when Statement
                           [prepare_statement(statement),
@@ -212,16 +211,8 @@ module Cequel
                         end
 
         log('CQL', statement) do
-          begin
+          client_retry do
             client.execute(cql, options)
-          rescue Cassandra::Errors::NoHostsAvailable,
-                 Cassandra::Errors::ExecutionError,
-                 Cassandra::Errors::TimeoutError
-            clear_active_connections!
-            raise if retries == 0
-            retries -= 1
-            sleep(retry_delay)
-            retry
           end
         end
       end
@@ -233,22 +224,14 @@ module Cequel
       # @return [Cassandra::Statement::Prepared] the prepared statement
       #
       def prepare_statement(statement)
-        retries = max_retries
         cql = case statement
               when Statement
                 statement.cql
               else
                 statement
               end
-        begin
+        client_retry do
           client.prepare(cql)
-        rescue Cassandra::Errors::NoHostsAvailable,
-               Cassandra::Errors::ExecutionError
-          clear_active_connections!
-          raise if retries == 0
-          retries -= 1
-          sleep(retry_delay)
-          retry
         end
       end
 
@@ -325,6 +308,20 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
+      def client_retry
+        retries = max_retries
+        begin
+          yield
+        rescue Cassandra::Errors::NoHostsAvailable,
+               Cassandra::Errors::ExecutionError,
+               Cassandra::Errors::TimeoutError
+          clear_active_connections!
+          raise if retries == 0
+          retries -= 1
+          sleep(retry_delay)
+          retry
+        end
+      end
 
       def client_without_keyspace
         synchronize do
