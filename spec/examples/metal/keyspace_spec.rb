@@ -118,6 +118,7 @@ describe Cequel::Metal::Keyspace do
 
   describe "#execute" do
     let(:statement) { "SELECT id FROM posts" }
+    let(:execution_error) { Cassandra::Errors::OverloadedError.new(1,2,3,4,5,6,7,8,9) }
 
     context "without a connection error" do
       it "executes a CQL query" do
@@ -126,15 +127,70 @@ describe Cequel::Metal::Keyspace do
     end
 
     context "with a connection error" do
-      it "reconnects to cassandra with a new client after first failed connection" do
+      it "reconnects to cassandra with a new client after no hosts could be reached" do
         allow(cequel.client)
           .to receive(:execute)
                .with(->(s){ s.cql == statement},
                      hash_including(:consistency => cequel.default_consistency))
-          .and_raise(Ione::Io::ConnectionError)
+          .and_raise(Cassandra::Errors::NoHostsAvailable)
           .once
 
         expect { cequel.execute(statement) }.not_to raise_error
+      end
+
+      it "reconnects to cassandra with a new client after execution failed" do
+        allow(cequel.client)
+          .to receive(:execute)
+               .with(->(s){ s.cql == statement},
+                     hash_including(:consistency => cequel.default_consistency))
+          .and_raise(execution_error)
+          .once
+
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
+
+      it "reconnects to cassandra with a new client after timeout occurs" do
+        allow(cequel.client)
+          .to receive(:execute)
+               .with(->(s){ s.cql == statement},
+                     hash_including(:consistency => cequel.default_consistency))
+          .and_raise(Cassandra::Errors::TimeoutError)
+          .once
+
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
+    end
+  end
+
+  describe "#prepare_statement" do
+    let(:statement) { "SELECT id FROM posts" }
+    let(:execution_error) { Cassandra::Errors::OverloadedError.new(1,2,3,4,5,6,7,8,9) }
+
+    context "without a connection error" do
+      it "executes a CQL query" do
+        expect { cequel.prepare_statement(statement) }.not_to raise_error
+      end
+    end
+
+    context "with a connection error" do
+      it "reconnects to cassandra with a new client after no hosts could be reached" do
+        allow(cequel.client)
+          .to receive(:prepare)
+               .with(->(s){ s == statement})
+          .and_raise(Cassandra::Errors::NoHostsAvailable)
+          .once
+
+        expect { cequel.prepare_statement(statement) }.not_to raise_error
+      end
+
+      it "reconnects to cassandra with a new client after execution failed" do
+        allow(cequel.client)
+          .to receive(:prepare)
+               .with(->(s){ s == statement})
+          .and_raise(execution_error)
+          .once
+
+        expect { cequel.prepare_statement(statement) }.not_to raise_error
       end
     end
   end

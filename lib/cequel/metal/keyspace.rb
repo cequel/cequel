@@ -202,26 +202,36 @@ module Cequel
       def execute_with_options(statement, options={})
         options[:consistency] ||= default_consistency
 
-        retries = max_retries
         cql, options = *case statement
                         when Statement
-                          [client.prepare(statement.cql),
+                          [prepare_statement(statement),
                            {arguments: statement.bind_vars}.merge(options)]
                         when Cassandra::Statements::Batch
                           [statement, options]
                         end
 
         log('CQL', statement) do
-          begin
+          client_retry do
             client.execute(cql, options)
-          rescue Cassandra::Errors::NoHostsAvailable,
-                 Ione::Io::ConnectionError => e
-            clear_active_connections!
-            raise if retries == 0
-            retries -= 1
-            sleep(retry_delay)
-            retry
           end
+        end
+      end
+
+      #
+      # Wraps the prepare statement in the default retry strategy
+      #
+      # @param statement [String,Statement] statement to prepare
+      # @return [Cassandra::Statement::Prepared] the prepared statement
+      #
+      def prepare_statement(statement)
+        cql = case statement
+              when Statement
+                statement.cql
+              else
+                statement
+              end
+        client_retry do
+          client.prepare(cql)
         end
       end
 
@@ -298,6 +308,20 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
+      def client_retry
+        retries = max_retries
+        begin
+          yield
+        rescue Cassandra::Errors::NoHostsAvailable,
+               Cassandra::Errors::ExecutionError,
+               Cassandra::Errors::TimeoutError
+          clear_active_connections!
+          raise if retries == 0
+          retries -= 1
+          sleep(retry_delay)
+          retry
+        end
+      end
 
       def client_without_keyspace
         synchronize do
