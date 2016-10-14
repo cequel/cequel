@@ -94,8 +94,8 @@ module Cequel
       # @see Cequel.connect
       #
       def initialize(configuration={})
-        configure(configuration)
         @lock = Monitor.new
+        configure(configuration)
       end
 
       #
@@ -241,15 +241,17 @@ module Cequel
       # @return [void]
       #
       def clear_active_connections!
-        if defined? @client
-          remove_instance_variable(:@client)
-        end
-        if defined? @client_without_keyspace
-          remove_instance_variable(:@client_without_keyspace)
-        end
-        if defined? @cluster
-          @cluster.close
-          remove_instance_variable(:@cluster)
+        synchronize do
+          if defined? @client
+            remove_instance_variable(:@client)
+          end
+          if defined? @client_without_keyspace
+            remove_instance_variable(:@client_without_keyspace)
+          end
+          if defined? @cluster
+            @cluster.close
+            remove_instance_variable(:@cluster)
+          end
         end
       end
 
