@@ -1,3 +1,8 @@
+## 2.0.2
+
+* Fix intermittent failures around preparing statements ([PR 330](https://github.com/cequel/cequel/pull/330))
+* Fix new relic instrumentation ([PR 331](https://github.com/cequel/cequel/pull/331))
+
 ## 2.0.1
 
 * Remove requirment on activemodel-serializers-xml ([PR 329](https://github.com/cequel/cequel/pull/329))
