@@ -13,15 +13,28 @@ module Cequel
     module NewRelicInstrumentation
       extend ActiveSupport::Concern
 
-      define_method :execute_with_options_with_newrelic do |statement, bind_vars, options|
-        callback = Proc.new do |result, scoped_metric, elapsed|
-          NewRelic::Agent::Datastores.notice_statement(statement, elapsed)
+      define_method :execute_with_options_with_newrelic do |statement, options|
+
+        operation = nil
+        statement_txt = nil 
+        statement_words = nil
+
+        if statement.is_a?(::Cequel::Metal::Statement)
+          statement_txt = statement.cql
+          statement_words = statement_txt.split
+          operation = statement_words.first.downcase
+        elsif statement.is_a?(::Cassandra::Statements::Batch)
+          operation = "batch"
         end
 
-        statement_words = statement.split
-        operation = statement_words.first.downcase
+        callback = Proc.new do |result, scoped_metric, elapsed|
+          NewRelic::Agent::Datastores.notice_statement(statement_txt, elapsed)
+        end
+
         table = nil
         case operation
+        when "batch"
+          # Nothing to do
         when "begin"
           operation = "batch"
         when "select"
@@ -33,7 +46,7 @@ module Cequel
         end
 
         NewRelic::Agent::Datastores.wrap("Cassandra", operation, table, callback) do
-          execute_with_options_without_newrelic(statement, bind_vars, options)
+          execute_with_options_without_newrelic(statement, options)
         end
       end
 
