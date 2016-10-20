@@ -579,8 +579,24 @@ module Cequel
         end
       end
 
+      #
+      # Exposes current paging state for stateless pagination
+      #
+      # @return [String] or nil
+      #
+      # @see http://docs.datastax.com/en/developer/ruby-driver/3.0/api/cassandra/result/#paging_state-instance_method
+      #
       def next_paging_state
         results.paging_state
+      end
+
+      #
+      # @return [Boolean] Returns whether no more pages are available
+      #
+      # @see http://docs.datastax.com/en/developer/ruby-driver/3.0/api/cassandra/result/#last_page?-instance_method
+      #
+      def last_page?
+        results.last_page?
       end
 
       # rubocop:enable LineLength
