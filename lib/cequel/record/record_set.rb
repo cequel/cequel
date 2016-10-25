@@ -488,6 +488,10 @@ module Cequel
         data_set.next_paging_state
       end
 
+      def last_page?
+        data_set.last_page?
+      end
+
       #
       # @overload first
       #   @return [Record] the first record in this record set
