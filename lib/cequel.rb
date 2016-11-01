@@ -8,6 +8,7 @@ require 'cassandra'
 
 require 'cequel/errors'
 require 'cequel/util'
+require 'cequel/metal/policy/cassandra_error'
 require 'cequel/metal'
 require 'cequel/schema'
 require 'cequel/type'

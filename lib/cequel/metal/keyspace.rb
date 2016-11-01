@@ -34,6 +34,8 @@ module Cequel
       attr_reader :ssl_config
       # @return [Symbol] The client compression option
       attr_reader :client_compression
+      # @return [Hash] A hash of additional options passed to Cassandra, if any
+      attr_reader :cassandra_options
 
       #
       # @!method write(statement, *bind_vars)
@@ -122,7 +124,7 @@ module Cequel
       #   certificate
       # @option configuration [String] :private_key path to ssl client private
       #   key
-      # @option configuartion [String] :passphrase the passphrase for client
+      # @option configuration [String] :passphrase the passphrase for client
       #   private key
       # @return [void]
       #
@@ -132,7 +134,9 @@ module Cequel
                "with Cassandra. The :thrift option is deprecated and ignored."
         end
         @configuration = configuration
-
+        
+        extend(extract_cassandra_error_policy(configuration))
+        @cassandra_options = extract_cassandra_options(configuration)
         @hosts, @port = extract_hosts_and_port(configuration)
         @credentials  = extract_credentials(configuration)
         @max_retries  = extract_max_retries(configuration)
@@ -311,17 +315,15 @@ module Cequel
       private :lock
 
       def client_retry
-        retries = max_retries
+        retries_remaining = max_retries
         begin
           yield
         rescue Cassandra::Errors::NoHostsAvailable,
                Cassandra::Errors::ExecutionError,
-               Cassandra::Errors::TimeoutError
-          clear_active_connections!
-          raise if retries == 0
-          retries -= 1
-          sleep(retry_delay)
-          retry
+               Cassandra::Errors::TimeoutError => exc               
+          handle_error(exc, retries_remaining)
+          retries_remaining -= 1
+          retry                    
         end
       end
 
@@ -336,6 +338,7 @@ module Cequel
           options.merge!(credentials) if credentials
           options.merge!(ssl_config) if ssl_config
           options.merge!(compression: client_compression) if client_compression
+          options.merge!(cassandra_options) if cassandra_options
         end
       end
 
@@ -393,7 +396,20 @@ module Cequel
         ssl_config.each { |key, value| ssl_config.delete(key) unless value }
         ssl_config
       end
-
+      
+      def extract_cassandra_error_policy(configuration)
+        value = configuration.fetch(:cassandra_error_policy, ::Cequel::Metal::Policy::CassandraError::ClearAndRetry)
+        # Accept a class name as a string
+        if value.is_a?(String)
+          value.constantize
+        else 
+          value
+        end
+      end
+      
+      def extract_cassandra_options(configuration)
+        configuration[:cassandra_options]
+      end
     end
   end
 end
