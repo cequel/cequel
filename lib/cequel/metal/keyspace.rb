@@ -126,6 +126,10 @@ module Cequel
       #   key
       # @option configuration [String] :passphrase the passphrase for client
       #   private key
+      # @option configuration [String] :cassandra_error_policy A mixin for 
+      #   handling errors from Cassandra
+      # @option configuration [Hash] :cassandra_options A hash of arbitrary
+      #   options to pass to Cassandra
       # @return [void]
       #
       def configure(configuration = {})
