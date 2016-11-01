@@ -115,6 +115,42 @@ describe Cequel::Metal::Keyspace do
       expect(connect.client_compression).to eq client_compression
     end
   end
+  
+  describe '#cassandra_options' do 
+    let(:cassandra_options) { {foo: :bar} }
+    let(:connect) do
+      Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port,
+          cassandra_options: cassandra_options
+    end
+    it 'passes the cassandra options as part of the client options' do 
+      expect(connect.send(:client_options)).to have_key(:foo)
+    end
+  end
+  
+  describe 'cassandra error handling' do 
+    module SpecCassandraErrorHandler
+      def handle_error(error, retries_remaining)
+        raise error 
+      end
+    end
+    
+    it 'uses the error handler passed in as a string' do 
+      obj = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port,
+          cassandra_error_policy: 'SpecCassandraErrorHandler'
+          
+      expect(obj.method(:handle_error).owner).to equal(SpecCassandraErrorHandler)
+    end 
+    
+    it 'uses the error handler passed in as a module' do 
+      obj = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port,
+          cassandra_error_policy: 'SpecCassandraErrorHandler'
+          
+      expect(obj.method(:handle_error).owner).to equal(SpecCassandraErrorHandler)
+    end
+  end
 
   describe "#execute" do
     let(:statement) { "SELECT id FROM posts" }
