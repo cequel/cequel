@@ -119,6 +119,14 @@ module Cequel
       end
 
       #
+      # @param name [Symbol] name of the table to check
+      # @return [boolean] true if it is materialized view
+      #
+      def materialized_view?(name)
+        TableReader.materialized_view?(keyspace, name)
+      end
+
+      #
       # Create a table in the keyspace
       #
       # @param name [Symbol] name of the new table to create

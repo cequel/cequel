@@ -30,6 +30,16 @@ module Cequel
       end
 
       #
+      # Check if it is materialized view
+      #
+      # @param (see #initialize)
+      # @return (see #materialized_view?)
+      #
+      def self.materialized_view?(keyspace, table_name)
+        new(keyspace, table_name).materialized_view?
+      end
+
+      #
       # @param keyspace [Metal::Keyspace] keyspace to read the table from
       # @param table_name [Symbol] name of the table to read
       # @private
@@ -57,6 +67,19 @@ module Cequel
           read_table_settings
           table
         end
+      end
+
+      #
+      # Check if it is materialized view
+      #
+      # @return [boolean] true if it is materialized view
+      #
+      # @api private
+      #
+      def materialized_view?
+        cluster && cluster
+          .keyspace(keyspace.name)
+          .has_materialized_view?(table_name.to_s)
       end
 
       protected
@@ -150,18 +173,21 @@ module Cequel
       end
 
       def table_data
-        @table_data ||=
-          begin
-            cluster = keyspace.cluster
-            cluster.refresh_schema
+        @table_data ||= cluster && cluster
+          .keyspace(keyspace.name)
+          .table(table_name.to_s)
+      end
 
-            fail(NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") if
-              !cluster.has_keyspace?(keyspace.name)
+      def cluster
+        @cluster ||= begin
+          @cluster = keyspace.cluster
+          @cluster.refresh_schema
 
-            cluster
-              .keyspace(keyspace.name)
-              .table(table_name.to_s)
-          end
+          fail(NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") if
+            !@cluster.has_keyspace?(keyspace.name)
+
+          @cluster
+        end
       end
     end
   end
