@@ -56,7 +56,7 @@ module Cequel
       #   consistency. Will be included the current batch operation if one is
       #   present.
       #
-      #   @param (see #execute_with_consistency)
+      #   @param (see #execute_with_options)
       #   @return [void]
       #
       def_delegator :write_target, :execute_with_options,
@@ -194,7 +194,7 @@ module Cequel
       # @param bind_vars [Object] values for bind variables
       # @return [Enumerable] the results of the query
       #
-      # @see #execute_with_consistency
+      # @see #execute_with_options
       #
       def execute(statement, *bind_vars)
         execute_with_options(Statement.new(statement, bind_vars), { consistency: default_consistency })
