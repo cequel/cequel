@@ -128,28 +128,77 @@ describe Cequel::Metal::Keyspace do
     end
   end
   
-  describe 'cassandra error handling' do 
-    module SpecCassandraErrorHandler
-      def handle_error(error, retries_remaining)
+  describe 'cassandra error handling' do
+    let(:connect_options) do 
+      {
+        host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port
+      } 
+    end 
+    
+    let(:default_connect) do 
+      Cequel.connect(connect_options)
+    end 
+    
+    class SpecCassandraErrorHandler
+      def handle_error(keyspace, error, retries_remaining)
         raise error 
       end
     end
     
     it 'uses the error handler passed in as a string' do 
-      obj = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
-          port: Cequel::SpecSupport::Helpers.port,
-          cassandra_error_policy: 'SpecCassandraErrorHandler'
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: 'SpecCassandraErrorHandler')
           
-      expect(obj.method(:handle_error).owner).to equal(SpecCassandraErrorHandler)
+      expect(obj.error_policy.class).to equal(SpecCassandraErrorHandler)
     end 
     
     it 'uses the error handler passed in as a module' do 
-      obj = Cequel.connect host: Cequel::SpecSupport::Helpers.host,
-          port: Cequel::SpecSupport::Helpers.port,
-          cassandra_error_policy: 'SpecCassandraErrorHandler'
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: SpecCassandraErrorHandler)
           
-      expect(obj.method(:handle_error).owner).to equal(SpecCassandraErrorHandler)
+      expect(obj.error_policy.class).to equal(SpecCassandraErrorHandler)
     end
+    
+    it 'uses the instance of an error handler passed in' do
+      policy = SpecCassandraErrorHandler.new 
+      
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: policy)
+          
+      expect(obj.error_policy).to equal(policy)
+    end
+    
+    it 'responds to error policy' do
+      # Always defined, even if config does not specify it 
+      expect(default_connect).to respond_to(:error_policy)
+    end
+    
+    it 'responds to retry delay' do 
+      expect(default_connect).to respond_to(:retry_delay)
+    end
+    
+    it 'rejects a negative value for retry delay' do 
+      expect { Cequel.connect connect_options.merge(
+        retry_delay: -1.0)
+      }.to raise_error(ArgumentError)
+    end
+    
+    it 'accepts a configured value for retry delay' do
+      obj = Cequel.connect connect_options.merge(
+        retry_delay: 1337.0)
+      
+      # do not compare floats exactly, it is error prone
+      expect(obj.retry_delay).to be_within(0.1).of(1337.0) 
+    end
+    
+    it 'can clear active connections' do       
+      expect {
+        default_connect.clear_active_connections!
+      }.to change {
+        default_connect.client
+      }
+    end   
   end
 
   describe "#execute" do

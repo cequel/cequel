@@ -36,6 +36,8 @@ module Cequel
       attr_reader :client_compression
       # @return [Hash] A hash of additional options passed to Cassandra, if any
       attr_reader :cassandra_options
+      # @return [Object] The error policy object in use by this keyspace 
+      attr_reader :error_policy
 
       #
       # @!method write(statement, *bind_vars)
@@ -139,7 +141,7 @@ module Cequel
         end
         @configuration = configuration
         
-        extend(extract_cassandra_error_policy(configuration))
+        @error_policy = extract_cassandra_error_policy(configuration)
         @cassandra_options = extract_cassandra_options(configuration)
         @hosts, @port = extract_hosts_and_port(configuration)
         @credentials  = extract_credentials(configuration)
@@ -324,8 +326,10 @@ module Cequel
           yield
         rescue Cassandra::Errors::NoHostsAvailable,
                Cassandra::Errors::ExecutionError,
-               Cassandra::Errors::TimeoutError => exc               
-          handle_error(exc, retries_remaining)
+               Cassandra::Errors::TimeoutError => exc
+          # Pass the error to the error policy. It can reraise,
+          # if it returns at all it indicates a retry should occur               
+          error_policy.handle_error(self, exc, retries_remaining)
           retries_remaining -= 1
           retry                    
         end
@@ -387,7 +391,11 @@ module Cequel
       end
 
       def extract_retry_delay(configuration)
-        configuration.fetch(:retry_delay, 0.5)
+        v = configuration.fetch(:retry_delay, 0.5)
+        if v <= 0.0
+          raise ArgumentError, "The value for retry must be a positive number, not '#{v}'"
+        end 
+        v
       end
 
       def extract_ssl_config(configuration)
@@ -402,10 +410,14 @@ module Cequel
       end
       
       def extract_cassandra_error_policy(configuration)
-        value = configuration.fetch(:cassandra_error_policy, ::Cequel::Metal::Policy::CassandraError::ClearAndRetry)
-        # Accept a class name as a string
+        value = configuration.fetch(:cassandra_error_policy, ::Cequel::Metal::Policy::CassandraError::ClearAndRetryPolicy)
+        # Accept a class name as a string, create an instance of it 
         if value.is_a?(String)
-          value.constantize
+          value.constantize.new
+        # Accept a class, instantiate it
+        elsif value.is_a?(Class)
+          value.new 
+        # Accept a value, assume it is a ready to use policy object
         else 
           value
         end
