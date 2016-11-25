@@ -80,10 +80,9 @@ module Cequel
         # @return [void]
         #
         def synchronize_schema
-          unless connection.schema.materialized_view?(table_name)
-            Cequel::Schema::TableSynchronizer
-              .apply(connection, read_schema, table_schema)
-          end
+          return if connection.schema.materialized_view?(table_name)
+          Cequel::Schema::TableSynchronizer
+            .apply(connection, read_schema, table_schema)
         end
 
         #
