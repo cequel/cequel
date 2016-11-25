@@ -178,13 +178,13 @@ module Cequel
 
       def cluster
         @cluster ||= begin
-          cluster = keyspace.cluster
+          tmp_cluster = keyspace.cluster
           refresh(keyspace)
 
           fail(NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") if
-            !cluster.has_keyspace?(keyspace.name)
+            !tmp_cluster.has_keyspace?(keyspace.name)
 
-          cluster
+          tmp_cluster
         end
       end
 
