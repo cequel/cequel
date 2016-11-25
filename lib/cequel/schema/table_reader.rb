@@ -77,8 +77,7 @@ module Cequel
       # @api private
       #
       def materialized_view?
-        cluster && cluster
-          .keyspace(keyspace.name)
+        cluster.keyspace(keyspace.name)
           .has_materialized_view?(table_name.to_s)
       end
 
@@ -173,21 +172,27 @@ module Cequel
       end
 
       def table_data
-        @table_data ||= cluster && cluster
-          .keyspace(keyspace.name)
+        @table_data ||= cluster.keyspace(keyspace.name)
           .table(table_name.to_s)
       end
 
       def cluster
         @cluster ||= begin
-          @cluster = keyspace.cluster
-          @cluster.refresh_schema
+          cluster = keyspace.cluster
+          refresh(keyspace)
 
           fail(NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") if
-            !@cluster.has_keyspace?(keyspace.name)
+            !cluster.has_keyspace?(keyspace.name)
 
-          @cluster
+          cluster
         end
+      end
+
+      @@refreshed = {}
+      def refresh(keyspace)
+        return if @@refreshed[keyspace.name]
+        @@refreshed[keyspace.name] = true
+        keyspace.cluster.refresh_schema
       end
     end
   end
