@@ -413,10 +413,10 @@ module Cequel
         value = configuration.fetch(:cassandra_error_policy, ::Cequel::Metal::Policy::CassandraError::ClearAndRetryPolicy)
         # Accept a class name as a string, create an instance of it 
         if value.is_a?(String)
-          value.constantize.new
+          value.constantize.new(configuration)
         # Accept a class, instantiate it
         elsif value.is_a?(Class)
-          value.new 
+          value.new(configuration)
         # Accept a value, assume it is a ready to use policy object
         else 
           value

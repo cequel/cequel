@@ -3,7 +3,7 @@ module Cequel
   module Metal
     module Policy
       module CassandraError
-        class ErrorPolicyBase        
+        class ErrorPolicyBase                  
           # This class is used by the Keyspace object to dictate 
           # how a failure from Cassandra is handled.
           # The only method defined is 
@@ -16,7 +16,13 @@ module Cequel
           # retried.
           # 
           # The specific instance is chosen by passing configuration options
-          # See Keyspace#configure          
+          # See Keyspace#configure
+          
+          # On instantiation, the configuraiton hash passed to Cequel is 
+          # available here
+          def initialize(options = {})
+          end
+                    
           def handle_error(error, retries_remaining)
             raise RuntimeError, 'This is an abstract base class, never call this'
           end

@@ -141,6 +141,9 @@ describe Cequel::Metal::Keyspace do
     end 
     
     class SpecCassandraErrorHandler
+      def initialize(options = {})
+      end
+      
       def handle_error(keyspace, error, retries_remaining)
         raise error 
       end
