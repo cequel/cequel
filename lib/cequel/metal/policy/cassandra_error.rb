@@ -29,26 +29,51 @@ module Cequel
         end
          
         class ClearAndRetryPolicy < ErrorPolicyBase 
-          def handle_error(keyspace, error, retries_remaining)
-            keyspace.clear_active_connections!
-            raise error if retries_remaining == 0
-            sleep(keyspace.retry_delay)          
-          end
+          # @return Integer maximum number of retries to reconnect to Cassandra
+          attr_reader :max_retries
+          # @return Float delay between retries to reconnect to Cassandra
+          attr_reader :retry_delay
+          # @return Boolean if this policy clears connections before retry
+          attr_reader :clear_before_retry
+          def initialize(options = {})
+            @max_retries = options.fetch(:max_retries, 3)
+            @retry_delay = options.fetch(:retry_delay, 0.5)
+            @clear_before_retry = !!options.fetch(:clear_before_retry, true)
+            
+            if @retry_delay <= 0.0
+              raise ArgumentError, "The value for retry must be a positive number, not '#{@retry_delay}'"
+            end
+          end 
+          
+          def execute_stmt(keyspace)
+            retries_remaining = max_retries
+            begin
+              yield
+            rescue Cassandra::Errors::NoHostsAvailable,
+                  Cassandra::Errors::ExecutionError,
+                  Cassandra::Errors::TimeoutError => exc
+              raise error if retries_remaining == 0
+              sleep(retry_delay)
+              keyspace.clear_active_connections! if clear_before_retry
+              retries_remaining -= 1
+              retry                    
+            end
+          end 
         end
         
-        class RetryPolicy < ErrorPolicyBase
-          def handle_error(keyspace, error, retries_remaining)
-            raise error if retries_remaining == 0
-            sleep(keyspace.retry_delay)          
-          end
+        module RetryPolicy 
+          def self.new(options = {})
+            options[:clear_before_retry] = false 
+            ClearAndRetryPolicy.new(options)
+          end 
         end
         
         class RaisePolicy < ErrorPolicyBase
-          def handle_error(keyspace, error, retries_remaining)
-            raise error
-          end
+          def execute_stmt(keyspace)
+            yield
+          end           
         end
       end 
     end
   end 
-end
+end 

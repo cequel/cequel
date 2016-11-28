@@ -21,10 +21,6 @@ module Cequel
       attr_reader :hosts
       # @return Integer port to connect to Cassandra nodes on
       attr_reader :port
-      # @return Integer maximum number of retries to reconnect to Cassandra
-      attr_reader :max_retries
-      # @return Float delay between retries to reconnect to Cassandra
-      attr_reader :retry_delay
       # @return [Symbol] the default consistency for queries in this keyspace
       # @since 1.1.0
       attr_writer :default_consistency
@@ -145,8 +141,6 @@ module Cequel
         @cassandra_options = extract_cassandra_options(configuration)
         @hosts, @port = extract_hosts_and_port(configuration)
         @credentials  = extract_credentials(configuration)
-        @max_retries  = extract_max_retries(configuration)
-        @retry_delay  = extract_retry_delay(configuration)
         @ssl_config = extract_ssl_config(configuration)
 
         @name = configuration[:keyspace]
@@ -221,7 +215,7 @@ module Cequel
                         end
 
         log('CQL', statement) do
-          client_retry do
+          error_policy.execute_stmt(self) do
             client.execute(cql, options)
           end
         end
@@ -240,7 +234,7 @@ module Cequel
               else
                 statement
               end
-        client_retry do
+        error_policy.execute_stmt(self) do
           client.prepare(cql)
         end
       end
@@ -320,21 +314,6 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
-      def client_retry
-        retries_remaining = max_retries
-        begin
-          yield
-        rescue Cassandra::Errors::NoHostsAvailable,
-               Cassandra::Errors::ExecutionError,
-               Cassandra::Errors::TimeoutError => exc
-          # Pass the error to the error policy. It can reraise,
-          # if it returns at all it indicates a retry should occur               
-          error_policy.handle_error(self, exc, retries_remaining)
-          retries_remaining -= 1
-          retry                    
-        end
-      end
-
       def client_without_keyspace
         synchronize do
           @client_without_keyspace ||= cluster.connect
@@ -384,18 +363,6 @@ module Cequel
 
       def extract_credentials(configuration)
         configuration.slice(:username, :password).presence
-      end
-
-      def extract_max_retries(configuration)
-        configuration.fetch(:max_retries, 3)
-      end
-
-      def extract_retry_delay(configuration)
-        v = configuration.fetch(:retry_delay, 0.5)
-        if v <= 0.0
-          raise ArgumentError, "The value for retry must be a positive number, not '#{v}'"
-        end 
-        v
       end
 
       def extract_ssl_config(configuration)

@@ -144,9 +144,9 @@ describe Cequel::Metal::Keyspace do
       def initialize(options = {})
       end
       
-      def handle_error(keyspace, error, retries_remaining)
-        raise error 
-      end
+      def execute_stmt(keyspace)
+        yield
+      end      
     end
     
     it 'uses the error handler passed in as a string' do 
@@ -177,9 +177,14 @@ describe Cequel::Metal::Keyspace do
       expect(default_connect).to respond_to(:error_policy)
     end
     
-    it 'responds to retry delay' do 
-      expect(default_connect).to respond_to(:retry_delay)
-    end
+    it 'calls execute_stmt on the error policy' do 
+      policy = ::Cequel::Metal::Policy::CassandraError::RetryPolicy.new 
+      
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: policy)
+      expect(policy).to receive(:execute_stmt).at_least(:once)
+      obj.execute_with_options(Cequel::Metal::Statement.new('select * from system.peers;'))
+    end 
     
     it 'rejects a negative value for retry delay' do 
       expect { Cequel.connect connect_options.merge(
@@ -192,7 +197,8 @@ describe Cequel::Metal::Keyspace do
         retry_delay: 1337.0)
       
       # do not compare floats exactly, it is error prone
-      expect(obj.retry_delay).to be_within(0.1).of(1337.0) 
+      # the value is passed to the error policy
+      expect(obj.error_policy.retry_delay).to be_within(0.1).of(1337.0) 
     end
     
     it 'can clear active connections' do       
