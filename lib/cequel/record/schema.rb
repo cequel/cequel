@@ -80,9 +80,21 @@ module Cequel
         # @return [void]
         #
         def synchronize_schema
-          return if connection.schema.materialized_view?(table_name)
+          reader = get_table_reader
+          return if reader.materialized_view?
           Cequel::Schema::TableSynchronizer
-            .apply(connection, read_schema, table_schema)
+            .apply(connection, reader.read, table_schema)
+        end
+
+        #
+        # Return a {TableReader} instance
+        #
+        # @return [Schema::TableReader] object
+        #
+        def get_table_reader
+          fail MissingTableNameError unless table_name
+
+          connection.schema.get_table_reader(table_name)
         end
 
         #
@@ -93,9 +105,7 @@ module Cequel
         #   table in the database
         #
         def read_schema
-          fail MissingTableNameError unless table_name
-
-          connection.schema.read_table(table_name)
+          table_reader.read
         end
 
         #
