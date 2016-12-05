@@ -396,4 +396,40 @@ describe Cequel::Schema::TableReader do
       [Cequel::Schema::DataColumn.new(:value, :text)]
     ) }
   end
+
+  describe 'materialized view exists', thrift: true do
+    let!(:name) { table_name }
+    let(:view_name) { "#{name}_view" }
+    before do
+      cequel.execute <<-CQL
+        CREATE TABLE #{table_name} (
+          blog_subdomain text,
+          permalink ascii,
+          PRIMARY KEY (blog_subdomain, permalink)
+        )
+      CQL
+      cequel.execute <<-CQL
+        CREATE MATERIALIZED VIEW #{view_name} AS
+          SELECT blog_subdomain, permalink
+          FROM #{name}
+          WHERE blog_subdomain IS NOT NULL AND permalink IS NOT NULL
+          PRIMARY KEY ( blog_subdomain, permalink )
+      CQL
+    end
+    after do
+      cequel.schema.drop_materialized_view(view_name)
+    end
+
+    context 'when materialized_view' do
+      let(:reader) { cequel.schema.get_table_reader(view_name) }
+      subject { reader }
+      its(:materialized_view?) { should eq true }
+    end
+
+    context 'when table' do
+      let(:reader) { cequel.schema.get_table_reader(name) }
+      subject { reader }
+      its(:materialized_view?) { should eq false }
+    end
+  end
 end

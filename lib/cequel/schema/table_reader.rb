@@ -30,13 +30,13 @@ module Cequel
       end
 
       #
-      # Check if it is materialized view
+      # Return a {TableReader} instance
       #
       # @param (see #initialize)
-      # @return (see #materialized_view?)
+      # @return [TableReader] object
       #
-      def self.materialized_view?(keyspace, table_name)
-        new(keyspace, table_name).materialized_view?
+      def self.get(keyspace, table_name)
+        new(keyspace, table_name)
       end
 
       #
@@ -178,21 +178,14 @@ module Cequel
 
       def cluster
         @cluster ||= begin
-          tmp_cluster = keyspace.cluster
-          refresh(keyspace)
+          cluster = keyspace.cluster
+          cluster.refresh_schema
 
           fail(NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") if
-            !tmp_cluster.has_keyspace?(keyspace.name)
+            !cluster.has_keyspace?(keyspace.name)
 
-          tmp_cluster
+          cluster
         end
-      end
-
-      @@refreshed = {}
-      def refresh(keyspace)
-        return if @@refreshed[keyspace.name]
-        @@refreshed[keyspace.name] = true
-        keyspace.cluster.refresh_schema
       end
     end
   end
