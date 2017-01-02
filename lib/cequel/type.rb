@@ -195,7 +195,7 @@ module Cequel
     #
     # `ascii` columns store 7-bit ASCII character data
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Ascii < String
@@ -215,7 +215,7 @@ module Cequel
     # `blob` columns store arbitrary bytes of data, represented as 8-bit ASCII
     # strings of hex digits
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Blob < String
@@ -239,7 +239,7 @@ module Cequel
     #
     # `boolean` types store boolean values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Boolean < Base
@@ -256,7 +256,7 @@ module Cequel
     # counter columns cannot be updated without Cassandra internally reading
     # the existing state of the column
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Counter < Base
@@ -277,7 +277,7 @@ module Cequel
     #
     # `decimal` columns store decimal numeric values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Decimal < Base
@@ -290,7 +290,7 @@ module Cequel
     #
     # `double` columns store 64-bit floating-point numeric values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Double < Base
@@ -303,7 +303,7 @@ module Cequel
     #
     # `inet` columns store IP addresses
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Inet < Base
@@ -316,7 +316,7 @@ module Cequel
     #
     # `int` columns store 32-bit integer values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Int < Base
@@ -333,7 +333,7 @@ module Cequel
     #
     # `float` columns store 32-bit floating-point numeric values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Float < Double; end
@@ -342,7 +342,7 @@ module Cequel
     #
     # `bigint` columns store 64-bit integer values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Bigint < Int
@@ -357,7 +357,7 @@ module Cequel
     # `varchar` columns; the names can be used interchangeably. Text columns do
     # not have a length limit
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Text < String
@@ -406,7 +406,7 @@ module Cequel
     # created using the {Cequel.uuid} method, and a value can be checked to see
     # if it is a UUID recognized by Cequel using the {Cequel.uuid?} method.
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Uuid < Base
@@ -435,7 +435,7 @@ module Cequel
     # functionality presumes the use of type 1 UUIDs, which encode the
     # timestamp of their creation.
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Timeuuid < Uuid
@@ -452,7 +452,7 @@ module Cequel
     #
     # `varint` columns store arbitrary-length integer data
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Varint < Int
