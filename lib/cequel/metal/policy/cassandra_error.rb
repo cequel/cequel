@@ -7,13 +7,9 @@ module Cequel
           # This class is used by the Keyspace object to dictate 
           # how a failure from Cassandra is handled.
           # The only method defined is 
-          #   handle_error(keyspace, error, retries_remaining)
+          #   execute_stmt(keyspace)
           # The first argument is an instance of the Keyspace class
-          # The second argument is the error from the Cassandra gem.
-          # The thid argument is the number of remaining retries.
-          # This function must raise the error to abort the operation,
-          # if this function returns it indicates the operation should be 
-          # retried.
+          # This method may raise an error to abort the operation,
           # 
           # The specific instance is chosen by passing configuration options
           # See Keyspace#configure
@@ -23,8 +19,8 @@ module Cequel
           def initialize(options = {})
           end
                     
-          def handle_error(error, retries_remaining)
-            raise RuntimeError, 'This is an abstract base class, never call this'
+          def execute_stmt(keyspace)
+            raise NotImplementedError, "#execute_stmt must be implemented in #{self.class.name}"
           end
         end
          
