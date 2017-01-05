@@ -231,7 +231,7 @@ multiple queries in your logs if you're iterating over a huge result set.
 CQL has [special handling for the `timeuuid`
 type](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/uuid_type_r.html),
 which allows you to return a rows whose UUID keys correspond to a range of
-timestamps. 
+timestamps.
 
 Cequel automatically constructs timeuuid range queries if you pass a `Time`
 value for a range over a `timeuuid` column. So, if you want to get the posts
@@ -393,7 +393,7 @@ Both read and write consistency default to `QUORUM`.
 ### Compression ###
 
 Cassandra supports [frame compression](http://datastax.github.io/ruby-driver/features/#compression),
-which can give you a performance boost if your requests or responses are big. To enable it you can 
+which can give you a performance boost if your requests or responses are big. To enable it you can
 specify `client_compression` to use in cequel.yaml.
 
 ```yaml
@@ -539,14 +539,6 @@ essentially the same thing: both simply persist the given column data at the
 given key(s). So, you may think you are creating a new record, but in fact
 you're overwriting data at an existing record:
 
-#### Counting ####
-
-Counting is not the same as in a RDB, as it can have a much longer runtime and
-can put unexpected load on your cluster. As a result Cequel does not support
-this feature. It is still possible to execute raw cql to get the counts, should
-you require this functionality.
-`MyModel.connection.execute('select count(*) from table_name;').first['count']`
-
 ``` ruby
 # I'm just creating a blog here.
 blog1 = Blog.create!(
@@ -565,6 +557,14 @@ error because the row with key 'big-data' already exists. But not Cassandra: the
 above code will just overwrite the `name` in that row.  Note that the
 `description` will not be touched by the second statement; upserts only work on
 the columns that are given.
+
+#### Counting ####
+
+Counting is not the same as in a RDB, as it can have a much longer runtime and
+can put unexpected load on your cluster. As a result Cequel does not support
+this feature. It is still possible to execute raw cql to get the counts, should
+you require this functionality.
+`MyModel.connection.execute('select count(*) from table_name;').first['count']`
 
 ## Compatibility ##
 
