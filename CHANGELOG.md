@@ -1,3 +1,13 @@
+## 2.0.3
+
+* Add synchronization around use of @cluster and other variables Fix ([PR 333](https://github.com/cequel/cequel/pull/333))
+* expose if the dataset is on the last page ([PR 335](https://github.com/cequel/cequel/pull/335))
+* Delegate error handling to a policy object, allow for arbitrary options to be passed to cassandra driver gem ([PR 336](https://github.com/cequel/cequel/pull/336))
+* Fixes README.md ([PR 340](https://github.com/cequel/cequel/pull/340))
+* skip synchronizing materialized view ([PR 346](https://github.com/cequel/cequel/pull/346))
+* Fixed link to cassandra documentation ([PR 347](https://github.com/cequel/cequel/pull/347))
+
+
 ## 2.0.2
 
 * Fix intermittent failures around preparing statements ([PR 330](https://github.com/cequel/cequel/pull/330))
