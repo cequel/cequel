@@ -192,20 +192,22 @@ module Cequel
       # Drop this table from the keyspace
       #
       # @param name [Symbol] name of the table to drop
+      # @param exists [Boolean] if set to true, will drop only if exists
       # @return [void]
       #
-      def drop_table(name)
-        keyspace.execute("DROP TABLE #{name}")
+      def drop_table(name, exists: false)
+        keyspace.execute("DROP TABLE #{'IF EXISTS ' if exists}#{name}")
       end
 
       #
       # Drop this materialized view from the keyspace
       #
       # @param name [Symbol] name of the materialized view to drop
+      # @param exists [Boolean] if set to true, will drop only if exists
       # @return [void]
       #
-      def drop_materialized_view(name)
-        keyspace.execute("DROP MATERIALIZED VIEW #{name}")
+      def drop_materialized_view(name, exists: false)
+        keyspace.execute("DROP MATERIALIZED VIEW #{'IF EXISTS ' if exists}#{name}")
       end
 
       #
