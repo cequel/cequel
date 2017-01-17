@@ -100,26 +100,30 @@ module Cequel
         #
         def belongs_to(name, options = {})
           if parent_association
-            fail InvalidRecordConfiguration,
-                 "Can't declare more than one belongs_to association"
-          end
-          if table_schema.key_columns.any?
-            fail InvalidRecordConfiguration,
-                 "belongs_to association must be declared before declaring " \
-                 "key(s)"
-          end
+            # skip adding the belongs to if already defined on a reload
+            unless parent_association.association_class_name.downcase.to_sym == name.to_sym
+              fail InvalidRecordConfiguration,
+                   "Can't declare more than one belongs_to association"
+            end
+          else
+            if table_schema.key_columns.any?
+              fail InvalidRecordConfiguration,
+                   "belongs_to association must be declared before declaring " \
+                   "key(s)"
+            end
 
-          key_options = options.extract!(:partition)
+            key_options = options.extract!(:partition)
 
-          self.parent_association =
-            BelongsToAssociation.new(self, name.to_sym, options)
+            self.parent_association =
+              BelongsToAssociation.new(self, name.to_sym, options)
 
-          parent_association.association_key_columns.each_with_index do |column, i|
-            foreign_key_parts = self.parent_association.foreign_keys
-            foreign_key = foreign_key_parts.any? ? foreign_key_parts[i] : "#{name}_#{column.name}"
-            key foreign_key.to_sym, column.type, key_options
+            parent_association.association_key_columns.each_with_index do |column, i|
+              foreign_key_parts = self.parent_association.foreign_keys
+              foreign_key = foreign_key_parts.any? ? foreign_key_parts[i] : "#{name}_#{column.name}"
+              key foreign_key.to_sym, column.type, key_options
+            end
+            def_parent_association_accessors
           end
-          def_parent_association_accessors
         end
 
         #

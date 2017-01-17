@@ -186,4 +186,5 @@ describe Cequel::Record::Finders do
       end
     end
   end
+
 end

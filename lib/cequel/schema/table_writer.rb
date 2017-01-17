@@ -72,20 +72,29 @@ module Cequel
       end
 
       def keys_cql
-        partition_cql = table.partition_key_columns
-          .map { |key| key.name }.join(', ')
-        if table.clustering_columns.any?
-          nonpartition_cql =
-            table.clustering_columns.map { |key| key.name }.join(', ')
+        if unique_nonpartition_names.any?
           "PRIMARY KEY ((#{partition_cql}), #{nonpartition_cql})"
         else
           "PRIMARY KEY ((#{partition_cql}))"
         end
       end
 
+      def partition_cql
+        table.partition_key_column_names.join(', ')
+      end
+
+      def nonpartition_cql
+        unique_nonpartition_names.join(', ')
+      end
+
+      def unique_nonpartition_names
+        @unique_nonpartition_names ||= Array(table.clustering_column_names -
+                                         table.partition_key_column_names)
+      end
+
       def properties_cql
         properties_fragments = table.properties
-          .map { |_, property| property.to_cql }
+                                    .map { |_, property| property.to_cql }
         properties_fragments << 'COMPACT STORAGE' if table.compact_storage?
         if table.clustering_columns.any?
           clustering_fragment =

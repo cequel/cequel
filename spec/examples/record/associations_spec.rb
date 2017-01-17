@@ -51,6 +51,7 @@ describe Cequel::Record::Associations do
   end
 
   describe '::belongs_to' do
+
     let(:blog) { Blog.new { |blog| blog.subdomain = 'big-data' }}
     let(:post) { Post.new }
 

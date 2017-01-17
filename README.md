@@ -637,6 +637,7 @@ Cequel was written by:
 * Maxim Dobryakov
 * Yi-Cyuan Chen
 * Justin Hannus
+* William Flanagan
 
 Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.

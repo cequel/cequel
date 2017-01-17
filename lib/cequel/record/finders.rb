@@ -77,7 +77,7 @@ module Cequel
       end
 
       def def_finder(method_prefix, column_names, scope_operation = '')
-        arg_names = column_names.join(', ')
+        arg_names = column_names.uniq.join(', ')
         method_suffix = finder_method_suffix(column_names)
         column_filter_expr = column_names
           .map { |name| "#{name}: #{name}" }.join(', ')
