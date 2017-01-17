@@ -28,7 +28,7 @@ require 'cequel/record/timestamps'
 
 require 'cequel/record'
 
-if defined? Rails
+if defined? Rails::Railtie
   require 'cequel/record/railtie'
 end
 
