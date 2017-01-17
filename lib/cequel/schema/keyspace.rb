@@ -119,6 +119,14 @@ module Cequel
       end
 
       #
+      # @param name [Symbol] name of the table to read
+      # @return [TableReader] object
+      #
+      def get_table_reader(name)
+        TableReader.get(keyspace, name)
+      end
+
+      #
       # Create a table in the keyspace
       #
       # @param name [Symbol] name of the new table to create
@@ -188,6 +196,16 @@ module Cequel
       #
       def drop_table(name)
         keyspace.execute("DROP TABLE #{name}")
+      end
+
+      #
+      # Drop this materialized view from the keyspace
+      #
+      # @param name [Symbol] name of the materialized view to drop
+      # @return [void]
+      #
+      def drop_materialized_view(name)
+        keyspace.execute("DROP MATERIALIZED VIEW #{name}")
       end
 
       #

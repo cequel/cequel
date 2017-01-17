@@ -167,10 +167,9 @@ describe Cequel::Schema::TableWriter do
       end
 
       it 'should set map collection properties' do
-        expect(table.property(:compression)).to eq({
-          :sstable_compression => 'DeflateCompressor',
+        expect(table.property(:compression)).to include(
           :chunk_length_kb => 64
-        })
+        )
       end
     end
 

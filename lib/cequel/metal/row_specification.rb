@@ -35,15 +35,16 @@ module Cequel
       # @return [String] row specification as CQL fragment
       #
       def cql
-        case @value
-        when Array
-          if @value.length == 1
-            ["#{@column} = ?", @value.first]
-          else
-            ["#{@column} IN (?)", @value]
-          end
+        value = if Enumerable === @value && @value.count == 1
+                  @value.first
+                else
+                  @value
+                end
+
+        if Array === value
+          ["#{@column} IN ?", value]
         else
-          ["#{@column} = ?", @value]
+          ["#{@column} = ?", value]
         end
       end
     end

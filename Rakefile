@@ -8,7 +8,8 @@ require File.expand_path('../lib/cequel/version', __FILE__)
 
 RUBY_VERSIONS = YAML.load_file(File.expand_path('../.travis.yml', __FILE__))['rvm']
 
-task :default => :release
+task default: :test
+
 task :release => [
   :verify_changelog,
   :"test:all",

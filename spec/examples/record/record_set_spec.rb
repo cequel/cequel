@@ -809,7 +809,7 @@ describe Cequel::Record::RecordSet do
 
   describe '#consistency' do
     it 'should perform query with specified consistency' do
-      expect_query_with_consistency(/SELECT/, :one) do
+      expect_query_with_consistency(anything, :one) do
         Post.consistency(:one).to_a
       end
     end

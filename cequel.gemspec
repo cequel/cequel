@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
     'Ilya Bazylchuk', 'Dan Cardamore', 'Kei Kusakari', 'Oleh Novosad',
     'John Smart', 'Angelo Lakra', 'Olivier Lance', 'Tomohiro Nishimura',
     'Masaki Takahashi', 'G Gordon Worley III', 'Clark Bremer', 'Tamara Temple',
-    'Long On', 'Lucas Mundim'
+    'Long On', 'Lucas Mundim', 'William Flanagan'
   ]
   s.homepage = "https://github.com/cequel/cequel"
   s.email = 'mat.a.brown@gmail.com'
@@ -27,8 +27,8 @@ DESC
   s.has_rdoc = true
   s.extra_rdoc_files = 'README.md'
   s.required_ruby_version = '>= 2.0'
-  s.add_runtime_dependency 'activemodel', '>= 3.2', '< 5.0'
-  s.add_runtime_dependency 'cassandra-driver', '~> 2.0'
+  s.add_runtime_dependency 'activemodel', '>= 4.0'
+  s.add_runtime_dependency 'cassandra-driver', '~> 3.0'
   s.add_development_dependency 'appraisal', '~> 1.0'
   s.add_development_dependency 'wwtd', '~> 0.5'
   s.add_development_dependency 'rake', '~> 10.1'

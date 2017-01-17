@@ -39,10 +39,9 @@ module Cequel
       #
       # @param (see Keyspace#execute)
       #
-      def execute(cql, *bind_vars)
-        @statement.append("#{cql}\n", *bind_vars)
-        @statement_count += 1
-        if @auto_apply && @statement_count >= @auto_apply
+      def execute(statement)
+        @statements << statement
+        if @auto_apply && @statements.size >= @auto_apply
           apply
           reset
         end
@@ -52,13 +51,20 @@ module Cequel
       # Send the batch to Cassandra
       #
       def apply
-        return if @statement_count.zero?
-        if @statement_count > 1
-          @statement.prepend(begin_statement)
-          @statement.append("APPLY BATCH\n")
+        return if @statements.empty?
+
+        statement = @statements.first
+        if @statements.size > 1
+          statement =
+            if logged?
+              keyspace.client.logged_batch
+            else
+              keyspace.client.unlogged_batch
+            end
+          @statements.each { |s| statement.add(s.prepare(keyspace), arguments: s.bind_vars) }
         end
-        @keyspace.execute_with_consistency(
-          @statement.args.first, @statement.args.drop(1), @consistency)
+
+        keyspace.execute_with_options(statement, consistency: @consistency)
         execute_on_complete_hooks
       end
 
@@ -84,28 +90,25 @@ module Cequel
       end
 
       # @private
-      def execute_with_consistency(cql, bind_vars, query_consistency)
+      def execute_with_options(statement, options)
+        query_consistency = options.fetch(:consistency)
         if query_consistency && query_consistency != @consistency
           raise ArgumentError,
                 "Attempting to perform query with consistency " \
                 "#{query_consistency.to_s.upcase} in batch with consistency " \
                 "#{@consistency.upcase}"
         end
-        execute(cql, *bind_vars)
+        execute(statement)
       end
 
       private
 
-      attr_reader :on_complete_hooks
+      attr_reader :on_complete_hooks, :keyspace
 
       def reset
-        @statement = Statement.new
+        @statements = []
         @statement_count = 0
         @on_complete_hooks = []
-      end
-
-      def begin_statement
-        "BEGIN #{"UNLOGGED " if unlogged?}BATCH\n"
       end
 
       def execute_on_complete_hooks

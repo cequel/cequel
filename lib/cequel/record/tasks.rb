@@ -52,6 +52,8 @@ namespace :cequel do
     migrate
   end
 
+  class NoModelDirectoryFound < StandardError; end
+
   def create!
     Cequel::Record.connection.schema.create!
     puts "Created keyspace #{Cequel::Record.connection.name}"
@@ -63,15 +65,22 @@ namespace :cequel do
     puts "Dropped keyspace #{Cequel::Record.connection.name}"
   end
 
+  #
+  require File.expand_path('./concerns/cassandra_wordsmaster_list', File.dirname(__FILE__))
+
   def models_dir_path
-    ENV['CEQUEL_MODELS_PATH'] || "#{File.expand_path('app/models', project_root)}/"
+    models_dir_path = ENV['CEQUEL_MODELS_PATH']
+    models_dir_path = Pathname.expand_path('app/models', Rails.root)
+                        if defined?(Rails::Railtie) && models_dir_path.nil?
+    models_dir_path = Pathname.expand_path('app/models', Dir.pwd)
+                        if models_dir_path.nil?
+    raise NoModelDirectoryFound, "#{model_dir_path} is not a directory" unless Pathname.new(models_dir_path).directory?
+    models_dir_path
   end
 
   def migrate
     watch_stack = ActiveSupport::Dependencies::WatchStack.new
-
     migration_table_names = Set[]
-    project_root = defined?(Rails) ? Rails.root : Dir.pwd
     model_files = Dir.glob(File.join(models_dir_path, '**', '*.rb'))
     model_files.sort.each do |file|
       watch_namespaces = ["Object"]

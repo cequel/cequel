@@ -13,6 +13,8 @@ module Cequel
     class Writer
       extend Util::Forwardable
 
+      attr_accessor :type_hints
+
       #
       # @param data_set [DataSet] data set to write to
       #
@@ -41,8 +43,8 @@ module Cequel
         consistency = options.fetch(:consistency, data_set.query_consistency)
         write_to_statement(statement, options)
         statement.append(*data_set.row_specifications_cql)
-        data_set.write_with_consistency(
-          statement.cql, statement.bind_vars, consistency)
+        data_set.write_with_options(statement,
+                                    consistency: consistency)
       end
 
       private
@@ -52,17 +54,7 @@ module Cequel
       def_delegator :statements, :empty?
 
       def prepare_upsert_value(value)
-        case value
-        when ::Array
-          yield '[?]', value
-        when ::Set then
-          yield '{?}', value.to_a
-        when ::Hash then
-          binding_pairs = ::Array.new(value.length) { '?:?' }.join(',')
-          yield "{#{binding_pairs}}", *value.flatten
-        else
-          yield '?', value
-        end
+        yield '?', value
       end
 
       #

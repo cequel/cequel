@@ -28,10 +28,14 @@ describe Cequel::Record::Timestamps do
     end
 
     it 'should update updated_at after record update but not created_at' do
-      future = Timecop.freeze(now + 2.minutes)
+      before = now
+      sleep 1
+      after = Time.now
+
       blog.name = 'name'
       blog.save!
-      expect(blog.updated_at).to be_within(one_millisecond).of(future)
+      expect(blog.created_at).to be_within(one_millisecond).of(before)
+      expect(blog.updated_at).to be_within(one_millisecond).of(after)
     end
 
     it 'should cast the timestamp in the same way that Cassandra records it' do
@@ -55,11 +59,14 @@ describe Cequel::Record::Timestamps do
     end
 
     it 'should update updated_at after record update but not created_at' do
-      future = Timecop.freeze(now + 2.minutes)
+      before = now
+      sleep 1
+      after = Time.now
+
       post.name = 'name'
       post.save!
-      expect(post.created_at).to be_within(one_millisecond).of(now)
-      expect(post.updated_at).to be_within(one_millisecond).of(future)
+      expect(post.created_at).to be_within(one_millisecond).of(before)
+      expect(post.updated_at).to be_within(one_millisecond).of(after)
     end
   end
 end
