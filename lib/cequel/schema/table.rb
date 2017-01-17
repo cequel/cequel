@@ -1,6 +1,5 @@
 # -*- encoding : utf-8 -*-
 require 'stringio'
-require 'set'
 
 module Cequel
   module Schema
@@ -18,6 +17,8 @@ module Cequel
       # @return [Boolean] `true` if this table is configured with compact
       #   storage
       attr_writer :compact_storage
+
+      class ColumnTypeMismatch < StandardError; end
 
       #
       # @param name [Symbol] the name of the table
@@ -161,8 +162,11 @@ module Cequel
               data_columns_hash[name] = add_column(column)
             end
         else
-          # return the data column like we would if we built it
-          data_columns_hash[name]
+          if data_column_same_type_as_existing?(name, type)
+            data_columns_hash[name]
+          else
+            raise ColumnTypeMismatch, "data column #{name} is type #{data_columns_hash[name].type.class.to_s}, but is requested to be #{type(type).class.to_s}"
+          end
         end
       end
 
@@ -172,6 +176,17 @@ module Cequel
       #
       def valid_data_column?(name)
         !data_column_names.include?(name)
+      end
+
+      #
+      # Is the existing data column type the same? If so, then
+      # ok.. if not, we will raise an error.
+      #
+      # using try because we want to raise a ColumnMismatchError
+      # if the type is not defined
+      #
+      def data_column_same_type_as_existing?(name, requested_type)
+        data_columns_hash[name].type.class == type(requested_type).try(:class)
       end
 
       #
