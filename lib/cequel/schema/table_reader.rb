@@ -30,6 +30,16 @@ module Cequel
       end
 
       #
+      # Return a {TableReader} instance
+      #
+      # @param (see #initialize)
+      # @return [TableReader] object
+      #
+      def self.get(keyspace, table_name)
+        new(keyspace, table_name)
+      end
+
+      #
       # @param keyspace [Metal::Keyspace] keyspace to read the table from
       # @param table_name [Symbol] name of the table to read
       # @private
@@ -54,8 +64,21 @@ module Cequel
           read_clustering_columns
           read_data_columns
           read_properties
+          read_table_settings
           table
         end
+      end
+
+      #
+      # Check if it is materialized view
+      #
+      # @return [boolean] true if it is materialized view
+      #
+      # @api private
+      #
+      def materialized_view?
+        cluster.keyspace(keyspace.name)
+          .has_materialized_view?(table_name.to_s)
       end
 
       protected
@@ -64,141 +87,104 @@ module Cequel
 
       private
 
-      # XXX This gets a lot easier in Cassandra 2.0: all logical columns
-      # (including keys) are returned from the `schema_columns` query, so
-      # there's no need to jump through all these hoops to figure out what the
-      # key columns look like.
-      #
-      # However, this approach works for both 1.2 and 2.0, so better to keep it
-      # for now. It will be worth refactoring this code to take advantage of
-      # 2.0's better interface in a future version of Cequel that targets 2.0+.
       def read_partition_keys
-        validators = table_data['key_validator']
-        types = parse_composite_types(validators) || [validators]
-        columns = partition_columns.sort_by { |c| c['component_index'] }
-          .map { |c| c['column_name'] }
-
-        columns.zip(types) do |name, type|
-          table.add_partition_key(name.to_sym, Type.lookup_internal(type))
+        table_data.partition_key.each do |k|
+          table.add_partition_key(k.name.to_sym, k.type)
         end
+
       end
 
-      # XXX See comment on {read_partition_keys}
       def read_clustering_columns
-        columns = cluster_columns.sort { |l, r| l['component_index'] <=> r['component_index'] }
-          .map { |c| c['column_name'] }
-        comparators = parse_composite_types(table_data['comparator'])
-        unless comparators
-          table.compact_storage = true
-          return unless column_data.empty?
-          columns << :column1 if cluster_columns.empty?
-          comparators = [table_data['comparator']]
-        end
-
-        columns.zip(comparators) do |name, type|
-          if REVERSED_TYPE_PATTERN =~ type
-            type = $1
-            clustering_order = :desc
+        table_data.clustering_columns.zip(table_data.clustering_order)
+          .each do |c,o|
+            table.add_clustering_column(c.name.to_sym, c.type, o)
           end
-          table.add_clustering_column(
-            name.to_sym,
-            Type.lookup_internal(type),
-            clustering_order
-          )
-        end
       end
 
       def read_data_columns
-        if column_data.empty?
-          table.add_data_column(
-            (compact_value['column_name'] || :value).to_sym,
-            Type.lookup_internal(table_data['default_validator']),
-            false
-          )
-        else
-          column_data.each do |result|
-            if COLLECTION_TYPE_PATTERN =~ result['validator']
-              read_collection_column(
-                result['column_name'],
-                $1.underscore,
-                *$2.split(',')
-              )
+        indexes = Hash[table_data.each_index.map{|i| [i.target, i.name]}]
+
+        ((table_data.each_column - table_data.partition_key) - table_data.clustering_columns)
+          .each do |c|
+            next if table.column(c.name.to_sym)
+            case c.type
+            when Cassandra::Types::Simple
+              opts = if indexes[c.name]
+                       {index: indexes[c.name].to_sym}
+                     else
+                       {}
+                     end
+              table.add_data_column(c.name.to_sym, c.type, opts)
+            when Cassandra::Types::List
+              table.add_list(c.name.to_sym, c.type.value_type)
+            when Cassandra::Types::Set
+              table.add_set(c.name.to_sym, c.type.value_type)
+            when Cassandra::Types::Map
+              table.add_map(c.name.to_sym, c.type.key_type, c.type.value_type)
             else
-              table.add_data_column(
-                result['column_name'].to_sym,
-                Type.lookup_internal(result['validator']),
-                result['index_name'].try(:to_sym)
-              )
+              fail "Unsupported type #{c.type.inspect}"
             end
           end
-        end
       end
 
-      def read_collection_column(name, collection_type, *internal_types)
-        types = internal_types
-          .map { |internal| Type.lookup_internal(internal) }
-        table.__send__("add_#{collection_type}", name.to_sym, *types)
+      @@prop_extractors = []
+      def self.def_property(name,
+                            option_method = name,
+                            coercion = ->(val, _table_data){ val })
+
+        @@prop_extractors << ->(table, table_data) {
+          raw_prop_val = table_data.options.public_send(option_method)
+          prop_val = coercion.call(raw_prop_val,table_data)
+
+          table.add_property(name, prop_val)
+        }
       end
+
+      def_property("bloom_filter_fp_chance")
+      def_property("caching")
+      def_property("comment")
+      def_property("local_read_repair_chance")
+      def_property("dclocal_read_repair_chance", :local_read_repair_chance)
+      def_property("compression", :compression,
+                   ->(comp, table_data) {
+                     comp.clone.tap { |r|
+                       r["chunk_length_kb"] ||= r["chunk_length_in_kb"] if r["chunk_length_in_kb"]
+                       r["crc_check_chance"] ||= table_data.options.crc_check_chance
+                     }
+                   })
+      def_property("compaction", :compaction_strategy,
+                   ->(compaction_strategy, _table_data) {
+                     compaction_strategy.options
+                       .merge(class: compaction_strategy.class_name)
+                   })
+      def_property("gc_grace_seconds")
+      def_property("read_repair_chance")
+      def_property("replicate_on_write", :replicate_on_write?)
 
       def read_properties
-        table_data.slice(*Table::STORAGE_PROPERTIES).each do |name, value|
-          table.add_property(name, value)
+        @@prop_extractors.each do |extractor|
+          extractor.call(table, table_data)
         end
-        compaction = JSON.parse(table_data['compaction_strategy_options'])
-          .symbolize_keys
-        compaction[:class] = table_data['compaction_strategy_class']
-        table.add_property(:compaction, compaction)
-        compression = JSON.parse(table_data['compression_parameters'])
-        table.add_property(:compression, compression)
       end
 
-      def parse_composite_types(type_string)
-        if COMPOSITE_TYPE_PATTERN =~ type_string
-          $1.split(',')
-        end
+      def read_table_settings
+        table.compact_storage = table_data.options.compact_storage?
       end
 
       def table_data
-        return @table_data if defined? @table_data
-        table_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
-              SELECT * FROM system.schema_columnfamilies
-              WHERE keyspace_name = ? AND columnfamily_name = ?
-        CQL
-        @table_data = table_query.first.try(:to_hash)
+        @table_data ||= cluster.keyspace(keyspace.name)
+          .table(table_name.to_s)
       end
 
-      def all_columns
-        @all_columns ||=
-          if table_data
-            column_query = keyspace.execute(<<-CQL, keyspace.name, table_name)
-              SELECT * FROM system.schema_columns
-              WHERE keyspace_name = ? AND columnfamily_name = ?
-            CQL
-            column_query.map(&:to_hash)
-          end
-      end
+      def cluster
+        @cluster ||= begin
+          cluster = keyspace.cluster
+          cluster.refresh_schema
 
-      def compact_value
-        @compact_value ||= all_columns.find do |column|
-          column['type'] == 'compact_value'
-        end || {}
-      end
+          fail(NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") if
+            !cluster.has_keyspace?(keyspace.name)
 
-      def column_data
-        @column_data ||= all_columns.select do |column|
-          !column.key?('type') || column['type'] == 'regular'
-        end
-      end
-
-      def partition_columns
-        @partition_columns ||= all_columns.select do |column|
-          column['type'] == 'partition_key'
-        end
-      end
-
-      def cluster_columns
-        @cluster_columns ||= all_columns.select do |column|
-          column['type'] == 'clustering_key'
+          cluster
         end
       end
     end

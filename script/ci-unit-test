@@ -1,0 +1,22 @@
+#!/bin/bash
+
+wait_for_service() {
+  count=0
+  while [ $count -lt 20 ] && ! eval "$1" > /dev/null; do
+    (( count += 1  ))
+    echo "Waiting for $2 to start..." 1>&2
+    sleep 1
+  done
+}
+
+start_cassandra() {
+  docker run -d -p 9042:9042 cassandra:${CASSANDRA_VERSION}
+
+  wait_for_service "docker run --net='host' cassandra:${CASSANDRA_VERSION} cqlsh -e 'SHOW VERSION' localhost" cassandra
+}
+
+# SCRIPT
+set -xe
+
+start_cassandra \
+  && bundle exec rake test

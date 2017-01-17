@@ -100,7 +100,7 @@ module Cequel
       #   Altering column types is not recommended.
       #
       def change_column(name, type)
-        alter_table("ALTER #{name} TYPE #{type(type).cql_name}")
+        add_stmt %Q|ALTER TABLE "#{table_name}" ALTER "#{name}" TYPE #{type}|
       end
 
       #
@@ -111,7 +111,7 @@ module Cequel
       # @return [void]
       #
       def rename_column(old_name, new_name)
-        alter_table(%(RENAME "#{old_name}" TO "#{new_name}"))
+        add_stmt %Q|ALTER TABLE "#{table_name}" RENAME "#{old_name}" TO "#{new_name}"|
       end
 
       #
@@ -125,7 +125,7 @@ module Cequel
       def change_properties(options)
         properties = options
           .map { |name, value| TableProperty.build(name, value).to_cql }
-        alter_table("WITH #{properties.join(' AND ')}")
+        add_stmt %Q|ALTER TABLE "#{table_name}" WITH #{properties.join(' AND ')}|
       end
 
       #
@@ -136,10 +136,8 @@ module Cequel
       #   convention if nil
       # @return [void]
       #
-      def create_index(column_name, index_name = nil)
-        index_name ||= "#{table_name}_#{column_name}_idx"
-        statements <<
-          "CREATE INDEX #{index_name} ON #{table_name} (#{column_name})"
+      def create_index(column_name, index_name = "#{table_name}_#{column_name}_idx")
+        add_stmt %Q|CREATE INDEX "#{index_name}" ON "#{table_name}" ("#{column_name}")|
       end
 
       #
@@ -149,12 +147,12 @@ module Cequel
       # @return [void]
       #
       def drop_index(index_name)
-        statements << "DROP INDEX IF EXISTS #{index_name}"
+        add_stmt %Q|DROP INDEX IF EXISTS "#{index_name}"|
       end
 
       # @!visibility protected
       def add_data_column(column)
-        add_column_statement(column)
+        add_stmt(%Q|ALTER TABLE #{table_name} ADD #{column.to_cql}|)
       end
 
       protected
@@ -163,12 +161,8 @@ module Cequel
 
       private
 
-      def alter_table(statement)
-        statements << "ALTER TABLE #{table_name} #{statement}"
-      end
-
-      def add_column_statement(column)
-        alter_table("ADD #{column.to_cql}")
+      def add_stmt(cql)
+        statements << Cequel::Metal::Statement.new(cql)
       end
 
       def type(type)

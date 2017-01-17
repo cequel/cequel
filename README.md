@@ -24,6 +24,11 @@ Add it to your Gemfile:
 gem 'cequel'
 ```
 
+If you use Rails 5, add this:
+``` ruby
+gem 'activemodel-serializers-xml'
+```
+
 ### Rails integration ###
 
 Cequel does not require Rails, but if you are using Rails, you
@@ -226,7 +231,7 @@ multiple queries in your logs if you're iterating over a huge result set.
 CQL has [special handling for the `timeuuid`
 type](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/uuid_type_r.html),
 which allows you to return a rows whose UUID keys correspond to a range of
-timestamps. 
+timestamps.
 
 Cequel automatically constructs timeuuid range queries if you pass a `Time`
 value for a range over a `timeuuid` column. So, if you want to get the posts
@@ -388,7 +393,7 @@ Both read and write consistency default to `QUORUM`.
 ### Compression ###
 
 Cassandra supports [frame compression](http://datastax.github.io/ruby-driver/features/#compression),
-which can give you a performance boost if your requests or responses are big. To enable it you can 
+which can give you a performance boost if your requests or responses are big. To enable it you can
 specify `client_compression` to use in cequel.yaml.
 
 ```yaml
@@ -534,14 +539,6 @@ essentially the same thing: both simply persist the given column data at the
 given key(s). So, you may think you are creating a new record, but in fact
 you're overwriting data at an existing record:
 
-#### Counting ####
-
-Counting is not the same as in a RDB, as it can have a much longer runtime and
-can put unexpected load on your cluster. As a result Cequel does not support
-this feature. It is still possible to execute raw cql to get the counts, should
-you require this functionality.
-`MyModel.connection.execute('select count(*) from table_name;').first['count']`
-
 ``` ruby
 # I'm just creating a blog here.
 blog1 = Blog.create!(
@@ -561,10 +558,19 @@ above code will just overwrite the `name` in that row.  Note that the
 `description` will not be touched by the second statement; upserts only work on
 the columns that are given.
 
+#### Counting ####
+
+Counting is not the same as in a RDB, as it can have a much longer runtime and
+can put unexpected load on your cluster. As a result Cequel does not support
+this feature. It is still possible to execute raw cql to get the counts, should
+you require this functionality.
+`MyModel.connection.execute('select count(*) from table_name;').first['count']`
+
 ## Compatibility ##
 
 ### Rails ###
 
+* 5.0
 * 4.2
 * 4.1
 * 4.0
@@ -572,13 +578,18 @@ the columns that are given.
 ### Ruby ###
 
 * Ruby 2.3, 2.2, 2.1, 2.0
-* JRuby 9.0
 
 ### Cassandra ###
 
 * 2.1.x
 * 2.2.x
+* 3.0.x
 
+## Breaking API changes
+
+### 2.0
+
+ * dropped support for jruby (Due to difficult to work around bugs in jruby. PRs welcome to restore jruby compatibility.)
 
 ## Support & Bugs ##
 
@@ -624,6 +635,8 @@ Cequel was written by:
 * Luke Duncalfe
 * Eric Betts
 * Maxim Dobryakov
+* Yi-Cyuan Chen
+* Justin Hannus
 
 Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.

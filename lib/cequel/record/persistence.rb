@@ -173,7 +173,7 @@ module Cequel
       # @param options [Options] options for save
       # @option options [Boolean] :validate (true) whether to run validations
       #   before saving
-      # @option options [Symbol] :consistency (:quorum) what consistency with
+      # @option options [Symbol] :consistency what consistency with
       #   which to persist the changes
       # @option options [Integer] :ttl time-to-live of the updated rows in
       #   seconds
@@ -211,7 +211,7 @@ module Cequel
       # Remove this record from the database
       #
       # @param options [Options] options for deletion
-      # @option options [Symbol] :consistency (:quorum) what consistency with
+      # @option options [Symbol] :consistency what consistency with
       #   which to persist the deletion
       # @option options [Time] :timestamp the writetime to use for the deletion
       #
@@ -274,8 +274,8 @@ module Cequel
 
       def create(options = {})
         assert_keys_present!
-        metal_scope
-          .insert(attributes.reject { |attr, value| value.nil? }, options)
+        attributes_for_write = attributes.reject { |attr, value| value.nil? }
+        metal_scope.insert(attributes_for_write, options)
         loaded!
         persisted!
       end

@@ -1,15 +1,34 @@
-sudo: false
+sudo: required
+
+addons:
+  apt:
+    packages: haveged
+
+services:
+  - docker
+
 language: ruby
+
 rvm:
-  - "2.2.0"
-  - "2.1.5"
-  - "2.3.0"
-  - "jruby-9.0.0.0"
+  - "2.1"
+  - "2.3"
+
 gemfile:
   - "gemfiles/rails_4.0.gemfile"
   - "gemfiles/rails_4.1.gemfile"
   - "gemfiles/rails_4.2.gemfile"
-script: 'bundle exec rake test'
+  - "gemfiles/rails_5.0.gemfile"
+
+env:
+  - CASSANDRA_VERSION: 2.1
+  - CASSANDRA_VERSION: 2.2
+  - CASSANDRA_VERSION: 3.0
+
+script: script/ci-unit-test
+
 bundler_args: '--without=debug'
-services:
-  - cassandra
+
+matrix:
+  exclude:
+  - rvm: "2.1"
+    gemfile: gemfiles/rails_5.0.gemfile

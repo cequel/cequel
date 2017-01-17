@@ -13,6 +13,7 @@ describe Cequel::Schema::TableReader do
   describe 'reading simple key' do
     before do
       cequel.execute("CREATE TABLE #{table_name} (permalink text PRIMARY KEY)")
+      cequel.send(:cluster).refresh_schema
     end
 
     it 'should read name correctly' do
@@ -295,8 +296,10 @@ describe Cequel::Schema::TableReader do
     end
 
     it 'should read and simplify compression class' do
-      expect(table.property(:compression)[:sstable_compression]).
+      expect(table.property(:compression)[:sstable_compression] ||
+             table.property(:compression)[:class]).
         to eq('DeflateCompressor')
+
     end
 
     it 'should read integer properties from compression class' do
@@ -392,5 +395,41 @@ describe Cequel::Schema::TableReader do
     its(:data_columns) { is_expected.to eq(
       [Cequel::Schema::DataColumn.new(:value, :text)]
     ) }
+  end
+
+  describe 'materialized view exists', thrift: true do
+    let!(:name) { table_name }
+    let(:view_name) { "#{name}_view" }
+    before do
+      cequel.execute <<-CQL
+        CREATE TABLE #{table_name} (
+          blog_subdomain text,
+          permalink ascii,
+          PRIMARY KEY (blog_subdomain, permalink)
+        )
+      CQL
+      cequel.execute <<-CQL
+        CREATE MATERIALIZED VIEW #{view_name} AS
+          SELECT blog_subdomain, permalink
+          FROM #{name}
+          WHERE blog_subdomain IS NOT NULL AND permalink IS NOT NULL
+          PRIMARY KEY ( blog_subdomain, permalink )
+      CQL
+    end
+    after do
+      cequel.schema.drop_materialized_view(view_name)
+    end
+
+    context 'when materialized_view' do
+      let(:reader) { cequel.schema.get_table_reader(view_name) }
+      subject { reader }
+      its(:materialized_view?) { should eq true }
+    end
+
+    context 'when table' do
+      let(:reader) { cequel.schema.get_table_reader(name) }
+      subject { reader }
+      its(:materialized_view?) { should eq false }
+    end
   end
 end

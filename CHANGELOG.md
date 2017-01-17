@@ -1,6 +1,30 @@
-## Unreleased
+## 2.0.3
 
-* drop support for JRuby 1.7
+* Add synchronization around use of @cluster and other variables Fix ([PR 333](https://github.com/cequel/cequel/pull/333))
+* expose if the dataset is on the last page ([PR 335](https://github.com/cequel/cequel/pull/335))
+* Delegate error handling to a policy object, allow for arbitrary options to be passed to cassandra driver gem ([PR 336](https://github.com/cequel/cequel/pull/336))
+* Fixes README.md ([PR 340](https://github.com/cequel/cequel/pull/340))
+* skip synchronizing materialized view ([PR 346](https://github.com/cequel/cequel/pull/346))
+* Fixed link to cassandra documentation ([PR 347](https://github.com/cequel/cequel/pull/347))
+
+
+## 2.0.2
+
+* Fix intermittent failures around preparing statements ([PR 330](https://github.com/cequel/cequel/pull/330))
+* Fix new relic instrumentation ([PR 331](https://github.com/cequel/cequel/pull/331))
+
+## 2.0.1
+
+* Remove requirment on activemodel-serializers-xml ([PR 329](https://github.com/cequel/cequel/pull/329))
+
+## 2.0.0
+
+* add support for Cassandra 3.x ([PR 324](https://github.com/cequel/cequel/pull/324))
+* upgrade cassandra driver to 3.x ([PR 323](https://github.com/cequel/cequel/pull/323))
+* add support for storing blobs (via parameterized CQL statements) ([PR 320](https://github.com/cequel/cequel/pull/320))
+* add support for Rails 5 ([PR 310](https://github.com/cequel/cequel/pull/310))
+* drop support for JRuby ([PR 310](https://github.com/cequel/cequel/pull/310))
+* handle missing indexes gracefully ([PR 317](https://github.com/cequel/cequel/pull/317))
 * Dropped support for count, length, and size as it results in unbounded run times and memory usage
   ([PR 313](https://github.com/cequel/cequel/pull/313))
 

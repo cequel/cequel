@@ -10,11 +10,6 @@ module Cequel
     # @see Keyspace#read_table
     #
     class Table
-      STORAGE_PROPERTIES = %w(
-        bloom_filter_fp_chance caching comment compaction compression
-        dclocal_read_repair_chance gc_grace_seconds read_repair_chance
-        replicate_on_write
-      )
 
       # @return [Symbol] the name of the table
       attr_reader :name
@@ -366,8 +361,11 @@ module Cequel
       end
 
       def type(type)
+        type = type.kind if type.respond_to?(:kind)
+
         ::Cequel::Type[type]
       end
+
     end
   end
 end

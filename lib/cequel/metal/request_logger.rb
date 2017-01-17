@@ -22,18 +22,17 @@ module Cequel
       # Log a CQL statement
       #
       # @param label [String] a logical label for this statement
-      # @param statement [String] the CQL statement to log
-      # @param bind_vars bind variables for the CQL statement
+      # @param statement [String,Statement,Batch] the CQL statement to log
       # @return [void]
       #
-      def log(label, statement, *bind_vars)
+      def log(label, statement)
         return yield if logger.nil?
 
         response = nil
         begin
           time = Benchmark.ms { response = yield }
           generate_message = lambda do
-            format_for_log(label, "#{time.round.to_i}ms", statement, bind_vars)
+            format_for_log(label, "#{time.round.to_i}ms", statement)
           end
 
           if time >= slowlog_threshold
@@ -42,7 +41,7 @@ module Cequel
             logger.debug(&generate_message)
           end
         rescue Exception => e
-          logger.error { format_for_log(label, 'ERROR', statement, bind_vars) }
+          logger.error { format_for_log(label, 'ERROR', statement) }
           raise
         end
         response
@@ -50,9 +49,24 @@ module Cequel
 
       private
 
-      def format_for_log(label, timing, statement, bind_vars)
-        bind_vars = bind_vars.map{|it| String === it ? limit_length(it) : it }
-        format('%s (%s) %s', label, timing, sanitize(statement, bind_vars))
+      def format_for_log(label, timing, statement)
+        cql_for_log =
+          case statement
+          when String
+            statement
+          when Statement
+            sanitize(statement.cql, limit_value_length(statement.bind_vars))
+          when Cassandra::Statements::Batch
+            batch_stmt = "BEGIN #{'UNLOGGED ' if statement.type == :unlogged}BATCH"
+            statement.statements.each { |s| batch_stmt << "\n" << sanitize(s.cql, limit_value_length(s.params)) }
+            batch_stmt << "END BATCH"
+          end
+
+        format('%s (%s) %s', label, timing, cql_for_log)
+      end
+
+      def limit_value_length(bind_vars)
+        bind_vars.map { |it| String === it ? limit_length(it) : it }
       end
 
       def limit_length(str)
