@@ -19,6 +19,7 @@ RSpec.configure do |config|
     !Gem::Requirement.new(requirement).
       satisfied_by?(Gem::Version.new(ActiveSupport::VERSION::STRING))
   }
+  config.filter_run_excluding cassandra_version: ->(version) { version != ENV.fetch('CASSANDRA_VERSION', '3.0') }
 
   unless defined? CassandraCQL
     config.filter_run_excluding thrift: true
