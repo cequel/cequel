@@ -192,7 +192,7 @@ module Cequel
       # Drop this table from the keyspace
       #
       # @param name [Symbol] name of the table to drop
-      # @param exists [Boolean] if set to true, will drop only if exists
+      # @param exists [Boolean] if set to true, will drop only if exists (Cassandra 3.x)
       # @return [void]
       #
       def drop_table(name, exists: false)
@@ -203,7 +203,7 @@ module Cequel
       # Drop this materialized view from the keyspace
       #
       # @param name [Symbol] name of the materialized view to drop
-      # @param exists [Boolean] if set to true, will drop only if exists
+      # @param exists [Boolean] if set to true, will drop only if exists (Cassandra 3.x)
       # @return [void]
       #
       def drop_materialized_view(name, exists: false)
