@@ -131,6 +131,7 @@ module Cequel
         #
         def column(name, type, options = {})
           def_accessors(name)
+          def_enum(name, options[:values]) if type == :enum
           set_attribute_default(name, options[:default])
         end
 
@@ -192,6 +193,34 @@ module Cequel
         end
 
         private
+
+        def def_enum(name, values)
+          name = name.to_sym
+          def_enum_values(name, values)
+          def_enum_reader(name, values)
+          def_enum_writer(name, values)
+        end
+
+        def def_enum_values(name, values)
+          define_singleton_method(name) { values }
+        end
+
+        def def_enum_reader(name, values)
+          module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{name}; #{values.invert}[read_attribute(#{name.inspect})]; end
+          RUBY
+          values.each do |key, value|
+            module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{key}?; read_attribute(#{name.inspect}) == #{value}; end
+            RUBY
+          end
+        end
+
+        def def_enum_writer(name, values)
+          module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{name}=(value); write_attribute(#{name.inspect}, #{values}[value]); end
+          RUBY
+        end
 
         def def_accessors(name)
           name = name.to_sym
