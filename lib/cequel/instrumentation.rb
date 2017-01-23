@@ -14,7 +14,7 @@ module Cequel
       # Example:
       #
       #    extend Instrumentation
-      #    instrument :create, "create.cequel", data: {table_name: table_name}
+      #    instrument :create, data: {topic: "create.cequel", table_name: table_name}
       #
       # @param method_name [Symbol,String] The method to instrument
       #
