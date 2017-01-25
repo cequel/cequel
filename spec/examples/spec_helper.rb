@@ -46,6 +46,9 @@ RSpec.configure do |config|
   config.filter_run :focus => true
   config.run_all_when_everything_filtered = true
   config.order = "random"
+
+  config.verbose_retry = true
+  config.default_retry_count = 0
 end
 
 if defined? byebug

@@ -73,7 +73,7 @@ describe Cequel::Metal::Keyspace do
   end
 
   describe "#exists?" do
-    it "is true for existent keyspaces" do
+    it "is true for existent keyspaces", :retry => 1, :retry_wait => 1 do
       expect(cequel.exists?).to eq true
     end
 
