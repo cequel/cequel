@@ -159,6 +159,8 @@ To add timestamp columns, simply use the `timestamps` class macro:
 
 ```ruby
 class Blog
+  include Cequel::Record
+
   key :subdomain, :text
   column :name, :text
   timestamps
@@ -170,6 +172,29 @@ populate them appropriately on save.
 
 If the creation time can be extracted from the primary key as outlined above,
 this method will be preferred and no `created_at` column will be defined.
+
+### Enums ###
+
+If your a column should behave like an `ActiveRecord::Enum` you can use the
+column type `:enum`. It will be handled by the data-type `:int` and expose some
+helper methods on the model:
+
+```ruby
+class Blog
+  include Cequel::Record
+
+  key :subdomain, :text
+  column :name, :text
+  column :status, :enum, values: { open: 1, closed: 2 }
+end
+
+blog = Blog.new(status: :open)
+blog.open? # true
+blog.closed? # false
+blog.status # :open
+
+Blog.status # { open: 1, closed: 2 }
+```
 
 ### Schema synchronization ###
 

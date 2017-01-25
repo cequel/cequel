@@ -123,6 +123,14 @@ module Cequel
         #   this column
         # @return [void]
         #
+        # @note Using type :enum will behave similar to an ActiveRecord enum:
+        #   example: `column :status, :enum, values: { open: 1, closed: 2 }`
+        #   will be handled as type Int
+        #   calling model.status will return the symbol ie. :open or :closed
+        #   expects setter to be called with symbol ie. model.status(:open)
+        #   exposes helpers ie. model.open?
+        #   exposes values-mapping on a class-level ModelClass.status
+        #
         # @note Secondary indexes are not nearly as flexible as primary keys:
         #   you cannot query for multiple values or for ranges of values. You
         #   also cannot combine a secondary index restriction with a primary
