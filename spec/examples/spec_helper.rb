@@ -15,10 +15,15 @@ RSpec.configure do |config|
   config.include(Cequel::SpecSupport::Helpers)
   config.extend(Cequel::SpecSupport::Macros)
 
-  config.filter_run_excluding rails: ->(requirement) {
-    !Gem::Requirement.new(requirement).
-      satisfied_by?(Gem::Version.new(ActiveSupport::VERSION::STRING))
-  }
+  {
+    rails: ActiveSupport::VERSION::STRING,
+    cassandra: ENV.fetch('CASSANDRA_VERSION', '3.0'),
+  }.each do |tag, version|
+    config.filter_run_excluding tag => ->(requirement) {
+      !Gem::Requirement.new(requirement).
+        satisfied_by?(Gem::Version.new(version))
+    }
+  end
 
   unless defined? CassandraCQL
     config.filter_run_excluding thrift: true
@@ -43,6 +48,9 @@ RSpec.configure do |config|
   config.filter_run :focus => true
   config.run_all_when_everything_filtered = true
   config.order = "random"
+
+  config.verbose_retry = true
+  config.default_retry_count = 0
 end
 
 if defined? byebug
