@@ -574,6 +574,9 @@ module Cequel
         end
       end
 
+      #
+      # @see RecordSet#allow_filtering!
+      #
       def allow_filtering!
         clone.tap do |data_set|
           data_set.allow_filtering = true

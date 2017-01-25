@@ -465,10 +465,16 @@ module Cequel
       end
 
       #
-      # Set the consistency at which to read records into the record set.
+      # Add `ALLOW FILTERING` to select-queries for filtering of none-indexed fields.
       #
-      # @param consistency [Symbol] consistency for reads
+      # `Post.allow_filtering!.where(title: 'Cequel 0')`
+      #
+      # Available as of Cassandra 3.6
+      #
       # @return [RecordSet] record set tuned to given consistency
+
+      # @see https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlSelect.html#cqlSelect__filtering-on-clustering-column
+      # @note Filtering can incurr a significant performance overhead or even timeout on a large data-set.
       #
       def allow_filtering!
         scoped(allow_filtering: true)
