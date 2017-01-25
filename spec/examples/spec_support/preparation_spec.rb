@@ -10,7 +10,7 @@ describe Cequel::SpecSupport::Preparation do
     expect(prep.drop_keyspace).to eq prep
   end
 
-  it "returns itself from #create_keyspace" do
+  it "returns itself from #create_keyspace", :retry => 1, :retry_wait => 1 do
     expect(prep.create_keyspace).to eq prep
   end
 
