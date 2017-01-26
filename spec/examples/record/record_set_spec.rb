@@ -805,6 +805,12 @@ describe Cequel::Record::RecordSet do
           to raise_error(ArgumentError)
       end
     end
+
+    context 'allow_filtering!', cassandra: '~> 3.x' do
+      it 'should allow filtering for none indexed columns' do
+        expect(Post.allow_filtering!.where(title: 'Cequel 0').entries.length).to be(1)
+      end
+    end
   end
 
   describe '#consistency' do

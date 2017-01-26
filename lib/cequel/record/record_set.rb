@@ -465,6 +465,22 @@ module Cequel
       end
 
       #
+      # Add `ALLOW FILTERING` to select-queries for filtering of none-indexed fields.
+      #
+      # `Post.allow_filtering!.where(title: 'Cequel 0')`
+      #
+      # Available as of Cassandra 3.6
+      #
+      # @return [RecordSet] record set tuned to given consistency
+
+      # @see https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlSelect.html#cqlSelect__filtering-on-clustering-column
+      # @note Filtering can incurr a significant performance overhead or even timeout on a large data-set.
+      #
+      def allow_filtering!
+        scoped(allow_filtering: true)
+      end
+
+      #
       # Set the page_size at which to read records into the record set.
       #
       # @param page_size [Integer] page_size for reads
@@ -695,10 +711,11 @@ module Cequel
       hattr_reader :attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
                    :scoped_indexed_column, :query_consistency,
-                   :query_page_size, :query_paging_state
+                   :query_page_size, :query_paging_state,
+                   :allow_filtering
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
                 :upper_bound, :scoped_indexed_column, :query_consistency,
-                :query_page_size, :query_paging_state
+                :query_page_size, :query_paging_state, :allow_filtering
       hattr_inquirer :attributes, :reversed
       protected :reversed?
 
@@ -812,7 +829,7 @@ module Cequel
           fail IllegalQuery,
                "Can't scope by more than one indexed column in the same query"
         end
-        unless column.indexed?
+        unless column.indexed? || allow_filtering
           fail ArgumentError,
                "Can't scope by non-indexed column #{column_name}"
         end
