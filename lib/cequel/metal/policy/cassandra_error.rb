@@ -47,7 +47,7 @@ module Cequel
               yield
             rescue Cassandra::Errors::NoHostsAvailable,
                   Cassandra::Errors::ExecutionError,
-                  Cassandra::Errors::TimeoutError => exc
+                  Cassandra::Errors::TimeoutError => error
               raise error if retries_remaining == 0
               sleep(retry_delay)
               keyspace.clear_active_connections! if clear_before_retry
