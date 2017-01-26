@@ -1,6 +1,11 @@
-## TBD
+## 2.1.0
 
 * Add ActiveRecord::Enum like support `column :status, :enum, values: { open: 1, closed: 2 }` ([PR 354](https://github.com/cequel/cequel/pull/354))
+* Fix bug CQL statement execution error handling ([PR 357](https://github.com/cequel/cequel/pull/357)
+* Documentation fixes ([PR 355](https://github.com/cequel/cequel/pull/355))
+* Add support for `ALLOW FILTERING` queries ([PR 353](https://github.com/cequel/cequel/pull/353))
+* Add support for `IF EXISTS` to schema modifications ([PR 349](https://github.com/cequel/cequel/pull/349))
+* Make `test` the default rake tast ([PR 348](https://github.com/cequel/cequel/pull/348))
 
 ## 2.0.3
 

@@ -633,35 +633,8 @@ See
 
 ## Credits ##
 
-Cequel was written by:
+Cequel was written by an [awesome lot](https://github.com/cequel/cequel/graphs/contributors). Thanks to you all.
 
-* Mat Brown
-* Aubrey Holland
-* Keenan Brock
-* Insoo Buzz Jung
-* Louis Simoneau
-* Peter Williams
-* Kenneth Hoffman
-* Antti Tapio
-* Ilya Bazylchuk
-* Dan Cardamore
-* Kei Kusakari
-* Oleh Novosad
-* John Smart
-* Angelo Lakra
-* Olivier Lance
-* Tomohiro Nishimura
-* Masaki Takahashi
-* G Gordon Worley III
-* Clark Bremer
-* Tamara Temple
-* Long On
-* Lucas Mundim
-* Luke Duncalfe
-* Eric Betts
-* Maxim Dobryakov
-* Yi-Cyuan Chen
-* Justin Hannus
 
 Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.
