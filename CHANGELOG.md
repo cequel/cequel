@@ -1,3 +1,7 @@
+## TBD
+
+* Add ActiveRecord::Enum like support `column :status, :enum, values: { open: 1, closed: 2 }` ([PR 354](https://github.com/cequel/cequel/pull/354))
+
 ## 2.0.3
 
 * Add synchronization around use of @cluster and other variables Fix ([PR 333](https://github.com/cequel/cequel/pull/333))

@@ -123,6 +123,14 @@ module Cequel
         #   this column
         # @return [void]
         #
+        # @note Using type :enum will behave similar to an ActiveRecord enum:
+        #   example: `column :status, :enum, values: { open: 1, closed: 2 }`
+        #   will be handled as type Int
+        #   calling model.status will return the symbol ie. :open or :closed
+        #   expects setter to be called with symbol ie. model.status(:open)
+        #   exposes helpers ie. model.open?
+        #   exposes values-mapping on a class-level ModelClass.status
+        #
         # @note Secondary indexes are not nearly as flexible as primary keys:
         #   you cannot query for multiple values or for ranges of values. You
         #   also cannot combine a secondary index restriction with a primary
@@ -131,6 +139,7 @@ module Cequel
         #
         def column(name, type, options = {})
           def_accessors(name)
+          def_enum(name, options[:values]) if type == :enum
           set_attribute_default(name, options[:default])
         end
 
@@ -192,6 +201,34 @@ module Cequel
         end
 
         private
+
+        def def_enum(name, values)
+          name = name.to_sym
+          def_enum_values(name, values)
+          def_enum_reader(name, values)
+          def_enum_writer(name, values)
+        end
+
+        def def_enum_values(name, values)
+          define_singleton_method(name) { values }
+        end
+
+        def def_enum_reader(name, values)
+          module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{name}; #{values.invert}[read_attribute(#{name.inspect})]; end
+          RUBY
+          values.each do |key, value|
+            module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{key}?; read_attribute(#{name.inspect}) == #{value}; end
+            RUBY
+          end
+        end
+
+        def def_enum_writer(name, values)
+          module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{name}=(value); write_attribute(#{name.inspect}, #{values}[value]); end
+          RUBY
+        end
 
         def def_accessors(name)
           name = name.to_sym
