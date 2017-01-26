@@ -50,6 +50,7 @@ module Cequel
       attr_reader :query_consistency
       attr_reader :query_page_size
       attr_reader :query_paging_state
+      attr_reader :allow_filtering
 
       def_delegator :keyspace, :write_with_options
 
@@ -573,6 +574,15 @@ module Cequel
         end
       end
 
+      #
+      # @see RecordSet#allow_filtering!
+      #
+      def allow_filtering!
+        clone.tap do |data_set|
+          data_set.allow_filtering = true
+        end
+      end
+
       def paging_state(paging_state)
         clone.tap do |data_set|
           data_set.query_paging_state = paging_state
@@ -645,6 +655,7 @@ module Cequel
           .append(*row_specifications_cql)
           .append(sort_order_cql)
           .append(limit_cql)
+          .append(allow_filtering_cql)
       end
 
       #
@@ -675,9 +686,17 @@ module Cequel
         end
       end
 
+      # @private
+      def allow_filtering_cql
+        if allow_filtering
+          ' ALLOW FILTERING'
+        else ''
+        end
+      end
+
       protected
 
-      attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state
+      attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state, :allow_filtering
 
       private
 
