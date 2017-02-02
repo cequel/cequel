@@ -52,7 +52,7 @@ module Cequel
         }
 
         options = options.symbolize_keys
-        options.reverse_merge!(keyspace.configuration)
+        options.reverse_merge!(keyspace.configuration.symbolize_keys)
         options.reverse_merge!(default_options)
 
         if options.key?(:class)
