@@ -16,7 +16,7 @@ module Cequel
       define_method :execute_with_options_with_newrelic do |statement, options|
 
         operation = nil
-        statement_txt = nil 
+        statement_txt = nil
         statement_words = nil
 
         if statement.is_a?(::Cequel::Metal::Statement)
@@ -25,6 +25,7 @@ module Cequel
           operation = statement_words.first.downcase
         elsif statement.is_a?(::Cassandra::Statements::Batch)
           operation = "batch"
+          statement_txt = ''
         end
 
         callback = Proc.new do |result, scoped_metric, elapsed|
