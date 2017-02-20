@@ -25,7 +25,7 @@ module Cequel
           operation = statement_words.first.downcase
         elsif statement.is_a?(::Cassandra::Statements::Batch)
           operation = "batch"
-          statement_txt = ''
+          statement_txt = 'BEGIN BATCH'
         end
 
         callback = Proc.new do |result, scoped_metric, elapsed|
