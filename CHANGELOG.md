@@ -1,3 +1,7 @@
+## 2.1.1
+* Fix Relic instrumentation for batch statements [PR 361](https://github.com/cequel/cequel/pull/361)
+* Don't set table name when it is already present [PR 364](https://github.com/cequel/cequel/pull/364)
+
 ## 2.1.0
 
 * Add ActiveRecord::Enum like support `column :status, :enum, values: { open: 1, closed: 2 }` ([PR 354](https://github.com/cequel/cequel/pull/354))
