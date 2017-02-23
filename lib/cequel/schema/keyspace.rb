@@ -211,6 +211,16 @@ module Cequel
       end
 
       #
+      # Drop this materialized view from the keyspace
+      #
+      # @param name [Symbol] name of the materialized view to drop
+      # @return [void]
+      #
+      def drop_materialized_view(name)
+        keyspace.execute("DROP MATERIALIZED VIEW #{name}")
+      end
+
+      #
       # Create or update a table to match a given schema structure. The desired
       # schema structure is defined by the directives given in the block; this
       # is then compared to the existing table in the database (if it is
