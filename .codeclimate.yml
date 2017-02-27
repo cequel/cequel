@@ -9,10 +9,9 @@ engines:
       - ruby
   rubocop:
     enabled: true
-  shellcheck:
-    enabled: true
+    
 ratings:
   paths:
   - "**.rb"
-  - "**.sh"
+
 exclude_paths: 
