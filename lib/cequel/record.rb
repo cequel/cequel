@@ -136,6 +136,14 @@ module Cequel
         weak_descendants << WeakRef.new(base)
       end
 
+      # This is probably not the method you are looking for.
+      #
+      # Clear descendants list. Useful in tests to ensure bogus record classes
+      # are not synced. 
+      def forget_all_descendants!
+        weak_descendants.clear
+      end
+
       private
 
       def weak_descendants

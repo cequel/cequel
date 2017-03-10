@@ -203,6 +203,7 @@ describe Cequel::Record::Properties do
       expect do
         Class.new do
           include Cequel::Record
+          self.table_name = "foo"
           key :subdomain, :text, auto: true
         end
       end.to raise_error(ArgumentError)

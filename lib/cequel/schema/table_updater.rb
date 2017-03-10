@@ -87,23 +87,6 @@ module Cequel
       end
 
       #
-      # Change an existing column's type
-      #
-      # @param name [Symbol] the name of the column
-      # @param type [Symbol,Type] the new type of the column
-      # @return [void]
-      #
-      # @note Changing the type of a CQL column does not modify the data
-      #   currently stored in the column. Thus, client-side handling is needed
-      #   to convert old values to the new type at read time. Cequel does not
-      #   currently support this functionality, although it may in the future.
-      #   Altering column types is not recommended.
-      #
-      def change_column(name, type)
-        add_stmt %Q|ALTER TABLE "#{table_name}" ALTER "#{name}" TYPE #{type}|
-      end
-
-      #
       # Rename a column
       #
       # @param old_name [Symbol] the current name of the column

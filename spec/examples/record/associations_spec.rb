@@ -104,6 +104,7 @@ describe Cequel::Record::Associations do
       expect do
         Class.new do
           include Cequel::Record
+          self.table_name = "foo"
           key :permalink, :text
           belongs_to :blog
         end
@@ -114,6 +115,7 @@ describe Cequel::Record::Associations do
       expect do
         Class.new do
           include Cequel::Record
+          self.table_name = "foo"
           belongs_to :blog
           belongs_to :user
         end
@@ -169,6 +171,8 @@ describe Cequel::Record::Associations do
         expect do
           Class.new do
             include Cequel::Record
+            self.table_name = "foo"
+
             key :permalink, :text
             belongs_to :post, partition: true
           end
@@ -179,6 +183,8 @@ describe Cequel::Record::Associations do
         expect do
           Class.new do
             include Cequel::Record
+            self.table_name = "foo"
+
             belongs_to :post, partition: true
             belongs_to :user
           end

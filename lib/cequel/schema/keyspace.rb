@@ -148,8 +148,7 @@ module Cequel
       # @see CreateTableDSL
       #
       def create_table(name, &block)
-        table = Table.new(name)
-        CreateTableDSL.apply(table, &block)
+        table = TableDescDsl.new(name).eval(&block)
         TableWriter.apply(keyspace, table)
       end
 
@@ -224,12 +223,24 @@ module Cequel
       # @see #create_table Example of DSL usage
       #
       def sync_table(name, &block)
-        existing = read_table(name)
-        updated = Table.new(name)
-        CreateTableDSL.apply(updated, &block)
-        TableSynchronizer.apply(keyspace, existing, updated)
+        new_table_desc = TableDescDsl.new(name).eval(&block)
+        patch = if has_table?(name)
+                  existing_table_desc = read_table(name)
+                  TableDiffer.new(existing_table_desc, new_table_desc).call
+                else
+                  TableWriter.new(new_table_desc) # close enough to a patch
+                end
+
+        patch.statements.each{|stmt| keyspace.execute(stmt) }
       end
       alias_method :synchronize_table, :sync_table
+
+
+      # Returns true iff the specified table name exists in the keyspace.
+      #
+      def has_table?(table_name)
+        !!read_table(table_name)
+      end
 
       protected
 

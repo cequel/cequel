@@ -62,6 +62,7 @@ module Cequel
         if table_data.present?
           read_partition_keys
           read_clustering_columns
+          read_indexes
           read_data_columns
           read_properties
           read_table_settings
@@ -83,13 +84,11 @@ module Cequel
 
       protected
 
-      attr_reader :keyspace, :table_name, :table
-
-      private
+      attr_reader :keyspace, :table_name, :table, :indexes
 
       def read_partition_keys
         table_data.partition_key.each do |k|
-          table.add_partition_key(k.name.to_sym, k.type)
+          table.add_column PartitionKey.new(k.name.to_sym, type(k.type))
         end
 
       end
@@ -97,34 +96,36 @@ module Cequel
       def read_clustering_columns
         table_data.clustering_columns.zip(table_data.clustering_order)
           .each do |c,o|
-            table.add_clustering_column(c.name.to_sym, c.type, o)
+            table.add_column ClusteringColumn.new(c.name.to_sym, type(c.type), o)
           end
       end
 
-      def read_data_columns
-        indexes = Hash[table_data.each_index.map{|i| [i.target, i.name]}]
+      def read_indexes
+        @indexes = Hash[table_data.each_index.map{|i| [i.target, i.name]}]
+      end
 
+      def read_data_columns
         ((table_data.each_column - table_data.partition_key) - table_data.clustering_columns)
           .each do |c|
-            next if table.column(c.name.to_sym)
-            case c.type
-            when Cassandra::Types::Simple
-              opts = if indexes[c.name]
-                       {index: indexes[c.name].to_sym}
-                     else
-                       {}
-                     end
-              table.add_data_column(c.name.to_sym, c.type, opts)
-            when Cassandra::Types::List
-              table.add_list(c.name.to_sym, c.type.value_type)
-            when Cassandra::Types::Set
-              table.add_set(c.name.to_sym, c.type.value_type)
-            when Cassandra::Types::Map
-              table.add_map(c.name.to_sym, c.type.key_type, c.type.value_type)
-            else
-              fail "Unsupported type #{c.type.inspect}"
-            end
+            next if table.has_column?(c.name.to_sym)
+
+            table.add_column interpret_column(c)
           end
+      end
+
+      def interpret_column(c)
+        case c.type
+        when Cassandra::Types::Simple
+          DataColumn.new(c.name.to_sym, type(c.type), index_name(c))
+        when Cassandra::Types::List
+          List.new(c.name.to_sym, type(c.type.value_type))
+        when Cassandra::Types::Set
+          Set.new(c.name.to_sym, type(c.type.value_type))
+        when Cassandra::Types::Map
+          Map.new(c.name.to_sym, type(c.type.key_type), type(c.type.value_type))
+        else
+          fail "Unsupported type #{c.type.inspect}"
+        end
       end
 
       @@prop_extractors = []
@@ -136,7 +137,7 @@ module Cequel
           raw_prop_val = table_data.options.public_send(option_method)
           prop_val = coercion.call(raw_prop_val,table_data)
 
-          table.add_property(name, prop_val)
+          table.add_property TableProperty.build(name, prop_val)
         }
       end
 
@@ -185,6 +186,18 @@ module Cequel
             !cluster.has_keyspace?(keyspace.name)
 
           cluster
+        end
+      end
+
+      def type(type_info)
+        ::Cequel::Type[type_info.kind]
+      end
+
+      def index_name(column_info)
+        if idx_name = indexes[column_info.name]
+          idx_name.to_sym
+        else
+          nil
         end
       end
     end
