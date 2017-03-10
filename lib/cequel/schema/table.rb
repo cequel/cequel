@@ -34,146 +34,41 @@ module Cequel
       # @api private
       #
       def initialize(name)
-        @name = name
+        @name = name.to_sym
         @partition_key_columns, @clustering_columns, @data_columns = [], [], []
         @columns, @columns_by_name = [], {}
         @properties = ActiveSupport::HashWithIndifferentAccess.new
       end
 
+      # Add a column descriptor to this table descriptor.
       #
-      # Define a key column. If this is the first key column defined, it will
-      # be a partition key; otherwise, it will be a clustering column.
+      # column_desc - Descriptor of column to add. Can be PartitionKey,
+      #   ClusteringColumn, DataColumn, List, Set, or Map.
       #
-      # @param name [Symbol] the name of the column
-      # @param type [Symbol,Type] the type for the column
-      # @param clustering_order [:asc,:desc] whether rows should be in
-      #   ascending or descending order by this column. Only meaningful for
-      #   clustering columns.
-      # @return [void]
+      def add_column(column_desc)
+        column_flavor = case column_desc
+                        when PartitionKey
+                          @partition_key_columns
+                        when ClusteringColumn
+                          @clustering_columns
+                        else
+                          @data_columns
+                        end
+
+        column_flavor << column_desc
+        columns << column_desc
+        columns_by_name[column_desc.name] = column_desc
+      end
+
+      # Add a property to this table descriptor
       #
-      # @see #add_partition_key
+      # property_desc - A `TableProperty` describing one property of this table.
       #
-      def add_key(name, type, clustering_order = nil)
-        if @partition_key_columns.empty?
-          unless clustering_order.nil?
-            fail ArgumentError,
-                 "Can't set clustering order for partition key #{name}"
-          end
-          add_partition_key(name, type)
-        else
-          add_clustering_column(name, type, clustering_order)
-        end
+      def add_property(property_desc)
+        properties[property_desc.name] = property_desc
       end
 
       #
-      # Define a partition key for the table
-      #
-      # @param name [Symbol] the name of the column
-      # @param type [Symbol,Type] the type for the column
-      # @return [void]
-      #
-      def add_partition_key(name, type)
-        PartitionKey.new(name, type(type)).tap do |column|
-          @partition_key_columns << add_column(column)
-        end
-      end
-
-      #
-      # Define a clustering column for the table
-      #
-      # @param (see #add_key)
-      # @return [void]
-      #
-      def add_clustering_column(name, type, clustering_order = nil)
-        ClusteringColumn.new(name, type(type), clustering_order)
-          .tap { |column| @clustering_columns << add_column(column) }
-      end
-
-      #
-      # Define a data column on the table
-      #
-      # @param name [Symbol] name of the column
-      # @param type [Type] type for the column
-      # @param options [Options] options for the column
-      # @option options [Boolean,Symbol] :index (nil) name of a secondary index
-      #   to apply to the column, or `true` to infer an index name by
-      #   convention
-      # @return [void]
-      #
-      def add_data_column(name, type, options = {})
-        options = {index: options} unless options.is_a?(Hash)
-        index_name = options[:index]
-        index_name = :"#{@name}_#{name}_idx" if index_name == true
-        if type == :enum
-          type = :int
-        end
-        DataColumn.new(name, type(type), index_name)
-          .tap { |column| @data_columns << add_column(column) }
-      end
-
-      #
-      # Define a list column on the table
-      #
-      # @param name [Symbol] name of the list
-      # @param type [Symbol,Type] type of the list's elements
-      # @return [void]
-      #
-      # @see List
-      #
-      def add_list(name, type)
-        List.new(name, type(type)).tap do |column|
-          @data_columns << add_column(column)
-        end
-      end
-
-      #
-      # Define a set column on the table
-      #
-      # @param name [Symbol] name of the set
-      # @param type [Symbol,Type] type of the set's elements
-      # @return [void]
-      #
-      # @see Set
-      #
-      def add_set(name, type)
-        Set.new(name, type(type)).tap do |column|
-          @data_columns << add_column(column)
-        end
-      end
-
-      #
-      # Define a map column on the table
-      #
-      # @param name [Symbol] name of the set
-      # @param key_type [Symbol,Type] type of the map's keys
-      # @param value_type [Symbol,Type] type of the map's values
-      # @return [void]
-      #
-      # @see Map
-      #
-      def add_map(name, key_type, value_type)
-        Map.new(name, type(key_type), type(value_type)).tap do |column|
-          @data_columns << add_column(column)
-        end
-      end
-
-      #
-      # Define a storage property for the table
-      #
-      # @param name [Symbol] name of the property
-      # @param value value for the property
-      # @return [void]
-      #
-      # @see STORAGE_PROPERTIES List of storage property names
-      # @see http://cassandra.apache.org/doc/cql3/CQL.html#createTableOptions
-      #   list of CQL3 table storage properties
-      #
-      def add_property(name, value)
-        TableProperty.build(name, value).tap do |property|
-          @properties[name] = property
-        end
-      end
-
       #
       # @param name [Symbol] name of column to look up
       # @return [Column] column defined on table with given name
@@ -182,17 +77,23 @@ module Cequel
         columns_by_name[name.to_sym]
       end
 
+      # Returns true iff this table has the specified column name.
+      #
+      def has_column?(name)
+        columns_by_name.has_key?(name.to_sym)
+      end
+
       #
       # @return [Array<Symbol>] the names of all columns
       def column_names
-        columns.map { |column| column.name }
+        columns_by_name.keys
       end
 
       #
       # @return [Array<Column>] all key columns (partition + clustering)
       #
       def key_columns
-        @partition_key_columns + @clustering_columns
+        partition_key_columns + clustering_columns
       end
 
       #
@@ -224,6 +125,12 @@ module Cequel
         partition_key_columns.length
       end
 
+      # Returns true iff this table descriptor currently has at least one
+      # partition key defined.
+      def has_partition_key?
+        partition_key_columns.any?
+      end
+
       #
       # @return [Array<Symbol>] names of clustering columns
       #
@@ -243,7 +150,7 @@ module Cequel
       # @return [PartitionKey] partition key column with given name
       #
       def partition_key(name)
-        @partition_key_columns.find { |column| column.name == name }
+        partition_key_columns.find { |column| column.name == name }
       end
 
       #
@@ -251,7 +158,7 @@ module Cequel
       # @return [ClusteringColumn] clustering column with given name
       #
       def clustering_column(name)
-        @clustering_columns.find { |column| column.name == name }
+        clustering_columns.find { |column| column.name == name }
       end
 
       #
@@ -261,7 +168,7 @@ module Cequel
       #
       def data_column(name)
         name = name.to_sym
-        @data_columns.find { |column| column.name == name }
+        data_columns.find { |column| column.name == name }
       end
 
       #
@@ -269,7 +176,7 @@ module Cequel
       # @return [TableProperty] property as defined on table
       #
       def property(name)
-        @properties[name].try(:value)
+        properties.fetch(name, null_table_property).value
       end
 
       #
@@ -283,19 +190,18 @@ module Cequel
 
       attr_reader :columns_by_name
 
-      private
-
-      def add_column(column)
-        columns << column
-        columns_by_name[column.name] = column
-      end
-
       def type(type)
         type = type.kind if type.respond_to?(:kind)
 
         ::Cequel::Type[type]
       end
 
+      def null_table_property
+        @@null_table_property ||= Class.new do
+          def value; nil; end
+          def name; nil; end
+        end.new
+      end
     end
   end
 end

@@ -13,18 +13,16 @@ module Cequel
       # @return (see #apply)
       #
       def self.apply(keyspace, table)
-        new(keyspace, table).apply
+        new(table).apply(keyspace)
       end
 
       #
       # @param keyspace [Keyspace] keyspace in which to create the table
       # @param table [Table] object representation of table schema
-      # @private
       #
-      def initialize(keyspace, table)
-        @keyspace, @table = keyspace, table
+      def initialize(table)
+        @table = table
       end
-      private_class_method :new
 
       #
       # Create the table in the keyspace
@@ -33,14 +31,17 @@ module Cequel
       #
       # @api private
       #
-      def apply
-        keyspace.execute(create_statement)
-        index_statements.each { |statement| keyspace.execute(statement) }
+      def apply(keyspace)
+        statements.each { |statement| keyspace.execute(statement) }
+      end
+
+      def statements
+        [create_statement] + index_statements
       end
 
       protected
 
-      attr_reader :keyspace, :table
+      attr_reader :table
 
       private
 

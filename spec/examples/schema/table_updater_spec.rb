@@ -83,18 +83,6 @@ describe Cequel::Schema::TableUpdater do
     end
   end
 
-  describe '#change_column' do
-    before do
-      cequel.schema.alter_table(table_name) do
-        change_column :title, :text
-      end
-    end
-
-    it 'should change the type' do
-      expect(table.data_column(:title).type).to eq(Cequel::Type[:text])
-    end
-  end
-
   describe '#rename_column' do
     before do
       cequel.schema.alter_table(table_name) do
