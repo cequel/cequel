@@ -27,13 +27,13 @@ module Cequel
       # @raise (see #apply)
       #
       def self.apply(keyspace, existing, updated)
-        if existing
-          TableUpdater.apply(keyspace, existing.name) do |updater|
-            new(updater, existing, updated).apply
-          end
-        else
-          TableWriter.apply(keyspace, updated)
-        end
+        patch = if existing
+                  patch = TableDiffer.new(existing, updated).call
+                else
+                  TableWriter.new(updated)
+                end
+ 
+        patch.statements.each { |stmt| keyspace.execute(stmt) }
       end
 
       #

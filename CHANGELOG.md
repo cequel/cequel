@@ -1,3 +1,7 @@
+## 3.0.0
+* Drop support for changing the type of cluster keys as it is no longer support by Cassandra.
+* Drop support for non-option based index specification in table schema DSL. For example, `column :author_name, :text, true` must be rewritten as `column :author_name, :text, index: true`.
+
 ## 2.1.1
 * Fix Relic instrumentation for batch statements [PR 361](https://github.com/cequel/cequel/pull/361)
 * Don't set table name when it is already present [PR 364](https://github.com/cequel/cequel/pull/364)

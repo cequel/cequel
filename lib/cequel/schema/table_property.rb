@@ -44,6 +44,20 @@ module Cequel
         "#{@name} = #{value_cql}"
       end
 
+      # Returns true iff `self` and `other` logically equivalent (same value for
+      # same property).
+      #
+      def ==(other)
+        other.name == self.name &&
+          other.value == self.value
+      end
+      alias_method :eql?, :==
+
+      # Returns a hash code for this object
+      def hash
+        [name, value].hash
+      end
+
       protected
 
       def normalized_value=(value)

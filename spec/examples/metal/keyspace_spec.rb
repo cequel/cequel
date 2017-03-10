@@ -89,14 +89,14 @@ describe Cequel::Metal::Keyspace do
   describe "#drop_table", cassandra: '~> 3.x' do
     it "allows IF EXISTS" do
       expect { cequel.schema.drop_table(:unknown) }.to raise_error(Cassandra::Errors::InvalidError)
-      expect { cequel.schema.drop_table(:unknown, exists: true) }.not_to raise_error(Cassandra::Errors::InvalidError)
+      expect { cequel.schema.drop_table(:unknown, exists: true) }.not_to raise_error
     end
   end
 
   describe "#drop_materialized_view", cassandra: '~> 3.x' do
     it "allows IF EXISTS" do
       expect { cequel.schema.drop_materialized_view(:unknown) }.to raise_error(Cassandra::Errors::ConfigurationError)
-      expect { cequel.schema.drop_materialized_view(:unknown, exists: true) }.not_to raise_error(Cassandra::Errors::ConfigurationError)
+      expect { cequel.schema.drop_materialized_view(:unknown, exists: true) }.not_to raise_error
     end
   end
 

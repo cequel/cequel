@@ -151,6 +151,21 @@ module Cequel
         0.001
       end
 
+      def example_slug(example, max_length=1000)
+        example.description.downcase.gsub(/[^a-z]+/, '_')[/.{1,#{max_length}}$/]
+      end
+
+      # figures a table name starting with `base_name` that is unique to the
+      # specified example
+      #
+      # Examples
+      #
+      #   let(:table_name) { |ex| unique_table_name("posts", ex) }
+      #
+      def unique_table_name(base_name, example)
+        max_suffix = 45 - base_name.size
+        :"#{base_name}_#{example_slug(example, max_suffix)}"
+      end
     end
   end
 end

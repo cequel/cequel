@@ -612,6 +612,14 @@ you require this functionality.
 
 ## Breaking API changes
 
+### 3.0
+
+ * Dropped support for changing the type of cluster keys because the ability has
+   been removed from Cassandra. Calls to `#change_column` must be removed.
+ * Dropped support for previously deprecated signature of the `#column` method
+   of schema DSL. Uses like `column :my_column, :text, true` must be rewritten
+   as `#column :my_column, :text, indexed: true`
+
 ### 2.0
 
  * dropped support for jruby (Due to difficult to work around bugs in jruby. PRs welcome to restore jruby compatibility.)
