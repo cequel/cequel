@@ -369,7 +369,7 @@ describe Cequel::Schema::TableReader do
                            [Cequel::Schema::DataColumn.new(:data, :text)] }
     end
 
-    context 'materialized view exists' do
+    context 'materialized view exists', cassandra: '~> 3.0' do
       let!(:name) { table_name }
       let(:view_name) { "#{name}_view" }
       before do
