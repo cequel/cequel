@@ -12,19 +12,25 @@ module Cequel
 
       # @return [Symbol] the name of the table
       attr_reader :name
+
       # @return [Array<Column>] all columns defined on the table
       attr_reader :columns
+
       # @return [Array<PartitionKey>] partition key columns defined on the
       #   table
       attr_reader :partition_key_columns
+
       # @return [Array<ClusteringColumn>] clustering columns defined on the
       #   table
       attr_reader :clustering_columns
+
       # @return [Array<DataColumn,CollectionColumn>] data columns and
       #   collection columns defined on the table
       attr_reader :data_columns
+
       # @return [Hash] storage properties defined on the table
       attr_reader :properties
+
       # @return [Boolean] `true` if this table is configured with compact
       #   storage
       attr_writer :compact_storage
@@ -33,11 +39,17 @@ module Cequel
       # @param name [Symbol] the name of the table
       # @api private
       #
-      def initialize(name)
+      def initialize(name, is_view=false)
         @name = name.to_sym
+        @is_view = is_view
         @partition_key_columns, @clustering_columns, @data_columns = [], [], []
         @columns, @columns_by_name = [], {}
         @properties = ActiveSupport::HashWithIndifferentAccess.new
+      end
+
+      # @return [Boolean] `true` when this table is a materialized view
+      def materialized_view?
+        @is_view
       end
 
       # Add a column descriptor to this table descriptor.

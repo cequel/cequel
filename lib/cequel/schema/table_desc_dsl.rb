@@ -15,17 +15,28 @@ module Cequel
     #     map :something_contrived, :text, :text
     #   end
     #
+    #   TableDescDsl.new("posts_view").eval do
+    #     materialized_view
+    #     partition_key :blog_subdomain, :text
+    #     key :slug, :text
+    #     column :body, :text
+    #   end
+
+    #
     class TableDescDsl < BasicObject
       extend ::Cequel::Util::Forwardable
 
-      # Intialize a new instance
+      # Initialize a new instance
       #
       # table_name - The name of the table being described.
       protected def initialize(table_name)
-        @table = Table.new(table_name)
+        @table_name = table_name
+        @columns = []
+        @properties = []
+        @is_compact_storage = false
+        @is_view = false
+        @has_part_key = false
       end
-
-      attr_reader :table
 
       # Returns a Table object built by evaluating the provided block.
       #
@@ -34,7 +45,7 @@ module Cequel
       def eval(&desc_block)
         instance_eval(&desc_block)
 
-        @table
+        table
       end
 
       # Describe (one of) the partition key(s) of the table.
@@ -44,7 +55,7 @@ module Cequel
       #   See `Cequel::Type`.
       #
       def partition_key(name, type)
-        table.add_column PartitionKey.new(name, type(type))
+        columns <<  PartitionKey.new(name, type(type))
       end
 
 
@@ -57,16 +68,13 @@ module Cequel
       #   keys. Leave nil for partition keys.
       #
       def key(name, type, clustering_order = nil)
-        (fail ArgumentError, "Can't set clustering order for partition key #{name}") if
-          clustering_order && !table.has_partition_key?
+        columns << if has_partition_key?
+                     ClusteringColumn.new(name, type(type), clustering_order)
+                   else
+                     (fail ArgumentError, "Can't set clustering order for partition key #{name}") if clustering_order
 
-        column_desc = if table.has_partition_key?
-                        ClusteringColumn.new(name, type(type), clustering_order)
-                      else
-                        PartitionKey.new(name, type(type))
-                      end
-
-        table.add_column column_desc
+                     PartitionKey.new(name, type(type))
+                   end
       end
 
       # Describe a column of the table
@@ -79,8 +87,8 @@ module Cequel
       #     `true` to infer an index name by convention
       #
       def column(name, type, options = {})
-        table.add_column DataColumn.new(name, type(type),
-                                        figure_index_name(name, options.fetch(:index, nil)))
+        columns << DataColumn.new(name, type(type),
+                                  figure_index_name(name, options.fetch(:index, nil)))
       end
 
       # Describe a column of type list.
@@ -90,7 +98,7 @@ module Cequel
       #   `Cequel::Type` or a symbol. See `Cequel::Type`.
       #
       def list(name, type)
-        table.add_column List.new(name, type(type))
+        columns << List.new(name, type(type))
       end
 
       # Describe a column of type set.
@@ -100,7 +108,7 @@ module Cequel
       #  `Cequel::Type` or a symbol. See `Cequel::Type`.
       #
       def set(name, type)
-        table.add_column Set.new(name, type(type))
+        columns << Set.new(name, type(type))
       end
 
       # Describe a column of type map.
@@ -111,7 +119,7 @@ module Cequel
       # value_type - The type of the values of this column. Either a
       #   `Cequel::Type` or a symbol. See `Cequel::Type`.
       def map(name, key_type, value_type)
-        table.add_column Map.new(name, type(key_type), type(value_type))
+        columns << Map.new(name, type(key_type), type(value_type))
       end
 
       # Describe property of the table.
@@ -124,7 +132,7 @@ module Cequel
       #   list of CQL3 table storage properties
       #
       def with(name, value)
-        table.add_property TableProperty.build(name, value)
+        properties << TableProperty.build(name, value)
       end
 
       #
@@ -134,10 +142,38 @@ module Cequel
       # @return [void]
       #
       def compact_storage
-        table.compact_storage = true
+        @is_compact_storage = true
+      end
+
+      #
+      # Indicates that this is a materialized view.
+      #
+      # @return [void]
+      def materialized_view
+        self.is_view = true
+      end
+
+      def table
+        Table.new(table_name, is_view).tap do |tab|
+          columns.each do |c|
+            tab.add_column c
+          end
+          properties.each do |p|
+            tab.add_property p
+          end
+          tab.compact_storage = is_compact_storage
+        end
       end
 
       protected
+
+      attr_reader :table_name, :columns, :properties, :is_compact_storage,
+                  :is_view
+
+
+      def has_partition_key?
+        columns.any?{|c| c.partition_key? }
+      end
 
       def type(type)
         type = :int if type == :enum
@@ -148,7 +184,7 @@ module Cequel
       def figure_index_name(column_name, idx_opt)
         case idx_opt
         when true
-          :"#{table.name}_#{column_name}_idx"
+          :"#{table_name}_#{column_name}_idx"
         when false, nil
           nil
         else

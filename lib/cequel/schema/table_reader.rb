@@ -2,9 +2,8 @@
 module Cequel
   module Schema
     #
-    # A TableReader will query Cassandra's internal representation of a table's
-    # schema, and build a {Table} instance exposing an object representation of
-    # that schema
+    # A TableReader interprets table data from the cassandra driver into a table
+    # descriptor (read: `Table`).
     #
     class TableReader
       COMPOSITE_TYPE_PATTERN =
@@ -18,25 +17,32 @@ module Cequel
       #   database
       attr_reader :table
 
-      #
-      # Read the schema defined in the database for a given table and return a
-      # {Table} instance
-      #
-      # @param (see #initialize)
-      # @return (see #read)
-      #
-      def self.read(keyspace, table_name)
-        new(keyspace, table_name).read
-      end
+      class << self
+        #
+        # Read the schema defined in the database for a given table and return a
+        # {Table} instance
+        #
+        # @param (see #initialize)
+        # @return (see #read)
+        #
+        def read(keyspace, table_name)
+          table_data = fetch_raw_keyspace(keyspace).table(table_name.to_s)
+          (fail NoSuchTableError) if table_data.blank?
 
-      #
-      # Return a {TableReader} instance
-      #
-      # @param (see #initialize)
-      # @return [TableReader] object
-      #
-      def self.get(keyspace, table_name)
-        new(keyspace, table_name)
+          new(table_data).call
+        end
+
+        protected
+
+        def fetch_raw_keyspace(keyspace)
+          cluster = keyspace.cluster
+          cluster.refresh_schema
+
+          (fail NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") unless
+            cluster.has_keyspace?(keyspace.name)
+
+          cluster.keyspace(keyspace.name)
+        end
       end
 
       #
@@ -44,11 +50,11 @@ module Cequel
       # @param table_name [Symbol] name of the table to read
       # @private
       #
-      def initialize(keyspace, table_name)
-        @keyspace, @table_name = keyspace, table_name
-        @table = Table.new(table_name.to_sym)
+      def initialize(table_data)
+        @table_data = table_data
+        @table = Table.new(table_data.name,
+                           Cassandra::MaterializedView === table_data)
       end
-      private_class_method(:new)
 
       #
       # Read table schema from the database
@@ -58,33 +64,22 @@ module Cequel
       #
       # @api private
       #
-      def read
-        if table_data.present?
-          read_partition_keys
-          read_clustering_columns
-          read_indexes
-          read_data_columns
-          read_properties
-          read_table_settings
-          table
-        end
-      end
+      def call
+        return nil if table_data.blank?
 
-      #
-      # Check if it is materialized view
-      #
-      # @return [boolean] true if it is materialized view
-      #
-      # @api private
-      #
-      def materialized_view?
-        cluster.keyspace(keyspace.name)
-          .has_materialized_view?(table_name.to_s)
+        read_partition_keys
+        read_clustering_columns
+        read_indexes
+        read_data_columns
+        read_properties
+        read_table_settings
+
+        table
       end
 
       protected
 
-      attr_reader :keyspace, :table_name, :table, :indexes
+      attr_reader :table_data, :table, :indexes
 
       def read_partition_keys
         table_data.partition_key.each do |k|
@@ -94,14 +89,19 @@ module Cequel
       end
 
       def read_clustering_columns
-        table_data.clustering_columns.zip(table_data.clustering_order)
-          .each do |c,o|
-            table.add_column ClusteringColumn.new(c.name.to_sym, type(c.type), o)
+        table_data.clustering_columns
+          .each do |c|
+            table.add_column ClusteringColumn.new(c.name.to_sym, type(c.type), c.order)
           end
       end
 
       def read_indexes
-        @indexes = Hash[table_data.each_index.map{|i| [i.target, i.name]}]
+        @indexes = if table_data.respond_to?(:each_index)
+                     Hash[table_data.each_index.map{|i| [i.target, i.name]}]
+                   else
+                     # materialized view
+                     {}
+                   end
       end
 
       def read_data_columns
@@ -170,23 +170,6 @@ module Cequel
 
       def read_table_settings
         table.compact_storage = table_data.options.compact_storage?
-      end
-
-      def table_data
-        @table_data ||= cluster.keyspace(keyspace.name)
-          .table(table_name.to_s)
-      end
-
-      def cluster
-        @cluster ||= begin
-          cluster = keyspace.cluster
-          cluster.refresh_schema
-
-          fail(NoSuchKeyspaceError, "No such keyspace #{keyspace.name}") if
-            !cluster.has_keyspace?(keyspace.name)
-
-          cluster
-        end
       end
 
       def type(type_info)
