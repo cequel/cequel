@@ -1,5 +1,5 @@
 # -*- encoding : utf-8 -*-
 module Cequel
   # The current version of the library
-  VERSION = '2.1.1'
+  VERSION = '3.0.0'
 end
