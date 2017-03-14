@@ -74,6 +74,10 @@ describe Cequel::SpecSupport::Preparation do
 
   # background
 
+  before(:each) do
+    Cequel::Record.forget_all_descendants!
+  end
+
   after(:each) do
     begin
       Cequel::Record.connection.clear_active_connections!
