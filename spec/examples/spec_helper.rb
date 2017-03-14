@@ -17,11 +17,11 @@ RSpec.configure do |config|
 
   {
     rails: ActiveSupport::VERSION::STRING,
-    cassandra: ENV.fetch('CASSANDRA_VERSION', '3.0'),
-  }.each do |tag, version|
-    config.filter_run_excluding tag => ->(requirement) {
-      !Gem::Requirement.new(requirement).
-        satisfied_by?(Gem::Version.new(version))
+    cql: Cequel::SpecSupport::Helpers.cql_version,
+  }.each do |tag, actual_version|
+    config.filter_run_excluding tag => ->(required_version) {
+      !Gem::Requirement.new(required_version).
+        satisfied_by?(Gem::Version.new(actual_version))
     }
   end
 

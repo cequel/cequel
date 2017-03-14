@@ -2,7 +2,7 @@
 require_relative 'spec_helper'
 
 describe Cequel::Record::MassAssignment do
-  context 'with strong parameters', :rails => '~> 4.0' do
+  context 'with strong parameters', rails: '>= 4.0' do
     model :Post do
       key :permalink, :text
       column :title, :text
@@ -34,7 +34,7 @@ describe Cequel::Record::MassAssignment do
     end
   end
 
-  context 'with mass-assignment protection', :rails => '~> 3.1' do
+  context 'with mass-assignment protection', rails: '~> 3.0' do
     model :Post do
       key :permalink, :text
       column :title, :text

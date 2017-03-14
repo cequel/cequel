@@ -51,6 +51,14 @@ module Cequel
 
     module Helpers
 
+      def self.cql_version
+        Cequel.connect(host: host,
+                       port: port,
+                       keyspace: "system")
+          .execute("SELECT cql_version FROM system.local")
+          .first["cql_version"]
+      end
+
       def self.cequel
         @cequel ||= Cequel.connect(
           host: host,
