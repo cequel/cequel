@@ -346,6 +346,24 @@ describe Cequel::Record::Persistence do
       end
     end
 
+    describe '#upsert' do
+      context 'new record' do
+        it 'should raise an error if the key is not provided' do
+          expect {
+            Blog.new.upsert
+          }.to raise_error
+        end
+
+        it 'should update new records' do
+          expect_query_with_consistency(/UPDATE/, :one) {
+            blog = Blog.new
+            blog.subdomain = 'subdomain'
+            blog.upsert(consistency: :one)
+          }
+        end
+      end
+    end
+
     describe '#destroy' do
       before { post.destroy }
 
