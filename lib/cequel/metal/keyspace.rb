@@ -362,7 +362,12 @@ module Cequel
       end
 
       def extract_credentials(configuration)
-        configuration.slice(:username, :password).presence
+        credentials = configuration.slice(:username, :password).presence
+        
+        return credentials unless configuration[:auth_provider]
+
+        { auth_provider: CequelPassword.new(*credentials.values),
+          datacenter: configuration[:datacenter].presence }
       end
 
       def extract_ssl_config(configuration)
@@ -392,6 +397,12 @@ module Cequel
       
       def extract_cassandra_options(configuration)
         configuration[:cassandra_options]
+      end
+    end
+
+    class CequelPassword < Cassandra::Auth::Providers::Password
+      def create_authenticator(_)
+        Authenticator.new(@username, @password)
       end
     end
   end
