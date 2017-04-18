@@ -1,3 +1,5 @@
+readme only change to trigger a ci build
+
 # Cequel #
 
 Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
