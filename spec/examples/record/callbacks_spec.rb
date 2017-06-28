@@ -35,12 +35,12 @@ describe Cequel::Record::Callbacks do
 
     attr_writer :instance_after_save
 
-    private
-
     def create_post
       post = Post.create!(permalink: 'autopost', title: 'Auto Post')
       self.post = post
     end
+    
+    private    
 
     def run_instance_after_save
       @instance_after_save.call

@@ -55,13 +55,13 @@ module Cequel
         end
       end
 
-      private
-
-      attr_reader :keyspace
-
       def current_batch
         ::Thread.current[batch_key]
       end
+
+      private
+
+      attr_reader :keyspace
 
       def current_batch=(batch)
         ::Thread.current[batch_key] = batch
