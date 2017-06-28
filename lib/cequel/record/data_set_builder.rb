@@ -48,14 +48,15 @@ module Cequel
 
       protected
 
-      attr_accessor :data_set
-      attr_reader :record_set
       def_delegators :record_set, :row_limit, :select_columns,
                      :scoped_key_names, :scoped_key_values,
                      :scoped_indexed_column, :lower_bound,
                      :upper_bound, :reversed?, :order_by_column,
                      :query_consistency, :query_page_size, :query_paging_state,
                      :ascends_by?, :allow_filtering
+
+      attr_accessor :data_set
+      attr_reader :record_set
 
       private
 
