@@ -1,3 +1,7 @@
+## 3.0.1
+* Fix problem with source reload creating duplicate finder methods (find_by_id_and_id) [Issue 206](https://github.com/cequel/cequel/issues/206)
+* Fix problems with noisy logs in Ruby 2.4+ [Issue 373](https://github.com/cequel/cequel/issues/373)
+
 ## 3.0.0
 * Drop support for changing the type of cluster keys as it is no longer support by Cassandra.
 * Drop support for non-option based index specification in table schema DSL. For example, `column :author_name, :text, true` must be rewritten as `column :author_name, :text, index: true`.

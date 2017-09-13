@@ -185,8 +185,10 @@ module Cequel
       #
       def save(options = {})
         options.assert_valid_keys(:consistency, :ttl, :timestamp)
-        if new_record? then create(options)
-        else update(options)
+        if new_record?
+          create(options)
+        else
+          update(options)
         end
         @new_record = false
         true
