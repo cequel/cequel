@@ -88,7 +88,7 @@ module Cequel
         (value.to_r * 1000).round.to_s
       when DateTime
         quote(value.utc.to_time)
-      when Date
+      when ::Date
         quote(Time.gm(value.year, value.month, value.day))
       when Numeric, true, false, Cassandra::Uuid
         value.to_s
@@ -400,6 +400,26 @@ module Cequel
       end
     end
     register Timestamp.instance
+
+    #
+    # `date` columns store dates.
+    #
+    # @see http://cassandra.apache.org/doc/cql3/CQL-3.0.html#usingdates
+    #   CQL3 documentation for date columns
+    #
+    class Date < Base
+      def internal_names
+        ['org.apache.cassandra.db.marshal.DateType']
+      end
+
+      def cast(value)
+        if value.is_a?(::String) then ::Date.parse(value)
+        elsif value.respond_to?(:to_date) then value.to_date
+        else ::Date.parse(value.to_s)
+        end
+      end
+    end
+    register Date.instance
 
     #
     # `uuid` columns store type 1 and type 4 UUIDs. New UUID instances can be
