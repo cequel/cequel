@@ -1,3 +1,6 @@
+## 3.0.1
+- fix list modification bug with Cassandra versions > 2.2.10 and 3.11.0
+
 ## 3.0.0
 * Drop support for changing the type of cluster keys as it is no longer support by Cassandra.
 * Drop support for non-option based index specification in table schema DSL. For example, `column :author_name, :text, true` must be rewritten as `column :author_name, :text, index: true`.
