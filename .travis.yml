@@ -20,9 +20,9 @@ gemfile:
   - "gemfiles/rails_5.0.gemfile"
 
 env:
-  - CASSANDRA_VERSION: 2.1
-  - CASSANDRA_VERSION: 2.2
-  - CASSANDRA_VERSION: 3.0
+  - CASSANDRA_VERSION=2.1
+  - CASSANDRA_VERSION=2.2
+  - CASSANDRA_VERSION=3.0
 
 script: script/ci-unit-test
 
