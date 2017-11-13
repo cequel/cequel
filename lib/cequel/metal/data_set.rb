@@ -289,7 +289,9 @@ module Cequel
       #
       def list_remove_at(column, *positions)
         options = positions.extract_options!
-        deleter { list_remove_at(column, *positions) }.execute(options)
+        sorted_positions = positions.sort.reverse
+
+        deleter { list_remove_at(column, *sorted_positions) }.execute(options)
       end
 
       #

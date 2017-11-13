@@ -217,39 +217,32 @@ module Cequel
       #   @param count [Integer] number of elements to replace
       #   @param elements [Array] new elements to replace in this range
       #
-      def []=(position, *args)
-        if position.is_a?(Range)
-          first, count = position.first, position.count
+      def []=(*args)
+        if args[0].is_a?(Fixnum) && args.count == 2
+          # single element set/replace
+          elem = cast_element(args[1])
+
+          to_update do
+            set_item(args[0], elem)
+          end
+          to_modify { super(args[0], elem) }
+
         else
-          first, count = position, args[-2]
-        end
+          # multi-element set/replace
+          range = if args[0].is_a?(Range)
+                    args[0]
+                  elsif args[0].is_a?(Fixnum) && args[1].is_a?(Fixnum)
+                    args[0]..(args[0]+args[1]-1)
+                  else
+                    Kernel.raise ArgumentError, "[i]=elem or [i,count]=elems or [a..b]=elems"
+                  end
+          elems = cast_collection(Array.wrap(args[-1]))
 
-        element = args[-1] =
-          if args[-1].is_a?(Array) then cast_collection(args[-1])
-          else cast_element(args[-1])
+          to_update do
+            set_range(range, elems, args[-1])
           end
-
-        if first < 0
-          fail ArgumentError,
-               "Bad index #{position}: CQL lists do not support negative " \
-               "indices"
+          to_modify { super(range, elems) }
         end
-
-        to_update do
-          if count.nil?
-            updater.list_replace(column_name, first, element)
-          else
-            element = Array.wrap(element)
-            count.times do |i|
-              if i < element.length
-                updater.list_replace(column_name, first+i, element[i])
-              else
-                deleter.list_remove_at(column_name, first+i)
-              end
-            end
-          end
-        end
-        to_modify { super }
       end
 
       #
@@ -337,6 +330,31 @@ module Cequel
         to_modify { super }
       end
       alias_method :prepend, :unshift
+
+      protected
+
+      def set_item(position, elem)
+        elem = cast_element(elem)
+
+        updater.list_replace(column_name, position, elem)
+      end
+
+      def set_range(range, elems, _raw_elems)
+        replace_range = if elems.count < range.count
+                          range.begin..(range.begin+elems.count-1)
+                        else
+                          range
+                        end
+        delete_range = (replace_range.end+1)..range.end
+
+        replace_range.zip(elems).each do |position, elem|
+          updater.list_replace(column_name, position, elem)
+        end
+
+        delete_range.to_a.reverse.each do |position|
+          deleter.list_remove_at(column_name, position)
+        end
+      end
     end
 
     #
