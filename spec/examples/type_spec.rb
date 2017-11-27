@@ -164,6 +164,20 @@ describe Cequel::Type do
     end
   end
 
+  describe 'date' do
+    subject { Cequel::Type[:date] }
+    its(:cql_name) { should == :date }
+    its(:internal_name) { should == 'org.apache.cassandra.db.marshal.DateType' }
+
+    describe '#cast' do
+      let(:today) { Date.today }
+      specify { expect(subject.cast(today)).to eq(today) }
+      specify { expect(subject.cast(today.to_s)).to eq(today) }
+      specify { expect(subject.cast(today.to_datetime)).to eq(today) }
+      specify { expect(subject.cast(today.to_time)).to eq(today) }
+    end
+  end
+
   describe 'timeuuid' do
     subject { Cequel::Type[:timeuuid] }
     its(:cql_name) { should == :timeuuid }

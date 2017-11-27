@@ -462,6 +462,7 @@ describe Cequel::Record::RecordSet do
 
   describe '#after' do
     let(:records) { [posts, published_posts] }
+    let(:published_at_uuid) { published_posts[2].published_at }
 
     it 'should return collection after given key' do
       expect(Post['cassandra'].after('cequel1').map(&:title)).
@@ -471,6 +472,11 @@ describe Cequel::Record::RecordSet do
     it 'should cast argument' do
       expect(Post['cassandra'].after('cequel1'.force_encoding('ASCII-8BIT')).
         map(&:title)).to eq((2...5).map { |i| "Cequel #{i}" })
+    end
+
+    it 'should query Time range for Timeuuid key with Timeuuid argument' do
+      expect(PublishedPost['cassandra'].after(published_at_uuid).map(&:permalink)).
+        to eq(%w(cequel4 cequel3))
     end
 
     it 'should query Time range for Timeuuid key' do
@@ -505,6 +511,7 @@ describe Cequel::Record::RecordSet do
 
   describe '#before' do
     let(:records) { [posts, published_posts] }
+    let(:published_at_uuid) { published_posts[3].published_at }
 
     it 'should return collection before given key' do
       expect(Post['cassandra'].before('cequel3').map(&:title)).
@@ -513,6 +520,11 @@ describe Cequel::Record::RecordSet do
 
     it 'should query Time range for Timeuuid key' do
       expect(PublishedPost['cassandra'].before(now - 1.minute).map(&:permalink)).
+        to eq(%w(cequel2 cequel1 cequel0))
+    end
+
+    it 'should query Time range for Timeuuid key with Timeuuid argument' do
+      expect(PublishedPost['cassandra'].before(published_at_uuid).map(&:permalink)).
         to eq(%w(cequel2 cequel1 cequel0))
     end
 

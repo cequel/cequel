@@ -34,10 +34,18 @@ module Cequel
     # @return [Boolean] true if the object is recognized by Cequel as a UUID
     #
     def uuid?(object)
+      return true if uuid_in_string?(object)
+
       object.is_a?(Cassandra::Uuid)
     end
 
     private
+
+    def uuid_in_string?(object)
+      object.is_a?(String) && Cassandra::Uuid.new(object)
+    rescue ArgumentError
+      false
+    end
 
     def timeuuid_generator
       @timeuuid_generator ||= Cassandra::TimeUuid::Generator.new
