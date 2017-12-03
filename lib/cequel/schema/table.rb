@@ -61,10 +61,7 @@ module Cequel
 
       # Accessor for the column values on the @columns_by_name hash
       # used to gain access to the column names.
-<<<<<<< HEAD
-=======
       #
->>>>>>> f3af3033d8b981dd32d4fd0b922edefec9f48909
       def columns
         columns_by_name.values
       end
