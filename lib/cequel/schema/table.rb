@@ -61,7 +61,6 @@ module Cequel
 
       # Accessor for the column values on the @columns_by_name hash
       # used to gain access to the column names.
-      #
       def columns
         columns_by_name.values
       end
@@ -111,8 +110,10 @@ module Cequel
       #   ClusteringColumn, DataColumn, List, Set, or Map.
       #
       def add_column(column_desc)
-        column_description_store(column_desc)[column_desc.name] = column_desc
-        columns_by_name[column_desc.name]                       = column_desc
+        unless columns_by_name[column_desc.name]
+          column_description_store(column_desc)[column_desc.name] = column_desc
+          columns_by_name[column_desc.name]                       = column_desc
+        end
       end
 
       # Stores the column description in the appropriate storage hash
