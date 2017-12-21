@@ -6,7 +6,7 @@ Contributions to Cequel are highly welcome! Here's a quick guide.
 
 1. Fork the repo and create a topic branch
 2. Set up your environment and run the tests. The easiest way to do this is to
-   use docker; see below. For those who already have a suitable Cassandra
+   use Docker; [see below](#running-the-tests). For those who already have a suitable Cassandra
    instance running locally: `rake test`
 3. Add tests for your change.
 4. Make the tests pass.
@@ -30,19 +30,19 @@ Contributions to Cequel are highly welcome! Here's a quick guide.
 
 ### For the impatient ###
 
-1. [install docker](https://docs.docker.com/engine/installation/)
-1. ```bash
+[Install Docker](https://docs.docker.com/engine/installation/) first, then run tests:
+```bash
 git clone git@github.com:yourname/cequel.git
 cd cequel
 git remote add upstream git@github.com:cequel/cequel.git
 bundle install
-rake test
+bundle exec rake test
 ```
 
 ### Using Docker
 
 Cequel's test suite runs against a live Cassandra instance. The easiest way to
-get one is to use docker, `docker run --rm -p 9042:9042 cassandra`.
+get one is to use Docker, `docker run --rm -p 9042:9042 cassandra`.
 
 ### Using different ports
 
