@@ -3,9 +3,9 @@ require File.expand_path('../spec_helper', __FILE__)
 
 describe Cequel::Record::List do
   model :Post do
-    key :permalink, :text
-    column :title, :text
-    list :tags, :text
+    key :permalink,        :text
+    column :title,         :text
+    list :tags,            :text
     list :contributor_ids, :int
   end
 

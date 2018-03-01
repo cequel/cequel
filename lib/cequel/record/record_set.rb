@@ -705,19 +705,14 @@ module Cequel
         entries
       end
 
-      protected
-
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
                    :scoped_indexed_column, :query_consistency,
                    :query_page_size, :query_paging_state,
                    :allow_filtering
-      protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-                :upper_bound, :scoped_indexed_column, :query_consistency,
-                :query_page_size, :query_paging_state, :allow_filtering
+
       hattr_inquirer :attributes, :reversed
-      protected :reversed?
 
       def next_batch_from(row)
         range_key_value = row[range_key_name]
@@ -940,10 +935,11 @@ module Cequel
           self
         end
       end
+      
+      def_delegators :target_class, :connection
 
       private
 
-      def_delegators :target_class, :connection
       def_delegator :range_key_column, :cast, :cast_range_key
       private :connection, :cast_range_key
 
