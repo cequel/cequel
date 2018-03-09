@@ -48,8 +48,11 @@ module Cequel
       #   use
       # @since 1.1.0
       attr_reader :query_consistency
+      attr_reader :query_page_size
+      attr_reader :query_paging_state
+      attr_reader :allow_filtering
 
-      def_delegator :keyspace, :write_with_consistency
+      def_delegator :keyspace, :write_with_options
 
       #
       # @param table_name [Symbol] column family for this data set
@@ -187,8 +190,8 @@ module Cequel
       # @example
       #   posts.list_prepend(:categories, ['CQL', 'ORMs'])
       #
-      # @note If multiple elements are passed, they will appear in the list in
-      #   reverse order.
+      # @note A bug (CASSANDRA-8733) exists in Cassandra versions 0.3.0-2.0.12 and 2.1.0-2.1.2 which
+      #   will make elements appear in REVERSE ORDER in the list.
       # @note If a enclosed in a Keyspace#batch block, this method will be
       #   executed as part of the batch.
       # @see #list_append
@@ -286,7 +289,9 @@ module Cequel
       #
       def list_remove_at(column, *positions)
         options = positions.extract_options!
-        deleter { list_remove_at(column, *positions) }.execute(options)
+        sorted_positions = positions.sort.reverse
+
+        deleter { list_remove_at(column, *sorted_positions) }.execute(options)
       end
 
       #
@@ -565,6 +570,47 @@ module Cequel
         end
       end
 
+      def page_size(page_size)
+        clone.tap do |data_set|
+          data_set.query_page_size = page_size
+        end
+      end
+
+      #
+      # @see RecordSet#allow_filtering!
+      #
+      def allow_filtering!
+        clone.tap do |data_set|
+          data_set.allow_filtering = true
+        end
+      end
+
+      def paging_state(paging_state)
+        clone.tap do |data_set|
+          data_set.query_paging_state = paging_state
+        end
+      end
+
+      #
+      # Exposes current paging state for stateless pagination
+      #
+      # @return [String] or nil
+      #
+      # @see http://docs.datastax.com/en/developer/ruby-driver/3.0/api/cassandra/result/#paging_state-instance_method
+      #
+      def next_paging_state
+        results.paging_state
+      end
+
+      #
+      # @return [Boolean] Returns whether no more pages are available
+      #
+      # @see http://docs.datastax.com/en/developer/ruby-driver/3.0/api/cassandra/result/#last_page?-instance_method
+      #
+      def last_page?
+        results.last_page?
+      end
+
       # rubocop:enable LineLength
 
       #
@@ -582,8 +628,7 @@ module Cequel
       #
       def each
         return enum_for(:each) unless block_given?
-        result = execute_cql(*cql)
-        result.each { |row| yield Row.from_result_row(row) }
+        results.each { |row| yield Row.from_result_row(row) }
       end
 
       #
@@ -594,15 +639,16 @@ module Cequel
         Row.from_result_row(row)
       end
 
-      #
-      # @return [Fixnum] the number of rows in this data set
-      #
+      # @raise [DangerousQueryError] to prevent loading the entire record set
+      #   to be counted
       def count
-        execute_cql(*count_cql).first['count']
+        raise Cequel::Record::DangerousQueryError.new
       end
+      alias_method :length, :count
+      alias_method :size, :count
 
       #
-      # @return [String] CQL `SELECT` statement encoding this data set's scope.
+      # @return [Statement] CQL `SELECT` statement encoding this data set's scope.
       #
       def cql
         statement = Statement.new
@@ -611,25 +657,14 @@ module Cequel
           .append(*row_specifications_cql)
           .append(sort_order_cql)
           .append(limit_cql)
-          .args
-      end
-
-      #
-      # @return [String] CQL statement to get count of rows in this data set
-      #
-      def count_cql
-        Statement.new
-          .append("SELECT COUNT(*) FROM #{table_name}")
-          .append(*row_specifications_cql)
-          .append(limit_cql).args
+          .append(allow_filtering_cql)
       end
 
       #
       # @return [String]
       #
       def inspect
-        "#<#{self.class.name}: " \
-          "#{Keyspace.sanitize(cql.first, cql.drop(1))}>"
+        "#<#{self.class.name}: #{cql.inspect}>"
       end
 
       #
@@ -653,14 +688,30 @@ module Cequel
         end
       end
 
+      # @private
+      def allow_filtering_cql
+        if allow_filtering
+          ' ALLOW FILTERING'
+        else ''
+        end
+      end
+
       protected
 
-      attr_writer :row_limit, :query_consistency
+      attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state, :allow_filtering
 
       private
 
-      def execute_cql(cql, *bind_vars)
-        keyspace.execute_with_consistency(cql, bind_vars, query_consistency)
+      def results
+        @results ||= execute_cql(cql)
+      end
+
+      def execute_cql(cql_stmt)
+        keyspace.execute_with_options(cql_stmt,
+                                      consistency: query_consistency,
+                                      page_size: query_page_size,
+                                      paging_state: query_paging_state
+                                     )
       end
 
       def inserter(&block)

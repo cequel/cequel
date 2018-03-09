@@ -50,41 +50,14 @@ module Cequel
       end
 
       #
-      # @!method count
-      #   Get the count of child records stored in the database. This method
-      #   will always query Cassandra, even if the records are loaded in
-      #   memory.
+      # @raise [DangerousQueryError] to prevent loading the entire record set
+      #   to be counted
       #
-      #   @return [Integer] number of child records in the database
-      #   @see #size
-      #   @see #length
-      #
-      def_delegator :record_set, :count
-
-      #
-      # @!method length
-      #   The number of child instances in the in-memory collection. If the
-      #   records are not loaded in memory, they will be loaded and then
-      #   counted.
-      #
-      #   @return [Integer] length of the loaded record collection in memory
-      #   @see #size
-      #   @see #count
-      #
-      def_delegator :entries, :length
-
-      #
-      # Get the size of the child collection. If the records are loaded in
-      # memory from a previous operation, count the length of the array in
-      # memory. If the collection is unloaded, perform a `COUNT` query.
-      #
-      # @return [Integer] size of the child collection
-      # @see #length
-      # @see #count
-      #
-      def size
-        loaded? ? length : count
+      def count
+        raise Cequel::Record::DangerousQueryError.new
       end
+      alias_method :length, :count
+      alias_method :size, :count
 
       #
       # @return [Boolean] true if this collection's records are loaded in

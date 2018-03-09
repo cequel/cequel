@@ -10,7 +10,7 @@ describe Cequel::SpecSupport::Preparation do
     expect(prep.drop_keyspace).to eq prep
   end
 
-  it "returns itself from #create_keyspace" do
+  it "returns itself from #create_keyspace", :retry => 1, :retry_wait => 1 do
     expect(prep.create_keyspace).to eq prep
   end
 
@@ -49,24 +49,38 @@ describe Cequel::SpecSupport::Preparation do
       Cequel::Record.connection.schema.drop!
     end
 
+    let!(:model) {
+      Class.new do
+        include Cequel::Record
+        self.table_name = "blog_" + SecureRandom.hex(4)
+        key :name, :text
+      end
+    }
+
     it "doesn't cause failure upon drop requests" do
       expect{ prep.drop_keyspace }.not_to raise_error
     end
 
     it "allows keyspace can be created" do
       prep.create_keyspace
+      keyspace.cluster.refresh_schema
       expect(keyspace).to exist
     end
 
     it "causes #sync_schema to fail" do
-      expect{ prep.sync_schema }.to raise_error(Cassandra::Errors::InvalidError)
+      expect{ prep.sync_schema }.to raise_error(Cequel::NoSuchKeyspaceError)
     end
   end
 
   # background
 
+  before(:each) do
+    Cequel::Record.forget_all_descendants!
+  end
+
   after(:each) do
     begin
+      Cequel::Record.connection.clear_active_connections!
       Cequel::Record.connection.schema.create!
     rescue
       nil
@@ -75,12 +89,18 @@ describe Cequel::SpecSupport::Preparation do
 
   matcher :contain_table do |table_name|
     match do |keyspace|
-      keyspace.execute(<<-CQL).any?
-        SELECT columnfamily_name
-        FROM System.schema_columnfamilies
-        WHERE keyspace_name='#{keyspace.name}'
-          AND columnfamily_name='#{table_name}'
-      CQL
+      keyspace.cluster.refresh_schema
+      ks = keyspace.cluster.keyspace(keyspace.name)
+
+      ks && ks.has_table?(table_name)
+    end
+
+    failure_message do |keyspace|
+      if keyspace.cluster.has_keyspace?(keyspace.name)
+        "no such keyspace #{keyspace.name}"
+      else
+        "no such table #{keyspace.name}.#{table_name}"
+      end
     end
   end
 end

@@ -88,7 +88,7 @@ module Cequel
         (value.to_r * 1000).round.to_s
       when DateTime
         quote(value.utc.to_time)
-      when Date
+      when ::Date
         quote(Time.gm(value.year, value.month, value.day))
       when Numeric, true, false, Cassandra::Uuid
         value.to_s
@@ -195,7 +195,7 @@ module Cequel
     #
     # `ascii` columns store 7-bit ASCII character data
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Ascii < String
@@ -215,7 +215,7 @@ module Cequel
     # `blob` columns store arbitrary bytes of data, represented as 8-bit ASCII
     # strings of hex digits
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Blob < String
@@ -239,7 +239,7 @@ module Cequel
     #
     # `boolean` types store boolean values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Boolean < Base
@@ -256,7 +256,7 @@ module Cequel
     # counter columns cannot be updated without Cassandra internally reading
     # the existing state of the column
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Counter < Base
@@ -277,7 +277,7 @@ module Cequel
     #
     # `decimal` columns store decimal numeric values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Decimal < Base
@@ -290,7 +290,7 @@ module Cequel
     #
     # `double` columns store 64-bit floating-point numeric values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Double < Base
@@ -303,7 +303,7 @@ module Cequel
     #
     # `inet` columns store IP addresses
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Inet < Base
@@ -316,7 +316,7 @@ module Cequel
     #
     # `int` columns store 32-bit integer values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Int < Base
@@ -333,7 +333,7 @@ module Cequel
     #
     # `float` columns store 32-bit floating-point numeric values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Float < Double; end
@@ -342,7 +342,7 @@ module Cequel
     #
     # `bigint` columns store 64-bit integer values
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Bigint < Int
@@ -357,7 +357,7 @@ module Cequel
     # `varchar` columns; the names can be used interchangeably. Text columns do
     # not have a length limit
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Text < String
@@ -379,7 +379,8 @@ module Cequel
 
     #
     # `timestamp` columns store timestamps. Timestamps do not include time zone
-    # data, and all input times are cast to UTC before being stored.
+    # data, and all input times are cast to UTC and rounded to the nearest
+    # millisecond before being stored.
     #
     # @see http://cassandra.apache.org/doc/cql3/CQL.html#usingdates
     #   CQL3 documentation for date columns
@@ -395,17 +396,37 @@ module Cequel
         elsif value.respond_to?(:to_time) then value.to_time
         elsif value.is_a?(Numeric) then Time.at(value)
         else Time.parse(value.to_s)
-        end.utc
+        end.utc.round(3)
       end
     end
     register Timestamp.instance
+
+    #
+    # `date` columns store dates.
+    #
+    # @see http://cassandra.apache.org/doc/cql3/CQL-3.0.html#usingdates
+    #   CQL3 documentation for date columns
+    #
+    class Date < Base
+      def internal_names
+        ['org.apache.cassandra.db.marshal.DateType']
+      end
+
+      def cast(value)
+        if value.is_a?(::String) then ::Date.parse(value)
+        elsif value.respond_to?(:to_date) then value.to_date
+        else ::Date.parse(value.to_s)
+        end
+      end
+    end
+    register Date.instance
 
     #
     # `uuid` columns store type 1 and type 4 UUIDs. New UUID instances can be
     # created using the {Cequel.uuid} method, and a value can be checked to see
     # if it is a UUID recognized by Cequel using the {Cequel.uuid?} method.
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Uuid < Base
@@ -434,7 +455,7 @@ module Cequel
     # functionality presumes the use of type 1 UUIDs, which encode the
     # timestamp of their creation.
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Timeuuid < Uuid
@@ -451,7 +472,7 @@ module Cequel
     #
     # `varint` columns store arbitrary-length integer data
     #
-    # @see http://cassandra.apache.org/doc/cql3/CQL.html#types
+    # @see https://cassandra.apache.org/doc/latest/cql/types.html
     #   CQL3 data type documentation
     #
     class Varint < Int

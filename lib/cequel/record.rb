@@ -94,7 +94,7 @@ module Cequel
       extend ActiveModel::Naming
       include Conversion
       include ActiveModel::Serializers::JSON
-      include ActiveModel::Serializers::Xml
+      include ActiveModel::Serializers::Xml if defined?(ActiveModel::Serializers::Xml)
       include Timestamps
     end
 
@@ -134,6 +134,14 @@ module Cequel
       # Hook called when new record classes are created.
       def included(base)
         weak_descendants << WeakRef.new(base)
+      end
+
+      # This is probably not the method you are looking for.
+      #
+      # Clear descendants list. Useful in tests to ensure bogus record classes
+      # are not synced. 
+      def forget_all_descendants!
+        weak_descendants.clear
       end
 
       private

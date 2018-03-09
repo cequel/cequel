@@ -462,6 +462,7 @@ describe Cequel::Record::RecordSet do
 
   describe '#after' do
     let(:records) { [posts, published_posts] }
+    let(:published_at_uuid) { published_posts[2].published_at }
 
     it 'should return collection after given key' do
       expect(Post['cassandra'].after('cequel1').map(&:title)).
@@ -471,6 +472,11 @@ describe Cequel::Record::RecordSet do
     it 'should cast argument' do
       expect(Post['cassandra'].after('cequel1'.force_encoding('ASCII-8BIT')).
         map(&:title)).to eq((2...5).map { |i| "Cequel #{i}" })
+    end
+
+    it 'should query Time range for Timeuuid key with Timeuuid argument' do
+      expect(PublishedPost['cassandra'].after(published_at_uuid).map(&:permalink)).
+        to eq(%w(cequel4 cequel3))
     end
 
     it 'should query Time range for Timeuuid key' do
@@ -505,6 +511,7 @@ describe Cequel::Record::RecordSet do
 
   describe '#before' do
     let(:records) { [posts, published_posts] }
+    let(:published_at_uuid) { published_posts[3].published_at }
 
     it 'should return collection before given key' do
       expect(Post['cassandra'].before('cequel3').map(&:title)).
@@ -513,6 +520,11 @@ describe Cequel::Record::RecordSet do
 
     it 'should query Time range for Timeuuid key' do
       expect(PublishedPost['cassandra'].before(now - 1.minute).map(&:permalink)).
+        to eq(%w(cequel2 cequel1 cequel0))
+    end
+
+    it 'should query Time range for Timeuuid key with Timeuuid argument' do
+      expect(PublishedPost['cassandra'].before(published_at_uuid).map(&:permalink)).
         to eq(%w(cequel2 cequel1 cequel0))
     end
 
@@ -674,7 +686,11 @@ describe Cequel::Record::RecordSet do
     let(:records) { blogs }
 
     it 'should return the number of records requested' do
-      expect(Blog.limit(2).length).to be(2)
+      expect(Blog.limit(2).to_a.length).to be(2)
+    end
+
+    it 'should return the minimum of the requested limit and the actual record count' do
+      expect(Blog.limit(5).to_a.length).to be(3)
     end
   end
 
@@ -801,21 +817,86 @@ describe Cequel::Record::RecordSet do
           to raise_error(ArgumentError)
       end
     end
+
+    context 'allow_filtering!', cql: '~> 3.4' do
+      it 'should allow filtering for none indexed columns' do
+        expect(Post.allow_filtering!.where(title: 'Cequel 0').entries.length).to be(1)
+      end
+    end
   end
 
   describe '#consistency' do
     it 'should perform query with specified consistency' do
-      expect_query_with_consistency(/SELECT/, :one) do
+      expect_query_with_consistency(anything, :one) do
         Post.consistency(:one).to_a
       end
     end
   end
 
-  describe '#count' do
-    let(:records) { blogs }
+  describe '#page_size' do
+    it 'should return the number of records specified by page_size' do
+      expect(Post.page_size(2).to_a.length).to be(2)
+    end
+  end
 
-    it 'should count records' do
-      expect(Blog.count).to eq(3)
+  describe '#next_paging_state' do
+    it 'should return the paging state of the result' do
+      expect(Post.page_size(1).next_paging_state).not_to eq(nil)
+    end
+  end
+
+  describe '#paging_state' do
+    let(:page_one) { Post.page_size(1) }
+    let(:page_two) { Post.page_size(1).paging_state(page_one.next_paging_state) }
+    let(:page_size) { 3 }
+
+    it 'should page through all records' do
+      all_pages = []
+      next_paging_state = nil
+
+      loop do
+        a_page = Post.page_size(page_size).paging_state(next_paging_state)
+        next_paging_state = a_page.next_paging_state
+
+        # There may be less than page size records on final page
+        expect(a_page.to_a.length).to be <= page_size
+        all_pages.concat(a_page.to_a)
+        break if next_paging_state.nil?
+      end
+
+      expect(all_pages).to eq(posts.to_a)
+    end
+  end
+
+  describe '#count' do
+    let(:records) { posts }
+
+    context 'without scoping' do
+      it 'should raise DangerousQueryError when attempting to count' do
+        expect{ Post.count }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access size' do
+        expect{ Post.size }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access length' do
+        expect{ Post.length }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+    end
+
+    context 'with scoping' do
+      it 'should raise DangerousQueryError when attempting to count' do
+        expect{ Post['postgres'].count }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access size' do
+        expect{ Post['postgres'].size }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
+
+      it 'should raise DangerousQueryError when attempting to access length' do
+        expect{ Post['postgres'].length }.to raise_error(Cequel::Record::DangerousQueryError)
+      end
     end
   end
 
@@ -860,13 +941,13 @@ describe Cequel::Record::RecordSet do
 
     it 'should be able to delete with no scoping' do
       Post.delete_all
-      expect(Post.count).to be_zero
+      expect(Post.first).to be_nil
     end
 
     it 'should be able to delete with scoping' do
       Post['postgres'].delete_all
-      expect(Post['postgres'].count).to be_zero
-      expect(Post['cassandra'].count).to eq(cassandra_posts.length)
+      expect(Post['postgres'].first).to be_nil
+      expect(Post['cassandra'].to_a.count).to eq(cassandra_posts.length)
     end
 
     it 'should be able to delete fully specified collection' do
@@ -881,13 +962,13 @@ describe Cequel::Record::RecordSet do
 
     it 'should be able to delete with no scoping' do
       Post.destroy_all
-      expect(Post.count).to be_zero
+      expect(Post.first).to be_nil
     end
 
     it 'should be able to delete with scoping' do
       Post['postgres'].destroy_all
-      expect(Post['postgres'].count).to be_zero
-      expect(Post['cassandra'].count).to eq(cassandra_posts.length)
+      expect(Post['postgres'].first).to be_nil
+      expect(Post['cassandra'].to_a.count).to eq(cassandra_posts.length)
     end
 
     it 'should be able to delete fully specified collection' do
@@ -939,5 +1020,4 @@ describe Cequel::Record::RecordSet do
         .to yield_successive_args *blog_1_views
     end
   end
-
 end

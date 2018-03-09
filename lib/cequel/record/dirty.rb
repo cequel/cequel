@@ -56,6 +56,10 @@ module Cequel
       private
 
       def write_attribute(name, value)
+        column = self.class.reflect_on_column(name)
+        fail UnknownAttributeError, "unknown attribute: #{name}" unless column
+        value = column.cast(value) unless value.nil?
+
         if loaded? && value != read_attribute(name)
           __send__("#{name}_will_change!")
         end

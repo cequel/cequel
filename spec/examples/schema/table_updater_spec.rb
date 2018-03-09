@@ -2,8 +2,10 @@
 require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Schema::TableUpdater do
+  let(:table_name) { :"posts_#{SecureRandom.hex(4)}" }
+
   before do
-    cequel.schema.create_table(:posts) do
+    cequel.schema.create_table(table_name) do
       key :blog_subdomain, :text
       key :permalink, :text
       column :title, :ascii
@@ -11,13 +13,13 @@ describe Cequel::Schema::TableUpdater do
     end
   end
 
-  after { cequel.schema.drop_table(:posts) }
+  after { cequel.schema.drop_table(table_name) }
 
-  let(:table) { cequel.schema.read_table(:posts) }
+  let(:table) { cequel.schema.read_table(table_name) }
 
   describe '#add_column' do
     before do
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         add_column :published_at, :timestamp
       end
     end
@@ -29,7 +31,7 @@ describe Cequel::Schema::TableUpdater do
 
   describe '#add_list' do
     before do
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         add_list :author_names, :text
       end
     end
@@ -45,7 +47,7 @@ describe Cequel::Schema::TableUpdater do
 
   describe '#add_set' do
     before do
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         add_set :author_names, :text
       end
     end
@@ -61,7 +63,7 @@ describe Cequel::Schema::TableUpdater do
 
   describe '#add_map' do
     before do
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         add_map :trackbacks, :timestamp, :ascii
       end
     end
@@ -81,21 +83,9 @@ describe Cequel::Schema::TableUpdater do
     end
   end
 
-  describe '#change_column' do
-    before do
-      cequel.schema.alter_table(:posts) do
-        change_column :title, :text
-      end
-    end
-
-    it 'should change the type' do
-      expect(table.data_column(:title).type).to eq(Cequel::Type[:text])
-    end
-  end
-
   describe '#rename_column' do
     before do
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         rename_column :permalink, :slug
       end
     end
@@ -108,7 +98,7 @@ describe Cequel::Schema::TableUpdater do
 
   describe '#change_properties' do
     before do
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         change_properties :comment => 'Test Comment'
       end
     end
@@ -118,9 +108,38 @@ describe Cequel::Schema::TableUpdater do
     end
   end
 
+  describe '#drop_index' do
+    context 'index exists' do
+      before do
+        tab_name = table_name
+        cequel.schema.alter_table(table_name) do
+          create_index :title
+          drop_index :"#{tab_name}_title_idx"
+        end
+      end
+
+      it 'should drop the index' do
+        expect(table.data_column(:title)).not_to be_indexed
+      end
+    end
+
+    context 'index does not exist' do
+      before do
+        tab_name = table_name
+        cequel.schema.alter_table(table_name) do
+          drop_index :"#{tab_name}_title_idx"
+        end
+      end
+
+      it 'should nop on non existent index' do
+        expect(table.data_column(:title)).not_to be_indexed
+      end
+    end
+  end
+
   describe '#add_index' do
     before do
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         create_index :title
       end
     end
@@ -130,23 +149,10 @@ describe Cequel::Schema::TableUpdater do
     end
   end
 
-  describe '#drop_index' do
-    before do
-      cequel.schema.alter_table(:posts) do
-        create_index :title
-        drop_index :posts_title_idx
-      end
-    end
-
-    it 'should drop the index' do
-      expect(table.data_column(:title)).not_to be_indexed
-    end
-  end
-
   describe '#drop_column' do
     before do
       pending 'Support in a future Cassandra version'
-      cequel.schema.alter_table(:posts) do
+      cequel.schema.alter_table(table_name) do
         drop_column :body
       end
     end

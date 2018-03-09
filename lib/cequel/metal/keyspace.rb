@@ -21,10 +21,6 @@ module Cequel
       attr_reader :hosts
       # @return Integer port to connect to Cassandra nodes on
       attr_reader :port
-      # @return Integer maximum number of retries to reconnect to Cassandra
-      attr_reader :max_retries
-      # @return Float delay between retries to reconnect to Cassandra
-      attr_reader :retry_delay
       # @return [Symbol] the default consistency for queries in this keyspace
       # @since 1.1.0
       attr_writer :default_consistency
@@ -32,6 +28,12 @@ module Cequel
       attr_reader :credentials
       # @return [Hash] SSL Configuration options
       attr_reader :ssl_config
+      # @return [Symbol] The client compression option
+      attr_reader :client_compression
+      # @return [Hash] A hash of additional options passed to Cassandra, if any
+      attr_reader :cassandra_options
+      # @return [Object] The error policy object in use by this keyspace 
+      attr_reader :error_policy
 
       #
       # @!method write(statement, *bind_vars)
@@ -44,17 +46,17 @@ module Cequel
       #
       def_delegator :write_target, :execute, :write
 
-      # @!method write_with_consistency(statement, bind_vars, consistency)
+      # @!method write_with_options(statement, bind_vars, consistency)
       #
       #   Write data to this keyspace using a CQL query at the given
       #   consistency. Will be included the current batch operation if one is
       #   present.
       #
-      #   @param (see #execute_with_consistency)
+      #   @param (see #execute_with_options)
       #   @return [void]
       #
-      def_delegator :write_target, :execute_with_consistency,
-                    :write_with_consistency
+      def_delegator :write_target, :execute_with_options,
+                    :write_with_options
 
       #
       # @!method batch
@@ -92,8 +94,8 @@ module Cequel
       # @see Cequel.connect
       #
       def initialize(configuration={})
-        configure(configuration)
         @lock = Monitor.new
+        configure(configuration)
       end
 
       #
@@ -120,8 +122,12 @@ module Cequel
       #   certificate
       # @option configuration [String] :private_key path to ssl client private
       #   key
-      # @option configuartion [String] :passphrase the passphrase for client
+      # @option configuration [String] :passphrase the passphrase for client
       #   private key
+      # @option configuration [String] :cassandra_error_policy A mixin for 
+      #   handling errors from Cassandra
+      # @option configuration [Hash] :cassandra_options A hash of arbitrary
+      #   options to pass to Cassandra
       # @return [void]
       #
       def configure(configuration = {})
@@ -130,15 +136,16 @@ module Cequel
                "with Cassandra. The :thrift option is deprecated and ignored."
         end
         @configuration = configuration
-
+        
+        @error_policy = extract_cassandra_error_policy(configuration)
+        @cassandra_options = extract_cassandra_options(configuration)
         @hosts, @port = extract_hosts_and_port(configuration)
         @credentials  = extract_credentials(configuration)
-        @max_retries  = extract_max_retries(configuration)
-        @retry_delay  = extract_retry_delay(configuration)
         @ssl_config = extract_ssl_config(configuration)
 
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
+        @client_compression = configuration[:client_compression].try(:to_sym)
 
         # reset the connections
         clear_active_connections!
@@ -181,37 +188,54 @@ module Cequel
       # @param bind_vars [Object] values for bind variables
       # @return [Enumerable] the results of the query
       #
-      # @see #execute_with_consistency
+      # @see #execute_with_options
       #
       def execute(statement, *bind_vars)
-        execute_with_consistency(statement, bind_vars, default_consistency)
+        execute_with_options(Statement.new(statement, bind_vars), { consistency: default_consistency })
       end
 
       #
-      # Execute a CQL query in this keyspace with the given consistency
+      # Execute a CQL query in this keyspace with the given options
       #
-      # @param statement [String] CQL string
-      # @param bind_vars [Array] array of values for bind variables
-      # @param consistency [Symbol] consistency at which to execute query
+      # @param statement [String,Statement,Batch] statement to execute
+      # @param options [Options] options for statement execution
       # @return [Enumerable] the results of the query
       #
       # @since 1.1.0
       #
-      def execute_with_consistency(statement, bind_vars, consistency)
-        retries = max_retries
+      def execute_with_options(statement, options={})
+        options[:consistency] ||= default_consistency
 
-        log('CQL', statement, *bind_vars) do
-          begin
-            client.execute(sanitize(statement, bind_vars),
-                           consistency: consistency || default_consistency)
-          rescue Cassandra::Errors::NoHostsAvailable,
-                 Ione::Io::ConnectionError => e
-            clear_active_connections!
-            raise if retries == 0
-            retries -= 1
-            sleep(retry_delay)
-            retry
+        cql, options = *case statement
+                        when Statement
+                          [prepare_statement(statement),
+                           {arguments: statement.bind_vars}.merge(options)]
+                        when Cassandra::Statements::Batch
+                          [statement, options]
+                        end
+
+        log('CQL', statement) do
+          error_policy.execute_stmt(self) do
+            client.execute(cql, options)
           end
+        end
+      end
+
+      #
+      # Wraps the prepare statement in the default retry strategy
+      #
+      # @param statement [String,Statement] statement to prepare
+      # @return [Cassandra::Statement::Prepared] the prepared statement
+      #
+      def prepare_statement(statement)
+        cql = case statement
+              when Statement
+                statement.cql
+              else
+                statement
+              end
+        error_policy.execute_stmt(self) do
+          client.prepare(cql)
         end
       end
 
@@ -221,15 +245,17 @@ module Cequel
       # @return [void]
       #
       def clear_active_connections!
-        if defined? @client
-          remove_instance_variable(:@client)
-        end
-        if defined? @client_without_keyspace
-          remove_instance_variable(:@client_without_keyspace)
-        end
-        if defined? @cluster
-          @cluster.close
-          remove_instance_variable(:@cluster)
+        synchronize do
+          if defined? @client
+            remove_instance_variable(:@client)
+          end
+          if defined? @client_without_keyspace
+            remove_instance_variable(:@client_without_keyspace)
+          end
+          if defined? @cluster
+            @cluster.close
+            remove_instance_variable(:@cluster)
+          end
         end
       end
 
@@ -243,14 +269,38 @@ module Cequel
 
       # @return [Boolean] true if the keyspace exists
       def exists?
+        cluster.has_keyspace?(name)
+      end
+
+      # @return [String] Cassandra version number
+      def cassandra_version
+        return @cassandra_version if @cassandra_version
+
         statement = <<-CQL
-          SELECT keyspace_name
-          FROM system.schema_keyspaces
-          WHERE keyspace_name = ?
+          SELECT release_version
+          FROM system.local
         CQL
 
-        log('CQL', statement, [name]) do
-          client_without_keyspace.execute(sanitize(statement, [name])).any?
+        log('CQL', statement) do
+          @cassandra_version = client_without_keyspace.execute(statement).first['release_version']
+        end
+      end
+
+      # return true if Cassandra server version is known to include bug CASSANDRA-8733
+      def bug8733_version?
+        version_file = File.expand_path('../../../../.cassandra-versions', __FILE__)
+        @all_versions ||= File.read(version_file).split("\n").map(&:strip)
+
+        # bug exists in versions 0.3.0-2.0.12 and 2.1.0-2.1.2
+        @bug8733_versions ||= @all_versions[0..@all_versions.index('2.0.12')] +
+            @all_versions[@all_versions.index('2.1.0')..@all_versions.index('2.1.2')]
+
+        @bug8733_versions.include?(cassandra_version)
+      end
+
+      def cluster
+        synchronize do
+          @cluster ||= Cassandra.cluster(client_options)
         end
       end
 
@@ -264,12 +314,6 @@ module Cequel
       def_delegator :lock, :synchronize
       private :lock
 
-      def cluster
-        synchronize do
-          @cluster ||= Cassandra.cluster(client_options)
-        end
-      end
-
       def client_without_keyspace
         synchronize do
           @client_without_keyspace ||= cluster.connect
@@ -280,6 +324,8 @@ module Cequel
         {hosts: hosts, port: port}.tap do |options|
           options.merge!(credentials) if credentials
           options.merge!(ssl_config) if ssl_config
+          options.merge!(compression: client_compression) if client_compression
+          options.merge!(cassandra_options) if cassandra_options
         end
       end
 
@@ -293,7 +339,7 @@ module Cequel
 
       def extract_hosts_and_port(configuration)
         hosts, ports = [], Set[]
-        ports << configuration[:port] if configuration.key?(:port)
+        ports << Integer(configuration[:port]) if configuration.key?(:port)
         host_or_hosts =
           configuration.fetch(:host, configuration.fetch(:hosts, '127.0.0.1'))
         Array.wrap(host_or_hosts).each do |host_port|
@@ -303,7 +349,7 @@ module Cequel
             warn "Specifying a hostname as host:port is deprecated. Specify " \
                  "only the host IP or hostname in :hosts, and specify a " \
                  "port for all nodes using the :port option."
-            ports << port.to_i
+            ports << Integer(port)
           end
         end
 
@@ -319,14 +365,6 @@ module Cequel
         configuration.slice(:username, :password).presence
       end
 
-      def extract_max_retries(configuration)
-        configuration.fetch(:max_retries, 3)
-      end
-
-      def extract_retry_delay(configuration)
-        configuration.fetch(:retry_delay, 0.5)
-      end
-
       def extract_ssl_config(configuration)
         ssl_config = {}
         ssl_config[:ssl] = configuration.fetch(:ssl, nil)
@@ -336,6 +374,24 @@ module Cequel
         ssl_config[:passphrase] = configuration.fetch(:passphrase, nil)
         ssl_config.each { |key, value| ssl_config.delete(key) unless value }
         ssl_config
+      end
+      
+      def extract_cassandra_error_policy(configuration)
+        value = configuration.fetch(:cassandra_error_policy, ::Cequel::Metal::Policy::CassandraError::ClearAndRetryPolicy)
+        # Accept a class name as a string, create an instance of it 
+        if value.is_a?(String)
+          value.constantize.new(configuration)
+        # Accept a class, instantiate it
+        elsif value.is_a?(Class)
+          value.new(configuration)
+        # Accept a value, assume it is a ready to use policy object
+        else 
+          value
+        end
+      end
+      
+      def extract_cassandra_options(configuration)
+        configuration[:cassandra_options]
       end
     end
   end

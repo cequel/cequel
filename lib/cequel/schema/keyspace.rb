@@ -52,7 +52,7 @@ module Cequel
         }
 
         options = options.symbolize_keys
-        options.reverse_merge!(keyspace.configuration)
+        options.reverse_merge!(keyspace.configuration.symbolize_keys)
         options.reverse_merge!(default_options)
 
         if options.key?(:class)
@@ -119,6 +119,14 @@ module Cequel
       end
 
       #
+      # @param name [Symbol] name of the table to read
+      # @return [TableReader] object
+      #
+      def get_table_reader(name)
+        TableReader.get(keyspace, name)
+      end
+
+      #
       # Create a table in the keyspace
       #
       # @param name [Symbol] name of the new table to create
@@ -140,8 +148,7 @@ module Cequel
       # @see CreateTableDSL
       #
       def create_table(name, &block)
-        table = Table.new(name)
-        CreateTableDSL.apply(table, &block)
+        table = TableDescDsl.new(name).eval(&block)
         TableWriter.apply(keyspace, table)
       end
 
@@ -184,10 +191,22 @@ module Cequel
       # Drop this table from the keyspace
       #
       # @param name [Symbol] name of the table to drop
+      # @param exists [Boolean] if set to true, will drop only if exists (Cassandra 3.x)
       # @return [void]
       #
-      def drop_table(name)
-        keyspace.execute("DROP TABLE #{name}")
+      def drop_table(name, exists: false)
+        keyspace.execute("DROP TABLE #{'IF EXISTS ' if exists}#{name}")
+      end
+
+      #
+      # Drop this materialized view from the keyspace
+      #
+      # @param name [Symbol] name of the materialized view to drop
+      # @param exists [Boolean] if set to true, will drop only if exists (Cassandra 3.x)
+      # @return [void]
+      #
+      def drop_materialized_view(name, exists: false)
+        keyspace.execute("DROP MATERIALIZED VIEW #{'IF EXISTS ' if exists}#{name}")
       end
 
       #
@@ -204,12 +223,24 @@ module Cequel
       # @see #create_table Example of DSL usage
       #
       def sync_table(name, &block)
-        existing = read_table(name)
-        updated = Table.new(name)
-        CreateTableDSL.apply(updated, &block)
-        TableSynchronizer.apply(keyspace, existing, updated)
+        new_table_desc = TableDescDsl.new(name).eval(&block)
+        patch = if has_table?(name)
+                  existing_table_desc = read_table(name)
+                  TableDiffer.new(existing_table_desc, new_table_desc).call
+                else
+                  TableWriter.new(new_table_desc) # close enough to a patch
+                end
+
+        patch.statements.each{|stmt| keyspace.execute(stmt) }
       end
       alias_method :synchronize_table, :sync_table
+
+
+      # Returns true iff the specified table name exists in the keyspace.
+      #
+      def has_table?(table_name)
+        !!read_table(table_name)
+      end
 
       protected
 

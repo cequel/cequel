@@ -9,8 +9,26 @@ namespace :cequel do
       create!
     end
 
+    desc 'Initialize Cassandra keyspace if not exist'
+    task :create_if_not_exist => :environment do
+      if Cequel::Record.connection.schema.exists?
+        puts "Keyspace #{Cequel::Record.connection.name} already exists. Nothing to do."
+        next
+      end
+      create!
+    end
+
     desc 'Drop Cassandra keyspace'
     task :drop => :environment do
+      drop!
+    end
+
+    desc 'Drop Cassandra keyspace if exist'
+    task :drop_if_exist => :environment do
+      unless Cequel::Record.connection.schema.exists?
+        puts "Keyspace #{Cequel::Record.connection.name} doesn't exist. Nothing to do."
+        next
+      end
       drop!
     end
   end

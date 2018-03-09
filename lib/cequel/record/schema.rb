@@ -20,7 +20,7 @@ module Cequel
 
       included do
         class_attribute :table_name, instance_writer: false
-        self.table_name = name.demodulize.tableize.to_sym unless name.nil?
+        self.table_name = name.demodulize.tableize.to_sym unless name.nil? || self.table_name.present?
       end
 
       #
@@ -80,8 +80,24 @@ module Cequel
         # @return [void]
         #
         def synchronize_schema
-          Cequel::Schema::TableSynchronizer
-            .apply(connection, read_schema, table_schema)
+          fail MissingTableNameError unless table_name
+
+          patch =
+            begin
+              existing_table_descriptor = Cequel::Schema::TableReader.read(connection,
+                                                                           table_name)
+
+              return if existing_table_descriptor.materialized_view?
+
+              Cequel::Schema::TableDiffer.new(existing_table_descriptor,
+                                              table_schema)
+                .call
+
+            rescue NoSuchTableError
+              Cequel::Schema::TableWriter.new(table_schema)
+            end
+
+          patch.statements.each { |stmt| connection.execute(stmt) }
         end
 
         #
@@ -92,9 +108,7 @@ module Cequel
         #   table in the database
         #
         def read_schema
-          fail MissingTableNameError unless table_name
-
-          connection.schema.read_table(table_name)
+          table_reader.read
         end
 
         #
@@ -102,46 +116,50 @@ module Cequel
         #   specified in the class definition
         #
         def table_schema
-          @table_schema ||= Cequel::Schema::Table.new(table_name)
+          dsl.table
         end
 
         protected
 
+        def dsl
+          @dsl ||= Cequel::Schema::TableDescDsl.new(table_name)
+        end
+
         def key(name, type, options = {})
           super
           if options[:partition]
-            table_schema.add_partition_key(name, type)
+            dsl.partition_key(name, type)
           else
-            table_schema.add_key(name, type, options[:order])
+            dsl.key(name, type, options[:order])
           end
         end
 
         def column(name, type, options = {})
           super
-          table_schema.add_data_column(name, type, options[:index])
+          dsl.column(name, type, options)
         end
 
         def list(name, type, options = {})
           super
-          table_schema.add_list(name, type)
+          dsl.list(name, type)
         end
 
         def set(name, type, options = {})
           super
-          table_schema.add_set(name, type)
+          dsl.set(name, type)
         end
 
         def map(name, key_type, value_type, options = {})
           super
-          table_schema.add_map(name, key_type, value_type)
+          dsl.map(name, key_type, value_type)
         end
 
         def table_property(name, value)
-          table_schema.add_property(name, value)
+          dsl.with(name, value)
         end
 
         def compact_storage
-          table_schema.compact_storage = true
+          dsl.compact_storage
         end
       end
 

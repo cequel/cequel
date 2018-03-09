@@ -1,7 +1,7 @@
 # Cequel #
 
 Cequel is a Ruby ORM for [Cassandra](http://cassandra.apache.org/) using
-[CQL3](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html).
+[CQL3][].
 
 [![Gem Version](https://badge.fury.io/rb/cequel.png)](http://badge.fury.io/rb/cequel)
 [![Build Status](https://travis-ci.org/cequel/cequel.png?branch=master)](https://travis-ci.org/cequel/cequel)
@@ -24,11 +24,16 @@ Add it to your Gemfile:
 gem 'cequel'
 ```
 
+If you use Rails 5, add this:
+``` ruby
+gem 'activemodel-serializers-xml'
+```
+
 ### Rails integration ###
 
 Cequel does not require Rails, but if you are using Rails, you
 will need version 3.2+. Cequel::Record will read from the configuration file
-`config/cequel.yml` if it is present. You can generate a default configuarion
+`config/cequel.yml` if it is present. You can generate a default configuration
 file with:
 
 ```bash
@@ -83,10 +88,13 @@ The `auto` option for the `key` declaration means Cequel will initialize new
 records with a UUID already generated. This option is only valid for `:uuid` and
 `:timeuuid` key columns.
 
+The `belongs_to` association accepts a `:foreign_key` option which allows you to
+specify the attribute used as the partition key.
+
 Note that the `belongs_to` declaration must come *before* the `key` declaration.
 This is because `belongs_to` defines the
-[partition key](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/ddl/../../cassandra/glossary/gloss_glossary.html#glossentry_dhv_s24_bk); the `id` column is
-the [clustering column](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#glossentry_h31_xjk_bk).
+[partition key](http://docs.datastax.com/en/glossary/doc/glossary/gloss_partition_key.html); the `id` column is
+the [clustering column](http://docs.datastax.com/en/glossary/doc/glossary/gloss_clustering_column.html).
 
 Practically speaking, this means that posts are accessed using both the
 `blog_subdomain` (automatically defined by the `belongs_to` association) and the
@@ -115,6 +123,33 @@ class PostsController < ActionController::Base
 end
 ```
 
+Parent child relationship in a namespaced model can be defined using the `class_name` option of `belongs_to` method as follows:
+
+```ruby
+module Blogger
+  class Blog
+    include Cequel::Record
+
+    key :subdomain, :text
+    column :name, :text
+    column :description, :text
+
+    has_many :posts
+  end
+end
+
+module Blogger
+  class Post
+    include Cequel::Record
+
+    belongs_to :blog, class_name: 'Blogger::Blog'
+    key :id, :timeuuid, auto: true
+    column :title, :text
+    column :body, :text
+  end
+end
+```
+
 ### Timestamps ###
 
 If your final primary key column is a `timeuuid` with the `:auto` option set,
@@ -124,6 +159,8 @@ To add timestamp columns, simply use the `timestamps` class macro:
 
 ```ruby
 class Blog
+  include Cequel::Record
+
   key :subdomain, :text
   column :name, :text
   timestamps
@@ -135,6 +172,29 @@ populate them appropriately on save.
 
 If the creation time can be extracted from the primary key as outlined above,
 this method will be preferred and no `created_at` column will be defined.
+
+### Enums ###
+
+If your a column should behave like an `ActiveRecord::Enum` you can use the
+column type `:enum`. It will be handled by the data-type `:int` and expose some
+helper methods on the model:
+
+```ruby
+class Blog
+  include Cequel::Record
+
+  key :subdomain, :text
+  column :name, :text
+  column :status, :enum, values: { open: 1, closed: 2 }
+end
+
+blog = Blog.new(status: :open)
+blog.open? # true
+blog.closed? # false
+blog.status # :open
+
+Blog.status # { open: 1, closed: 2 }
+```
 
 ### Schema synchronization ###
 
@@ -194,9 +254,9 @@ multiple queries in your logs if you're iterating over a huge result set.
 #### Time UUID Queries ####
 
 CQL has [special handling for the `timeuuid`
-type](http://www.datastax.com/documentation/cql/3.0/webhelp/index.html#cql/cql_reference/cql_data_types_c.html#reference_ds_axc_xk5_yj),
+type](https://docs.datastax.com/en/cql/3.3/cql/cql_reference/uuid_type_r.html),
 which allows you to return a rows whose UUID keys correspond to a range of
-timestamps. 
+timestamps.
 
 Cequel automatically constructs timeuuid range queries if you pass a `Time`
 value for a range over a `timeuuid` column. So, if you want to get the posts
@@ -355,6 +415,20 @@ Post.consistency(:one).find_each { |post| puts post.title }
 
 Both read and write consistency default to `QUORUM`.
 
+### Compression ###
+
+Cassandra supports [frame compression](http://datastax.github.io/ruby-driver/features/#compression),
+which can give you a performance boost if your requests or responses are big. To enable it you can
+specify `client_compression` to use in cequel.yaml.
+
+```yaml
+development:
+  host: '127.0.0.1'
+  port: 9042
+  keyspace: Blog
+  client_compression: :lz4
+```
+
 ### ActiveModel Support ###
 
 Cequel supports ActiveModel functionality, such as callbacks, validations,
@@ -509,27 +583,46 @@ above code will just overwrite the `name` in that row.  Note that the
 `description` will not be touched by the second statement; upserts only work on
 the columns that are given.
 
+#### Counting ####
+
+Counting is not the same as in a RDB, as it can have a much longer runtime and
+can put unexpected load on your cluster. As a result Cequel does not support
+this feature. It is still possible to execute raw cql to get the counts, should
+you require this functionality.
+`MyModel.connection.execute('select count(*) from table_name;').first['count']`
+
 ## Compatibility ##
 
 ### Rails ###
 
+* 5.0
 * 4.2
 * 4.1
 * 4.0
 
 ### Ruby ###
 
-* Ruby 2.2, 2.1, 2.0
-* JRuby 1.7, 9.0
-* Rubinius 2.5
+* Ruby 2.3, 2.2, 2.1, 2.0
 
 ### Cassandra ###
 
-* 2.x
+* 2.1.x
+* 2.2.x
+* 3.0.x
 
-Though Cequel is tested against Cassandra 2, it does not at this time support
-any of the CQL3.1 features introduced in Cassandra 2. This will change in the
-future.
+## Breaking API changes
+
+### 3.0
+
+ * Dropped support for changing the type of cluster keys because the ability has
+   been removed from Cassandra. Calls to `#change_column` must be removed.
+ * Dropped support for previously deprecated signature of the `#column` method
+   of schema DSL. Uses like `column :my_column, :text, true` must be rewritten
+   as `#column :my_column, :text, indexed: true`
+
+### 2.0
+
+ * dropped support for jruby (Due to difficult to work around bugs in jruby. PRs welcome to restore jruby compatibility.)
 
 ## Support & Bugs ##
 
@@ -548,32 +641,10 @@ See
 
 ## Credits ##
 
-Cequel was written by:
+Cequel was written by an [awesome lot](https://github.com/cequel/cequel/graphs/contributors). Thanks to you all.
 
-* Mat Brown
-* Aubrey Holland
-* Keenan Brock
-* Insoo Buzz Jung
-* Louis Simoneau
-* Peter Williams
-* Kenneth Hoffman
-* Antti Tapio
-* Ilya Bazylchuk
-* Dan Cardamore
-* Kei Kusakari
-* Oleh Novosad
-* John Smart
-* Angelo Lakra
-* Olivier Lance
-* Tomohiro Nishimura
-* Masaki Takahashi
-* G Gordon Worley III
-* Clark Bremer
-* Tamara Temple
-* Long On
-* Lucas Mundim
 
-Special thanks to [Brewster](https://www.brewster.com), which supported the 0.x
+Special thanks to [Brewster](http://www.brewster.com), which supported the 0.x
 releases of Cequel.
 
 ## Shameless Self-Promotion ##
@@ -581,9 +652,11 @@ releases of Cequel.
 If you're new to Cassandra, check out [Learning Apache
 Cassandra](http://www.amazon.com/gp/product/1783989203/ref=s9_simh_co_p14_d4_i1?pf_rd_m=ATVPDKIKX0DER&pf_rd_s=left-1&pf_rd_r=1TX356WHGF06W32ZHD8S&pf_rd_t=3201&pf_rd_p=1953562742&pf_rd_i=typ01),
 a hands-on guide to Cassandra application development by example, written by
-the maintainer of Cequel.
+the creator of Cequel.
 
 ## License ##
 
 Cequel is distributed under the MIT license. See the attached LICENSE for all
 the sordid details.
+
+[CQL3]: http://docs.datastax.com/en/cql/3.3/cql/cqlIntro.html

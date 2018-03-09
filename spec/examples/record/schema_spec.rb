@@ -73,6 +73,48 @@ describe Cequel::Record::Schema do
     end
   end
 
+  context 'CQL3 table with non-dictionary-ordered partition columns' do
+    let(:table_name) { 'accesses_' + SecureRandom.hex(4) }
+
+    let(:model) do
+      model_table_name = table_name
+      Class.new do
+        include Cequel::Record
+        self.table_name = model_table_name
+
+        key :serial, :text, partition: true
+        key :username, :text, partition: true
+        key :date, :text, partition: true
+        key :access_time, :timeuuid
+        column :url, :text
+      end
+    end
+
+    let(:model_modified) do
+      model_table_name = table_name
+      Class.new do
+        include Cequel::Record
+        self.table_name = model_table_name
+
+        key :serial, :text, partition: true
+        key :username, :text, partition: true
+        key :date, :text, partition: true
+        key :access_time, :timeuuid
+        column :url, :text
+        column :user_agent, :text
+      end
+    end
+
+    before { model.synchronize_schema }
+    after { cequel.schema.drop_table(table_name) }
+
+    it 'should be able to synchronize schema again' do
+      expect {
+        model_modified.synchronize_schema
+      }.not_to raise_error
+    end
+  end
+
   context 'wide-row legacy table' do
     let(:table_name) { 'legacy_posts_' + SecureRandom.hex(4) }
 

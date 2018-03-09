@@ -7,6 +7,7 @@ describe Cequel::Record::Properties do
     model :Post do
       key :permalink, :text
       column :title, :text
+      column :status, :enum, values: { open: 1, closed: 2 }
       list :tags, :text
       set :categories, :text
       map :shares, :text, :int
@@ -30,6 +31,17 @@ describe Cequel::Record::Properties do
       expect(Post.new.permalink).to be_nil
     end
 
+    it 'should have enums' do
+      expect(Post.new.status).to be_nil
+      expect(Post.status).to eql({ open: 1, closed: 2 })
+      expect(Post.new { |post| post.status = :open }.status).to eq(:open)
+      expect(Post.new { |post| post.status = :open }).to be_open
+      expect(Post.new { |post| post.status = :closed }.status).to eq(:closed)
+      expect(Post.new { |post| post.status = :closed }).to be_closed
+      expect(Post.new { |post| post.status = :closed }.attributes['status']).to eq(2)
+      expect(Post.new { |post| post.status = :unknown }.status).to eq(nil)
+    end
+
     it 'should provide accessor for data column' do
       expect(Post.new { |post| post.title = 'Big Data' }.title).to eq('Big Data')
     end
@@ -51,6 +63,11 @@ describe Cequel::Record::Properties do
     it 'should use writers when setting attributes' do
       expect(Post.new.tap { |post| post.attributes = {:downcased_title => 'big data' }}.
         title).to eq('Big Data')
+    end
+
+    it 'should mark the attribute as dirty when setting attributes' do
+      expect(Post.new { |post| post.title = 'Big Data' }.changed).to eq(['title'])
+      expect(Post.new { |post| post.title = 'Big Data' }.changes).to eq({'title' => [nil,'Big Data']})
     end
 
     it 'should get attributes with indifferent access' do
@@ -186,13 +203,14 @@ describe Cequel::Record::Properties do
       expect do
         Class.new do
           include Cequel::Record
+          self.table_name = "foo"
           key :subdomain, :text, auto: true
         end
       end.to raise_error(ArgumentError)
     end
 
     it 'should run default proc on keys' do
-      expect(Post.new.subid).to eq("subid #{1+1}") 
+      expect(Post.new.subid).to eq("subid #{1+1}")
     end
 
     it 'should run default proc' do

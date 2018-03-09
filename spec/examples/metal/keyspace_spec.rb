@@ -35,9 +35,9 @@ describe Cequel::Metal::Keyspace do
     it 'should auto-apply if option given' do
       cequel.batch(auto_apply: 2) do
         cequel[:posts].insert(id: 1, title: 'One')
-        expect(cequel[:posts].count).to be_zero
+        expect(cequel[:posts].to_a.count).to be_zero
         cequel[:posts].insert(id: 2, title: 'Two')
-        expect(cequel[:posts].count).to be(2)
+        expect(cequel[:posts].to_a.count).to be(2)
       end
     end
 
@@ -46,7 +46,7 @@ describe Cequel::Metal::Keyspace do
     end
 
     it 'should execute unlogged batch if specified' do
-      expect_query_with_consistency(/BEGIN UNLOGGED BATCH/, anything) do
+      expect_query_with_consistency(instance_of(Cassandra::Statements::Batch::Unlogged), anything) do
         cequel.batch(unlogged: true) do
           cequel[:posts].insert(id: 1, title: 'One')
           cequel[:posts].insert(id: 2, title: 'Two')
@@ -55,7 +55,7 @@ describe Cequel::Metal::Keyspace do
     end
 
     it 'should execute batch with given consistency' do
-      expect_query_with_consistency(/BEGIN BATCH/, :one) do
+      expect_query_with_consistency(instance_of(Cassandra::Statements::Batch::Logged), :one) do
         cequel.batch(consistency: :one) do
           cequel[:posts].insert(id: 1, title: 'One')
           cequel[:posts].insert(id: 2, title: 'Two')
@@ -73,7 +73,7 @@ describe Cequel::Metal::Keyspace do
   end
 
   describe "#exists?" do
-    it "is true for existent keyspaces" do
+    it "is true for existent keyspaces", :retry => 1, :retry_wait => 1 do
       expect(cequel.exists?).to eq true
     end
 
@@ -83,6 +83,20 @@ describe Cequel::Metal::Keyspace do
                            keyspace: "totallymadeup"
 
       expect(nonexistent_keyspace.exists?).to be false
+    end
+  end
+
+  describe "#drop_table", cql: "~> 3.1" do
+    it "allows IF EXISTS" do
+      expect { cequel.schema.drop_table(:unknown) }.to raise_error(Cassandra::Errors::InvalidError)
+      expect { cequel.schema.drop_table(:unknown, exists: true) }.not_to raise_error
+    end
+  end
+
+  describe "#drop_materialized_view", cql: "~> 3.4" do
+    it "allows IF EXISTS" do
+      expect { cequel.schema.drop_materialized_view(:unknown) }.to raise_error(Cassandra::Errors::ConfigurationError)
+      expect { cequel.schema.drop_materialized_view(:unknown, exists: true) }.not_to raise_error
     end
   end
 
@@ -104,8 +118,115 @@ describe Cequel::Metal::Keyspace do
     end
   end
 
+  describe "#client_compression" do
+    let(:client_compression) { :lz4 }
+    let(:connect) do
+      Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port,
+          client_compression: client_compression
+    end
+    it "client compression settings get extracted correctly for sending to cluster" do
+      expect(connect.client_compression).to eq client_compression
+    end
+  end
+
+  describe '#cassandra_options' do
+    let(:cassandra_options) { {foo: :bar} }
+    let(:connect) do
+      Cequel.connect host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port,
+          cassandra_options: cassandra_options
+    end
+    it 'passes the cassandra options as part of the client options' do
+      expect(connect.send(:client_options)).to have_key(:foo)
+    end
+  end
+
+  describe 'cassandra error handling' do
+    let(:connect_options) do
+      {
+        host: Cequel::SpecSupport::Helpers.host,
+          port: Cequel::SpecSupport::Helpers.port
+      }
+    end
+
+    let(:default_connect) do
+      Cequel.connect(connect_options)
+    end
+
+    class SpecCassandraErrorHandler
+      def initialize(options = {})
+      end
+
+      def execute_stmt(keyspace)
+        yield
+      end
+    end
+
+    it 'uses the error handler passed in as a string' do
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: 'SpecCassandraErrorHandler')
+
+      expect(obj.error_policy.class).to equal(SpecCassandraErrorHandler)
+    end
+
+    it 'uses the error handler passed in as a module' do
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: SpecCassandraErrorHandler)
+
+      expect(obj.error_policy.class).to equal(SpecCassandraErrorHandler)
+    end
+
+    it 'uses the instance of an error handler passed in' do
+      policy = SpecCassandraErrorHandler.new
+
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: policy)
+
+      expect(obj.error_policy).to equal(policy)
+    end
+
+    it 'responds to error policy' do
+      # Always defined, even if config does not specify it
+      expect(default_connect).to respond_to(:error_policy)
+    end
+
+    it 'calls execute_stmt on the error policy' do
+      policy = ::Cequel::Metal::Policy::CassandraError::RetryPolicy.new
+
+      obj = Cequel.connect connect_options.merge(
+          cassandra_error_policy: policy)
+      expect(policy).to receive(:execute_stmt).at_least(:once)
+      obj.execute_with_options(Cequel::Metal::Statement.new('select * from system.peers;'))
+    end
+
+    it 'rejects a negative value for retry delay' do
+      expect { Cequel.connect connect_options.merge(
+        retry_delay: -1.0)
+      }.to raise_error(ArgumentError)
+    end
+
+    it 'accepts a configured value for retry delay' do
+      obj = Cequel.connect connect_options.merge(
+        retry_delay: 1337.0)
+
+      # do not compare floats exactly, it is error prone
+      # the value is passed to the error policy
+      expect(obj.error_policy.retry_delay).to be_within(0.1).of(1337.0)
+    end
+
+    it 'can clear active connections' do
+      expect {
+        default_connect.clear_active_connections!
+      }.to change {
+        default_connect.client
+      }
+    end
+  end
+
   describe "#execute" do
     let(:statement) { "SELECT id FROM posts" }
+    let(:execution_error) { Cassandra::Errors::OverloadedError.new(1,2,3,4,5,6,7,8,9) }
 
     context "without a connection error" do
       it "executes a CQL query" do
@@ -114,13 +235,70 @@ describe Cequel::Metal::Keyspace do
     end
 
     context "with a connection error" do
-      it "reconnects to cassandra with a new client after first failed connection" do
-        allow(cequel.client).to receive(:execute)
-          .with(statement, :consistency => cequel.default_consistency)
-          .and_raise(Ione::Io::ConnectionError)
+      it "reconnects to cassandra with a new client after no hosts could be reached" do
+        allow(cequel.client)
+          .to receive(:execute)
+               .with(->(s){ s.cql == statement},
+                     hash_including(:consistency => cequel.default_consistency))
+          .and_raise(Cassandra::Errors::NoHostsAvailable)
           .once
 
         expect { cequel.execute(statement) }.not_to raise_error
+      end
+
+      it "reconnects to cassandra with a new client after execution failed" do
+        allow(cequel.client)
+          .to receive(:execute)
+               .with(->(s){ s.cql == statement},
+                     hash_including(:consistency => cequel.default_consistency))
+          .and_raise(execution_error)
+          .once
+
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
+
+      it "reconnects to cassandra with a new client after timeout occurs" do
+        allow(cequel.client)
+          .to receive(:execute)
+               .with(->(s){ s.cql == statement},
+                     hash_including(:consistency => cequel.default_consistency))
+          .and_raise(Cassandra::Errors::TimeoutError)
+          .once
+
+        expect { cequel.execute(statement) }.not_to raise_error
+      end
+    end
+  end
+
+  describe "#prepare_statement" do
+    let(:statement) { "SELECT id FROM posts" }
+    let(:execution_error) { Cassandra::Errors::OverloadedError.new(1,2,3,4,5,6,7,8,9) }
+
+    context "without a connection error" do
+      it "executes a CQL query" do
+        expect { cequel.prepare_statement(statement) }.not_to raise_error
+      end
+    end
+
+    context "with a connection error" do
+      it "reconnects to cassandra with a new client after no hosts could be reached" do
+        allow(cequel.client)
+          .to receive(:prepare)
+               .with(->(s){ s == statement})
+          .and_raise(Cassandra::Errors::NoHostsAvailable)
+          .once
+
+        expect { cequel.prepare_statement(statement) }.not_to raise_error
+      end
+
+      it "reconnects to cassandra with a new client after execution failed" do
+        allow(cequel.client)
+          .to receive(:prepare)
+               .with(->(s){ s == statement})
+          .and_raise(execution_error)
+          .once
+
+        expect { cequel.prepare_statement(statement) }.not_to raise_error
       end
     end
   end

@@ -71,6 +71,15 @@ module Cequel
         false
       end
 
+      # Indicates if this column is indexed. Overridden by subclasses that
+      # support indexing.
+      #
+      # @return [Boolean] true if this column has a secondary index
+      #
+      def indexed?
+        false
+      end
+
       #
       # @param type_in [Symbol,Type] type to check against
       # @return [Boolean] true if this column has the type given by `type_in`
@@ -96,7 +105,7 @@ module Cequel
       # @api private
       #
       def to_cql
-        "#{@name} #{@type}"
+        %Q|"#{@name}" #{@type}|
       end
 
       #
@@ -107,6 +116,7 @@ module Cequel
       def ==(other)
         to_cql == other.to_cql
       end
+      alias_method :eql?, :==
 
       #
       # @return [String] the column's name

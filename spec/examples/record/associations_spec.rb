@@ -104,6 +104,7 @@ describe Cequel::Record::Associations do
       expect do
         Class.new do
           include Cequel::Record
+          self.table_name = "foo"
           key :permalink, :text
           belongs_to :blog
         end
@@ -114,6 +115,7 @@ describe Cequel::Record::Associations do
       expect do
         Class.new do
           include Cequel::Record
+          self.table_name = "foo"
           belongs_to :blog
           belongs_to :user
         end
@@ -169,6 +171,8 @@ describe Cequel::Record::Associations do
         expect do
           Class.new do
             include Cequel::Record
+            self.table_name = "foo"
+
             key :permalink, :text
             belongs_to :post, partition: true
           end
@@ -179,10 +183,57 @@ describe Cequel::Record::Associations do
         expect do
           Class.new do
             include Cequel::Record
+            self.table_name = "foo"
+
             belongs_to :post, partition: true
             belongs_to :user
           end
         end.to raise_error(Cequel::Record::InvalidRecordConfiguration)
+      end
+    end
+
+    context 'with foreign_key option' do
+      model :Parent do
+        key :parent_id, :uuid, auto: true
+        column :name, :text
+        has_many :children, class_name: 'Child'
+      end
+
+      model :Child do
+        belongs_to :parent, partition: true, foreign_key: [:parent_id]
+        key :child_id, :uuid, auto: true
+        column :name, :text
+      end
+
+      it "should add parent's keys as first keys" do
+        expect(Child.key_column_names.first(2)).to eq([:parent_id, :child_id])
+      end
+
+      it "should add parent's keys as partition keys" do
+        expect(Child.partition_key_column_names).to eq([:parent_id])
+      end
+
+      context 'with multiple foreign_keys' do
+        model :Foo do
+          key :account_id, :uuid, auto: true
+          key :parent_id, :uuid, auto: true
+          column :name, :text
+          has_many :children, class_name: 'Child'
+        end
+
+        model :Bar do
+          belongs_to :foo, partition: true, foreign_key: [:account_id, :parent_id]
+          key :child_id, :uuid, auto: true
+          column :name, :text
+        end
+
+        it "should add parent's keys as first keys" do
+          expect(Bar.key_column_names).to eq([:account_id, :parent_id, :child_id])
+        end
+
+        it "should add parent's keys as partition keys" do
+          expect(Bar.partition_key_column_names).to eq([:account_id, :parent_id])
+        end
       end
     end
 
@@ -252,26 +303,16 @@ describe Cequel::Record::Associations do
       expect(blog.posts.first.title).to eq('Post 0')
     end
 
-    it 'should always query the database for #count' do
-      blog.posts.entries
-      posts.first.destroy
-      expect(blog.posts.count).to eq(2)
+    it 'should raise DangerousQueryError for #count' do
+      expect{ blog.posts.count }.to raise_error(Cequel::Record::DangerousQueryError)
     end
 
-    it 'should always load the records for #length' do
-      expect(blog.posts.length).to eq(3)
-      expect(blog.posts).to be_loaded
+    it 'should raise DangerousQueryError for #length' do
+      expect{ blog.posts.length }.to raise_error(Cequel::Record::DangerousQueryError)
     end
 
-    it 'should count from database for #size if unloaded' do
-      expect(blog.posts.size).to eq(3)
-      expect(blog.posts).not_to be_loaded
-    end
-
-    it 'should count records in memory for #size if loaded' do
-      blog.posts.entries
-      disallow_queries!
-      expect(blog.posts.size).to eq(3)
+    it 'should raise DangerousQueryError for #size' do
+      expect{ blog.posts.size }.to raise_error(Cequel::Record::DangerousQueryError)
     end
 
     it "does not allow invalid :dependent options" do
@@ -305,7 +346,7 @@ describe Cequel::Record::Associations do
       it "deletes all children when destroying the parent" do
         expect {
           post_with_comments.destroy
-        }.to change { Comment.count }.by(-2)
+        }.to change { Comment.all.to_a.count }.by(-2)
       end
 
       it "executes :destroy callbacks on the children" do
@@ -330,7 +371,7 @@ describe Cequel::Record::Associations do
       it "deletes all children when destroying the parent" do
         expect {
           post_with_attachments.destroy
-        }.to change { Attachment.count }.by(-2)
+        }.to change { Attachment.all.to_a.count }.by(-2)
       end
 
       it "does not execute :destroy callbacks on the children" do

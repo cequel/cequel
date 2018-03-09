@@ -465,6 +465,50 @@ module Cequel
       end
 
       #
+      # Add `ALLOW FILTERING` to select-queries for filtering of none-indexed fields.
+      #
+      # `Post.allow_filtering!.where(title: 'Cequel 0')`
+      #
+      # Available as of Cassandra 3.6
+      #
+      # @return [RecordSet] record set tuned to given consistency
+
+      # @see https://docs.datastax.com/en/cql/3.3/cql/cql_reference/cqlSelect.html#cqlSelect__filtering-on-clustering-column
+      # @note Filtering can incurr a significant performance overhead or even timeout on a large data-set.
+      #
+      def allow_filtering!
+        scoped(allow_filtering: true)
+      end
+
+      #
+      # Set the page_size at which to read records into the record set.
+      #
+      # @param page_size [Integer] page_size for reads
+      # @return [RecordSet] record set tuned to given page_size
+      #
+      def page_size(page_size)
+        scoped(query_page_size: page_size)
+      end
+
+      #
+      # Set the paging_state at which to read records into the record set.
+      #
+      # @param paging_state [String] paging_state for reads
+      # @return [RecordSet] record set tuned to given paging_state
+      #
+      def paging_state(paging_state)
+        scoped(query_paging_state: paging_state)
+      end
+
+      def next_paging_state
+        data_set.next_paging_state
+      end
+
+      def last_page?
+        data_set.last_page?
+      end
+
+      #
       # @overload first
       #   @return [Record] the first record in this record set
       #
@@ -513,11 +557,10 @@ module Cequel
         end
       end
 
-      #
-      # @return [Integer] the total number of records in this record set
-      #
+      # @raise [DangerousQueryError] to prevent loading the entire record set
+      #   to be counted
       def count
-        data_set.count
+        raise Cequel::Record::DangerousQueryError.new
       end
       alias_method :length, :count
       alias_method :size, :count
@@ -667,9 +710,12 @@ module Cequel
       attr_reader :attributes
       hattr_reader :attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
-                   :scoped_indexed_column, :query_consistency
+                   :scoped_indexed_column, :query_consistency,
+                   :query_page_size, :query_paging_state,
+                   :allow_filtering
       protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-                :upper_bound, :scoped_indexed_column, :query_consistency
+                :upper_bound, :scoped_indexed_column, :query_consistency,
+                :query_page_size, :query_paging_state, :allow_filtering
       hattr_inquirer :attributes, :reversed
       protected :reversed?
 
@@ -783,7 +829,7 @@ module Cequel
           fail IllegalQuery,
                "Can't scope by more than one indexed column in the same query"
         end
-        unless column.indexed?
+        unless column.indexed? || allow_filtering
           fail ArgumentError,
                "Can't scope by non-indexed column #{column_name}"
         end

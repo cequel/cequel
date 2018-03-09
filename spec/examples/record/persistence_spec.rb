@@ -50,7 +50,7 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should save with specified consistency' do
-          expect_query_with_consistency(/INSERT/, :one) do
+          expect_query_with_consistency(anything, :one) do
             Blog.new do |blog|
               blog.subdomain = 'cequel'
               blog.name = 'Cequel'
@@ -119,7 +119,7 @@ describe Cequel::Record::Persistence do
         end
 
         it 'should save with specified consistency' do
-          expect_query_with_consistency(/UPDATE/, :one) do
+          expect_query_with_consistency(anything, :one) do
             blog.name = 'Cequel'
             blog.save(consistency: :one)
           end
@@ -128,8 +128,8 @@ describe Cequel::Record::Persistence do
         it 'should save with specified TTL' do
           blog.name = 'Cequel 1.4'
           blog.save(ttl: 10)
-          expect(cequel[Blog.table_name].select_ttl(:name).first.ttl(:name)).
-            to be_within(0.1).of(9.9)
+          expect(cequel[Blog.table_name].select_ttl(:name).first.ttl(:name))
+            .to be_between(9,10).inclusive
         end
 
         it 'should save with specified timestamp' do
@@ -148,7 +148,7 @@ describe Cequel::Record::Persistence do
 
         it 'should not mark itself as clean if save failed at Cassandra level' do
           blog.name = 'Pizza'
-          with_client_error(Cassandra::Errors::InvalidError.new(1, 'error')) do
+          with_client_error(Cassandra::Errors::InvalidError.new(nil, nil, nil, nil, nil, nil, nil, nil, nil)) do
             begin
               blog.save
             rescue Cassandra::Errors::InvalidError
@@ -243,14 +243,14 @@ describe Cequel::Record::Persistence do
 
       it 'should destroy with specified consistency' do
         blog = Blog.create(:subdomain => 'big-data', :name => 'Big Data')
-        expect_query_with_consistency(/DELETE/, :one) do
+        expect_query_with_consistency(anything, :one) do
           blog.destroy(consistency: :one)
         end
       end
 
-      it 'should destroy with specified timestamp' do
+      it 'should not destroy records without specified timestamp' do
         blog = Blog.create(subdomain: 'big-data', name: 'Big Data')
-        blog.destroy(timestamp: 1.minute.ago)
+        blog.destroy(timestamp: 1.hour.ago)
         expect(cequel[Blog.table_name].where(subdomain: 'big-data').first).to be
       end
     end

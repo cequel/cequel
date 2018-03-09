@@ -1,3 +1,76 @@
+## 3.0.1
+- fix list modification bug with Cassandra versions > 2.2.10 and 3.11.0
+
+## 3.0.0
+* Drop support for changing the type of cluster keys as it is no longer support by Cassandra.
+* Drop support for non-option based index specification in table schema DSL. For example, `column :author_name, :text, true` must be rewritten as `column :author_name, :text, index: true`.
+* Fix Relic instrumentation for batch statements [PR 361](https://github.com/cequel/cequel/pull/361)
+* Don't set table name when it is already present [PR 364](https://github.com/cequel/cequel/pull/364)
+
+## 2.1.0
+
+* Add ActiveRecord::Enum like support `column :status, :enum, values: { open: 1, closed: 2 }` ([PR 354](https://github.com/cequel/cequel/pull/354))
+* Fix bug CQL statement execution error handling ([PR 357](https://github.com/cequel/cequel/pull/357)
+* Documentation fixes ([PR 355](https://github.com/cequel/cequel/pull/355))
+* Add support for `ALLOW FILTERING` queries ([PR 353](https://github.com/cequel/cequel/pull/353))
+* Add support for `IF EXISTS` to schema modifications ([PR 349](https://github.com/cequel/cequel/pull/349))
+* Make `test` the default rake tast ([PR 348](https://github.com/cequel/cequel/pull/348))
+
+## 2.0.3
+
+* Add synchronization around use of @cluster and other variables Fix ([PR 333](https://github.com/cequel/cequel/pull/333))
+* expose if the dataset is on the last page ([PR 335](https://github.com/cequel/cequel/pull/335))
+* Delegate error handling to a policy object, allow for arbitrary options to be passed to cassandra driver gem ([PR 336](https://github.com/cequel/cequel/pull/336))
+* Fixes README.md ([PR 340](https://github.com/cequel/cequel/pull/340))
+* skip synchronizing materialized view ([PR 346](https://github.com/cequel/cequel/pull/346))
+* Fixed link to cassandra documentation ([PR 347](https://github.com/cequel/cequel/pull/347))
+
+
+## 2.0.2
+
+* Fix intermittent failures around preparing statements ([PR 330](https://github.com/cequel/cequel/pull/330))
+* Fix new relic instrumentation ([PR 331](https://github.com/cequel/cequel/pull/331))
+
+## 2.0.1
+
+* Remove requirment on activemodel-serializers-xml ([PR 329](https://github.com/cequel/cequel/pull/329))
+
+## 2.0.0
+
+* add support for Cassandra 3.x ([PR 324](https://github.com/cequel/cequel/pull/324))
+* upgrade cassandra driver to 3.x ([PR 323](https://github.com/cequel/cequel/pull/323))
+* add support for storing blobs (via parameterized CQL statements) ([PR 320](https://github.com/cequel/cequel/pull/320))
+* add support for Rails 5 ([PR 310](https://github.com/cequel/cequel/pull/310))
+* drop support for JRuby ([PR 310](https://github.com/cequel/cequel/pull/310))
+* handle missing indexes gracefully ([PR 317](https://github.com/cequel/cequel/pull/317))
+* Dropped support for count, length, and size as it results in unbounded run times and memory usage
+  ([PR 313](https://github.com/cequel/cequel/pull/313))
+
+## 1.10.0
+
+* `:foreign_key` option for belongs_to associations
+  ([PR 287](https://github.com/cequel/cequel/pull/287))
+* `:client_compression` option in cequel.yaml
+  ([PR 304](https://github.com/cequel/cequel/pull/304))
+
+## 1.9.1
+
+* fix dirty checking for timestamps more precise than Cassandra can store
+* fix bug with new relic instrumentation
+
+## 1.9.0
+
+* NewRelic instrumentation
+* fix querying tables whose first partition key is a timestamp
+
+## 1.8.0
+
+* remove false claims of Rubinius support from readme (we would gratefully accept a PR to fix compatibility)
+* add dirty tracking on unsaved records
+* fix key column order bug on tables with more than 2 key columns
+* trim very large field values to a reasonable size in log messages
+* native CQL paging support
+
 ## 1.7.0
 
 * Support Cassandra up to 2.2
