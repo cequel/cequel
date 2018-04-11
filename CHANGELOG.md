@@ -1,3 +1,7 @@
+## 3.0.2
+- support rails 5.1 (https://github.com/cequel/cequel/pull/389)
+- various small changes
+
 ## 3.0.1
 - fix list modification bug with Cassandra versions > 2.2.10 and 3.11.0
 
