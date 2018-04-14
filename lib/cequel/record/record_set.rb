@@ -123,7 +123,7 @@ module Cequel
       #
       def initialize(target_class, attributes = {})
         attributes = self.class.default_attributes.merge!(attributes)
-        @target_class, @attributes = target_class, attributes
+        @target_class, @cequel_attributes = target_class, attributes
         super(target_class)
       end
 
@@ -705,10 +705,20 @@ module Cequel
         entries
       end
 
-      protected
+      def attributes
+        cequel_attributes
+      end
 
-      attr_reader :attributes
-      hattr_reader :attributes, :select_columns, :scoped_key_values,
+      def attributes=(attrs)
+        self.cequel_attributes = attr
+      end
+
+
+      attr_accessor :cequel_attributes
+
+      protected
+      
+      hattr_reader :cequel_attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
                    :scoped_indexed_column, :query_consistency,
                    :query_page_size, :query_paging_state,

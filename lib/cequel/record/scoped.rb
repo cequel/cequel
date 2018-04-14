@@ -60,7 +60,7 @@ module Cequel
 
       def initialize_new_record(*)
         super
-        @attributes.merge!(self.class.current_scope.scoped_key_attributes)
+        @cequel_attributes.merge!(self.class.current_scope.scoped_key_attributes)
       end
     end
   end
