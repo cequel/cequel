@@ -82,7 +82,7 @@ module Cequel
       # @since 1.0.0
       #
       def key_attributes
-        @attributes.slice(*self.class.key_column_names)
+        @cequel_attributes.slice(*self.class.key_column_names)
       end
 
       #
@@ -160,7 +160,7 @@ module Cequel
       # @since 1.0.0
       #
       def loaded?(column = nil)
-        !!@loaded && (column.nil? || @attributes.key?(column.to_sym))
+        !!@loaded && (column.nil? || @cequel_attributes.key?(column.to_sym))
       end
 
       #
@@ -361,17 +361,17 @@ module Cequel
       end
 
       def attributes_for_create
-        @attributes.each_with_object({}) do |(column, value), attributes|
+        @cequel_attributes.each_with_object({}) do |(column, value), attributes|
           attributes[column] = value unless value.nil?
         end
       end
 
       def attributes_for_update
-        @attributes_for_update ||= {}
+        @cequel_attributes_for_update ||= {}
       end
 
       def attributes_for_deletion
-        @attributes_for_deletion ||= []
+        @cequel_attributes_for_deletion ||= []
       end
 
       def assert_keys_present!

@@ -47,8 +47,7 @@ module Cequel
       def save(options = {})
         super.tap do |success|
           if success
-            @previously_changed = changes
-            @changed_attributes.clear
+            changes_applied
           end
         end
       end
