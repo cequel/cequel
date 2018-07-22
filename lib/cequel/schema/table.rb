@@ -256,8 +256,6 @@ module Cequel
 
       protected
 
-      # attr_reader :columns_by_name
-
       def type(type)
         type = type.kind if type.respond_to?(:kind)
         ::Cequel::Type[type]
