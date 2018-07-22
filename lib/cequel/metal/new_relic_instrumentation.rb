@@ -53,7 +53,8 @@ module Cequel
 
 
       included do
-        alias_method_chain :execute_with_options, :newrelic
+        alias :execute_with_options_without_newrelic :execute_with_options
+        alias :execute_with_options :execute_with_options_with_newrelic
       end
     end
   end

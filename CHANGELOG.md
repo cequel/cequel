@@ -1,6 +1,10 @@
-## 3.0.2
+## 3.0.3
 * Fix problem with source reload creating duplicate finder methods (find_by_id_and_id) [Issue 206](https://github.com/cequel/cequel/issues/206)
 * Fix problems with noisy logs in Ruby 2.4+ [Issue 373](https://github.com/cequel/cequel/issues/373)
+
+## 3.0.2
+* Support rails 5.1 (https://github.com/cequel/cequel/pull/389)
+* Various small changes
 
 ## 3.0.1
 * fix list modification bug with Cassandra versions > 2.2.10 and 3.11.0
