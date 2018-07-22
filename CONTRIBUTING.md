@@ -47,8 +47,13 @@ get one is to use Docker, `docker run --rm -p 9042:9042 cassandra`.
 ### Using Docker Compose
 
 Cequel's test suite, including a development bash environment, container, and Cassandra
-instance is setup for use through Docker Compose.  To use, update the docker-compose.yml
-with your personal details (for Git compatibility) and then:
+instance is setup for use through Docker Compose.
+
+The local folder is mapped into the docker container. So, you can use your IDE of choice
+to make edits, leveraging the docker-compose to provide Cassandra and an lightweight container for
+running tests.
+
+To use, update the docker-compose.yml with your personal details (for Git compatibility) and then:
 ```bash
 docker-compose run dev
 ```
