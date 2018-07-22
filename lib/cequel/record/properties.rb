@@ -281,7 +281,7 @@ module Cequel
 
       # @private
       def initialize(attributes = {}, record_collection = nil)
-        @attributes, @record_collection = attributes, record_collection
+        @cequel_attributes, @record_collection = attributes, record_collection
         @collection_proxies = {}
       end
 
@@ -289,7 +289,7 @@ module Cequel
       # @return [Array<Symbol>] list of names of attributes on this record
       #
       def attribute_names
-        @attributes.keys
+        @cequel_attributes.keys
       end
 
       #
@@ -367,7 +367,7 @@ module Cequel
       protected
 
       def read_attribute(name)
-        @attributes.fetch(name)
+        @cequel_attributes.fetch(name)
       rescue KeyError
         if self.class.reflect_on_column(name)
           fail MissingAttributeError, "missing attribute: #{name}"
@@ -382,7 +382,7 @@ module Cequel
         end
 
         send("#{name}_will_change!") unless value === read_attribute(name)
-        @attributes[name] = value
+        @cequel_attributes[name] = value
       end
 
       private
@@ -397,14 +397,14 @@ module Cequel
       end
 
       def init_attributes(new_attributes)
-        @attributes = {}
+        @cequel_attributes = {}
         new_attributes.each_pair do |name, value|
           if value.nil?
             value = empty_attributes.fetch(name.to_sym) { -> {} }.call
           end
-          @attributes[name.to_sym] = value
+          @cequel_attributes[name.to_sym] = value
         end
-        @attributes
+        @cequel_attributes
       end
 
       def initialize_new_record(attributes = {})
