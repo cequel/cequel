@@ -713,7 +713,6 @@ module Cequel
         self.cequel_attributes = attr
       end
 
-
       attr_accessor :cequel_attributes
 
       protected

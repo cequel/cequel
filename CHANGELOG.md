@@ -1,3 +1,7 @@
+## 3.0.4
+* Add Dockerfile and docker-compose.yml for use in development of the gem.
+* Fix noisy logs from Ruby 2.5, ActiveModel 5.2 compatibility.
+
 ## 3.0.3
 * Fix problem with source reload creating duplicate finder methods (find_by_id_and_id) [Issue 206](https://github.com/cequel/cequel/issues/206)
 * Fix problems with noisy logs in Ruby 2.4+ [Issue 373](https://github.com/cequel/cequel/issues/373)
@@ -32,7 +36,6 @@
 * Fixes README.md ([PR 340](https://github.com/cequel/cequel/pull/340))
 * skip synchronizing materialized view ([PR 346](https://github.com/cequel/cequel/pull/346))
 * Fixed link to cassandra documentation ([PR 347](https://github.com/cequel/cequel/pull/347))
-
 
 ## 2.0.2
 
