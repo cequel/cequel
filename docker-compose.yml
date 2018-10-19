@@ -1,0 +1,25 @@
+version: '3.6'
+volumes:
+  bundle_cache:
+  cassandra:
+    driver: local
+services:
+  dev:
+    build: .
+    volumes:
+      - ./:/cequel
+    environment:
+      - "CEQUEL_TEST_HOST=cassandra"
+      - "GIT_AUTHOR_NAME=YourAuthorName"
+      - "GIT_AUTHOR_EMAIL=YourAuthor@email.com"
+      - "EMAIL=YourAuthor@email.com"
+    working_dir: /cequel
+    stdin_open: true
+    tty: true
+    command: bash
+    links:
+      - cassandra
+  cassandra:
+    image: smizy/cassandra:3.11-alpine
+    volumes:
+      - cassandra:/var/lib/cassandra

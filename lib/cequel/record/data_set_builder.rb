@@ -48,14 +48,14 @@ module Cequel
 
       protected
 
+      def record_set_delegated_methods
+        %i[ row_limit select_columns scoped_key_names scoped_key_values
+            scoped_indexed_column lower_bound upper_bound reversed? order_by_column
+            query_consistency query_page_size query_paging_state ascends_by? allow_filtering ]
+      end
+
       attr_accessor :data_set
       attr_reader :record_set
-      def_delegators :record_set, :row_limit, :select_columns,
-                     :scoped_key_names, :scoped_key_values,
-                     :scoped_indexed_column, :lower_bound,
-                     :upper_bound, :reversed?, :order_by_column,
-                     :query_consistency, :query_page_size, :query_paging_state,
-                     :ascends_by?, :allow_filtering
 
       private
 
@@ -121,6 +121,14 @@ module Cequel
 
       def sort_direction
         ascends_by?(order_by_column) ? :asc : :desc
+      end
+
+      def method_missing(m, *args, &block)
+        if record_set_delegated_methods.include?(m)
+          record_set.send(m, *args, &block)
+        else
+          super
+        end
       end
     end
   end

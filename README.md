@@ -595,6 +595,8 @@ you require this functionality.
 
 ### Rails ###
 
+* 5.2
+* 5.1
 * 5.0
 * 4.2
 * 4.1
@@ -602,7 +604,7 @@ you require this functionality.
 
 ### Ruby ###
 
-* Ruby 2.3, 2.2, 2.1, 2.0
+* Ruby 2.5, 2.4, 2.3, 2.2, 2.1, 2.0
 
 ### Cassandra ###
 

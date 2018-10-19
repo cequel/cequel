@@ -82,7 +82,7 @@ module Cequel
       # @since 1.0.0
       #
       def key_attributes
-        @attributes.slice(*self.class.key_column_names)
+        @cequel_attributes.slice(*self.class.key_column_names)
       end
 
       #
@@ -160,7 +160,7 @@ module Cequel
       # @since 1.0.0
       #
       def loaded?(column = nil)
-        !!@loaded && (column.nil? || @attributes.key?(column.to_sym))
+        !!@loaded && (column.nil? || @cequel_attributes.key?(column.to_sym))
       end
 
       #
@@ -185,8 +185,10 @@ module Cequel
       #
       def save(options = {})
         options.assert_valid_keys(:consistency, :ttl, :timestamp)
-        if new_record? then create(options)
-        else update(options)
+        if new_record?
+          create(options)
+        else
+          update(options)
         end
         @new_record = false
         true
@@ -260,6 +262,16 @@ module Cequel
         self
       end
 
+      def updater
+        raise ArgumentError, "Can't get updater for new record" if new_record?
+        @updater ||= Metal::Updater.new(metal_scope)
+      end
+
+      def deleter
+        raise ArgumentError, "Can't get deleter for new record" if new_record?
+        @deleter ||= Metal::Deleter.new(metal_scope)
+      end
+
       protected
 
       def persisted!
@@ -290,16 +302,6 @@ module Cequel
         end
       end
       instrument :update, data: ->(rec) { {table_name: rec.table_name} }
-
-      def updater
-        raise ArgumentError, "Can't get updater for new record" if new_record?
-        @updater ||= Metal::Updater.new(metal_scope)
-      end
-
-      def deleter
-        raise ArgumentError, "Can't get deleter for new record" if new_record?
-        @deleter ||= Metal::Deleter.new(metal_scope)
-      end
 
       private
 
@@ -361,17 +363,17 @@ module Cequel
       end
 
       def attributes_for_create
-        @attributes.each_with_object({}) do |(column, value), attributes|
+        @cequel_attributes.each_with_object({}) do |(column, value), attributes|
           attributes[column] = value unless value.nil?
         end
       end
 
       def attributes_for_update
-        @attributes_for_update ||= {}
+        @cequel_attributes_for_update ||= {}
       end
 
       def attributes_for_deletion
-        @attributes_for_deletion ||= []
+        @cequel_attributes_for_deletion ||= []
       end
 
       def assert_keys_present!

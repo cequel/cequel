@@ -13,21 +13,6 @@ module Cequel
       # @return [Symbol] the name of the table
       attr_reader :name
 
-      # @return [Array<Column>] all columns defined on the table
-      attr_reader :columns
-
-      # @return [Array<PartitionKey>] partition key columns defined on the
-      #   table
-      attr_reader :partition_key_columns
-
-      # @return [Array<ClusteringColumn>] clustering columns defined on the
-      #   table
-      attr_reader :clustering_columns
-
-      # @return [Array<DataColumn,CollectionColumn>] data columns and
-      #   collection columns defined on the table
-      attr_reader :data_columns
-
       # @return [Hash] storage properties defined on the table
       attr_reader :properties
 
@@ -42,8 +27,6 @@ module Cequel
       def initialize(name, is_view=false)
         @name = name.to_sym
         @is_view = is_view
-        @partition_key_columns, @clustering_columns, @data_columns = [], [], []
-        @columns, @columns_by_name = [], {}
         @properties = ActiveSupport::HashWithIndifferentAccess.new
       end
 
@@ -52,24 +35,79 @@ module Cequel
         @is_view
       end
 
+      # Manages the columns by name that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # The last one loaded in the source load will be the definition
+      # of the column.
+      def columns_by_name
+        @columns_by_name ||= {}
+      end
+
+      # Accessor for the column values on the @columns_by_name hash
+      # used to gain access to the column names.
+      def columns
+        columns_by_name.values
+      end
+
+      # Manages the partition key columns that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # Similar to columns, the last one loaded in the source load will be
+      # the definition of the column.
+      def partition_key_columns_hash
+        @partition_key_columns_hash ||= {}
+      end
+
+      # Provides an accessor for the partition_key_columns as an array
+      def partition_key_columns
+        partition_key_columns_hash.values
+      end
+
+      # Manages the clustering key columns that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # Similar to columns, the last one loaded in the source load will be
+      # the definition of the column.
+      def clustering_columns_hash
+        @clustering_columns_hash ||= {}
+      end
+
+      # Provides an accessor for the clustering_key_columns as an array
+      def clustering_columns
+        clustering_columns_hash.values
+      end
+
+      # Manages the data key columns that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # Similar to columns, the last one loaded in the source load will be
+      # the definition of the column.
+      def data_columns_hash
+        @data_columns_hash ||= {}
+      end
+
+       # Provides an accessor for the data_key_columns as an array
+      def data_columns
+        data_columns_hash.values
+      end
+
       # Add a column descriptor to this table descriptor.
       #
       # column_desc - Descriptor of column to add. Can be PartitionKey,
       #   ClusteringColumn, DataColumn, List, Set, or Map.
       #
       def add_column(column_desc)
-        column_flavor = case column_desc
-                        when PartitionKey
-                          @partition_key_columns
-                        when ClusteringColumn
-                          @clustering_columns
-                        else
-                          @data_columns
-                        end
-
-        column_flavor << column_desc
-        columns << column_desc
+        column_description_store(column_desc)[column_desc.name] = column_desc
         columns_by_name[column_desc.name] = column_desc
+      end
+
+      # Stores the column description in the appropriate storage hash
+      # for the column name and column type.
+      def column_description_store(column_desc)
+        if partition_key?(column_desc)
+          partition_key_columns_hash
+        elsif clustering_column?(column_desc)
+          clustering_columns_hash
+        else
+          data_columns_hash
+        end
       end
 
       # Add a property to this table descriptor
@@ -143,6 +181,12 @@ module Cequel
         partition_key_columns.any?
       end
 
+      # Returns true iff the column descriptor is a partition key
+      #
+      def partition_key?(column_desc)
+        column_desc.class == Cequel::Schema::PartitionKey
+      end
+
       #
       # @return [Array<Symbol>] names of clustering columns
       #
@@ -173,6 +217,12 @@ module Cequel
         clustering_columns.find { |column| column.name == name }
       end
 
+      # Returns true iff the column descriptor is a clustering column
+      #
+      def clustering_column?(column_desc)
+        column_desc.class == Cequel::Schema::ClusteringColumn
+      end
+
       #
       # @param name [Symbol] name of data column to look up
       # @return [DataColumn,CollectionColumn] data column or collection column
@@ -200,11 +250,8 @@ module Cequel
 
       protected
 
-      attr_reader :columns_by_name
-
       def type(type)
         type = type.kind if type.respond_to?(:kind)
-
         ::Cequel::Type[type]
       end
 

@@ -99,7 +99,7 @@ module Cequel
         # @see Associations
         #
         def belongs_to(name, options = {})
-          if parent_association
+          if parent_association && !self.parent_association.name == name.to_sym
             fail InvalidRecordConfiguration,
                  "Can't declare more than one belongs_to association"
           end
@@ -146,8 +146,6 @@ module Cequel
           def_child_association_reader(association)
         end
 
-        private
-
         def def_parent_association_accessors
           def_parent_association_reader
           def_parent_association_writer
@@ -188,7 +186,7 @@ module Cequel
         end
       end
 
-      private
+      protected
 
       def read_parent_association
         ivar_name = parent_association.instance_variable_name
@@ -226,6 +224,8 @@ module Cequel
             write_attribute(column_name, value)
           end
       end
+
+      private
 
       def read_child_association(association_name, reload = false)
         association = child_associations[association_name]

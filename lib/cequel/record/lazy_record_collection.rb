@@ -19,9 +19,6 @@ module Cequel
       #   (see RecordSet#table)
       # @!method connection
       #   (see RecordSet#connection)
-      def_delegators :record_set, :table, :connection
-
-      #
       # @param record_set [RecordSet] record set representing the records in
       #   this collection
       # @api private
@@ -77,11 +74,20 @@ module Cequel
 
       attr_reader :record_set
 
-      def_delegators :record_set, :key_columns, :scoped_key_values
-      private :key_columns, :scoped_key_values
-
       def key_attributes_for_each_row
         map { |record| record.key_attributes }
+      end
+
+      def record_set_delegated_methods
+        %i[table connection key_columns scoped_key_values]
+      end
+      
+      def method_missing(m, *args, &block)
+        if record_set_delegated_methods.include?(m)
+          record_set.send(m, *args, &block)
+        else
+          super
+        end
       end
     end
   end
