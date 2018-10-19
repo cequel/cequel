@@ -43,11 +43,11 @@ module Cequel
     #
     #   # Collection is lazily read from the database, and then staged
     #   # modifications are made to the loaded collection
-    #   puts blog.categories.join(', ') 
+    #   puts blog.categories.join(', ')
     #
     #   # Issues an UPDATE statement which prepends "Distributed Data" onto the
     #   # collection
-    #   blog.save! 
+    #   blog.save!
     #
     # @since 1.0.0
     #
@@ -218,7 +218,7 @@ module Cequel
       #   @param elements [Array] new elements to replace in this range
       #
       def []=(*args)
-        if args[0].is_a?(Fixnum) && args.count == 2
+        if args[0].is_a?(Integer) && args.count == 2
           # single element set/replace
           elem = cast_element(args[1])
 
@@ -231,7 +231,7 @@ module Cequel
           # multi-element set/replace
           range = if args[0].is_a?(Range)
                     args[0]
-                  elsif args[0].is_a?(Fixnum) && args[1].is_a?(Fixnum)
+                  elsif args[0].is_a?(Integer) && args[1].is_a?(Integer)
                     args[0]..(args[0]+args[1]-1)
                   else
                     Kernel.raise ArgumentError, "[i]=elem or [i,count]=elems or [a..b]=elems"

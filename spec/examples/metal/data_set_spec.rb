@@ -3,7 +3,7 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Metal::DataSet do
   posts_tn = "posts_#{SecureRandom.hex(4)}"
-  post_act_tn = "post_activity_#{SecureRandom.hex(4)}" 
+  post_act_tn = "post_activity_#{SecureRandom.hex(4)}"
 
   before :all do
     cequel.schema.create_table(posts_tn) do

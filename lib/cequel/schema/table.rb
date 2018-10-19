@@ -35,14 +35,12 @@ module Cequel
       #   storage
       attr_writer :compact_storage
 
-      #
       # @param name [Symbol] the name of the table
       # @api private
       #
       def initialize(name, is_view=false)
         @name = name.to_sym
         @is_view = is_view
-        # @partition_key_columns, @clustering_columns, @data_columns = [], [], []
         @properties = ActiveSupport::HashWithIndifferentAccess.new
       end
 
@@ -61,7 +59,6 @@ module Cequel
 
       # Accessor for the column values on the @columns_by_name hash
       # used to gain access to the column names.
-      #
       def columns
         columns_by_name.values
       end
@@ -111,7 +108,9 @@ module Cequel
       #   ClusteringColumn, DataColumn, List, Set, or Map.
       #
       def add_column(column_desc)
-        unless columns_by_name[column_desc.name]
+        if columns_by_name[column_desc.name]
+          raise ArgumentError, "Column #{column_desc.name} already defined"
+        else
           column_description_store(column_desc)[column_desc.name] = column_desc
           columns_by_name[column_desc.name]                       = column_desc
         end
@@ -120,23 +119,23 @@ module Cequel
       # Stores the column description in the appropriate storage hash
       # for the column name and column type.
       def column_description_store(column_desc)
-        value = {
-          Cequel::Schema::PartitionKey     => partition_key_columns_hash,
-          Cequel::Schema::ClusteringColumn => clustering_columns_hash
-        }.try(:[], column_desc.class)
-        value = data_columns_hash if value.nil?
-        value
+        if partition_key?(column_desc)
+          partition_key_columns_hash
+        elsif cluster_key?(column_desc)
+          clustering_columns_hash
+        else
+          data_columns_hash
+        end
       end
 
-      # Add a property to this table descriptor
       #
+      # Add a property to this table descriptor
       # property_desc - A `TableProperty` describing one property of this table.
       #
       def add_property(property_desc)
         properties[property_desc.name] = property_desc
       end
 
-      #
       #
       # @param name [Symbol] name of column to look up
       # @return [Column] column defined on table with given name
@@ -146,13 +145,13 @@ module Cequel
       end
 
       # Returns true iff this table has the specified column name.
-      #
       def has_column?(name)
         columns_by_name.has_key?(name.to_sym)
       end
 
       #
       # @return [Array<Symbol>] the names of all columns
+      #
       def column_names
         columns_by_name.keys
       end
@@ -193,8 +192,10 @@ module Cequel
         partition_key_columns.length
       end
 
-      # Returns true iff this table descriptor currently has at least one
+      #
+      # Returns true if this table descriptor currently has at least one
       # partition key defined.
+      #
       def has_partition_key?
         partition_key_columns.any?
       end
@@ -266,6 +267,14 @@ module Cequel
           def value; nil; end
           def name; nil; end
         end.new
+      end
+
+      def partition_key?(column_desc)
+        column_desc.class == Cequel::Schema::PartitionKey
+      end
+
+      def cluster_key?(column_desc)
+        column_desc.class == Cequel::Schema::ClusteringColumn
       end
     end
   end

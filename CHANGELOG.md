@@ -1,3 +1,7 @@
+## 3.0.5
+* Style changes per @pezra
+* Fix deprecation warning for Fixnum in Ruby 2.5
+
 ## 3.0.4
 * Add Dockerfile and docker-compose.yml for use in development of the gem.
 * Fix noisy logs from Ruby 2.5, ActiveModel 5.2 compatibility.
