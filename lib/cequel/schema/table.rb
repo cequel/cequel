@@ -13,20 +13,16 @@ module Cequel
       # @return [Symbol] the name of the table
       attr_reader :name
 
-      # # @return [Array<Column>] all columns defined on the table
-      # attr_reader :columns
+      # @return [Array<Column>] all columns defined on the table
 
       # @return [Array<PartitionKey>] partition key columns defined on the
       #   table
-      # attr_reader :partition_key_columns
 
       # @return [Array<ClusteringColumn>] clustering columns defined on the
       #   table
-      # attr_reader :clustering_columns
 
       # @return [Array<DataColumn,CollectionColumn>] data columns and
       #   collection columns defined on the table
-      # attr_reader :data_columns
 
       # @return [Hash] storage properties defined on the table
       attr_reader :properties

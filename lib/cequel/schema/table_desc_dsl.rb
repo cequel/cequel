@@ -21,7 +21,6 @@ module Cequel
     #     key :slug, :text
     #     column :body, :text
     #   end
-
     #
     class TableDescDsl < BasicObject
       extend ::Cequel::Util::Forwardable
