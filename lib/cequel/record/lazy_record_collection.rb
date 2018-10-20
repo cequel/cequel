@@ -78,16 +78,20 @@ module Cequel
         map { |record| record.key_attributes }
       end
 
-      def record_set_delegated_methods
-        %i[table connection key_columns scoped_key_values]
+      def table(*args)
+        record_set.table(*args)
       end
 
-      def method_missing(m, *args, &block)
-        if record_set_delegated_methods.include?(m)
-          record_set.send(m, *args, &block)
-        else
-          super
-        end
+      def connection(*args)
+        record_set.connection(*args)
+      end
+
+      def key_columns(*args)
+        record_set.key_columns(*args)
+      end
+
+      def scoped_key_values(*args)
+        record_set.scoped_key_values(*args)
       end
     end
   end

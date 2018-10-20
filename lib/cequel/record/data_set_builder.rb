@@ -123,12 +123,68 @@ module Cequel
         ascends_by?(order_by_column) ? :asc : :desc
       end
 
-      def method_missing(m, *args, &block)
-        if record_set_delegated_methods.include?(m)
-          record_set.send(m, *args, &block)
-        else
-          super
-        end
+      def row_limit(*args)
+        record_set.send(:row_limit, *args)
+      end
+
+      def select_columns(*args)
+        record_set.send(:select_columns, *args)
+      end
+
+      def scoped_key_names(*args)
+        record_set.send(:scoped_key_names, *args)
+      end
+
+      def select_columns(*args)
+        record_set.send(:select_columns, *args)
+      end
+
+      def scoped_key_names(*args)
+        record_set.send(:scoped_key_names, *args)
+      end
+
+      def scoped_key_values(*args)
+        record_set.send(:scoped_key_values, *args)
+      end
+
+      def scoped_indexed_column(*args)
+        record_set.send(:scoped_indexed_column, *args)
+      end
+
+      def lower_bound(*args)
+        record_set.send(:lower_bound, *args)
+      end
+
+      def upper_bound(*args)
+        record_set.send(:upper_bound, *args)
+      end
+
+      def reversed?(*args)
+        record_set.send(:reversed?, *args)
+      end
+
+      def order_by_column(*args)
+        record_set.send(:order_by_column, *args)
+      end
+
+      def query_consistency(*args)
+        record_set.send(:query_consistency, *args)
+      end
+
+      def query_page_size(*args)
+        record_set.send(:query_page_size, *args)
+      end
+
+      def query_paging_state(*args)
+        record_set.send(:query_paging_state, *args)
+      end
+
+      def ascends_by?(*args)
+        record_set.send(:ascends_by?, *args)
+      end
+
+      def allow_filtering(*args)
+        record_set.send(:allow_filtering, *args)
       end
     end
   end
