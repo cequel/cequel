@@ -97,6 +97,15 @@ module Cequel
         add_stmt %Q|ALTER TABLE "#{table_name}" RENAME "#{old_name}" TO "#{new_name}"|
       end
 
+      # Remove a column
+      #
+      # @param name [Symbol] the name of the column to remove
+      # @return [void]
+      #
+      def drop_column(name)
+        add_stmt %Q|ALTER TABLE "#{table_name}" DROP "#{name}"|
+      end
+
       #
       # Change one or more table storage properties
       #

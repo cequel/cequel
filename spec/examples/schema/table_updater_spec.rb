@@ -151,7 +151,6 @@ describe Cequel::Schema::TableUpdater do
 
   describe '#drop_column' do
     before do
-      pending 'Support in a future Cassandra version'
       cequel.schema.alter_table(table_name) do
         drop_column :body
       end
