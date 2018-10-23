@@ -20,6 +20,6 @@ services:
     links:
       - cassandra
   cassandra:
-    image: smizy/cassandra:3.11-alpine
+    image: cassandra:${CASSANDRA_VERSION}
     volumes:
       - cassandra:/var/lib/cassandra

@@ -41,11 +41,6 @@ bundle exec rake test
 
 ### Using Docker
 
-Cequel's test suite runs against a live Cassandra instance. The easiest way to
-get one is to use Docker, `docker run --rm -p 9042:9042 cassandra`.
-
-### Using Docker Compose
-
 Cequel's test suite, including a development bash environment, container, and Cassandra
 instance is setup for use through Docker Compose.
 
@@ -57,22 +52,23 @@ To use, update the docker-compose.yml with your personal details (for Git compat
 ```bash
 docker-compose run dev
 ```
-This will drop you to a bash prompt in the /cequel/ folder.  From there, you can run
+This will drop you to a bash prompt in the `/cequel/` folder.  From there, you can run
 tests using familiar RSpec commands.
-
-### Using different ports
-
-You can configure the cequel test suite to use a different port by setting the `CEQUEL_TEST_PORT` environment variable. Example:
-1. `docker run --rm -p 33333:9042 cassandra` in one terminal
-1. `rake test CEQUEL_TEST_PORT=33333` in another termainal
 
 ### Cassandra versions
 
 Cequel is tested against a large range of Ruby, Rails, and Cassandra
-versions; for most patches, you can just run the tests using the
+versions; for most patches, you can develop the tests using the
 latest version of all of them. If you're messing with the
 `Cequel::Schema` or `Cequel::Type` modules, you'll want to test at
 least against the first and latest releases of 2.1, 2.2 and 3 series.
+
+If want to use a specific version of Cassandra in development do this: 
+
+```bash
+docker-compose down
+CASSANDRA_VERSION=3.10 docker-compose run dev
+```
 
 ## And finally
 
