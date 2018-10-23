@@ -10,7 +10,6 @@ services:
 language: ruby
 
 rvm:
-  - "2.1"
   - "2.3"
 
 gemfile:
@@ -30,5 +29,3 @@ bundler_args: '--without=debug'
 
 matrix:
   exclude:
-  - rvm: "2.1"
-    gemfile: gemfiles/rails_5.0.gemfile
