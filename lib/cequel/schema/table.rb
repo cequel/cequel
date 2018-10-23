@@ -13,17 +13,6 @@ module Cequel
       # @return [Symbol] the name of the table
       attr_reader :name
 
-      # @return [Array<Column>] all columns defined on the table
-
-      # @return [Array<PartitionKey>] partition key columns defined on the
-      #   table
-
-      # @return [Array<ClusteringColumn>] clustering columns defined on the
-      #   table
-
-      # @return [Array<DataColumn,CollectionColumn>] data columns and
-      #   collection columns defined on the table
-
       # @return [Hash] storage properties defined on the table
       attr_reader :properties
 
@@ -45,52 +34,22 @@ module Cequel
         @is_view
       end
 
-      # Manages the columns by name that have been added to the
-      # table. Uses the hash to create a unique value for this attribute.
-      # The last one loaded in the source load will be the definition
-      # of the column.
-      def columns_by_name
-        @columns_by_name ||= {}
-      end
-
-      # Accessor for the column values on the @columns_by_name hash
-      # used to gain access to the column names.
+      # Returns `Cequel::Schema::Column` descriptors for the columns
+      # of this table in an `Enumerable`.
       def columns
         columns_by_name.values
       end
 
-      # Manages the partition key columns that have been added to the
-      # table. Uses the hash to create a unique value for this attribute.
-      # Similar to columns, the last one loaded in the source load will be
-      # the definition of the column.
-      def partition_key_columns_hash
-        @partition_key_columns_hash ||= {}
-      end
-
-      # Provides an accessor for the partition_key_columns as an array
+      # Returns `Cequel::Schema::Column` descriptors for the partition
+      # key columns of this table in an `Enumerable`.
       def partition_key_columns
         partition_key_columns_hash.values
       end
 
-      # Manages the clustering key columns that have been added to the
-      # table. Uses the hash to create a unique value for this attribute.
-      # Similar to columns, the last one loaded in the source load will be
-      # the definition of the column.
-      def clustering_columns_hash
-        @clustering_columns_hash ||= {}
-      end
-
-      # Provides an accessor for the clustering_key_columns as an array
+      # Returns `Cequel::Schema::Column` descriptors for the cluster
+      # key columns of this table in an `Enumerable`.
       def clustering_columns
         clustering_columns_hash.values
-      end
-
-      # Manages the data key columns that have been added to the
-      # table. Uses the hash to create a unique value for this attribute.
-      # Similar to columns, the last one loaded in the source load will be
-      # the definition of the column.
-      def data_columns_hash
-        @data_columns_hash ||= {}
       end
 
       # Provides an accessor for the data_key_columns as an array
@@ -100,28 +59,14 @@ module Cequel
 
       # Add a column descriptor to this table descriptor.
       #
-      # column_desc - Descriptor of column to add. Can be PartitionKey,
-      #   ClusteringColumn, DataColumn, List, Set, or Map.
+      # column_desc - Descriptor of column to add. Can be `PartitionKey`,
+      #   `ClusteringColumn`, `DataColumn`, `List`, `Set`, or `Map`.
       #
       def add_column(column_desc)
-        if columns_by_name[column_desc.name]
-          raise ArgumentError, "Column #{column_desc.name} already defined"
-        else
-          column_description_store(column_desc)[column_desc.name] = column_desc
-          columns_by_name[column_desc.name]                       = column_desc
-        end
-      end
+        (raise ArgumentError, "Column #{column_desc.name} already defined") if has_column?(column_desc.name)
 
-      # Stores the column description in the appropriate storage hash
-      # for the column name and column type.
-      def column_description_store(column_desc)
-        if partition_key?(column_desc)
-          partition_key_columns_hash
-        elsif cluster_key?(column_desc)
-          clustering_columns_hash
-        else
-          data_columns_hash
-        end
+        column_description_store(column_desc)[column_desc.name] = column_desc
+        columns_by_name[column_desc.name]                       = column_desc
       end
 
       #
@@ -252,6 +197,50 @@ module Cequel
       end
 
       protected
+
+      # Manages the columns by name that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # The last one loaded in the source load will be the definition
+      # of the column.
+      def columns_by_name
+        @columns_by_name ||= {}
+      end
+
+      # Manages the partition key columns that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # Similar to columns, the last one loaded in the source load will be
+      # the definition of the column.
+      def partition_key_columns_hash
+        @partition_key_columns_hash ||= {}
+      end
+
+      # Manages the clustering key columns that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # Similar to columns, the last one loaded in the source load will be
+      # the definition of the column.
+      def clustering_columns_hash
+        @clustering_columns_hash ||= {}
+      end
+
+      # Manages the data key columns that have been added to the
+      # table. Uses the hash to create a unique value for this attribute.
+      # Similar to columns, the last one loaded in the source load will be
+      # the definition of the column.
+      def data_columns_hash
+        @data_columns_hash ||= {}
+      end
+
+      # Stores the column description in the appropriate storage hash
+      # for the column name and column type.
+      def column_description_store(column_desc)
+        if partition_key?(column_desc)
+          partition_key_columns_hash
+        elsif cluster_key?(column_desc)
+          clustering_columns_hash
+        else
+          data_columns_hash
+        end
+      end
 
       def type(type)
         type = type.kind if type.respond_to?(:kind)

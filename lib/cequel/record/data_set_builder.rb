@@ -48,14 +48,14 @@ module Cequel
 
       protected
 
-      def record_set_delegated_methods
-        %i[ row_limit select_columns scoped_key_names scoped_key_values
-            scoped_indexed_column lower_bound upper_bound reversed? order_by_column
-            query_consistency query_page_size query_paging_state ascends_by? allow_filtering ]
-      end
-
       attr_accessor :data_set
       attr_reader :record_set
+      def_delegators :record_set, :row_limit, :select_columns,
+                     :scoped_key_names, :scoped_key_values,
+                     :scoped_indexed_column, :lower_bound,
+                     :upper_bound, :reversed?, :order_by_column,
+                     :query_consistency, :query_page_size, :query_paging_state,
+                     :ascends_by?, :allow_filtering
 
       private
 
@@ -121,70 +121,6 @@ module Cequel
 
       def sort_direction
         ascends_by?(order_by_column) ? :asc : :desc
-      end
-
-      def row_limit(*args)
-        record_set.send(:row_limit, *args)
-      end
-
-      def select_columns(*args)
-        record_set.send(:select_columns, *args)
-      end
-
-      def scoped_key_names(*args)
-        record_set.send(:scoped_key_names, *args)
-      end
-
-      def select_columns(*args)
-        record_set.send(:select_columns, *args)
-      end
-
-      def scoped_key_names(*args)
-        record_set.send(:scoped_key_names, *args)
-      end
-
-      def scoped_key_values(*args)
-        record_set.send(:scoped_key_values, *args)
-      end
-
-      def scoped_indexed_column(*args)
-        record_set.send(:scoped_indexed_column, *args)
-      end
-
-      def lower_bound(*args)
-        record_set.send(:lower_bound, *args)
-      end
-
-      def upper_bound(*args)
-        record_set.send(:upper_bound, *args)
-      end
-
-      def reversed?(*args)
-        record_set.send(:reversed?, *args)
-      end
-
-      def order_by_column(*args)
-        record_set.send(:order_by_column, *args)
-      end
-
-      def query_consistency(*args)
-        record_set.send(:query_consistency, *args)
-      end
-
-      def query_page_size(*args)
-        record_set.send(:query_page_size, *args)
-      end
-
-      def query_paging_state(*args)
-        record_set.send(:query_paging_state, *args)
-      end
-
-      def ascends_by?(*args)
-        record_set.send(:ascends_by?, *args)
-      end
-
-      def allow_filtering(*args)
-        record_set.send(:allow_filtering, *args)
       end
     end
   end
