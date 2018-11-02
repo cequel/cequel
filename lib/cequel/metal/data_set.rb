@@ -696,11 +696,7 @@ module Cequel
         end
       end
 
-      protected
-
       attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state, :allow_filtering
-
-      private
 
       def results
         @results ||= execute_cql(cql)
@@ -729,6 +725,8 @@ module Cequel
       def deleter(&block)
         Deleter.new(self, &block)
       end
+
+      private
 
       def initialize_copy(source)
         super

@@ -713,30 +713,23 @@ module Cequel
         self.cequel_attributes = attr
       end
 
-
       attr_accessor :cequel_attributes
 
-      protected
-      
-      hattr_reader :cequel_attributes, :select_columns, :scoped_key_values,
-                   :row_limit, :lower_bound, :upper_bound,
-                   :scoped_indexed_column, :query_consistency,
-                   :query_page_size, :query_paging_state,
-                   :allow_filtering
-      protected :select_columns, :scoped_key_values, :row_limit, :lower_bound,
-                :upper_bound, :scoped_indexed_column, :query_consistency,
-                :query_page_size, :query_paging_state, :allow_filtering
-      hattr_inquirer :attributes, :reversed
-      protected :reversed?
+      def unscoped_key_names
+        unscoped_key_columns.map { |column| column.name }
+      end
 
-      def next_batch_from(row)
-        range_key_value = row[range_key_name]
-        if ascends_by?(range_key_column)
-          after(range_key_value)
-        else
-          before(range_key_value)
+      def order_by_column
+        if target_class.clustering_columns.any?
+          target_class.clustering_columns.first
         end
       end
+
+      def scoped_key_names
+        scoped_key_columns.map { |column| column.name }
+      end
+
+      hattr_inquirer :attributes, :reversed
 
       def ascends_by?(column)
         !descends_by?(column)
@@ -745,6 +738,24 @@ module Cequel
       def descends_by?(column)
         column.clustering_column? &&
           (reversed? ^ (column.clustering_order == :desc))
+      end
+
+
+      hattr_reader :cequel_attributes, :select_columns, :scoped_key_values,
+                   :row_limit, :lower_bound, :upper_bound,
+                   :scoped_indexed_column, :query_consistency,
+                   :query_page_size, :query_paging_state,
+                   :allow_filtering
+
+      protected
+
+      def next_batch_from(row)
+        range_key_value = row[range_key_name]
+        if ascends_by?(range_key_column)
+          after(range_key_value)
+        else
+          before(range_key_value)
+        end
       end
 
       def find_nested_batches_from(row, options, &block)
@@ -846,20 +857,12 @@ module Cequel
         scoped(scoped_indexed_column: {column_name => column.cast(value)})
       end
 
-      def scoped_key_names
-        scoped_key_columns.map { |column| column.name }
-      end
-
       def scoped_key_columns
         target_class.key_columns.first(scoped_key_values.length)
       end
 
       def unscoped_key_columns
         target_class.key_columns.drop(scoped_key_values.length)
-      end
-
-      def unscoped_key_names
-        unscoped_key_columns.map { |column| column.name }
       end
 
       def range_key_column
@@ -920,12 +923,6 @@ module Cequel
           end
         else
           self
-        end
-      end
-
-      def order_by_column
-        if target_class.clustering_columns.any?
-          target_class.clustering_columns.first
         end
       end
 

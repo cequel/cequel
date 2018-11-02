@@ -260,6 +260,16 @@ module Cequel
         self
       end
 
+      def updater
+        raise ArgumentError, "Can't get updater for new record" if new_record?
+        @updater ||= Metal::Updater.new(metal_scope)
+      end
+
+      def deleter
+        raise ArgumentError, "Can't get deleter for new record" if new_record?
+        @deleter ||= Metal::Deleter.new(metal_scope)
+      end
+
       protected
 
       def persisted!
@@ -290,16 +300,6 @@ module Cequel
         end
       end
       instrument :update, data: ->(rec) { {table_name: rec.table_name} }
-
-      def updater
-        raise ArgumentError, "Can't get updater for new record" if new_record?
-        @updater ||= Metal::Updater.new(metal_scope)
-      end
-
-      def deleter
-        raise ArgumentError, "Can't get deleter for new record" if new_record?
-        @deleter ||= Metal::Deleter.new(metal_scope)
-      end
 
       private
 
