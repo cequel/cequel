@@ -218,7 +218,7 @@ module Cequel
       #   @param elements [Array] new elements to replace in this range
       #
       def []=(*args)
-        if args[0].is_a?(Fixnum) && args.count == 2
+        if args[0].is_a?(Integer) && args.count == 2
           # single element set/replace
           elem = cast_element(args[1])
 
@@ -231,7 +231,7 @@ module Cequel
           # multi-element set/replace
           range = if args[0].is_a?(Range)
                     args[0]
-                  elsif args[0].is_a?(Fixnum) && args[1].is_a?(Fixnum)
+                  elsif args[0].is_a?(Integer) && args[1].is_a?(Integer)
                     args[0]..(args[0]+args[1]-1)
                   else
                     Kernel.raise ArgumentError, "[i]=elem or [i,count]=elems or [a..b]=elems"
