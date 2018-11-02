@@ -188,8 +188,6 @@ module Cequel
         end
       end
 
-      private
-
       def read_parent_association
         ivar_name = parent_association.instance_variable_name
         if instance_variable_defined?(ivar_name)
