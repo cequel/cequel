@@ -1,3 +1,6 @@
+## 3.0.4
+- support ruby 2.5 and rails 5.2 (https://github.com/cequel/cequel/pull/401)
+
 ## 3.0.2
 - support rails 5.1 (https://github.com/cequel/cequel/pull/389)
 - various small changes
