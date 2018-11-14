@@ -1,3 +1,6 @@
+## 3.1.0
+- Can now drop columns (https://github.com/cequel/cequel/pull/398)
+
 ## 3.0.4
 - support ruby 2.5 and rails 5.2 (https://github.com/cequel/cequel/pull/401)
 
