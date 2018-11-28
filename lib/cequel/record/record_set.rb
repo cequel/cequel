@@ -846,7 +846,7 @@ module Cequel
                "Can't scope key column #{column_name} without also scoping " \
                "#{missing_column_names.join(', ')}"
         end
-        if scoped_indexed_column
+        if scoped_indexed_column && !allow_filtering
           fail IllegalQuery,
                "Can't scope by more than one indexed column in the same query"
         end

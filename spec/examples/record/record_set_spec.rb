@@ -819,8 +819,15 @@ describe Cequel::Record::RecordSet do
     end
 
     context 'allow_filtering!', cql: '~> 3.4' do
-      it 'should allow filtering for none indexed columns' do
+      it 'should allow filtering for non-indexed columns' do
         expect(Post.allow_filtering!.where(title: 'Cequel 0').entries.length).to be(1)
+      end
+
+      it 'should allow filtering for more than one non-indexed column' do
+        expect(Post.allow_filtering!.where(
+          title: 'Cequel 0',
+          body: 'Post number 0'
+        ).entries.length).to be(1)
       end
     end
   end
