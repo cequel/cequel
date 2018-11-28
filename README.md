@@ -150,6 +150,25 @@ module Blogger
 end
 ```
 
+### Compound Partition Keys ###
+
+If you wish to declare a compound partition key in a model, you can do something like:
+
+```ruby
+class Post
+  include Cequel::Record
+
+  key :country, :text, partition: true
+  key :blog, :text, partition: true
+  key :id, :timeuuid, auto: true
+  column :title, :text
+  column :body, :text
+end
+```
+
+Your compound partition key here is `(country, blog)`, and the entire compound primary key is `((country, blog), id)`.
+Any key values defined after the last partition key value are clustering columns.
+
 ### Timestamps ###
 
 If your final primary key column is a `timeuuid` with the `:auto` option set,
