@@ -1,3 +1,6 @@
+## 3.2.0
+- Can filter on more than one non-indexed columns (https://github.com/cequel/cequel/pull/404)
+
 ## 3.1.0
 - Can now drop columns (https://github.com/cequel/cequel/pull/398)
 
