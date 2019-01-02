@@ -1,5 +1,5 @@
 ---
-engines:
+plugins:
   duplication:
     enabled: true
     config:
@@ -7,9 +7,4 @@ engines:
       - ruby
   rubocop:
     enabled: true
-    
-ratings:
-  paths:
-  - "**.rb"
-
-exclude_paths: 
+version: 2
