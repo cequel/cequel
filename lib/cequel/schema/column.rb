@@ -205,6 +205,18 @@ module Cequel
       end
     end
 
+    class UdtColumn < DataColumn
+      #
+      # @param value the value to cast
+      # @return the value cast as a hash
+      #
+      # @api private
+      #
+      def cast(value)
+        Cassandra::UDT.new(value.to_h)
+      end
+    end
+
     #
     # A collection column (list, set, or map)
     #

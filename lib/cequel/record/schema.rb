@@ -154,6 +154,11 @@ module Cequel
           dsl.map(name, key_type, value_type)
         end
 
+        def udt(name, type, options = {})
+          super
+          dsl.udt(name, type, options)
+        end
+
         def table_property(name, value)
           dsl.with(name, value)
         end

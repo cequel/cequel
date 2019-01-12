@@ -200,6 +200,23 @@ module Cequel
           set_empty_attribute(name) { {} }
         end
 
+        #
+        # Define a user-defined type column
+        #
+        # @param name [Symbol] the name of the UDT column
+        # @param type [Symbol] the UDT to use
+        # @option options [Object,Proc] :default ({}) a default value for the
+        #   column, or a proc that returns a default value for the column
+        # @return [void]
+        #
+        # @see Record::Map
+        # @since 1.0.0
+        #
+        def udt(name, type, options = {})
+          def_udt_accessors(name)
+          set_attribute_default(name, options[:default])
+        end
+
         private
 
         def def_enum(name, values)
@@ -266,6 +283,21 @@ module Cequel
             def #{name}=(value)
               reset_collection_proxy(#{name.inspect})
               write_attribute(#{name.inspect}, value)
+            end
+          RUBY
+        end
+
+        def def_udt_accessors(name)
+          name = name.to_sym
+          def_udt_reader(name)
+          def_writer(name)
+        end
+
+        def def_udt_reader(name)
+          module_eval <<-RUBY, __FILE__, __LINE__+1
+            def #{name}
+              value = read_attribute(#{name.inspect})
+              (value.is_a? Cassandra::UDT) ? value.to_h.symbolize_keys : value
             end
           RUBY
         end
