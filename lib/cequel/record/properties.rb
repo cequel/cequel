@@ -209,9 +209,6 @@ module Cequel
         #   column, or a proc that returns a default value for the column
         # @return [void]
         #
-        # @see Record::Map
-        # @since 1.0.0
-        #
         def udt(name, type, options = {})
           def_udt_accessors(name)
           set_attribute_default(name, options[:default])
