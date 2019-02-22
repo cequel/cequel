@@ -743,7 +743,7 @@ module Cequel
 
       hattr_reader :cequel_attributes, :select_columns, :scoped_key_values,
                    :row_limit, :lower_bound, :upper_bound,
-                   :scoped_indexed_column, :query_consistency,
+                   :scoped_secondary_columns, :query_consistency,
                    :query_page_size, :query_paging_state,
                    :allow_filtering
 
@@ -818,7 +818,7 @@ module Cequel
         if column_values.key?(next_unscoped_key_name)
           filter_primary_key(column_values.delete(next_unscoped_key_name))
         else
-          filter_secondary_index(*column_values.shift)
+          filter_secondary_column(*column_values.shift)
         end.filter_columns(column_values)
       end
 
@@ -832,7 +832,7 @@ module Cequel
         end
       end
 
-      def filter_secondary_index(column_name, value)
+      def filter_secondary_column(column_name, value)
         column = target_class.reflect_on_column(column_name)
         if column.nil?
           fail ArgumentError,
@@ -846,15 +846,16 @@ module Cequel
                "Can't scope key column #{column_name} without also scoping " \
                "#{missing_column_names.join(', ')}"
         end
-        if scoped_indexed_column && !allow_filtering
+        if scoped_secondary_columns && !allow_filtering
           fail IllegalQuery,
-               "Can't scope by more than one indexed column in the same query"
+               "Can't scope by more than one indexed column in the same query without allow_filtering!"
         end
         unless column.indexed? || allow_filtering
           fail ArgumentError,
-               "Can't scope by non-indexed column #{column_name}"
+               "Can't scope by non-indexed column #{column_name} without allow_filtering!"
         end
-        scoped(scoped_indexed_column: {column_name => column.cast(value)})
+        filter = { column_name => column.cast(value) }
+        scoped(scoped_secondary_columns: scoped_secondary_columns ? scoped_secondary_columns.merge(filter) : filter)
       end
 
       def scoped_key_columns

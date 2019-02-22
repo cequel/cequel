@@ -13,6 +13,7 @@ describe Cequel::Record::RecordSet do
     key :permalink, :ascii
     column :title, :text
     column :body, :text
+    column :subtitle, :text
     column :author_id, :uuid, index: true
     column :author_name, :text, index: true
     list :tags, :text
@@ -54,11 +55,12 @@ describe Cequel::Record::RecordSet do
   let(:cassandra_posts) do
     5.times.map do |i|
       Post.new(
-        :blog_subdomain => 'cassandra',
-        :permalink => "cequel#{i}",
-        :title => "Cequel #{i}",
-        :body => "Post number #{i}",
-        :author_id => uuids[i%2]
+        blog_subdomain: 'cassandra',
+        permalink: "cequel#{i}",
+        title: "Cequel #{i}",
+        subtitle: 'New Cequel Post',
+        body: "Post number #{i}",
+        author_id: uuids[i%2]
       )
     end
   end
@@ -826,7 +828,7 @@ describe Cequel::Record::RecordSet do
       it 'should allow filtering for more than one non-indexed column' do
         expect(Post.allow_filtering!.where(
           title: 'Cequel 0',
-          body: 'Post number 0'
+          subtitle: 'New Cequel Post'
         ).entries.length).to be(1)
       end
     end
