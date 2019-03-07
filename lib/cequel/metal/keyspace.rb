@@ -167,7 +167,7 @@ module Cequel
       end
 
       #
-      # @return [Cql::Client::Client] the low-level client provided by the
+      # @return [Cassandra::Session] the low-level client session provided by the
       #   adapter
       # @api private
       #
