@@ -107,7 +107,7 @@ module Cequel
 
       # @private
       def self.default_attributes
-        {scoped_key_values: [], select_columns: []}
+        { scoped_key_values: [], select_columns: [], scoped_secondary_columns: {} }
       end
 
       # @return [Class] the Record class that this collection yields instances
@@ -835,27 +835,11 @@ module Cequel
       def filter_secondary_column(column_name, value)
         column = target_class.reflect_on_column(column_name)
         if column.nil?
-          fail ArgumentError,
-               "No column #{column_name} configured for #{target_class.name}"
+          fail ArgumentError, "No column #{column_name} configured for #{target_class.name}"
         end
-        if column.key?
-          missing_column_names = unscoped_key_names.take_while do |key_name|
-            key_name != column_name
-          end
-          fail IllegalQuery,
-               "Can't scope key column #{column_name} without also scoping " \
-               "#{missing_column_names.join(', ')}"
-        end
-        if scoped_secondary_columns && !allow_filtering
-          fail IllegalQuery,
-               "Can't scope by more than one indexed column in the same query without allow_filtering!"
-        end
-        unless column.indexed? || allow_filtering
-          fail ArgumentError,
-               "Can't scope by non-indexed column #{column_name} without allow_filtering!"
-        end
-        filter = { column_name => column.cast(value) }
-        scoped(scoped_secondary_columns: scoped_secondary_columns ? scoped_secondary_columns.merge(filter) : filter)
+        validate_secondary_column_filter(column)
+        scoped(scoped_secondary_columns:
+               scoped_secondary_columns.merge(column_name => column.cast(value)))
       end
 
       def scoped_key_columns
@@ -994,6 +978,32 @@ module Cequel
           value.map { |element| next_unscoped_key_column.cast(element) }
         else
           next_unscoped_key_column.cast(value)
+        end
+      end
+
+      def validate_secondary_column_filter(column)
+        if column.key?
+          missing_column_names = unscoped_key_names.take_while do |key_name|
+            key_name != column.name
+          end
+          fail IllegalQuery,
+               "Can't scope key column #{column.name} without also scoping " \
+               "#{missing_column_names.join(', ')}"
+        else
+          validate_non_key_column_filter(column)
+        end
+      end
+
+      def validate_non_key_column_filter(column)
+        return if allow_filtering
+
+        if scoped_secondary_columns.any?
+          fail IllegalQuery,
+               "Can't scope by more than one indexed column in the same query without allow_filtering!"
+        end
+        unless column.indexed?
+          fail ArgumentError,
+               "Can't scope by non-indexed column #{column.name} without allow_filtering!"
         end
       end
     end
