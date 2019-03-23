@@ -1,3 +1,7 @@
+## 3.2.1
+- fix multiple non-index column filtering (https://github.com/cequel/cequel/pull/407)
+- fix KeySpace#client docs (https://github.com/cequel/cequel/pull/409)
+
 ## 3.2.0
 - Can filter on more than one non-indexed columns (https://github.com/cequel/cequel/pull/404)
 
