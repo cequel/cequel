@@ -282,7 +282,7 @@ module Cequel
     #
     class Decimal < Base
       def cast(value)
-        value.is_a?(BigDecimal) ? value : BigDecimal.new(value, 0)
+        value.is_a?(BigDecimal) ? value : BigDecimal(value, 0)
       end
     end
     register Decimal.instance
