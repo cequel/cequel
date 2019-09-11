@@ -59,10 +59,22 @@ module Cequel
           records_by_identity[identity].hydrate(row)
         end
 
-        loaded_count = count { |record| record.loaded? }
-        if loaded_count < count
-          fail Cequel::Record::RecordNotFound,
-               "Expected #{count} results; got #{loaded_count}"
+        loaded_count = 0
+        missing_keys_loaded = []
+        puts "KEYS: #{records_by_identity.keys.inspect}"
+        if records_by_identity.keys.any? { |key| records_by_identity[key].loaded? != true }
+          records_by_identity.keys.each do |key| 
+            if records_by_identity[key].loaded? != true 
+              missing_keys_loaded << key
+            else
+              loaded_count += 1
+            end
+          end
+          
+          if loaded_count < count
+            fail Cequel::Record::RecordNotFound,
+                 "Expected #{count} results; got #{loaded_count}, missing #{missing_keys_loaded.join(", ")}"
+          end
         end
 
         self
