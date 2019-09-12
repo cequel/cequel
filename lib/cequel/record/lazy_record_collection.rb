@@ -61,7 +61,6 @@ module Cequel
 
         loaded_count = 0
         missing_keys_loaded = []
-        puts "KEYS: #{records_by_identity.keys.inspect}"
         if records_by_identity.keys.any? { |key| records_by_identity[key].loaded? != true }
           records_by_identity.keys.each do |key| 
             if records_by_identity[key].loaded? != true 

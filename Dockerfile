@@ -2,7 +2,7 @@ FROM ruby:alpine
 
 # Put the basic system setup in a layer of its own so we don't have
 # rebuild it all the time.
-RUN apk add --update build-base tzdata bash bash-completion git \
+RUN apk add --update build-base tzdata bash bash-completion git less \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /cequel

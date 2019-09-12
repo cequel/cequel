@@ -1,3 +1,6 @@
+## 3.2.2
+- fix serialization to work with ruby 2.6
+
 ## 3.2.1
 - fix multiple non-index column filtering (https://github.com/cequel/cequel/pull/407)
 - fix KeySpace#client docs (https://github.com/cequel/cequel/pull/409)
