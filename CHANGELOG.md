@@ -1,5 +1,6 @@
 ## 3.2.2
 - fix serialization to work with ruby 2.6
+- add less to the docker container so that pry works in development mode
 
 ## 3.2.1
 - fix multiple non-index column filtering (https://github.com/cequel/cequel/pull/407)

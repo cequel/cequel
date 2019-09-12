@@ -27,12 +27,12 @@ describe 'serialization' do
 
   it 'should provide JSON serialization' do
     json = post.as_json.deep_symbolize_keys
-    compare_attributes = attributes.merge(body: nil, id: {n: post.attributes["id"].to_i})
+    compare_attributes = attributes.merge(body: nil, id: {n: post.attributes["id"].to_i, s: post.attributes["id"].to_s})
     expect(json).to eq(compare_attributes)
   end
 
   it 'should be able to serialize restricting to some attributes' do
     json = post.as_json(only: [:id]).deep_symbolize_keys
-    expect(json).to eq(id: {n: post.attributes[:id].to_i})
+    expect(json).to eq(id: {n: post.attributes[:id].to_i, s: post.attributes[:id].to_s})
   end
 end

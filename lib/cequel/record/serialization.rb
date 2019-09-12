@@ -40,7 +40,7 @@ module Cequel
       def cast_time_uuid_to_hash(value)
         return value unless value.is_a?(Cassandra::TimeUuid)
 
-        {"n" => value.to_i}
+        {"n" => value.to_i, "s" => value.to_s}
       end
     end
   end
