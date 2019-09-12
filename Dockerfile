@@ -1,4 +1,4 @@
-FROM ruby:alpine
+FROM ruby:2.5.6-alpine
 
 # Put the basic system setup in a layer of its own so we don't have
 # rebuild it all the time.
