@@ -847,12 +847,7 @@ module Cequel
       end
 
       def unscoped_key_columns
-        # puts "Key columns length is #{key_columns.length}"
-        # puts "Scoped key values length of #{scoped_key_values.length}"
-        # puts "Scoped key values #{scoped_key_values.inspect}" if scoped_key_values.length == 1
-        ret_val = target_class.key_columns.drop(scoped_key_values.length)
-        puts "#RETVAL = #{ret_val}"
-        ret_val
+        target_class.key_columns.drop(scoped_key_values.length)
       end
 
       def range_key_column

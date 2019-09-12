@@ -53,27 +53,28 @@ module Cequel
       # @return [LazyRecordCollection] self
       def load!
         records_by_identity = index_by { |record| record.key_values }
-
+        track_hydrate_errors = []
+        
         record_set.find_each_row do |row|
           identity = row.values_at(*record_set.key_column_names)
-          records_by_identity[identity].hydrate(row)
+          resp = records_by_identity[identity].hydrate(row)
+          if records_by_identity[identity].loaded? == false
+            track_hydrate_errors << {identity: identity, record: records_by_identity[identity], row: row}
+          end
+          resp
         end
 
-        loaded_count = 0
-        missing_keys_loaded = []
-        if records_by_identity.keys.any? { |key| records_by_identity[key].loaded? != true }
-          records_by_identity.keys.each do |key| 
-            if records_by_identity[key].loaded? != true 
-              missing_keys_loaded << key
-            else
-              loaded_count += 1
-            end
-          end
-          
-          if loaded_count < count
-            fail Cequel::Record::RecordNotFound,
-                 "Expected #{count} results; got #{loaded_count}, missing #{missing_keys_loaded.join(", ")}"
-          end
+        track_hydrate_errors.each do |error_record|
+          puts "\nIdentity: #{error_record[:identity]}"
+          puts "Row: #{error_record[:row]}"
+          puts "Record: #{error_record[:record]}"
+          puts "Record class #{error_record[:record].class}"
+        end
+
+        loaded_count = count { |record| puts record.loaded?; record.loaded? }
+        if loaded_count < count
+          fail Cequel::Record::RecordNotFound,
+               "Expected #{count} results; got #{loaded_count}"
         end
 
         self
