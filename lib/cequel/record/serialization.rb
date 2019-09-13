@@ -4,7 +4,7 @@ module Cequel
     #
     # `Cequel::Record` implementations use a number of different types
     # of columns than ActiveRecord columns. In later versions of Ruby (2.6.3+)
-    # some of tehse column types (such as a Cequel::TimeUUID) are not
+    # some of these column types (such as a Cequel::TimeUUID) are not
     # serialized correctly.  Rails provides a method to handle this wtih a
     # hook built in to take control of what is represented as a 
     # serializable hash. This module overrides that funcionality to allow
