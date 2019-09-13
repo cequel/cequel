@@ -1,4 +1,11 @@
-FROM ruby:2.5.6-alpine
+ARG RUBY_VERSION
+FROM ruby:$RUBY_VERSION-alpine
+
+ARG GIT_AUTHOR_NAME
+ARG GIT_AUTHOR_EMAIL
+
+ENV GIT_AUTHOR_NAME=$GIT_AUTHOR_NAME
+ENV GIT_AUTHOR_EMAIL=$GIT_AUTHOR_EMAIL
 
 # Put the basic system setup in a layer of its own so we don't have
 # rebuild it all the time.
