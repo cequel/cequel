@@ -81,7 +81,7 @@ module Cequel
 
         if track_hydrate_failed.length > 0
           fail Cequel::Record::RecordNotFound,
-               "Expected #{count} results; got #{track_hydrate_failed.length}"
+               "Expected #{count} results; got #{count - track_hydrate_failed.length}"
         end
 
         self
