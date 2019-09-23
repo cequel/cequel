@@ -680,3 +680,4 @@ Cequel is distributed under the MIT license. See the attached LICENSE for all
 the sordid details.
 
 [CQL3]: http://docs.datastax.com/en/cql/3.3/cql/cqlIntro.html
+
