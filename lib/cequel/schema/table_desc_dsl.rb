@@ -111,6 +111,15 @@ module Cequel
         columns << Set.new(name, type(type))
       end
 
+      # Describe a column of a user-defined type.
+      #
+      # name - The name of the column.
+      # type - The user-defined type of the members of this column. Always a symbol.
+      #
+      def udt(name, type, options = {})
+        columns << UdtColumn.new(name, type.to_sym)
+      end
+
       # Describe a column of type map.
       #
       # name - The name of the column.
