@@ -1,3 +1,9 @@
+## 3.2.2
+- Change hydrate strategy to eliminate double looping and resolve errors with hydration in Ruby 2.6.4
+- Fix JSON serialization to work with ruby 2.6 and Rails 5.2 ActiveModel Serializers (test fix)
+- Add less to the docker container so that pry works in development mode
+- Make docker-compose configurable with args to be able to test/develop with different ruby versions
+
 ## 3.2.1
 - fix multiple non-index column filtering (https://github.com/cequel/cequel/pull/407)
 - fix KeySpace#client docs (https://github.com/cequel/cequel/pull/409)

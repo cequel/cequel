@@ -49,20 +49,39 @@ module Cequel
 
       #
       # Hydrate all the records in this collection from a database query
+      # 
+      # Takes the record_set (Cequel::RecordSet type), indexes it by the
+      # tracked_class's keys, and the loops over self to hydrate the values
+      # into the records.  
+      #
+      # In the loop, checks to ensure that every row was hydrated.  If not,
+      # the record is added to a tracking array that can be used in future
+      # versions of Cequel (and/or during gem troubleshooting). 
+      #
+      # After hydrating the records, the error count is checked, and
+      # the system returns an error that states how many records were
+      # unable to by hydrated if there are unhydrated records.
       #
       # @return [LazyRecordCollection] self
       def load!
-        records_by_identity = index_by { |record| record.key_values }
-
+        key_values = record_set.key_column_names
+        track_hydrate_failed = []
+        
+        rows_by_identity = {}
         record_set.find_each_row do |row|
-          identity = row.values_at(*record_set.key_column_names)
-          records_by_identity[identity].hydrate(row)
+          identity = row.values_at(*key_values)
+          rows_by_identity[identity] = row
         end
 
-        loaded_count = count { |record| record.loaded? }
-        if loaded_count < count
+        each do |record|
+          row = rows_by_identity[record.key_values]
+          record.hydrate(row) if row
+          track_hydrate_failed << record if record.loaded? == false
+        end
+
+        if track_hydrate_failed.length > 0
           fail Cequel::Record::RecordNotFound,
-               "Expected #{count} results; got #{loaded_count}"
+               "Expected #{count} results; got #{count - track_hydrate_failed.length}"
         end
 
         self

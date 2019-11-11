@@ -5,7 +5,11 @@ volumes:
     driver: local
 services:
   dev:
-    build: .
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        RUBY_VERSION: "2.6.4"
     volumes:
       - ./:/cequel
     environment:

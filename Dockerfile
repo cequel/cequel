@@ -1,8 +1,15 @@
-FROM ruby:alpine
+ARG RUBY_VERSION
+FROM ruby:$RUBY_VERSION-alpine
+
+ARG GIT_AUTHOR_NAME
+ARG GIT_AUTHOR_EMAIL
+
+ENV GIT_AUTHOR_NAME=$GIT_AUTHOR_NAME
+ENV GIT_AUTHOR_EMAIL=$GIT_AUTHOR_EMAIL
 
 # Put the basic system setup in a layer of its own so we don't have
 # rebuild it all the time.
-RUN apk add --update build-base tzdata bash bash-completion git \
+RUN apk add --update build-base tzdata bash bash-completion git less \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /cequel

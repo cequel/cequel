@@ -399,9 +399,7 @@ module Cequel
       def init_attributes(new_attributes)
         @cequel_attributes = {}
         new_attributes.each_pair do |name, value|
-          if value.nil?
-            value = empty_attributes.fetch(name.to_sym) { -> {} }.call
-          end
+          value = empty_attributes.fetch(name.to_sym) { -> {} }.call if value.nil?
           @cequel_attributes[name.to_sym] = value
         end
         @cequel_attributes
