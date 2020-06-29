@@ -62,7 +62,8 @@ module Cequel
       #
       def generate_upsert_options(options)
         upsert_options = options.slice(:timestamp, :ttl)
-        if upsert_options.empty?
+        bind_vars = []
+        statement = if upsert_options.empty?
           ''
         else
           ' USING ' <<
@@ -70,11 +71,15 @@ module Cequel
             serialized_value =
               case key
               when :timestamp then (value.to_f * 1_000_000).to_i
+              when :ttl
+                bind_vars << value
+                '?'
               else value
               end
             "#{key.to_s.upcase} #{serialized_value}"
           end.join(' AND ')
         end
+        return statement, *bind_vars
       end
     end
   end

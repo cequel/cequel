@@ -148,7 +148,7 @@ module Cequel
       def write_to_statement(statement, options)
         all_statements, all_bind_vars = statements_with_column_updates
         statement.append("UPDATE #{table_name}")
-          .append(generate_upsert_options(options))
+          .append(*generate_upsert_options(options))
           .append(" SET ")
           .append(all_statements.join(', '), *all_bind_vars)
       end

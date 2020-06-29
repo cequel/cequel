@@ -71,7 +71,7 @@ module Cequel
             .append(statements.join(','), *bind_vars)
             .append(" FROM #{table_name}")
         end
-        statement.append(generate_upsert_options(options))
+        statement.append(*generate_upsert_options(options))
       end
 
       def empty?
