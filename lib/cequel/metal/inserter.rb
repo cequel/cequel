@@ -63,7 +63,7 @@ module Cequel
         statement.append(
           " (#{column_names.join(', ')}) VALUES (#{statements.join(', ')}) ",
           *bind_vars)
-        statement.append(generate_upsert_options(options))
+        statement.append(*generate_upsert_options(options))
       end
     end
   end
