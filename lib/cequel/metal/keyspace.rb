@@ -411,7 +411,7 @@ module Cequel
       end
 
       def extract_datacenter(configuration)
-        configuration.fetch(:datacenter, nil)
+        configuration[:datacenter]
       end
     end
   end
