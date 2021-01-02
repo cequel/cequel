@@ -21,6 +21,8 @@ module Cequel
       attr_reader :hosts
       # @return Integer port to connect to Cassandra nodes on
       attr_reader :port
+      # @return [String] name of the datacenter
+      attr_reader :datacenter
       # @return [Symbol] the default consistency for queries in this keyspace
       # @since 1.1.0
       attr_writer :default_consistency
@@ -32,8 +34,10 @@ module Cequel
       attr_reader :client_compression
       # @return [Hash] A hash of additional options passed to Cassandra, if any
       attr_reader :cassandra_options
-      # @return [Object] The error policy object in use by this keyspace 
+      # @return [Object] The error policy object in use by this keyspace
       attr_reader :error_policy
+      # @return [::Cassandra::LoadBalancing::Policy] Policy used for Cassandra connection
+      attr_reader :load_balancing_policy
 
       #
       # @!method write(statement, *bind_vars)
@@ -124,7 +128,7 @@ module Cequel
       #   key
       # @option configuration [String] :passphrase the passphrase for client
       #   private key
-      # @option configuration [String] :cassandra_error_policy A mixin for 
+      # @option configuration [String] :cassandra_error_policy A mixin for
       #   handling errors from Cassandra
       # @option configuration [Hash] :cassandra_options A hash of arbitrary
       #   options to pass to Cassandra
@@ -136,16 +140,18 @@ module Cequel
                "with Cassandra. The :thrift option is deprecated and ignored."
         end
         @configuration = configuration
-        
+
         @error_policy = extract_cassandra_error_policy(configuration)
         @cassandra_options = extract_cassandra_options(configuration)
         @hosts, @port = extract_hosts_and_port(configuration)
+        @datacenter = extract_datacenter(configuration)
         @credentials  = extract_credentials(configuration)
         @ssl_config = extract_ssl_config(configuration)
 
         @name = configuration[:keyspace]
         @default_consistency = configuration[:default_consistency].try(:to_sym)
         @client_compression = configuration[:client_compression].try(:to_sym)
+        @load_balancing_policy = create_load_balancing_policy
 
         # reset the connections
         clear_active_connections!
@@ -326,6 +332,7 @@ module Cequel
           options.merge!(ssl_config) if ssl_config
           options.merge!(compression: client_compression) if client_compression
           options.merge!(cassandra_options) if cassandra_options
+          options.merge!(load_balancing_policy) if load_balancing_policy
         end
       end
 
@@ -335,6 +342,15 @@ module Cequel
 
       def write_target
         current_batch || self
+      end
+
+      def create_load_balancing_policy
+        return unless datacenter
+
+        dc_aware_round_robin_policy = ::Cassandra::LoadBalancing::Policies::DCAwareRoundRobin.new(@datacenter)
+        token_aware_policy = ::Cassandra::LoadBalancing::Policies::TokenAware.new(dc_aware_round_robin_policy)
+
+        { load_balancing_policy: token_aware_policy }
       end
 
       def extract_hosts_and_port(configuration)
@@ -375,23 +391,27 @@ module Cequel
         ssl_config.each { |key, value| ssl_config.delete(key) unless value }
         ssl_config
       end
-      
+
       def extract_cassandra_error_policy(configuration)
         value = configuration.fetch(:cassandra_error_policy, ::Cequel::Metal::Policy::CassandraError::ClearAndRetryPolicy)
-        # Accept a class name as a string, create an instance of it 
+        # Accept a class name as a string, create an instance of it
         if value.is_a?(String)
           value.constantize.new(configuration)
         # Accept a class, instantiate it
         elsif value.is_a?(Class)
           value.new(configuration)
         # Accept a value, assume it is a ready to use policy object
-        else 
+        else
           value
         end
       end
-      
+
       def extract_cassandra_options(configuration)
         configuration[:cassandra_options]
+      end
+
+      def extract_datacenter(configuration)
+        configuration[:datacenter]
       end
     end
   end

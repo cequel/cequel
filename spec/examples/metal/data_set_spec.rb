@@ -3,7 +3,7 @@ require File.expand_path('../../spec_helper', __FILE__)
 
 describe Cequel::Metal::DataSet do
   posts_tn = "posts_#{SecureRandom.hex(4)}"
-  post_act_tn = "post_activity_#{SecureRandom.hex(4)}" 
+  post_act_tn = "post_activity_#{SecureRandom.hex(4)}"
 
   before :all do
     cequel.schema.create_table(posts_tn) do
@@ -53,6 +53,16 @@ describe Cequel::Metal::DataSet do
     it 'should insert a row' do
       cequel[posts_tn].insert(row)
       expect(cequel[posts_tn].where(row_keys).first[:title]).to eq('Fun times')
+    end
+
+    it 'should insert a record when multi-DC option of on' do
+      connection = Cequel.connect(host: Cequel::SpecSupport::Helpers.host,
+                                  port: Cequel::SpecSupport::Helpers.port,
+                                  keyspace: Cequel::SpecSupport::Helpers.keyspace_name,
+                                  datacenter: 1)
+
+      connection[posts_tn].insert(row)
+      expect(connection[posts_tn].where(row_keys).first[:title]).to eq('Fun times')
     end
 
     it 'should correctly insert a list' do
@@ -109,6 +119,18 @@ describe Cequel::Metal::DataSet do
       cequel[posts_tn].where(row_keys).
         update(:title => 'Fun times', :body => 'Fun')
       expect(cequel[posts_tn].where(row_keys).
+        first[:title]).to eq('Fun times')
+    end
+
+    it 'should update a record when multi-DC option of on' do
+      connection = Cequel.connect(host: Cequel::SpecSupport::Helpers.host,
+                                  port: Cequel::SpecSupport::Helpers.port,
+                                  keyspace: Cequel::SpecSupport::Helpers.keyspace_name,
+                                  datacenter: 1)
+
+      connection[posts_tn].where(row_keys).
+        update(:title => 'Fun times', :body => 'Fun')
+      expect(connection[posts_tn].where(row_keys).
         first[:title]).to eq('Fun times')
     end
 

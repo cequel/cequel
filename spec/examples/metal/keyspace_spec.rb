@@ -86,6 +86,28 @@ describe Cequel::Metal::Keyspace do
     end
   end
 
+  describe "#configure" do
+    it "sets load_balancing_policy to DCAwareRoundRobin if datacenter name is present" do
+      connection = Cequel.connect(host: Cequel::SpecSupport::Helpers.host,
+                                  port: Cequel::SpecSupport::Helpers.port,
+                                  datacenter: "datacenter")
+
+      main_policy = connection.load_balancing_policy[:load_balancing_policy]
+      inner_policy = main_policy.instance_variable_get("@policy")
+
+      expect(main_policy).not_to be_nil
+      expect(main_policy).to be_a(::Cassandra::LoadBalancing::Policies::TokenAware)
+      expect(inner_policy).to be_a(::Cassandra::LoadBalancing::Policies::DCAwareRoundRobin)
+    end
+
+    it "will leave load_balancing_policy to unset if no datacenter is provided" do
+      connection = Cequel.connect(host: Cequel::SpecSupport::Helpers.host,
+                                  port: Cequel::SpecSupport::Helpers.port)
+
+      expect(connection.load_balancing_policy).to be_nil
+    end
+  end
+
   describe "#drop_table", cql: "~> 3.1" do
     it "allows IF EXISTS" do
       expect { cequel.schema.drop_table(:unknown) }.to raise_error(Cassandra::Errors::InvalidError)
