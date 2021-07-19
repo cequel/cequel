@@ -10,6 +10,24 @@ describe Cequel::Uuids do
     specify { time = Time.zone.now; Cequel.uuid(time).to_time == time.to_time }
     specify { val = Cequel.uuid.value; Cequel.uuid(val).value == val }
     specify { str = Cequel.uuid.to_s; Cequel.uuid(str).to_s == str }
+
+    it 'should not share instances of Cassandra::TimeUuid::Generator between threads' do
+      original_generator = Cequel.send(:timeuuid_generator)
+      other_thread_generator = Thread.new { Cequel.send(:timeuuid_generator) }.value
+
+      expect(original_generator).kind_of?(Cassandra::TimeUuid::Generator)
+      expect(other_thread_generator).kind_of?(Cassandra::TimeUuid::Generator)
+      expect(original_generator).not_to be(other_thread_generator)
+    end
+
+    it 'should not share Cassandra::TimeUuid::Generator state between forked processes' do
+      original_generator = Cequel.send(:timeuuid_generator)
+      forked_generator = Parallel.map([nil], in_processes: 1) { Cequel.send(:timeuuid_generator) }.first
+
+      expect(original_generator).kind_of?(Cassandra::TimeUuid::Generator)
+      expect(forked_generator).kind_of?(Cassandra::TimeUuid::Generator)
+      expect(original_generator.instance_values).not_to eq(forked_generator.instance_values)
+    end
   end
 
   describe '#uuid?' do
