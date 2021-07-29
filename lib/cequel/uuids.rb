@@ -48,7 +48,14 @@ module Cequel
     end
 
     def timeuuid_generator
-      @timeuuid_generator ||= Cassandra::TimeUuid::Generator.new
+      current_pid = Process.pid
+      if Thread.current[:cequel_timeuuid_generator_pid] != current_pid
+        Thread.current[:cequel_timeuuid_generator_pid] = current_pid
+        # Clearing the thread local generator ensures that a forked child process will not use a
+        # generator with the same internal state as one held by the parent process.
+        Thread.current[:cequel_timeuuid_generator] = nil
+      end
+      Thread.current[:cequel_timeuuid_generator] ||= Cassandra::TimeUuid::Generator.new
     end
   end
 end
