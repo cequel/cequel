@@ -643,21 +643,20 @@ module Cequel
       # @see #find_in_batches
       #
       def find_rows_in_batches(options = {}, &block)
-        return find_rows_in_single_batch(options, &block) if row_limit
+        if row_limit || query_page_size || query_paging_state
+          return find_rows_in_single_batch(options, &block)
+        end
         options.assert_valid_keys(:batch_size)
         batch_size = options.fetch(:batch_size, 1000)
-        batch_record_set = base_record_set = limit(batch_size)
-        more_results = true
+        batch_record_set = page_size(batch_size)
 
-        while more_results
+        loop do
           rows = batch_record_set.find_rows_in_single_batch
-          yield rows if rows.any?
-          more_results = rows.length == batch_size
-          last_row = rows.last
-          if more_results
-            find_nested_batches_from(last_row, options, &block)
-            batch_record_set = base_record_set.next_batch_from(last_row)
+          if rows.any?
+            target_class.with_scope(nil) { yield rows }
           end
+          break if batch_record_set.last_page?
+          batch_record_set = batch_record_set.paging_state(batch_record_set.next_paging_state)
         end
       end
 
@@ -748,48 +747,6 @@ module Cequel
                    :allow_filtering
 
       protected
-
-      def next_batch_from(row)
-        range_key_value = row[range_key_name]
-        if ascends_by?(range_key_column)
-          after(range_key_value)
-        else
-          before(range_key_value)
-        end
-      end
-
-      def find_nested_batches_from(row, options, &block)
-        return unless next_range_key_column
-
-        without_bounds_on(range_key_column)[row[range_key_name]]
-          .next_batch_from(row)
-          .find_rows_in_batches(options, &block)
-      end
-
-      # @return [RecordSet] self but without any bounds conditions on
-      # the specified column.
-      #
-      # @private
-      def without_bounds_on(column)
-        without_lower_bound_on(column)
-          .without_upper_bound_on(column)
-      end
-
-      def without_lower_bound_on(column)
-        if lower_bound && lower_bound.column == column
-          scoped(lower_bound: nil)
-        else
-          self
-        end
-      end
-
-      def without_upper_bound_on(column)
-        if upper_bound && upper_bound.column == column
-          scoped(upper_bound: nil)
-        else
-          self
-        end
-      end
 
       def find_rows_in_single_batch(options = {})
         if options.key?(:batch_size)
