@@ -354,6 +354,15 @@ describe Cequel::Record::RecordSet do
     end
   end
 
+  describe '#each' do
+    let(:records) { [comments] }
+
+    it 'should unscope inner loops' do
+      expect(Comment['cassandra'].map { Comment['cassandra']['cequel0'].to_a.size }).
+        to match_array([comments.size] * comments.size)
+    end
+  end
+
   describe '#find_each' do
     let(:records) { [posts, blogs, mongo_posts] }
 
