@@ -1,5 +1,5 @@
 # -*- encoding : utf-8 -*-
-require 'i18n/core_ext/hash'
+require 'active_support/core_ext/hash'
 require 'yaml'
 require 'erb'
 
