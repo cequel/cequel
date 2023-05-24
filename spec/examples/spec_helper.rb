@@ -11,6 +11,24 @@ Dir.glob(File.expand_path('../../shared/**/*.rb', __FILE__)).each do |file|
   require file
 end
 
+
+KNOWN_WARNING_FRAGMENTS = [
+]
+
+KNOWN_WARNING_PATHS = [
+]
+
+# Set this to true during blocks where we want to raise errors.
+$ruby_3_warnings_as_errors = false
+
+def Warning.warn(message)
+  should_raise = $ruby_3_warnings_as_errors
+  should_raise = false if KNOWN_WARNING_FRAGMENTS.any? { |fragment| message.include?(fragment) }
+  paths = caller.join('')
+  should_raise = false if KNOWN_WARNING_PATHS.any? { |path_fragment| paths.include?(path_fragment) }
+  raise "[RUBY 3 DEPRECATION] #{message}" if should_raise
+end
+
 RSpec.configure do |config|
   config.include(Cequel::SpecSupport::Helpers)
   config.extend(Cequel::SpecSupport::Macros)
@@ -49,6 +67,13 @@ RSpec.configure do |config|
 
   config.verbose_retry = true
   config.default_retry_count = 0
+
+  config.around(:each) do |example|
+    $ruby_3_warnings_as_errors = true
+    example.run
+  ensure
+    $ruby_3_warnings_as_errors = false
+  end
 end
 
 if defined? byebug
