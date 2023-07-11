@@ -34,19 +34,6 @@ module Cequel
         end
       end
 
-      initializer "cequel.add_datadog" do
-        if configuration.fetch(:datadog, true)
-          begin
-            require 'ddtrace'
-          rescue LoadError => e
-            Rails.logger.debug(
-              "Datadog APM not installed; skipping Datadog integration")
-          else
-            require 'cequel/metal/datadog_instrumentation'
-          end
-        end
-      end
-
       rake_tasks do
         require "cequel/record/tasks"
       end

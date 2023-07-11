@@ -1,9 +1,3 @@
-begin
-  require 'ddtrace'
-rescue LoadError
-  fail LoadError, "Can't use Datadog instrumentation without ddtrace gem"
-end
-
 module Cequel
   module Metal
     #
@@ -53,6 +47,12 @@ module Cequel
         end
       end
 
+      def self.instrument!
+        Cequel::Metal::Keyspace.module_eval do
+          include Cequel::Metal::DatadogInstrumentation
+        end
+      end
+
 
       included do
         alias :execute_with_options_without_datadog :execute_with_options
@@ -60,8 +60,4 @@ module Cequel
       end
     end
   end
-end
-
-Cequel::Metal::Keyspace.module_eval do
-  include Cequel::Metal::DatadogInstrumentation
 end
