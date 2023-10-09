@@ -1,3 +1,15 @@
+# frozen_string_literal: true
+
+# ^ DO NOT REMOVE THIS
+#
+# Freezing string literals also means that the values being handed to Datadog
+# tracing instrumentation are strings allocated ONCE during parsing of this
+# code. Due to the potential volume of C* querying, this saves a significant
+# amount of memory bloat by avoiding those allocations. Especially in cases
+# where we're cycling through code so fast that any delay in the background
+# thread shipping results to Datadog means that strings are being promoted to
+# the old generation for garbage collection.
+
 module Cequel
   module Metal
     #
