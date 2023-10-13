@@ -66,8 +66,8 @@ module Cequel
       include ::Forwardable
 
       def delegate(*args, &block)
-        return super if args.one?
-        Module.instance_method(:delegate).bind(self).call(*args, &block)
+        kwargs = args.pop if args.last.is_a? Hash # pull off the hash that is the last argument
+        Module.instance_method(:delegate).bind(self).call(*args, **kwargs, &block)
       end
     end
   end
