@@ -26,12 +26,16 @@ describe 'serialization' do
   end
 
   it 'should provide JSON serialization' do
-    json = post.as_json.symbolize_keys
-    expect(json).to eq(attributes.merge(body: nil))
+    json = post.to_json
+    expected = attributes.merge(body: nil).to_json
+
+    expect(JSON.parse(json)).to eq(JSON.parse(expected))
   end
 
   it 'should be able to serialize restricting to some attributes' do
-    json = post.as_json(only: [:id]).symbolize_keys
-    expect(json).to eq(id: attributes[:id])
+    json = post.to_json(only: [:id])
+    expected = { id: attributes[:id] }.to_json
+
+    expect(JSON.parse(json)).to eq(JSON.parse(expected))
   end
 end

@@ -60,10 +60,10 @@ describe Cequel::Type do
       should == 'org.apache.cassandra.db.marshal.DecimalType' }
 
     describe '#cast' do
-      specify { expect(subject.cast(1)).to eql(BigDecimal.new('1.0')) }
-      specify { expect(subject.cast(1.0)).to eql(BigDecimal.new('1.0')) }
-      specify { expect(subject.cast(1.0.to_r)).to eql(BigDecimal.new('1.0')) }
-      specify { expect(subject.cast('1')).to eql(BigDecimal.new('1.0')) }
+      specify { expect(subject.cast(1)).to eql(BigDecimal('1.0')) }
+      specify { expect(subject.cast(1.0)).to eql(BigDecimal('1.0')) }
+      specify { expect(subject.cast(1.0.to_r)).to eql(BigDecimal('1.0')) }
+      specify { expect(subject.cast('1')).to eql(BigDecimal('1.0')) }
     end
   end
 
@@ -78,7 +78,7 @@ describe Cequel::Type do
       specify { expect(subject.cast(1)).to eql(1.0) }
       specify { expect(subject.cast(1.0.to_r)).to eql(1.0) }
       specify { expect(subject.cast('1.0')).to eql(1.0) }
-      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1.0) }
+      specify { expect(subject.cast(BigDecimal('1.0'))).to eql(1.0) }
     end
   end
 
@@ -93,7 +93,7 @@ describe Cequel::Type do
       specify { expect(subject.cast(1)).to eql(1.0) }
       specify { expect(subject.cast(1.0.to_r)).to eql(1.0) }
       specify { expect(subject.cast('1.0')).to eql(1.0) }
-      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1.0) }
+      specify { expect(subject.cast(BigDecimal('1.0'))).to eql(1.0) }
     end
   end
 
@@ -115,7 +115,7 @@ describe Cequel::Type do
       specify { expect(subject.cast('1')).to eql(1) }
       specify { expect(subject.cast(1.0)).to eql(1) }
       specify { expect(subject.cast(1.0.to_r)).to eql(1) }
-      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1) }
+      specify { expect(subject.cast(BigDecimal('1.0'))).to eql(1) }
     end
   end
 
@@ -130,7 +130,7 @@ describe Cequel::Type do
       specify { expect(subject.cast('1')).to eql(1) }
       specify { expect(subject.cast(1.0)).to eql(1) }
       specify { expect(subject.cast(1.0.to_r)).to eql(1) }
-      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1) }
+      specify { expect(subject.cast(BigDecimal('1.0'))).to eql(1) }
     end
   end
 
@@ -214,7 +214,7 @@ describe Cequel::Type do
       specify { expect(subject.cast('1')).to eql(1) }
       specify { expect(subject.cast(1.0)).to eql(1) }
       specify { expect(subject.cast(1.0.to_r)).to eql(1) }
-      specify { expect(subject.cast(BigDecimal.new('1.0'))).to eql(1) }
+      specify { expect(subject.cast(BigDecimal('1.0'))).to eql(1) }
     end
   end
 
